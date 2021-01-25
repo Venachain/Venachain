@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"encoding/json"
 	"math/big"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
@@ -34,6 +35,17 @@ func toContractReturnValueStringType(txType int, res []byte) []byte {
 	}
 
 	return MakeReturnBytes(res)
+}
+
+func toContractReturnValueStructType(txType int, res interface{}) []byte {
+	b, err := json.Marshal(res)
+	if err != nil {
+		b = []byte{}
+	}
+	if txType == common.CallContractFlag || txType == common.TxTypeCallSollCompatibleWasm {
+		return b
+	}
+	return MakeReturnBytes(b)
 }
 
 func MakeReturnBytes(ret []byte) []byte {

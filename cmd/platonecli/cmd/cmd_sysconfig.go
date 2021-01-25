@@ -7,11 +7,8 @@ import (
 	"strconv"
 
 	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
-
-	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/precompiled"
-
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/precompiled"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"gopkg.in/urfave/cli.v1"
 )

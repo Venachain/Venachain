@@ -172,7 +172,7 @@
         "inputs": [
             {
                 "name": "isTxUseGas",
-                "type": "uint64"
+                "type": "uint32"
             }
         ],
         "outputs": [],
@@ -185,7 +185,7 @@
         "outputs": [
             {
                 "name": "",
-                "type": "uint64"
+                "type": "uint32"
             }
         ],
         "constant": "true",
@@ -196,7 +196,7 @@
         "inputs": [
             {
                 "name": "isBlockUseTrieHash",
-                "type": "uint64"
+                "type": "uint32"
             }
         ],
         "outputs": [],
@@ -209,7 +209,7 @@
         "outputs": [
             {
                 "name": "",
-                "type": "uint64"
+                "type": "uint32"
             }
         ],
         "constant": "true",
@@ -275,7 +275,7 @@
         "name": "Notify",
         "inputs": [
             {
-                "type": "uint64"
+                "type": "uint32"
             },
             {
                 "type": "string"
@@ -308,12 +308,86 @@
         "type": "function"
     },
     {
-        "name":"IsBlockUseTrieHash",
+        "name":"VRFParams",
         "inputs":[
-            {"type":"uint64"},
+            {"type":"uint32"},
             {"type":"string"}
         ],
         "type":"event"
+    },
+    {
+        "name":"IsBlockUseTrieHash",
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name": "getIntParam",
+        "inputs": [
+            {
+            "name": "",
+            "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "setIntParam",
+        "inputs": [
+            {
+                "name": "",
+                "type": "string"
+            },
+            {
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "outputs": [],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "getStrParam",
+        "inputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "setStrParam",
+        "inputs": [
+            {
+                "name": "",
+                "type": "string"
+            },
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "outputs": [],
+        "constant": "false",
+        "type": "function"
     }
 ]
 

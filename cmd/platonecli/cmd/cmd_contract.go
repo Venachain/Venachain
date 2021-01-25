@@ -6,14 +6,10 @@ import (
 	"reflect"
 
 	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
-
-	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/precompiled"
-
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient"
-
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/precompiled"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/packet"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/packet"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"gopkg.in/urfave/cli.v1"
 )
@@ -99,7 +95,7 @@ Get the full information of the transaction receipt by transaction hash`,
 func contractReceipt(c *cli.Context) {
 
 	url := getUrl(c)
-	client, err := platoneclient.SetupClient(url)
+	client, err := client.SetupClient(url)
 	if err != nil {
 		utils.Fatalf("set up client failed: %s\n", err.Error())
 	}

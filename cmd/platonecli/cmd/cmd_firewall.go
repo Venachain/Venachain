@@ -7,12 +7,9 @@ import (
 	"log"
 
 	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
-
-	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/precompiled"
-
-	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/utils"
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/precompiled"
+	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"gopkg.in/urfave/cli.v1"
 )

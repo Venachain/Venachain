@@ -9,10 +9,10 @@ import (
 	"strings"
 
 	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/packet"
-	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/precompiled"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/packet"
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/precompiled"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/gin-gonic/gin"
 )
@@ -194,7 +194,7 @@ func handlerCallCommon(jsonInfo *temp) ([]interface{}, error) {
 }
 
 func A(url string, dataGen packet.MsgDataGen, tx *packet.TxParams, keyfile *utils.Keyfile) ([]interface{}, error) {
-	pc, err := platoneclient.SetupClient(url)
+	pc, err := client.SetupClient(url)
 	if err != nil {
 		return nil, err
 	}

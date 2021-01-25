@@ -1,11 +1,10 @@
 package vm
 
 import (
-	"math/big"
-	"testing"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
+	"math/big"
+	"testing"
 )
 
 //func TestParamManager_get(t *testing.T) {
@@ -122,9 +121,9 @@ func TestParamManager_getTxLimit(t *testing.T) {
 	um := UserManagement{stateDB: db, caller: caller, contractAddr: addr1, blockNumber: big.NewInt(100)}
 	um.setSuperAdmin()
 	um.addChainAdminByAddress(caller)
-	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller, blockNumber: big.NewInt(100)}
-	p.setIsApproveDeployedContract(1)
-	ret, err := p.getIsApproveDeployedContract()
+	p := scParamManagerWrapper{base: &ParamManager{contractAddr: &addr, stateDB: db, caller: caller, blockNumber: big.NewInt(100)}}
+	p.setTxGasLimit(txGasLimitDefaultValue)
+	ret, err := p.getTxGasLimit()
 	if nil != err {
 		t.Error(err)
 		return
@@ -139,7 +138,7 @@ func TestParamManager_gasName(t *testing.T) {
 	um := UserManagement{stateDB: db, caller: caller, contractAddr: addr1, blockNumber: big.NewInt(100)}
 	um.setSuperAdmin()
 	um.addChainAdminByAddress(caller)
-	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller, blockNumber: big.NewInt(100)}
+	p := scParamManagerWrapper{base: &ParamManager{contractAddr: &addr, stateDB: db, caller: caller, blockNumber: big.NewInt(100)}}
 	p.setGasContractName("abc")
 	ret, err := p.getGasContractName()
 	if nil != err {
@@ -156,7 +155,7 @@ func TestParamManager_emptyBlock(t *testing.T) {
 	um := UserManagement{stateDB: db, caller: caller, contractAddr: addr1, blockNumber: big.NewInt(100)}
 	um.setSuperAdmin()
 	um.addChainAdminByAddress(caller)
-	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller, blockNumber: big.NewInt(100)}
+	p := scParamManagerWrapper{base: &ParamManager{contractAddr: &addr, stateDB: db, caller: caller, blockNumber: big.NewInt(100)}}
 	p.setIsProduceEmptyBlock(1)
 	ret, err := p.getIsProduceEmptyBlock()
 	if nil != err {
@@ -174,11 +173,11 @@ func TestParamManager_vrf(t *testing.T) {
 	um := UserManagement{stateDB: db, caller: caller, contractAddr: addr1, blockNumber: big.NewInt(100)}
 	um.setSuperAdmin()
 	um.addChainAdminByAddress(caller)
-	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller, blockNumber: big.NewInt(100)}
-	param := common.VRFParams{ElectionEpoch: 10, NextElectionBlock: big.NewInt(10), ValidatorCount: 5}
+	p := scParamManagerWrapper{base: &ParamManager{contractAddr: &addr, stateDB: db, caller: caller, blockNumber: big.NewInt(100)}}
+	param := "{\"ElectionEpoch\": 10, \"NextElectionBlock\": 10, \"ValidatorCount\": 5}"
 	p.setVRFParams(param)
 	ret, err := p.getVRFParams()
-	if nil != err || ret.ElectionEpoch != param.ElectionEpoch {
+	if nil != err || ret.ElectionEpoch != 10 {
 		t.Error(err)
 		return
 	}
@@ -193,7 +192,7 @@ func TestParamManager_contractPer(t *testing.T) {
 	um := UserManagement{stateDB: db, caller: caller, contractAddr: addr1, blockNumber: big.NewInt(100)}
 	um.setSuperAdmin()
 	um.addChainAdminByAddress(caller)
-	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller, blockNumber: big.NewInt(100)}
+	p := scParamManagerWrapper{base: &ParamManager{contractAddr: &addr, stateDB: db, caller: caller, blockNumber: big.NewInt(100)}}
 	p.setCheckContractDeployPermission(1)
 	ret, err := p.getCheckContractDeployPermission()
 	if nil != err {
@@ -201,6 +200,29 @@ func TestParamManager_contractPer(t *testing.T) {
 		return
 	}
 	t.Logf("%d", ret)
+}
+
+func TestParaManager_getsetParam(t *testing.T){
+	db := newMockStateDB()
+	addr := syscontracts.ParameterManagementAddress
+	addr1 := syscontracts.UserManagementAddress
+	caller := common.HexToAddress("0x62fb664c49cfa4fa35931760c704f9b3ab664666")
+	um := UserManagement{stateDB: db, caller: caller, contractAddr: addr1, blockNumber: big.NewInt(100)}
+	um.setSuperAdmin()
+	um.addChainAdminByAddress(caller)
+	p := scParamManagerWrapper{base: &ParamManager{contractAddr: &addr, stateDB: db, caller: caller, blockNumber: big.NewInt(100)}}
+	p.setParam(vrfParamsKey,[]byte("{\"ElectionEpoch\": 1,\"NextElectionBlock\": 5,\"ValidatorCount\": 1}"))
+
+	ret, err := p.getParam(vrfParamsKey)
+	if nil != err {
+		t.Error(err)
+		return
+	}
+	t.Logf("%d", ret)
+}
+
+func TestOutCall(t *testing.T){
+
 }
 
 //func TestParamManager_getFn(t *testing.T) {

@@ -9,10 +9,10 @@ import (
 	"strings"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
-	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/precompiled"
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/precompiled"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/byteutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"

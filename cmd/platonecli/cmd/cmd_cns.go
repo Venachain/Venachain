@@ -5,8 +5,7 @@ import (
 	"strings"
 
 	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
-
-	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/precompiled"
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/precompiled"
 
 	"gopkg.in/urfave/cli.v1"
 )

@@ -62,7 +62,7 @@ func getVRFParamsAtNumber(chain consensus.ChainReader, sb *backend, number uint6
 		return &common.SysCfg.SysParam.VRF
 	}
 
-	resVRF := CallSystemContractAtBlockNumber(chain, sb, number, "__sys_ParamManager", "getVRFParams", []interface{}{})
+	resVRF := CallSystemContractAtBlockNumber(chain, sb, number, syscontracts.ParameterManagementAddress, "getVRFParams", []interface{}{})
 	vrf := ParseResultToExtractType(resVRF, common.VRFParams{})
 	if vrf != nil {
 		return vrf.(*common.VRFParams)
@@ -71,7 +71,7 @@ func getVRFParamsAtNumber(chain consensus.ChainReader, sb *backend, number uint6
 }
 
 func getVrfConsensusNodesAtNumber(chain consensus.ChainReader, sb *backend, number uint64) []common.NodeInfo {
-	resVrfConsensusNodes := CallSystemContractAtBlockNumber(chain, sb, number, "__sys_NodeManager", "getVrfConsensusNodes", []interface{}{})
+	resVrfConsensusNodes := CallSystemContractAtBlockNumber(chain, sb, number, syscontracts.NodeManagementAddress, "getVrfConsensusNodes", []interface{}{})
 	nodes := ParseResultToExtractType(resVrfConsensusNodes, common.CommonResult{})
 	if nodes != nil {
 		return nodes.(*common.CommonResult).Data
@@ -83,7 +83,7 @@ func getCandidateNodesAtNumber(chain consensus.ChainReader, sb *backend, number 
 	isOldBlock := number < chain.CurrentHeader().Number.Uint64()
 	nodes := make([]common.NodeInfo, 0)
 	if isOldBlock {
-		resNodes := CallSystemContractAtBlockNumber(chain, sb, number, "__sys_NodeManager", "getAllNodes", []interface{}{})
+		resNodes := CallSystemContractAtBlockNumber(chain, sb, number, syscontracts.NodeManagementAddress, "getAllNodes", []interface{}{})
 		tmp := ParseResultToExtractType(resNodes, common.CommonResult{})
 		if tmp != nil {
 			nodes = tmp.(*common.CommonResult).Data
@@ -108,7 +108,7 @@ func CallSystemContractAtBlockNumber(
 	chain consensus.ChainReader,
 	sb *backend,
 	number uint64,
-	sysContractName string,
+	sysContractAddr common.Address,
 	sysFuncName string,
 	sysFuncParams []interface{},
 ) []byte {
@@ -121,21 +121,10 @@ func CallSystemContractAtBlockNumber(
 	cc := ChainContext{&chain, sb}
 	context := core.NewEVMContext(msg, chain.CurrentHeader(), &cc, nil)
 	evm := vm.NewEVM(context, _state, chain.Config(), vm.Config{})
-	callContract := func(conAddr common.Address, data []byte) []byte {
-		res, _, err := evm.Call(vm.AccountRef(common.Address{}), conAddr, data, uint64(0xffffffffff), big.NewInt(0))
-		if err != nil {
-			return nil
-		}
-		return res
-	}
-
-	callParams := []interface{}{sysContractName, "latest"}
-	btsRes := callContract(syscontracts.CnsManagementAddress, common.GenCallData("getContractAddress", callParams))
-	strRes := common.CallResAsString(btsRes)
-	if len(strRes) == 0 || common.IsHexZeroAddress(strRes) {
-		log.Warn("call system contract address fail")
+	callData := common.GenCallData(sysFuncName, sysFuncParams)
+	res, _, err := evm.Call(vm.AccountRef(common.Address{}), sysContractAddr, callData, uint64(0xffffffffff), big.NewInt(0))
+	if err != nil {
 		return nil
 	}
-	contractAddr := common.HexToAddress(strRes)
-	return callContract(contractAddr, common.GenCallData(sysFuncName, sysFuncParams))
+	return res
 }

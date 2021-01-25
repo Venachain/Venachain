@@ -16,7 +16,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"

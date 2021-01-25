@@ -5,8 +5,8 @@ package cmd
 import (
 	"strings"
 
-	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/precompiled"
-	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/utils"
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/precompiled"
+	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/utils"
 )
 
 const (
@@ -94,7 +94,7 @@ func getAbiOnchain(addr string) ([]byte, error) {
 	}
 
 	// get the contract code by address through eth_getCode
-	code, err := platoneclient.GetCodeByAddress(addr)
+	code, err := client.GetCodeByAddress(addr)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +127,7 @@ func GetAddressByName(name string) (string, error) {
 	tx := packet.NewTxParams(from, &to, "", "", "", data)
 	params := utl.CombineParams(tx, "latest")
 
-	response, err := platoneclient.RpcCalls("eth_call", params)
+	response, err := client.RpcCalls("eth_call", params)
 	if err != nil {
 		return "", err
 	}

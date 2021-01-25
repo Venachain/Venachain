@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/utils"
+	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 )
 

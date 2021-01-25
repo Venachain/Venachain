@@ -4,7 +4,7 @@ import (
 	"crypto/ecdsa"
 	"encoding/hex"
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts/keystore"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/gin-gonic/gin"
 	"github.com/pborman/uuid"

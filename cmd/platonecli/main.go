@@ -6,9 +6,7 @@ import (
 	"sort"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/cmd"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/rest"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"gopkg.in/urfave/cli.v1"
 )
@@ -55,7 +53,7 @@ var (
 	}
 )
 
-//go:generate go-bindata -pkg precompile -o precompiled/bindata.go ../../release/linux/conf/contracts/...
+//go:generate go-bindata -pkg precompile -o client/precompiled/bindata.go ../../release/linux/conf/contracts/...
 func main() {
 	// Initialize the related file
 	cmd.ConfigInit()

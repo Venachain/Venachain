@@ -4,8 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/utils"
-
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
 )
 

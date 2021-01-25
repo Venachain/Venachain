@@ -5,13 +5,13 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client"
 
 	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/utils"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/packet"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/packet"
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"gopkg.in/urfave/cli.v1"
@@ -22,7 +22,7 @@ func clientCommonV2(c *cli.Context, dataGen packet.MsgDataGen, to *common.Addres
 	// get the client global parameters
 	keyfile, isSync, isDefault, url := getClientConfig(c)
 
-	pc, err := platoneclient.SetupClient(url)
+	pc, err := client.SetupClient(url)
 	if err != nil {
 		utl.Fatalf("set up client failed: %s\n", err.Error())
 	}
@@ -164,7 +164,7 @@ func clientCommon(c *cli.Context, dataGen packet.MsgDataGen, to *common.Address)
 	// get the client global parameters
 	keyfile, isSync, isDefault, url := getClientConfig(c)
 
-	pc, err := platoneclient.SetupClient(url)
+	pc, err := client.SetupClient(url)
 	if err != nil {
 		utl.Fatalf("set up client failed: %s\n", err.Error())
 	}

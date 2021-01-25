@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/precompiled"
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/precompiled"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"gopkg.in/urfave/cli.v1"

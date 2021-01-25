@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/packet"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/packet"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/gin-gonic/gin"

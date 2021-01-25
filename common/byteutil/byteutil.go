@@ -11,6 +11,9 @@ import (
 )
 
 func ConvertBytesTo(input []byte, targetType string) reflect.Value {
+	if targetType == "[]uint8" {
+		return reflect.ValueOf(input)
+	}
 	v, ok := Bytes2X_CMD[targetType]
 	if !ok {
 		panic("unsupported type")
@@ -36,7 +39,6 @@ var Bytes2X_CMD = map[string]interface{}{
 	"*syscontracts.UserInfo":     BytesToUserInfo,
 	"*syscontracts.UserDescInfo": BytesToUserDescInfo,
 	"common.Address":             HexBytesToAddress,
-	"common.VRFParams":           BytesToVRFParams,
 }
 
 func HexBytesToAddress(curByte []byte) common.Address {
@@ -60,13 +62,6 @@ func BytesToNodeInfo(curByte []byte) *syscontracts.NodeInfo {
 	}
 	return &info
 }
-func BytesToVRFParams(curByte []byte) common.VRFParams {
-	var info common.VRFParams
-	if err := json.Unmarshal(curByte, &info); nil != err {
-		panic("BytesToVRFParams:" + err.Error() + " bytes:" + string(curByte))
-	}
-	return info
-}
 
 func BytesToUserInfo(curByte []byte) *syscontracts.UserInfo {
 	var info syscontracts.UserInfo
@@ -89,6 +84,11 @@ func BytesToString(curByte []byte) string {
 }
 
 func BytesToInt16(b []byte) int16 {
+	if len(b) < 2 {
+		b = append(make([]byte, 2-len(b)), b...)
+	} else {
+		b = b[len(b)-2:]
+	}
 	bytesBuffer := bytes.NewBuffer(b)
 	var tmp int16
 	binary.Read(bytesBuffer, binary.BigEndian, &tmp)
@@ -100,6 +100,11 @@ func BytesToInt(b []byte) int {
 }
 
 func BytesToInt32(b []byte) int32 {
+	if len(b) < 4 {
+		b = append(make([]byte, 4-len(b)), b...)
+	} else {
+		b = b[len(b)-4:]
+	}
 	bytesBuffer := bytes.NewBuffer(b)
 	var tmp int32
 	binary.Read(bytesBuffer, binary.BigEndian, &tmp)
@@ -107,6 +112,11 @@ func BytesToInt32(b []byte) int32 {
 }
 
 func BytesToInt64(b []byte) int64 {
+	if len(b) < 8 {
+		b = append(make([]byte, 8-len(b)), b...)
+	} else {
+		b = b[len(b)-8:]
+	}
 	bytesBuffer := bytes.NewBuffer(b)
 	var tmp int64
 	binary.Read(bytesBuffer, binary.BigEndian, &tmp)
@@ -114,15 +124,39 @@ func BytesToInt64(b []byte) int64 {
 }
 
 func BytesToUint16(b []byte) uint16 {
-	return binary.BigEndian.Uint16(b)
+	if len(b) < 2 {
+		b = append(make([]byte, 2-len(b)), b...)
+	} else {
+		b = b[len(b)-2:]
+	}
+	bytesBuffer := bytes.NewBuffer(b)
+	var tmp uint16
+	binary.Read(bytesBuffer, binary.BigEndian, &tmp)
+	return tmp
 }
 
 func BytesToUint32(b []byte) uint32 {
-	return binary.BigEndian.Uint32(b)
+	if len(b) < 4 {
+		b = append(make([]byte, 4-len(b)), b...)
+	} else {
+		b = b[len(b)-4:]
+	}
+	bytesBuffer := bytes.NewBuffer(b)
+	var tmp uint32
+	binary.Read(bytesBuffer, binary.BigEndian, &tmp)
+	return tmp
 }
 
 func BytesToUint64(b []byte) uint64 {
-	return binary.BigEndian.Uint64(b)
+	if len(b) < 8 {
+		b = append(make([]byte, 8-len(b)), b...)
+	} else {
+		b = b[len(b)-8:]
+	}
+	bytesBuffer := bytes.NewBuffer(b)
+	var tmp uint64
+	binary.Read(bytesBuffer, binary.BigEndian, &tmp)
+	return tmp
 }
 
 func Int64ToBytes(i int64) []byte {

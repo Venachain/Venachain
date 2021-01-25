@@ -10,8 +10,8 @@ import (
 
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 
-	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/precompiled"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/utils"
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/precompiled"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/utils"
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 )

@@ -1,18 +1,15 @@
-package platoneclient
+package client
 
 import (
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/utils"
-
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/packet"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/packet"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
 )
 

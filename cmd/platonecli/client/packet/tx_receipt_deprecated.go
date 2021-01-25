@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
-	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/precompiled"
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/precompiled"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )

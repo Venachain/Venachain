@@ -12,6 +12,7 @@ GOBIN = $(shell pwd)/build/bin
 GO ?= latest
 
 platonecli:
+	@go generate ./cmd/platonecli/main.go
 	build/build_deps.sh
 	build/env.sh go run build/ci.go install ./cmd/platonecli
 	@cp $(GOBIN)/platonecli $(shell pwd)/release/linux/bin/
@@ -30,6 +31,7 @@ platone:
 #	build/build_syscontracts.sh
 
 all:
+	@go generate ./cmd/platonecli/main.go
 	build/build_deps.sh
 	build/env.sh go run build/ci.go install
 	build/move_bin_to_release.sh

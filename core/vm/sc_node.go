@@ -569,11 +569,13 @@ func (n *SCNode) emitEvent(topic string, code CodeType, msg string) {
 
 func (n *SCNode) VrfElection(nonce []byte) (int32, error) {
 
-	scParam := &ParamManager{
-		stateDB:      n.stateDB,
-		contractAddr: &syscontracts.ParameterManagementAddress,
-		caller:       n.caller,
-		blockNumber:  n.blockNumber,
+	scParam := &scParamManagerWrapper{
+		base: &ParamManager{
+			stateDB:      n.stateDB,
+			contractAddr: &syscontracts.ParameterManagementAddress,
+			caller:       n.caller,
+			blockNumber:  n.blockNumber,
+		},
 	}
 
 	vrf, err := scParam.getVRFParams()

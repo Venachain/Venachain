@@ -5,9 +5,7 @@ import (
 	"testing"
 
 	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
-
 	"github.com/stretchr/testify/assert"
 )
 

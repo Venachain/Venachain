@@ -9,8 +9,8 @@ import (
 
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
 	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/packet"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/packet"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/utils"
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"gopkg.in/urfave/cli.v1"
 )

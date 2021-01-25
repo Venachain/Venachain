@@ -297,10 +297,10 @@ func (c *core) startNewRoundWhenEmpty(round *big.Int) {
 	c.setStateWhenEmpty(StateAcceptRequest)
 
 	c.newRoundChangeTimerWhenEmpty()
-	//log.Info("==================================================")
-	//log.Info("RoundChange\t"+"Height: "+newView.Sequence.String()+"\tRound: "+newView.Round.String()+"\tProposer: "+c.valSet.GetProposer().Address().String(), "IsProposer: ", c.IsProposer())
-	//log.Info("==================================================")
-	//logger.Info("New round", "valSet", c.valSet.List(), "size", c.valSet.Size())
+	log.Info("==================================================")
+	log.Info("RoundChange\t"+"Height: "+newView.Sequence.String()+"\tRound: "+newView.Round.String()+"\tProposer: "+c.valSet.GetProposer().Address().String(), "IsProposer: ", c.IsProposer())
+	log.Info("==================================================")
+	logger.Info("New round", "valSet", c.valSet.List(), "size", c.valSet.Size())
 }
 
 // startNewRound starts a new round. if round equals to 0, it means to starts a new sequence
@@ -379,10 +379,10 @@ func (c *core) startNewRound(round *big.Int) {
 		}
 	}
 	c.newRoundChangeTimer()
-	//log.Info("==================================================")
-	//log.Info("RoundChange\t"+"Height: "+newView.Sequence.String()+"\tRound: "+newView.Round.String()+"\tProposer: "+c.valSet.GetProposer().Address().String(), "IsProposer: ", c.IsProposer())
-	//log.Info("==================================================")
-	//logger.Info("New round", "valSet", c.valSet.List(), "size", c.valSet.Size())
+	log.Info("==================================================")
+	log.Info("RoundChange\t"+"Height: "+newView.Sequence.String()+"\tRound: "+newView.Round.String()+"\tProposer: "+c.valSet.GetProposer().Address().String(), "IsProposer: ", c.IsProposer())
+	log.Info("==================================================")
+	logger.Info("New round", "valSet", c.valSet.List(), "size", c.valSet.Size())
 }
 
 func (c *core) catchUpRound(view *istanbul.View) {
