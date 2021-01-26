@@ -19,6 +19,7 @@ package types
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"math/big"
@@ -37,9 +38,17 @@ var (
 	EmptyRootHash = DeriveSha(Transactions{})
 )
 
+var (
+	ErrInvalidBlockNonce = errors.New("invalid Block Nonce length")
+)
+
 // BlockNonce is an 81-byte vrf proof containing random numbers
 // Used to verify the block when receiving the block
-type BlockNonce [81]byte
+const (
+	BlockNonceLen = 81
+)
+type BlockNonce [BlockNonceLen]byte
+
 
 // EncodeNonce converts the given integer to a block nonce.
 func EncodeNonce(i uint64) BlockNonce {
@@ -68,6 +77,27 @@ func (n BlockNonce) MarshalText() ([]byte, error) {
 // UnmarshalText implements encoding.TextUnmarshaler.
 func (n *BlockNonce) UnmarshalText(input []byte) error {
 	return hexutil.UnmarshalFixedText("BlockNonce", input, n[:])
+}
+
+
+func (n *BlockNonce) DecodeRLP(s *rlp.Stream) error {
+	_, size, err := s.Kind()
+	if err != nil {
+		return err
+	}
+
+	if BlockNonceLen < size {
+		return errors.New(fmt.Sprint("input string too long"))
+	}
+	slice := n[:size]
+	if err := s.ReadFull(slice); err != nil {
+		return err
+	}
+	// Reject cases where single byte encoding should have been used.
+	if size == 1 && slice[0] < 128 {
+		return rlp.ErrCanonSize
+	}
+	return nil
 }
 
 //go:generate gencodec -type Header -field-override headerMarshaling -out gen_header_json.go

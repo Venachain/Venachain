@@ -5,7 +5,6 @@ import (
 	"math/big"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 
@@ -40,15 +39,16 @@ var (
 	/// regName = regexp.MustCompile(namePattern)
 	regVer = regexp.MustCompile(versionRegPattern)
 )
+
 //
-//var (
-//	cnsSysContractsMap = map[string]common.Address{
-//		"__sys_ParamManager": syscontracts.ParameterManagementAddress,
-//		"__sys_NodeManager":  syscontracts.NodeManagementAddress,
-//		"__sys_UserManager":  syscontracts.UserManagementAddress,
-//		"cnsManager":         syscontracts.CnsManagementAddress,
-//	}
-//)
+var (
+	CnsSysContractsMap = map[string]common.Address{
+		"__sys_ParamManager": syscontracts.ParameterManagementAddress,
+		"__sys_NodeManager":  syscontracts.NodeManagementAddress,
+		"__sys_UserManager":  syscontracts.UserManagementAddress,
+		"cnsManager":         syscontracts.CnsManagementAddress,
+	}
+)
 
 // CnsManager
 type CnsManager struct {
@@ -68,13 +68,13 @@ type ContractInfo struct {
 	TimeStamp uint64         `json:"create_time"`
 }
 
-func newContractInfo(name, version string, address, origin common.Address) *ContractInfo {
+func newContractInfo(name, version string, address, origin common.Address, blockNumber uint64) *ContractInfo {
 	return &ContractInfo{
 		Name:      name,
 		Version:   version,
 		Address:   address,
 		Origin:    origin,
-		TimeStamp: uint64(time.Now().Unix()),
+		TimeStamp: blockNumber,
 	}
 }
 
@@ -193,7 +193,7 @@ func (cns *CnsManager) doCnsRegister(name, version string, address common.Addres
 	}
 
 	// new a contractInfo struct
-	cnsInfo := newContractInfo(name, version, address, ori)
+	cnsInfo := newContractInfo(name, version, address, ori, cns.blockNumber.Uint64())
 
 	// record the info to stateDB
 	cns.cMap.insert(key, cnsInfo)

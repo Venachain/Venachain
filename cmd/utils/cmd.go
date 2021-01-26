@@ -19,6 +19,7 @@ package utils
 
 import (
 	"compress/gzip"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -125,6 +126,36 @@ func ImportChain(chain *core.BlockChain, fn string) error {
 		}
 	}
 	stream := rlp.NewStream(reader, 0)
+	// import pivot,system contract info,super admin
+	var pivot uint64
+	if err := stream.Decode(&pivot); err != nil {
+		return fmt.Errorf("at import pivot: %v", err)
+	} else {
+		b, _ := rlp.EncodeToBytes(pivot)
+		chain.Put(common.Sys_pivot_key, b)
+	}
+
+	mapSysContractAddr := make(map[common.Address]string)
+	var b []byte
+	if err := stream.Decode(&b); err != nil {
+		return fmt.Errorf("at import system contract: %v", err)
+	}
+	if err := json.Unmarshal(b, &mapSysContractAddr); err != nil {
+		return fmt.Errorf("at import system contract: %v", err)
+	} else {
+		b, _ := rlp.EncodeToBytes(b)
+		chain.Put(common.Sys_old_system_contract_key, b)
+	}
+
+	var superAdmin string
+	if err := stream.Decode(&superAdmin); err != nil {
+		return fmt.Errorf("at import super admin: %v", err)
+	} else {
+		b, _ := rlp.EncodeToBytes(common.HexToAddress(superAdmin))
+		chain.Put(common.Sys_old_super_admin_key, b)
+	}
+
+	core.UpdateSysContractConfig(chain, common.SysCfg)
 
 	// Run actual the import.
 	blocks := make(types.Blocks, importBatchSize)
@@ -189,7 +220,7 @@ func missingBlocks(chain *core.BlockChain, blocks []*types.Block) []*types.Block
 
 // ExportChain exports a blockchain into the specified file, truncating any data
 // already present in the file.
-func ExportChain(blockchain *core.BlockChain, fn string) error {
+func ExportChain(blockchain *core.BlockChain, fn string, version string) error {
 	log.Info("Exporting blockchain", "file", fn)
 
 	// Open the file handle and potentially wrap with a gzip stream
@@ -205,7 +236,7 @@ func ExportChain(blockchain *core.BlockChain, fn string) error {
 		defer writer.(*gzip.Writer).Close()
 	}
 	// Iterate over the blocks and export them
-	if err := blockchain.Export(writer); err != nil {
+	if err := blockchain.Export(writer, version); err != nil {
 		return err
 	}
 	log.Info("Exported blockchain", "file", fn)
@@ -215,7 +246,7 @@ func ExportChain(blockchain *core.BlockChain, fn string) error {
 
 // ExportAppendChain exports a blockchain into the specified file, appending to
 // the file if data already exists in it.
-func ExportAppendChain(blockchain *core.BlockChain, fn string, first uint64, last uint64) error {
+func ExportAppendChain(blockchain *core.BlockChain, fn string, version string, first uint64, last uint64) error {
 	log.Info("Exporting blockchain", "file", fn)
 
 	// Open the file handle and potentially wrap with a gzip stream
@@ -231,7 +262,7 @@ func ExportAppendChain(blockchain *core.BlockChain, fn string, first uint64, las
 		defer writer.(*gzip.Writer).Close()
 	}
 	// Iterate over the blocks and export them
-	if err := blockchain.ExportN(writer, first, last); err != nil {
+	if err := blockchain.ExportN(writer, version, first, last); err != nil {
 		return err
 	}
 	log.Info("Exported blockchain to", "file", fn)

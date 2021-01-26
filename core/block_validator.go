@@ -54,6 +54,11 @@ func (v *BlockValidator) ValidateBody(block *types.Block) error {
 	if v.bc.HasBlockAndState(block.Hash(), block.NumberU64()) {
 		return ErrKnownBlock
 	}
+
+	if block.NumberU64() <= common.SysCfg.ReplayParam.Pivot {
+		return nil
+	}
+
 	if !v.bc.HasBlockAndState(block.ParentHash(), block.NumberU64()-1) {
 		if !v.bc.HasBlock(block.ParentHash(), block.NumberU64()-1) {
 			return consensus.ErrUnknownAncestor
@@ -73,6 +78,9 @@ func (v *BlockValidator) ValidateBody(block *types.Block) error {
 // itself. ValidateState returns a database batch if the validation was a success
 // otherwise nil and an error is returned.
 func (v *BlockValidator) ValidateState(block, parent *types.Block, statedb *state.StateDB, receipts types.Receipts, usedGas uint64) error {
+	if block.NumberU64() <= common.SysCfg.ReplayParam.Pivot {
+		return nil
+	}
 	header := block.Header()
 	if block.GasUsed() != usedGas {
 		return fmt.Errorf("invalid gas used (remote: %d local: %d)", block.GasUsed(), usedGas)
