@@ -473,13 +473,7 @@ func (bc *BlockChain) ExportN(w io.Writer, version string, first uint64, last ui
 	//export possible old system contracts
 	var addrSuperAdmin string
 	m := make(map[common.Address]string)
-	CnsSysContractsMap := map[string]common.Address{
-		"__sys_ParamManager": syscontracts.ParameterManagementAddress,
-		"__sys_NodeManager":  syscontracts.NodeManagementAddress,
-		"__sys_UserManager":  syscontracts.UserManagementAddress,
-		"__sys_RoleManager":  syscontracts.UserManagementAddress,
-	}
-	for k, v := range CnsSysContractsMap {
+	for k, v := range vm.CnsSysContractsMap {
 		if version < "1.0.0" {
 			input := common.GenCallData("getContractAddress", []interface{}{k, "latest"})
 			btsRes, err := bc.RunInterpreterDirectly(common.Address{}, syscontracts.CnsManagementAddress, input)
