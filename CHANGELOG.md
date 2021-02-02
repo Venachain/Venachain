@@ -1,16 +1,18 @@
 # Changelog
 
-## [unknown]
+## [1.0.0]
 
 ### Breaking Changes
 * [system contract] 系统合约重构成预编译合约形式
 * [other] 删除eip，DAO等版本升级的Hard Fork和兼容性检查;
 * [other] 删除Rinkeby，Testnet;删除ChainConfig的EmptyBlock设置;删除Clique；删除difficulty；删除dev模式；
 * [other] 删除默认配置,并重写了genesis初始化逻辑。
+* [other]交易处理生命周期全流程优化  - 张玉坚
 * [p2p] 修改protocol协议为platoneV1，交易广播添加hash广播  - 张玉坚
 
+
 ### Improvements
-* [other] 版本管理采用mod模型 - 汤涌，于宗坤，杜满想
+* [other] 版本管理采用mod模型 - 汤勇，于宗坤，杜满想
 * [other] 删除whisper,swarm,mobile,cmd/wnode（Whisper node）- 杜满想
 * [other] 删除pow相关逻辑(reorg,sidechain),删除cbft - 杜满想
 * [contract] 系统合约缓存机制重构。
@@ -18,6 +20,8 @@
 
 ### Features
 * [chain] 添加一链多账本功能（群组预编译化系统合约等等）
+* [chain] 支持VRF共识机制 - 于宗坤
+* [chain] platone命令行工具支持通过replay区块的方式完成非兼容性升级 - 于宗坤
 * [other] 可视化运维平台
 
 
