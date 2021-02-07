@@ -104,6 +104,7 @@ release/linux/bin/wasm
 release/linux/bin/wnode
 release/linux/conf/ctool.json
 release/linux/conf/genesis.json
+release/linux/conf/keyfile.json
 release/linux/data/
 release/linux/bin/cmd
 release/linux/bin/build
