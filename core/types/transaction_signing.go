@@ -155,7 +155,6 @@ func (s EIP155Signer) Hash(tx *Transaction) common.Hash {
 		tx.data.Recipient,
 		tx.data.Amount,
 		tx.data.Payload,
-		tx.data.TxType,
 		s.chainId, uint(0), uint(0),
 	})
 }
@@ -224,7 +223,6 @@ func (fs FrontierSigner) Hash(tx *Transaction) common.Hash {
 		tx.data.Recipient,
 		tx.data.Amount,
 		tx.data.Payload,
-		tx.data.TxType,
 	})
 }
 

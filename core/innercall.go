@@ -12,7 +12,7 @@ var InnerCallFromAddress = common.HexToAddress("0x100000000000000000000000000000
 
 func innerCallContract(state *state.StateDB, bc *BlockChain, caller common.Address, contractAddr common.Address, input []byte) ([]byte, error) {
 	// Create new call message
-	msg := types.NewMessage(caller, &contractAddr, 1, big.NewInt(1), uint64(0xffffffffff), big.NewInt(1), input, false, types.NormalTxType)
+	msg := types.NewMessage(caller, &contractAddr, 1, big.NewInt(1), uint64(0xffffffffff), big.NewInt(1), input, false)
 	header := bc.CurrentHeader()
 
 	context := NewEVMContext(msg, header, bc, nil)

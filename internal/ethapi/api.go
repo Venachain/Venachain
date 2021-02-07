@@ -638,7 +638,6 @@ type CallArgs struct {
 	GasPrice hexutil.Big     `json:"gasPrice"`
 	Value    hexutil.Big     `json:"value"`
 	Data     hexutil.Bytes   `json:"data"`
-	TxType   uint64          `json:"txType"`
 }
 
 func (s *PublicBlockChainAPI) doCall(ctx context.Context, args CallArgs, blockNr rpc.BlockNumber, vmCfg vm.Config, timeout time.Duration) ([]byte, uint64, bool, error) {
@@ -667,8 +666,7 @@ func (s *PublicBlockChainAPI) doCall(ctx context.Context, args CallArgs, blockNr
 	}
 
 	// Create new call message
-	msg := types.NewMessage(addr, args.To, 0, args.Value.ToInt(), 0x999999999, gasPrice, args.Data, false, args.TxType)
-	log.Debug("evm call", "txtpe", args.TxType)
+	msg := types.NewMessage(addr, args.To, 0, args.Value.ToInt(), 0x999999999, gasPrice, args.Data, false)
 	// Setup context so it may be cancelled the call has completed
 	// or, in case of unmetered gas, setup a context with a timeout.
 	var cancel context.CancelFunc
@@ -892,7 +890,6 @@ type RPCTransaction struct {
 	V                *hexutil.Big    `json:"v"`
 	R                *hexutil.Big    `json:"r"`
 	S                *hexutil.Big    `json:"s"`
-	TxType           hexutil.Uint64  `json:"txType"`
 }
 
 // newRPCTransaction returns a transaction that will serialize to the RPC
@@ -917,7 +914,7 @@ func newRPCTransaction(tx *types.Transaction, blockHash common.Hash, blockNumber
 		V:        (*hexutil.Big)(v),
 		R:        (*hexutil.Big)(r),
 		S:        (*hexutil.Big)(s),
-		TxType:   hexutil.Uint64(tx.Type()),
+		//TxType:   hexutil.Uint64(tx.Type()),
 	}
 	if blockHash != (common.Hash{}) {
 		result.BlockHash = blockHash
@@ -1147,7 +1144,6 @@ type SendTxArgs struct {
 	// newer name and should be preferred by clients.
 	Data   *hexutil.Bytes `json:"data"`
 	Input  *hexutil.Bytes `json:"input"`
-	TxType uint64         `json:"txType"`
 }
 
 // setDefaults is a helper function that fills in default values for unspecified tx fields.
@@ -1203,7 +1199,7 @@ func (args *SendTxArgs) toTransaction() *types.Transaction {
 	if args.To == nil {
 		return types.NewContractCreation(uint64(*args.Nonce), (*big.Int)(args.Value), uint64(*args.Gas), (*big.Int)(args.GasPrice), input)
 	}
-	return types.NewTransaction(uint64(*args.Nonce), *args.To, (*big.Int)(args.Value), uint64(*args.Gas), (*big.Int)(args.GasPrice), input, args.TxType)
+	return types.NewTransaction(uint64(*args.Nonce), *args.To, (*big.Int)(args.Value), uint64(*args.Gas), (*big.Int)(args.GasPrice), input)
 }
 
 // submitTransaction is a helper function that submits tx to txPool and logs a message.

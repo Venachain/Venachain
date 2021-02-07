@@ -117,7 +117,7 @@ func CallSystemContractAtBlockNumber(
 		log.Warn("load state fail at block number", "number", number)
 		return nil
 	}
-	msg := types.NewMessage(common.Address{}, nil, 1, big.NewInt(1), 0x1, big.NewInt(1), nil, false, types.NormalTxType)
+	msg := types.NewMessage(common.Address{}, nil, 1, big.NewInt(1), 0x1, big.NewInt(1), nil, false)
 	cc := ChainContext{&chain, sb}
 	context := core.NewEVMContext(msg, chain.CurrentHeader(), &cc, nil)
 	evm := vm.NewEVM(context, _state, chain.Config(), vm.Config{})

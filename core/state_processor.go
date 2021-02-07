@@ -18,8 +18,6 @@ package core
 
 import (
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
@@ -127,11 +125,12 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 		if header.Number.Uint64() < common.SysCfg.ReplayParam.Pivot && msg.To() != nil {
 			if n := common.SysCfg.ReplayParam.OldSysContracts[*msg.To()]; n != "" {
 				msg.SetTo(vm.CnsSysContractsMap[n])
-			} else if msg.TxType() == types.CnsTxType {
-				msg.SetTo(syscontracts.CnsInvokeAddress)
-			} else if msg.TxType() == types.FwTxType {
-				msg.SetTo(syscontracts.FirewallManagementAddress)
 			}
+			//else if msg.TxType() == types.CnsTxType {
+			//	msg.SetTo(syscontracts.CnsInvokeAddress)
+			//} else if msg.TxType() == types.FwTxType {
+			//	msg.SetTo(syscontracts.FirewallManagementAddress)
+			//}
 		}
 		from = msg.From()
 		if err != nil {

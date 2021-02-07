@@ -23,7 +23,6 @@ type Tx struct {
 	GasPrice  uint64   `json:"gas_price" bson:"gas_price"`
 	Nonce     string   `json:"nonce" bson:"nonce"`
 	Input     string   `json:"input" bson:"input"`
-	Typ       uint64   `json:"tx_type" bson:"tx_type"`
 	Value     uint64   `json:"value" bson:"value"`
 	Receipt   *Receipt `json:"receipt" bson:"receipt"`
 }

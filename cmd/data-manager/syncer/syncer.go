@@ -197,7 +197,6 @@ func (this *syncer) doSyncTxs(block *types.Block) error {
 		if tx.To() != nil {
 			dbTx.To = tx.To().Hex()
 		}
-		dbTx.Typ = tx.Type()
 		dbTx.Value = tx.Value().Uint64()
 		dbTx.Height = block.NumberU64()
 

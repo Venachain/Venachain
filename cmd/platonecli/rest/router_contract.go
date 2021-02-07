@@ -7,7 +7,6 @@ import (
 
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/packet"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/gin-gonic/gin"
 )
 
@@ -86,7 +85,7 @@ func deploy(jsonInfo *temp) ([]interface{}, error) {
 		consArgs, _ = constructor.StringToArgs(consParams)
 	}
 
-	dataGenerator := packet.NewDeployDataGen(conAbi, types.CreateTxType)
+	dataGenerator := packet.NewDeployDataGen(conAbi)
 	dataGenerator.SetInterpreter(vm, abiBytes, codeBytes, consArgs, constructor)
 
 	from := common.HexToAddress(jsonInfo.Tx.From)

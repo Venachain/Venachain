@@ -1440,7 +1440,7 @@ func (pool *TxPool) generateTxs(cnt string, addr common.Address, preProducer boo
 		var gasLimit = 1 + threadNum
 		for i := 0; i < cnt; i++ {
 			nonce := time.Now().UnixNano()
-			tx := types.NewTransaction(uint64(nonce), addr, big.NewInt(1), uint64(gasLimit), big.NewInt(1), nil, 0)
+			tx := types.NewTransaction(uint64(nonce), addr, big.NewInt(1), uint64(gasLimit), big.NewInt(1), nil)
 			signedTx, _ := types.SignTx(tx, types.HomesteadSigner{}, pool.pk)
 			types.Sender(pool.signer, signedTx) // already validated
 			tx.Hash()

@@ -1637,7 +1637,7 @@ func (bc *BlockChain) RunInterpreterDirectly(caller common.Address, contractAddr
 		return nil, err
 	}
 
-	msg := types.NewMessage(caller, &contractAddr, 1, big.NewInt(1), 0x1, big.NewInt(1), input, false, types.NormalTxType)
+	msg := types.NewMessage(caller, &contractAddr, 1, big.NewInt(1), 0x1, big.NewInt(1), input, false)
 	context := NewEVMContext(msg, bc.CurrentHeader(), bc, nil)
 	evm := vm.NewEVM(context, state, bc.Config(), vm.Config{})
 

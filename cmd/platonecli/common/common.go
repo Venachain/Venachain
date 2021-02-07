@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 
 	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/precompiled"
@@ -15,6 +13,8 @@ import (
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 )
+
+const defaultTxType = 2
 
 // CombineRule combines firewall rules
 func CombineRule(addr, api string) string {
@@ -214,9 +214,9 @@ func CnsParse(contract string) (*Cns, common.Address, error) {
 
 	switch isAddress {
 	case CnsIsAddress:
-		return NewCns("", types.NormalTxType), common.HexToAddress(contract), nil
+		return NewCns("", defaultTxType), common.HexToAddress(contract), nil
 	case CnsIsName:
-		return NewCns(contract, types.CnsTxType), common.HexToAddress(precompile.CnsInvokeAddress), nil
+		return NewCns(contract, defaultTxType), common.HexToAddress(precompile.CnsInvokeAddress), nil
 	default:
 		return nil, common.Address{}, fmt.Errorf(utils.ErrParamInValidSyntax, "contract address")
 	}

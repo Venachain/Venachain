@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"reflect"
 
-	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
-	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/precompiled"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/packet"
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/precompiled"
+	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"gopkg.in/urfave/cli.v1"
 )
@@ -138,7 +137,7 @@ func deploy(c *cli.Context) {
 	}
 
 	/// dataGenerator := packet.NewDeployDataGen(codeBytes, abiBytes, consArgs, vm, types.CreateTxType)
-	dataGenerator := packet.NewDeployDataGen(conAbi, types.CreateTxType)
+	dataGenerator := packet.NewDeployDataGen(conAbi)
 	// set the virtual machine interpreter
 	dataGenerator.SetInterpreter(vm, abiBytes, codeBytes, consArgs, constructor)
 

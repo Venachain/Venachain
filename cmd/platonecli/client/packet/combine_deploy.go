@@ -10,7 +10,6 @@ import (
 type DeployDataGen struct {
 	/// codeBytes         []byte
 	/// abiBytes          []byte
-	TxType uint64
 	/// ConstructorParams []string
 	Interpreter deployInter
 
@@ -18,7 +17,7 @@ type DeployDataGen struct {
 }
 
 // NewDeployCall new a DeployCall object
-func NewDeployDataGen(conAbi ContractAbi, txType uint64) *DeployDataGen {
+func NewDeployDataGen(conAbi ContractAbi) *DeployDataGen {
 	var dataGen = new(DeployDataGen)
 	dataGen.conAbi = conAbi
 
