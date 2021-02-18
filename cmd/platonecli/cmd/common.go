@@ -31,7 +31,10 @@ func contractCallWrap(c *cli.Context, funcParams []string, funcName, contract st
 	// abi bytes parsing
 	contractAbi, _ := packet.ParseAbiFromJson(funcAbi)
 	// find the method in abi obj.
-	methodAbi, _ := contractAbi.GetFuncFromAbi(funcName)
+	methodAbi, err1 := contractAbi.GetFuncFromAbi(funcName)
+	if err1 != nil{
+		utl.Fatalf(err1.Error())
+	}
 	// convert user input string to args in Golang
 	funcArgs, _ := methodAbi.StringToArgs(funcParams)
 
