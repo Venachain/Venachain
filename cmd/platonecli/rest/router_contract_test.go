@@ -14,23 +14,26 @@ import (
 )
 
 // ================== Contract Execute ====================
-const (
+var (
+	testContractDeployWasmBody string
+	testContractDeployEvmBody  string
+	testContractExecRawBody    string
+)
+
+func initRoutContractTest() {
+	txSender = getTestTxSender()
 	testContractDeployWasmBody = "{\"tx\":{\"from\": \"" + txSender + "\", \"gas\":\"0x10\"}," +
 		"\"contract\":{\"data\": {\"params\": \"()\"},\"interpreter\": \"wasm\"}," +
-		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\"}}"
+		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\",\"passphrase\":\"" + testPassphrase + "\"}}"
 
 	testContractDeployEvmBody = "{\"tx\":{\"from\": \"" + txSender + "\", \"gas\":\"0x10\"}," +
 		"\"contract\":{\"data\": {\"params\": \"()\"},\"interpreter\": \"evm\"}," +
-		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\"}}"
+		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\",\"passphrase\":\"" + testPassphrase + "\"}}"
 
-	testContractExecBody = "{\"tx\":{\"from\": \"" + txSender + "\", \"gas\":\"0x10\"}," +
+	testContractExecRawBody = "{\"tx\":{\"from\": \"" + txSender + "\", \"gas\":\"0x10\"}," +
 		"\"contract\":{\"method\":\"invokeNotify\",\"data\": {\"params\": \"(this is a test)\"},\"interpreter\": \"wasm\"}," +
-		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\"}}"
-
-	testContractExecRawBody = "{\"tx\":{\"from\": \"0xf1b043d71ef5484d960a6f369a057386264d8c4b\", \"gas\":\"0x10\"}," +
-		"\"contract\":{\"method\":\"invokeNotify\",\"data\": {\"params\": \"(this is a test)\"},\"interpreter\": \"wasm\"}," +
-		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\", \"passphrase\":\"123456\"}}"
-)
+		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\",\"passphrase\":\"" + testPassphrase + "\"}}"
+}
 
 type uploadFile struct {
 	path string
@@ -145,7 +148,6 @@ func TestContractExecHandlers(t *testing.T) {
 		body         string
 		expectedCode int
 	}{
-		/// {"POST", "/contract/" + testContractAddr, testContractExecBody, 200},
 		{"POST", "/contracts/" + testContractAddr, testContractExecRawBody, 200},
 	}
 

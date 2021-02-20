@@ -39,13 +39,13 @@ func TestGetDataParams(t *testing.T) {
 
 		// other cases
 		{*newTestInfo("tofu", "0.0.0.1", "0x9ccf0b561c9142d3a771ce2131db8bc9fba61f6f"), true},
-		{[]string{"tofu"}, true},
+		{[]string{"tofu"}, false},
 	}
 
 	for _, data := range testCases {
 		res, err := getDataParams(data.Info)
 		if err != nil {
-			t.Errorf("error: %v", err)
+			t.Logf("error: %v\n", err)
 		}
 
 		valid := paramsCheck(data.Info)
@@ -59,7 +59,7 @@ func TestGetDataParams(t *testing.T) {
 }
 
 func TestJsonUnmarshal(t *testing.T) {
-	testCase := "{\"status\":2}"
+	testCase := "{\"status\":\"2\"}"
 
 	testStruct := &struct {
 		Status string `json:"status"`

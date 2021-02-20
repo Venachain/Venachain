@@ -10,30 +10,39 @@ import (
 )
 
 // ================== Fire Wall =========================
-const (
+var (
+	testFwNewRuleBody    string
+	testFwClearRuleBody  string
+	testFwDeleteRuleBody string
+	testFwStatusBody     string
+	testFwStatusErrBody  string
+	testFwOffBody        string
+)
+
+func initRouterFwTest() {
 	testFwNewRuleBody = "{\"tx\":{\"from\": \"" + txSender + "\", \"gas\":\"0x10\"}," +
 		"\"contract\":{\"data\":{\"action\":\"ACCEPT\", \"rules\":\"0x5585cc9e9dc2b383fcbbbfd758744ada62427202:*|*:funcName2|0x5585cc9e9dc2b383fcbbbfd758744ada62427201:funcName3\"}}," +
-		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\"}}"
+		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\",\"passphrase\":\"" + testPassphrase + "\"}}"
 
 	testFwClearRuleBody = "{\"tx\":{\"from\": \"" + txSender + "\", \"gas\":\"0x10\"}," +
 		"\"contract\":{\"data\":{\"action\":\"ACCEPT\"}}," +
-		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\"}}"
+		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\",\"passphrase\":\"" + testPassphrase + "\"}}"
 
 	testFwDeleteRuleBody = "{\"tx\":{\"from\": \"" + txSender + "\", \"gas\":\"0x10\"}," +
 		"\"contract\":{\"data\":{\"action\":\"ACCEPT\", \"rules\":\"0x5585cc9e9dc2b383fcbbbfd758744ada62427201:funcName3\"}}," +
-		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\"}}"
+		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\",\"passphrase\":\"" + testPassphrase + "\"}}"
 
 	testFwStatusBody = "{\"tx\":{\"from\": \"" + txSender + "\", \"gas\":\"0x10\"}," +
-		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\"}}"
+		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\",\"passphrase\":\"" + testPassphrase + "\"}}"
 
 	testFwStatusErrBody = "{\"tx\":{\"from\": \"" + txSender + "\", \"gas\":\"0x10\"}," +
 		"\"contract\":{\"data\":{\"address\":\"0x1000000000000000000000000000000000000001\"}}," +
-		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\"}}"
+		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\",\"passphrase\":\"" + testPassphrase + "\"}}"
 
 	testFwOffBody = "{\"tx\":{\"from\": \"" + txSender + "\", \"gas\":\"0x10\"}," +
 		"\"contract\":{\"data\":{\"status\":\"false\"}}," +
-		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\"}}"
-)
+		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\",\"passphrase\":\"" + testPassphrase + "\"}}"
+}
 
 func TestFwHandlers(t *testing.T) {
 	testCase := []struct {

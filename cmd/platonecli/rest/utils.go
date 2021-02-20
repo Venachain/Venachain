@@ -29,7 +29,7 @@ func getDataParams(i interface{}) ([]string, error) {
 	}
 
 	if t.Kind() != reflect.Struct {
-		return nil, errors.New("todo")
+		return nil, errors.New("data is not struct type")
 	}
 
 	for i := 0; i < v.NumField(); i++ {
@@ -44,7 +44,7 @@ func getDataParams(i interface{}) ([]string, error) {
 			funcParams = append(funcParams, string(marshalBytes))
 			continue
 		} else if value.Type().Kind() != reflect.String {
-			return nil, errors.New("todo")
+			return nil, errors.New("data type not support")
 		}
 
 		temp := value.String()
@@ -74,6 +74,10 @@ func paramsCheck(i interface{}) bool {
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 		v = v.Elem()
+	}
+
+	if t.Kind()!=reflect.Struct{
+		return false
 	}
 
 	for i := 0; i < t.NumField(); i++ {

@@ -10,31 +10,40 @@ import (
 )
 
 // ================== system configuration =========================
-const (
+var (
+	testGasLimitBody    string
+	testGasLimitErrBody string
+	testSysParamBody    string
+	testSysParamErrBody string
+	testGasNameBody     string
+	testGasNameErrBody  string
+)
+
+func initRouterSysconfigTest() {
 	testGasLimitBody = "{\"tx\":{\"from\": \"" + txSender + "\", \"gas\":\"0x10\"}," +
 		"\"contract\":{\"data\":{\"blockGasLimit\":\"2000000000\"}}," +
-		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\"}}"
+		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\",\"passphrase\":\"" + testPassphrase + "\"}}"
 
 	testGasLimitErrBody = "{\"tx\":{\"from\": \"" + txSender + "\", \"gas\":\"0x10\"}," +
 		"\"contract\":{\"data\":{\"blockGasLimit\":\"1000000000\"}}," +
-		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\"}}"
+		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\",\"passphrase\":\"" + testPassphrase + "\"}}"
 
 	testSysParamBody = "{\"tx\":{\"from\": \"" + txSender + "\", \"gas\":\"0x10\"}," +
 		"\"contract\":{\"data\":{\"sysParam\":\"1\"}}," +
-		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\"}}"
+		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\",\"passphrase\":\"" + testPassphrase + "\"}}"
 
 	testSysParamErrBody = "{\"tx\":{\"from\": \"" + txSender + "\", \"gas\":\"0x10\"}," +
 		"\"contract\":{\"data\":{\"sysParam\":\"3\"}}," +
-		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\"}}"
+		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\",\"passphrase\":\"" + testPassphrase + "\"}}"
 
 	testGasNameBody = "{\"tx\":{\"from\": \"" + txSender + "\", \"gas\":\"0x10\"}," +
 		"\"contract\":{\"data\":{\"contractName\":\"tofu\"}}," +
-		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\"}}"
+		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\",\"passphrase\":\"" + testPassphrase + "\"}}"
 
 	testGasNameErrBody = "{\"tx\":{\"from\": \"" + txSender + "\", \"gas\":\"0x10\"}," +
 		"\"contract\":{\"data\":{\"contractName\":\"@alice\"}}," +
-		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\"}}"
-)
+		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\",\"passphrase\":\"" + testPassphrase + "\"}}"
+}
 
 func TestSysConfigHandlers(t *testing.T) {
 	testCase := []struct {
