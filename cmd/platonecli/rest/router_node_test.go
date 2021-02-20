@@ -11,15 +11,20 @@ import (
 
 // ================== Node management =========================
 
-const (
+var (
+	testNodeAddBody    string
+	testNodeUpdateBody string
+)
+
+func initRouterNodeTest() {
 	testNodeAddBody = "{\"tx\":{\"from\": \"" + txSender + "\", \"gas\":\"0x10\"}," +
 		"\"contract\":{\"data\": {\"info\": {\"name\":\"node0\",\"status\":1,\"internalIP\":\"127.0.0.1\",\"publicKey\":\"64a684197dbc77b69f418c511e55adb7a4a532a88d25d8e9d34667141d53790b5ff84ed385e35ade60ea9e610b3ac54499119fd1a9bf1344d319aeceadcb5bb7\",\"p2pPort\":8888}},\"interpreter\": \"wasm\"}," +
-		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\"}}"
+		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\",\"passphrase\":\"" + testPassphrase + "\"}}"
 
 	testNodeUpdateBody = "{\"tx\":{\"from\": \"" + txSender + "\", \"gas\":\"0x10\"}," +
 		"\"contract\":{\"data\": {\"info\": {\"status\":2}},\"interpreter\": \"wasm\"}," +
-		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\"}}"
-)
+		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\",\"passphrase\":\"" + testPassphrase + "\"}}"
+}
 
 func TestNodeHandlers(t *testing.T) {
 	testCase := []struct {

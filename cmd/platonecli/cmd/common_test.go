@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	testConfigFilePath = "./test/test_case/config.json"
+	testConfigFilePath = "../test/test_case/config.json"
 	testAccount        = "0x60ceca9c1290ee56b98d4e160ef0453f7c40d219"
 )
 
@@ -31,8 +31,8 @@ func TestParamParse(t *testing.T) {
 		paramName string
 		result    interface{}
 	}{
-		{testAccount, "contract", true},
-		{"Alice_02", "contract", false},
+		{testAccount, "contract", cmd_common.CnsIsAddress},
+		{"Alice_02", "contract", cmd_common.CnsIsName},
 		//{"Alice.bob", "contract"},
 		//{"na*&2", "contract"},
 		//{"-1", "p2pPort"},
