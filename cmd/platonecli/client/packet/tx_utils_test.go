@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	TEST_ABI_FILE_PATH = "../test/test_case/wasm/contracta.cpp.abi.json"
+	TEST_ABI_FILE_PATH = "../../test/test_case/wasm/contracta.cpp.abi.json"
 )
 
 func TestGetNonceRand(t *testing.T) {
@@ -46,7 +46,17 @@ func TestParseFuncFromAbi(t *testing.T) {
 	}
 
 	for i, data := range testCase {
-		funcDesc, err := ParseFuncFromAbi(data.abiBytes, data.funcName)
+		contractApi, err := ParseAbiFromJson(data.abiBytes)
+		if err != nil {
+			t.Log(err)
+			continue
+		}
+
+		funcDesc, err := contractApi.GetFuncFromAbi(data.funcName)
+		if err != nil {
+			t.Log(err)
+			continue
+		}
 
 		switch {
 		case err != nil:

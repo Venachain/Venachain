@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/utils"
 )
 
 func TestEvmStringToEncodeByte(t *testing.T) {
@@ -49,16 +49,20 @@ func TestEvmUnpack(t *testing.T) {
 		"0339ede104561962311dacf91b9c5faea8f21c3df2b7810743725c943a25f6ff" +
 		"0a2bba17994e1543194d6c73d4e5b7ff721e4a6cb47685a9e65e5625686f2215"
 
-	funcAbi, err := utils.ParseFileToBytes("../test/test_case/sol/privacyToken_sol_PToken.abi")
+	funcAbi, err := utils.ParseFileToBytes("../../test/test_case/sol/privacyToken.abi")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	abiFunc, err := ParseFuncFromAbi(funcAbi, "simulateAccounts") //修改
+	contractApi, err := ParseAbiFromJson(funcAbi)
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	abiFunc, err := contractApi.GetFuncFromAbi("simulateAccounts")
+	if err != nil {
+		t.Fatal(err)
+	}
 	outputType := abiFunc.Outputs
 
 	arguments := GenUnpackArgs(outputType)
