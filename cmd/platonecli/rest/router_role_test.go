@@ -31,15 +31,15 @@ func TestRoleHandlers(t *testing.T) {
 		body         string
 		expectedCode int
 	}{
-		//{"POST", "/role/role-lists/super-admin", testNullBody, 200},
+		{"POST", "/role/role-lists/super-admin", testNullBody, 200},
 		{"PUT", "/role/role-lists/super-admin", testRoleBody, 200},
-		//
-		//{"PATCH", "/role/role-lists/contract-deployer", testRoleBody, 200},
-		//{"PATCH", "/role/role-lists/chain-admin", testRoleBody, 200},
-		//{"DELETE", "/role/role-lists/contract-deployer", testRoleBody, 200},
-		//
-		//{"GET", "/role/user-lists/" + txSender, "", 200},
-		//{"GET", "/role/role-lists/chain-admin", "", 200},
+
+		{"PATCH", "/role/role-lists/contract-deployer", testRoleBody, 200},
+		{"PATCH", "/role/role-lists/chain-admin", testRoleBody, 200},
+		{"DELETE", "/role/role-lists/contract-deployer", testRoleBody, 200},
+
+		{"GET", "/role/user-lists/" + txSender, "", 200},
+		{"GET", "/role/role-lists/chain-admin", "", 200},
 	}
 
 	router := genRestRouters()
