@@ -17,6 +17,7 @@
 package types
 
 import (
+	"bytes"
 	"container/heap"
 	"errors"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
@@ -35,6 +36,7 @@ import (
 
 var (
 	ErrInvalidSig           = errors.New("invalid transaction v, r, s values")
+	ErrInvalidOldTrx        = errors.New("invalid old transaction payload")
 	TransactionsRlpCache, _ = lru.NewARC(4)
 )
 
@@ -72,9 +74,9 @@ type txdataMarshaling struct {
 	Amount       *hexutil.Big
 	Payload      hexutil.Bytes
 	//CnsData	     hexutil.Bytes
-	V      *hexutil.Big
-	R      *hexutil.Big
-	S      *hexutil.Big
+	V *hexutil.Big
+	R *hexutil.Big
+	S *hexutil.Big
 }
 
 func NewTransaction(nonce uint64, to common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte) *Transaction {
@@ -173,7 +175,6 @@ func (tx *Transaction) UnmarshalJSON(input []byte) error {
 	return nil
 }
 
-
 //func (tx *Transaction) Cns() []byte    { return common.CopyBytes(tx.data.CnsData) }
 func (tx *Transaction) Data() []byte       { return common.CopyBytes(tx.data.Payload) }
 func (tx *Transaction) Gas() uint64        { return tx.data.GasLimit }
@@ -234,6 +235,27 @@ func (tx *Transaction) AsMessage(s Signer) (*Message, error) {
 	var err error
 	msg.from, err = Sender(s, tx)
 	return &msg, err
+}
+
+// transactions from below 1.0 version do not have a correct signature,extract sender address from payload
+func (tx *Transaction) OldAsMessage() (*Message, error) {
+	if len(tx.data.Payload) < OldTxPrefixLen+common.AddressLength ||
+		!bytes.Equal(tx.data.Payload[:OldTxPrefixLen], OldTxPrefix) {
+		return nil, ErrInvalidOldTrx
+	}
+
+	msg := Message{
+		nonce:      tx.data.AccountNonce,
+		gasLimit:   tx.data.GasLimit,
+		gasPrice:   new(big.Int).Set(tx.data.Price),
+		to:         tx.data.Recipient,
+		amount:     tx.data.Amount,
+		data:       tx.data.Payload[OldTxPrefixLen+common.AddressLength:],
+		checkNonce: true,
+	}
+
+	msg.from = common.BytesToAddress(tx.data.Payload[OldTxPrefixLen : OldTxPrefixLen+common.AddressLength])
+	return &msg, nil
 }
 
 // WithSignature returns a new transaction with the given signature.

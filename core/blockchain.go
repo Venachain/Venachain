@@ -18,21 +18,17 @@
 package core
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"math/big"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/mclock"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/prque"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
@@ -452,92 +448,6 @@ func (bc *BlockChain) repair(head **types.Block, sortedMissingStateBlocks *types
 	return nil
 }
 
-// Export writes the active chain to the given writer.
-func (bc *BlockChain) Export(w io.Writer, version string) error {
-	return bc.ExportN(w, version, uint64(0), bc.CurrentBlock().NumberU64())
-}
-
-// ExportN writes a subset of the active chain to the given writer.
-func (bc *BlockChain) ExportN(w io.Writer, version string, first uint64, last uint64) error {
-	bc.mu.RLock()
-	defer bc.mu.RUnlock()
-
-	if first > last {
-		return fmt.Errorf("export failed: first (%d) is greater than last (%d)", first, last)
-	}
-	log.Info("Exporting batch of blocks", "count", last-first+1)
-
-	// export pivot
-	rlp.Encode(w, last)
-
-	//export possible old system contracts
-	var addrSuperAdmin string
-	m := make(map[common.Address]string)
-	for k, v := range vm.CnsSysContractsMap {
-		if version < "1.0.0" {
-			input := common.GenCallData("getContractAddress", []interface{}{k, "latest"})
-			btsRes, err := bc.RunInterpreterDirectly(common.Address{}, syscontracts.CnsManagementAddress, input)
-			if err != nil {
-				continue
-			}
-			strRes := common.CallResAsString(btsRes)
-			if len(strRes) == 0 || common.IsHexZeroAddress(strRes) {
-				continue
-			}
-			taddr := common.HexToAddress(strRes)
-			m[taddr] = k
-
-			if k == "__sys_RoleManager" {
-				input = common.GenCallData("getAccountsByRole", []interface{}{"chainCreator"})
-				btsRes, err = bc.RunInterpreterDirectly(common.Address{}, taddr, input)
-				if err != nil {
-					continue
-				}
-				strRes = common.CallResAsString(btsRes)
-
-				type tmpResInfo struct {
-					Name    string `json:"name"`
-					Address string `json:"address"`
-				}
-				type tmpResType struct {
-					Code int          `json:"code"`
-					Msg  string       `json:"msg"`
-					Data []tmpResInfo `json:"data"`
-				}
-				var tmp tmpResType
-				if err := json.Unmarshal(utils.String2bytes(strRes), &tmp); err != nil || tmp.Code != 0 || len(tmp.Data) < 1 {
-					continue
-				}
-				addrSuperAdmin = tmp.Data[0].Address
-			}
-		} else {
-			m[v] = k
-		}
-	}
-	b, err := json.Marshal(m)
-	if err != nil {
-		return err
-	}
-	rlp.Encode(w, b)
-	rlp.Encode(w, addrSuperAdmin)
-
-	start, reported := time.Now(), time.Now()
-	for nr := first; nr <= last; nr++ {
-		block := bc.GetBlockByNumber(nr)
-		if block == nil {
-			return fmt.Errorf("export failed on #%d: not found", nr)
-		}
-		if err := block.EncodeRLP(w); err != nil {
-			return err
-		}
-		if time.Since(reported) >= statsReportLimit {
-			log.Info("Exporting blocks", "exported", block.NumberU64()-first, "elapsed", common.PrettyDuration(time.Since(start)))
-			reported = time.Now()
-		}
-	}
-	return nil
-}
-
 func (bc *BlockChain) runInterpreter(evm *vm.EVM, contract *vm.Contract, input []byte) ([]byte, error) {
 	for _, interpreter := range evm.Interpreters() {
 		var ok bool
@@ -698,7 +608,7 @@ func (bc *BlockChain) GetBlockByHash(hash common.Hash) *types.Block {
 	if number == nil {
 		return nil
 	}
-	return bc.GetBlock(hash, *number)
+	return bc.GetBlockMaybeOld(hash, *number, params.Version)
 }
 
 // GetBlockByNumber retrieves a block from the database by number, caching it
@@ -708,7 +618,7 @@ func (bc *BlockChain) GetBlockByNumber(number uint64) *types.Block {
 	if hash == (common.Hash{}) {
 		return nil
 	}
-	return bc.GetBlock(hash, number)
+	return bc.GetBlockMaybeOld(hash, number, params.Version)
 }
 
 // GetReceiptsByHash retrieves the receipts for all transactions in a given block.

@@ -19,6 +19,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"os"
 	"runtime"
 	"strconv"
@@ -303,13 +304,16 @@ func exportChain(ctx *cli.Context) error {
 	if len(ctx.Args()) < 1 {
 		utils.Fatalf("This command requires an argument.")
 	}
-	stack := makeFullNode(ctx)
-	chain, _ := utils.MakeChain(ctx, stack)
-	start := time.Now()
+
 	version := ctx.String(utils.ReleaseFlag.Name)
 	if version == "" {
 		utils.Fatalf("\"relese\" flag is required\n")
 	}
+	params.Version = version
+
+	stack := makeFullNode(ctx)
+	chain, _ := utils.MakeChain(ctx, stack)
+	start := time.Now()
 	var err error
 	fp := ctx.Args().First()
 	if len(ctx.Args()) < 3 {

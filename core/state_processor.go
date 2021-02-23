@@ -120,7 +120,17 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 		gas = params.TxGas
 		gasPrice = 0
 	} else {
-		msg, err := tx.AsMessage(signer)
+		var msg *types.Message
+		var err error
+		if header.Number.Uint64() <= common.SysCfg.ReplayParam.Pivot {
+			msg, err = tx.OldAsMessage()
+			if err == types.ErrInvalidOldTrx {
+				msg, err = tx.AsMessage(signer)
+			}
+		} else {
+			msg, err = tx.AsMessage(signer)
+		}
+
 		// Replay situation,reflect address
 		if header.Number.Uint64() < common.SysCfg.ReplayParam.Pivot && msg.To() != nil {
 			if n := common.SysCfg.ReplayParam.OldSysContracts[*msg.To()]; n != "" {
