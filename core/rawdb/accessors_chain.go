@@ -61,8 +61,8 @@ func SetBlockReceiptsCache(number uint64, hash common.Hash, receipts types.Recei
 
 // ReadCanonicalHash retrieves the hash assigned to a canonical block number.
 func ReadCanonicalHash(db DatabaseReader, number uint64) common.Hash {
-	data, _ := db.Get(headerHashKey(number))
-	if len(data) == 0 {
+	data, err := db.Get(headerHashKey(number))
+	if len(data) == 0 || err != nil {
 		return common.Hash{}
 	}
 	return common.BytesToHash(data)
