@@ -7,8 +7,9 @@
 * [other] 删除eip，DAO等版本升级的Hard Fork和兼容性检查;
 * [other] 删除Rinkeby，Testnet;删除ChainConfig的EmptyBlock设置;删除Clique；删除difficulty；删除dev模式；
 * [other] 删除默认配置,并重写了genesis初始化逻辑。
-* [other]交易处理生命周期全流程优化  - 张玉坚
-* [p2p] 修改protocol协议为platoneV1，交易广播添加hash广播  - 张玉坚
+* [other] 交易处理生命周期全流程优化  - 张玉坚
+* [p2p]   修改protocol协议为platoneV1，交易广播添加hash广播  - 张玉坚
+* [other] 交易结构中删除了txtype字段
 
 
 ### Improvements
