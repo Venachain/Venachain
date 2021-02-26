@@ -6,4 +6,4 @@ add_subdirectory(appDemo)
 
 #add_subdirectory(DataContract)
 
-add_subdirectory(mycontract1)
+#add_subdirectory(mycontract1)
