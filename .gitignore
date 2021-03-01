@@ -59,8 +59,6 @@ coverage.txt
 *.exe
 *.test
 
-go.sum
-
 life/resolver/builtins/build
 life/resolver/softfloat/build
 # life/resolver/softfloat/*
