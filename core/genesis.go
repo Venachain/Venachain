@@ -173,7 +173,11 @@ func SetupGenesisBlock(db ethdb.Database, genesis *Genesis) (*params.ChainConfig
 		}
 	}
 
-	log.Info("Chain already have been initialized.")
+	if storedcfg != nil {
+		log.Info("Chain already have been initialized.")
+	} else {
+		log.Error("no genesis config found,maybe you should run \"platone init \" with proper params first")
+	}
 	return storedcfg, stored, nil
 }
 

@@ -180,8 +180,11 @@ func (n *Node) Start() error {
 
 		// Construct and save the service
 		service, err := constructor(ctx)
-		if err != nil {
+		if err != nil{
 			return err
+		}
+		if  reflect.ValueOf(service).IsNil(){
+			return fmt.Errorf("service is nil")
 		}
 		kind := reflect.TypeOf(service)
 		if _, exists := services[kind]; exists {

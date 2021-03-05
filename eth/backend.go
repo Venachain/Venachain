@@ -128,7 +128,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		return nil, err
 	}
 	chainConfig, _, genesisErr := core.SetupGenesisBlock(chainDb, config.Genesis)
-	if genesisErr != nil {
+	if chainConfig == nil || genesisErr != nil {
 		return nil, genesisErr
 	}
 	log.Info("Initialised chain configuration", "config", chainConfig)
@@ -257,6 +257,9 @@ func CreateExtDB(ctx *node.ServiceContext, config *Config, name string) (ethdb.D
 
 // CreateConsensusEngine creates the required type of consensus engine instance for an Ethereum service
 func CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *params.ChainConfig, db ethdb.Database) consensus.Engine {
+	if ctx == nil || chainConfig == nil {
+		return nil
+	}
 	if chainConfig.Istanbul != nil {
 		return istanbulBackend.New(chainConfig.Istanbul, ctx.NodeKey(), db)
 	}
