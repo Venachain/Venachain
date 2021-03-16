@@ -509,9 +509,15 @@ func (w *worker) taskLoop() {
 			if w.skipSealHook != nil && w.skipSealHook(task) {
 				continue
 			}
-			w.pendingMu.Lock()
-			w.pendingTasks[sealHash] = task
-			w.pendingMu.Unlock()
+
+			isEmpty := task.block.Transactions().Len() == 0
+			isProduceEmptyBlock := common.SysCfg.IsProduceEmptyBlock()
+
+			if !isEmpty || isProduceEmptyBlock {
+				w.pendingMu.Lock()
+				w.pendingTasks[sealHash] = task
+				w.pendingMu.Unlock()
+			}
 
 			if _, ok := w.engine.(consensus.Istanbul); ok {
 				// todo: shouldSeal()
