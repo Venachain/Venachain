@@ -8,11 +8,11 @@ import (
 	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/precompiled"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
 // MessageCallDemo, the interface for different types of data package methods
@@ -343,13 +343,14 @@ type EvmDeployInterpreter struct {
 // combineDeployData packet the data in the way defined by the evm virtual mechine
 // Implement the Interpreter interface
 func (i *EvmDeployInterpreter) combineData() (string, error) {
-	arguments, _ := i.constructorAbi.getArguments()
-	constructorBytes, _ := arguments.PackV2(i.constructorInput)
+	if i.constructorAbi != nil {
+		arguments, _ := i.constructorAbi.getArguments()
+		constructorBytes, _ := arguments.PackV2(i.constructorInput)
 
-	if i.constructorInput != nil {
-		return "0x" + string(i.codeBytes) + common.Bytes2Hex(constructorBytes), nil
+		if i.constructorInput != nil {
+			return "0x" + string(i.codeBytes) + common.Bytes2Hex(constructorBytes), nil
+		}
 	}
-
 	return "0x" + string(i.codeBytes), nil
 }
 
