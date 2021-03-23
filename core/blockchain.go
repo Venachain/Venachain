@@ -161,7 +161,7 @@ func NewBlockChain(db ethdb.Database, extdb ethdb.Database, cacheConfig *CacheCo
 		triegc:         prque.New(nil),
 		stateCache:     state.NewDatabase(db),
 		quit:           make(chan struct{}),
-		updateCh:       make(chan *ReceiptsTask, 1),
+		updateCh:       make(chan *ReceiptsTask, 0),
 		shouldPreserve: shouldPreserve,
 		bodyCache:      bodyCache,
 		bodyRLPCache:   bodyRLPCache,
@@ -1010,9 +1010,9 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 }
 
 func (bc *BlockChain) cacheData(block *types.Block, receipts []*types.Receipt) {
+	bc.insertData(block, receipts)
 	rawdb.SetBlockReceiptsCache(block.NumberU64(), block.Hash(), receipts)
 	rawdb.SetTxLookupEntryCache(block)
-	bc.insertData(block, receipts)
 }
 
 func (bc *BlockChain) insertData(block *types.Block, receipts []*types.Receipt) {
@@ -1061,9 +1061,9 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 	// faster than direct delivery and requires much less mutex
 	// acquiring.
 	var (
-		stats         = insertStats{startTime: mclock.Now()}
-		events        = make([]interface{}, 0, len(chain))
-		lastCanon     *types.Block
+		stats  = insertStats{startTime: mclock.Now()}
+		events = make([]interface{}, 0, len(chain))
+		//lastCanon     *types.Block
 		coalescedLogs []*types.Log
 	)
 
@@ -1215,7 +1215,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 			coalescedLogs = append(coalescedLogs, logs...)
 			blockInsertTimer.UpdateSince(bstart)
 			events = append(events, ChainEvent{fblock, fblock.Hash(), logs})
-			lastCanon = fblock
+			events = append(events, ChainHeadEvent{block})
 
 			// Only count canonical blocks for GC processing time
 			bc.gcproc += proctime
@@ -1234,9 +1234,9 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		stats.report(chain, i, cache)
 	}
 	// Append a single chain head event if we've progressed the chain
-	if lastCanon != nil && bc.CurrentBlock().Hash() == lastCanon.Hash() {
-		events = append(events, ChainHeadEvent{lastCanon})
-	}
+	//if lastCanon != nil && bc.CurrentBlock().Hash() == lastCanon.Hash() {
+	//	events = append(events, ChainHeadEvent{lastCanon})
+	//}
 	return 0, events, coalescedLogs, nil
 }
 

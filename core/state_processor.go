@@ -104,13 +104,14 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	if tx.To() != nil {
 		to = *tx.To()
 	}
-	if tx.Data() == nil && statedb.GetCode(to) == nil {
+	if (tx.Data() == nil || len(tx.Data()) == 0) && statedb.GetCode(to) == nil {
 		value := tx.Value()
 		from, _ = types.Sender(signer, tx)
 		if statedb.GetBalance(from).Cmp(value) < 0 {
 			failed = true
 			err = vm.ErrInsufficientBalance
 		} else {
+			statedb.SetNonce(from, statedb.GetNonce(from)+1)
 			statedb.SubBalance(from, value)
 			statedb.AddBalance(to, value)
 			failed = false
