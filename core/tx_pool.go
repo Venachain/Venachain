@@ -729,10 +729,6 @@ func (pool *TxPool) local() map[common.Address]types.Transactions {
 // validateTx checks whether a transaction is valid according to the consensus
 // rules and adheres to some heuristic limits of the local node (price and size).
 func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
-	if ok, _ := rawdb.HasTransaction(pool.db, tx.Hash()); ok {
-		log.Error("Transaction Repeat", "hash", tx.Hash().String())
-		return ErrTransactionRepeat
-	}
 
 	// Heuristic limit, reject transactions over 32KB to prevent DOS attacks
 	// 32kb -> 1m
@@ -786,6 +782,10 @@ func (pool *TxPool) add(tx *types.Transaction, local bool) (bool, error) {
 	// If the transaction is already known, discard it
 	hash := tx.Hash()
 
+	if ok, _ := rawdb.HasTransaction(pool.db, tx.Hash()); ok {
+		log.Error("Transaction Repeat", "hash", tx.Hash().String())
+		return false, ErrTransactionRepeat
+	}
 	// If the transaction is replacing an already pending one, do directly
 	from, _ := types.Sender(pool.signer, tx) // already validated
 
@@ -1440,7 +1440,7 @@ func (pool *TxPool) generateTxs(cnt string, addr common.Address, preProducer boo
 		var gasLimit = 1 + threadNum
 		for i := 0; i < cnt; i++ {
 			nonce := time.Now().UnixNano()
-			tx := types.NewTransaction(uint64(nonce), addr, big.NewInt(1), uint64(gasLimit), big.NewInt(1), nil)
+			tx := types.NewTransaction(uint64(nonce), addr, big.NewInt(0), uint64(gasLimit), big.NewInt(1), nil)
 			signedTx, _ := types.SignTx(tx, types.HomesteadSigner{}, pool.pk)
 			types.Sender(pool.signer, signedTx) // already validated
 			tx.Hash()
@@ -1477,7 +1477,7 @@ func (pool *TxPool) generateTxs(cnt string, addr common.Address, preProducer boo
 	addtx := func(txs types.Transactions) {
 		pool.mu.Lock()
 		defer pool.mu.Unlock()
-		for _, tx := range batch {
+		for _, tx := range txs {
 			hash := tx.Hash()
 
 			from, _ := types.Sender(pool.signer, tx) // already validated
@@ -1485,6 +1485,7 @@ func (pool *TxPool) generateTxs(cnt string, addr common.Address, preProducer boo
 			if !pool.promoteTx(from, hash, tx) {
 				errCnt++
 			}
+			go pool.txFeed.Send(NewTxsEvent{types.Transactions{tx}})
 			insertCnt++
 		}
 	}
