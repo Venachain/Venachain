@@ -35,7 +35,6 @@ function check_ip() {
 
 function create_node_key() {
     keyinfo=`${BIN_PATH}/ethkey genkeypair | sed s/[[:space:]]//g`
-    keyinfo=${keyinfo,,}
     address=${keyinfo:10:40}
     prikey=${keyinfo:62:64}
     pubkey=${keyinfo:137:128}
@@ -73,16 +72,21 @@ function create_node_key() {
 
 function replaceList() {
     res=`echo $2 | sed "s/,/\",\"/g"`
+    echo $
     ${BIN_PATH}/repstr ${CONF_PATH}/genesis.json $1 `echo \"${res}\"`
 }
 
 function create_genesis() {
+    os=`uname`
+    if [ "${os}" = "Darwin" ]; then
+        create_genesis_darwin "$@"
+        return
+    fi
     if [ -f ${CONF_PATH}/genesis.json ]; then
         mkdir -p ${CONF_PATH}/bak
         mv ${CONF_PATH}/genesis.json ${CONF_PATH}/bak/genesis.json.bak.`date '+%Y%m%d%H%M%S'`
     fi
     cp ${CONF_PATH}/genesis.json.istanbul.template ${CONF_PATH}/genesis.json
-
 
     NODE_KEY=`cat ${NODE_DIR}/node.pubkey`
     NODE_ADDRESS=`cat ${NODE_DIR}/node.address`
@@ -97,13 +101,44 @@ function create_genesis() {
      ${BIN_PATH}/repstr ${CONF_PATH}/genesis.json "__INTERPRETER__" ${INTERPRETER}
 
 #    ${BIN_PATH}/ctool codegen --abi ${CONF_PATH}/contracts/cnsProxy.cpp.abi.json --code ${CONF_PATH}/contracts/cnsProxy.wasm > ${CONF_PATH}/cns-code.hex
-    
+
 #    ${BIN_PATH}/repstr ${CONF_PATH}/genesis.json "CNS-CODE" -f ${CONF_PATH}/cns-code.hex
 #    rm -rf ${CONF_PATH}/cns-code.hex
 
     now=`date +%s`
 
     ${BIN_PATH}/repstr ${CONF_PATH}/genesis.json "TIMESTAMP" $now
+
+    echo "[INFO]: Create genesis succ. File: ${CONF_PATH}/genesis.json"
+}
+
+function create_genesis_darwin() {
+    if [ -f ${CONF_PATH}/genesis.json ]; then
+        mkdir -p ${CONF_PATH}/bak
+        mv ${CONF_PATH}/genesis.json ${CONF_PATH}/bak/genesis.json.bak.`date '+%Y%m%d%H%M%S'`
+    fi
+    cp ${CONF_PATH}/genesis.json.istanbul.template ${CONF_PATH}/genesis.json
+
+
+    NODE_KEY=`cat ${NODE_DIR}/node.pubkey`
+    NODE_ADDRESS=`cat ${NODE_DIR}/node.address`
+    default_enode="enode://${NODE_KEY}@${1}:${2}"
+    if [[ $VALIDATOR_NODES != "" ]]; then
+      sed -i '' "s#__VALIDATOR__#\"${VALIDATOR_NODES}\"#g" ${CONF_PATH}/genesis.json
+    else
+      sed -i '' "s#__VALIDATOR__#\"${default_enode}\"#g" ${CONF_PATH}/genesis.json
+    fi
+
+    sed -i '' "s/DEFAULT-ACCOUNT/${NODE_ADDRESS}/g" ${CONF_PATH}/genesis.json
+    sed -i '' "s/__INTERPRETER__/${INTERPRETER}/g" ${CONF_PATH}/genesis.json
+
+#    ${BIN_PATH}/ctool codegen --abi ${CONF_PATH}/contracts/cnsProxy.cpp.abi.json --code ${CONF_PATH}/contracts/cnsProxy.wasm > ${CONF_PATH}/cns-code.hex
+
+#    ${BIN_PATH}/repstr ${CONF_PATH}/genesis.json "CNS-CODE" -f ${CONF_PATH}/cns-code.hex
+#    rm -rf ${CONF_PATH}/cns-code.hex
+
+    now=`date +%s`
+    sed -i '' "s/TIMESTAMP/${now}/g" ${CONF_PATH}/genesis.json
 
     echo "[INFO]: Create genesis succ. File: ${CONF_PATH}/genesis.json"
 }
