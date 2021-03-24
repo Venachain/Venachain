@@ -1,32 +1,28 @@
 /*
- * Copyright 1999-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1999-2020 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
  */
 
 #include <openssl/opensslconf.h>
-#if defined(OPENSSL_NO_DES)
-NON_EMPTY_TRANSLATION_UNIT
-#else
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "apps.h"
+#include "progs.h"
+#include <openssl/crypto.h>
+#include <openssl/err.h>
+#include <openssl/pem.h>
+#include <openssl/pkcs12.h>
 
-# include <stdio.h>
-# include <stdlib.h>
-# include <string.h>
-# include "apps.h"
-# include "progs.h"
-# include <openssl/crypto.h>
-# include <openssl/err.h>
-# include <openssl/pem.h>
-# include <openssl/pkcs12.h>
-
-# define NOKEYS          0x1
-# define NOCERTS         0x2
-# define INFO            0x4
-# define CLCERTS         0x8
-# define CACERTS         0x10
+#define NOKEYS          0x1
+#define NOCERTS         0x2
+#define INFO            0x4
+#define CLCERTS         0x8
+#define CACERTS         0x10
 
 #define PASSWD_BUF_SIZE 2048
 
@@ -57,29 +53,44 @@ typedef enum OPTION_choice {
     OPT_NOMAC, OPT_LMK, OPT_NODES, OPT_MACALG, OPT_CERTPBE, OPT_KEYPBE,
     OPT_INKEY, OPT_CERTFILE, OPT_NAME, OPT_CSP, OPT_CANAME,
     OPT_IN, OPT_OUT, OPT_PASSIN, OPT_PASSOUT, OPT_PASSWORD, OPT_CAPATH,
-    OPT_CAFILE, OPT_CASTORE, OPT_NOCAPATH, OPT_NOCAFILE, OPT_NOCASTORE, OPT_ENGINE,
+    OPT_CAFILE, OPT_NOCAPATH, OPT_NOCAFILE, OPT_ENGINE,
     OPT_R_ENUM
 } OPTION_CHOICE;
 
 const OPTIONS pkcs12_options[] = {
-    OPT_SECTION("General"),
     {"help", OPT_HELP, '-', "Display this summary"},
-# ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
-# endif
-
-    OPT_SECTION("CA"),
-    {"CApath", OPT_CAPATH, '/', "PEM-format directory of CA's"},
-    {"CAfile", OPT_CAFILE, '<', "PEM-format file of CA's"},
-    {"CAstore", OPT_CASTORE, ':', "URI to store of CA's"},
-    {"no-CAfile", OPT_NOCAFILE, '-',
-     "Do not load the default certificates file"},
-    {"no-CApath", OPT_NOCAPATH, '-',
-     "Do not load certificates from the default certificates directory"},
-    {"no-CAstore", OPT_NOCASTORE, '-',
-     "Do not load certificates from the default certificates store"},
-
-    OPT_SECTION("Input"),
+    {"nokeys", OPT_NOKEYS, '-', "Don't output private keys"},
+    {"keyex", OPT_KEYEX, '-', "Set MS key exchange type"},
+    {"keysig", OPT_KEYSIG, '-', "Set MS key signature type"},
+    {"nocerts", OPT_NOCERTS, '-', "Don't output certificates"},
+    {"clcerts", OPT_CLCERTS, '-', "Only output client certificates"},
+    {"cacerts", OPT_CACERTS, '-', "Only output CA certificates"},
+    {"noout", OPT_NOOUT, '-', "Don't output anything, just verify"},
+    {"info", OPT_INFO, '-', "Print info about PKCS#12 structure"},
+    {"chain", OPT_CHAIN, '-', "Add certificate chain"},
+    {"twopass", OPT_TWOPASS, '-', "Separate MAC, encryption passwords"},
+    {"nomacver", OPT_NOMACVER, '-', "Don't verify MAC"},
+#ifndef OPENSSL_NO_RC2
+    {"descert", OPT_DESCERT, '-',
+     "Encrypt output with 3DES (default RC2-40)"},
+    {"certpbe", OPT_CERTPBE, 's',
+     "Certificate PBE algorithm (default RC2-40)"},
+#else
+    {"descert", OPT_DESCERT, '-', "Encrypt output with 3DES (the default)"},
+    {"certpbe", OPT_CERTPBE, 's', "Certificate PBE algorithm (default 3DES)"},
+#endif
+    {"export", OPT_EXPORT, '-', "Output PKCS12 file"},
+    {"noiter", OPT_NOITER, '-', "Don't use encryption iteration"},
+    {"maciter", OPT_MACITER, '-', "Use MAC iteration"},
+    {"nomaciter", OPT_NOMACITER, '-', "Don't use MAC iteration"},
+    {"nomac", OPT_NOMAC, '-', "Don't generate MAC"},
+    {"LMK", OPT_LMK, '-',
+     "Add local machine keyset attribute to private key"},
+    {"nodes", OPT_NODES, '-', "Don't encrypt private keys"},
+    {"macalg", OPT_MACALG, 's',
+     "Digest algorithm used in MAC (default SHA1)"},
+    {"keypbe", OPT_KEYPBE, 's', "Private key PBE algorithm (default 3DES)"},
+    OPT_R_OPTIONS,
     {"inkey", OPT_INKEY, 's', "Private key if not infile"},
     {"certfile", OPT_CERTFILE, '<', "Load certs from file"},
     {"name", OPT_NAME, 's', "Use name as friendly name"},
@@ -87,48 +98,20 @@ const OPTIONS pkcs12_options[] = {
     {"caname", OPT_CANAME, 's',
      "Use name as CA friendly name (can be repeated)"},
     {"in", OPT_IN, '<', "Input filename"},
-    {"passin", OPT_PASSIN, 's', "Input file pass phrase source"},
-
-    OPT_SECTION("Output"),
-    {"export", OPT_EXPORT, '-', "Output PKCS12 file"},
-    {"LMK", OPT_LMK, '-',
-     "Add local machine keyset attribute to private key"},
-    {"macalg", OPT_MACALG, 's',
-     "Digest algorithm used in MAC (default SHA1)"},
-    {"keypbe", OPT_KEYPBE, 's', "Private key PBE algorithm (default 3DES)"},
     {"out", OPT_OUT, '>', "Output filename"},
+    {"passin", OPT_PASSIN, 's', "Input file pass phrase source"},
     {"passout", OPT_PASSOUT, 's', "Output file pass phrase source"},
     {"password", OPT_PASSWORD, 's', "Set import/export password source"},
-    {"nocerts", OPT_NOCERTS, '-', "Don't output certificates"},
-    {"clcerts", OPT_CLCERTS, '-', "Only output client certificates"},
-    {"cacerts", OPT_CACERTS, '-', "Only output CA certificates"},
-    {"noout", OPT_NOOUT, '-', "Don't output anything, just verify"},
-    {"chain", OPT_CHAIN, '-', "Add certificate chain"},
-    {"twopass", OPT_TWOPASS, '-', "Separate MAC, encryption passwords"},
-    {"nomacver", OPT_NOMACVER, '-', "Don't verify MAC"},
-    {"info", OPT_INFO, '-', "Print info about PKCS#12 structure"},
-    {"nokeys", OPT_NOKEYS, '-', "Don't output private keys"},
-    {"keyex", OPT_KEYEX, '-', "Set MS key exchange type"},
-    {"keysig", OPT_KEYSIG, '-', "Set MS key signature type"},
-
-    OPT_SECTION("Encryption"),
-# ifndef OPENSSL_NO_RC2
-    {"descert", OPT_DESCERT, '-',
-     "Encrypt output with 3DES (default RC2-40)"},
-    {"certpbe", OPT_CERTPBE, 's',
-     "Certificate PBE algorithm (default RC2-40)"},
-# else
-    {"descert", OPT_DESCERT, '-', "Encrypt output with 3DES (the default)"},
-    {"certpbe", OPT_CERTPBE, 's', "Certificate PBE algorithm (default 3DES)"},
-# endif
-    {"noiter", OPT_NOITER, '-', "Don't use encryption iteration"},
-    {"maciter", OPT_MACITER, '-', "Use MAC iteration"},
-    {"nomaciter", OPT_NOMACITER, '-', "Don't use MAC iteration"},
-    {"nomac", OPT_NOMAC, '-', "Don't generate MAC"},
-    {"nodes", OPT_NODES, '-', "Don't encrypt private keys"},
+    {"CApath", OPT_CAPATH, '/', "PEM-format directory of CA's"},
+    {"CAfile", OPT_CAFILE, '<', "PEM-format file of CA's"},
+    {"no-CAfile", OPT_NOCAFILE, '-',
+     "Do not load the default certificates file"},
+    {"no-CApath", OPT_NOCAPATH, '-',
+     "Do not load certificates from the default certificates directory"},
     {"", OPT_CIPHER, '-', "Any supported cipher"},
-
-    OPT_R_OPTIONS,
+#ifndef OPENSSL_NO_ENGINE
+    {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
+#endif
     {NULL}
 };
 
@@ -139,19 +122,19 @@ int pkcs12_main(int argc, char **argv)
     char pass[PASSWD_BUF_SIZE] = "", macpass[PASSWD_BUF_SIZE] = "";
     int export_cert = 0, options = 0, chain = 0, twopass = 0, keytype = 0;
     int iter = PKCS12_DEFAULT_ITER, maciter = PKCS12_DEFAULT_ITER;
-# ifndef OPENSSL_NO_RC2
+#ifndef OPENSSL_NO_RC2
     int cert_pbe = NID_pbe_WithSHA1And40BitRC2_CBC;
-# else
+#else
     int cert_pbe = NID_pbe_WithSHA1And3_Key_TripleDES_CBC;
-# endif
+#endif
     int key_pbe = NID_pbe_WithSHA1And3_Key_TripleDES_CBC;
     int ret = 1, macver = 1, add_lmk = 0, private = 0;
     int noprompt = 0;
     char *passinarg = NULL, *passoutarg = NULL, *passarg = NULL;
     char *passin = NULL, *passout = NULL, *macalg = NULL;
     char *cpass = NULL, *mpass = NULL, *badpass = NULL;
-    const char *CApath = NULL, *CAfile = NULL, *CAstore = NULL, *prog;
-    int noCApath = 0, noCAfile = 0, noCAstore = 0;
+    const char *CApath = NULL, *CAfile = NULL, *prog;
+    int noCApath = 0, noCAfile = 0;
     ENGINE *e = NULL;
     BIO *in = NULL, *out = NULL;
     PKCS12 *p12 = NULL;
@@ -283,17 +266,11 @@ int pkcs12_main(int argc, char **argv)
         case OPT_CAPATH:
             CApath = opt_arg();
             break;
-        case OPT_CASTORE:
-            CAstore = opt_arg();
-            break;
         case OPT_CAFILE:
             CAfile = opt_arg();
             break;
         case OPT_NOCAPATH:
             noCApath = 1;
-            break;
-        case OPT_NOCASTORE:
-            noCAstore = 1;
             break;
         case OPT_NOCAFILE:
             noCAfile = 1;
@@ -423,8 +400,7 @@ int pkcs12_main(int argc, char **argv)
             int vret;
             STACK_OF(X509) *chain2;
             X509_STORE *store;
-            if ((store = setup_verify(CAfile, noCAfile, CApath, noCApath,
-                                      CAstore, noCAstore))
+            if ((store = setup_verify(CAfile, CApath, noCAfile, noCApath))
                     == NULL)
                 goto export_end;
 
@@ -485,7 +461,7 @@ int pkcs12_main(int argc, char **argv)
         p12 = PKCS12_create(cpass, name, key, ucert, certs,
                             key_pbe, cert_pbe, iter, -1, keytype);
 
-        if (p12 == NULL) {
+        if (!p12) {
             ERR_print_errors(bio_err);
             goto export_end;
         }
@@ -996,5 +972,3 @@ static int set_pbe(int *ppbe, const char *str)
     }
     return 1;
 }
-
-#endif

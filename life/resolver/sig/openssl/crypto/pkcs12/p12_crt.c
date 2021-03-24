@@ -1,7 +1,7 @@
 /*
- * Copyright 1999-2016 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1999-2020 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -54,7 +54,7 @@ PKCS12 *PKCS12_create(const char *pass, const char *name, EVP_PKEY *pkey, X509 *
     if (!mac_iter)
         mac_iter = 1;
 
-    if (pkey == NULL && cert == NULL && ca == NULL) {
+    if (!pkey && !cert && !ca) {
         PKCS12err(PKCS12_F_PKCS12_CREATE, PKCS12_R_INVALID_NULL_ARGUMENT);
         return NULL;
     }
@@ -62,7 +62,8 @@ PKCS12 *PKCS12_create(const char *pass, const char *name, EVP_PKEY *pkey, X509 *
     if (pkey && cert) {
         if (!X509_check_private_key(cert, pkey))
             return NULL;
-        X509_digest(cert, EVP_sha1(), keyid, &keyidlen);
+        if (!X509_digest(cert, EVP_sha1(), keyid, &keyidlen))
+            return NULL;
     }
 
     if (cert) {
@@ -110,7 +111,7 @@ PKCS12 *PKCS12_create(const char *pass, const char *name, EVP_PKEY *pkey, X509 *
 
     p12 = PKCS12_add_safes(safes, 0);
 
-    if (p12 == NULL)
+    if (!p12)
         goto err;
 
     sk_PKCS7_pop_free(safes, PKCS7_free);
@@ -208,12 +209,13 @@ int PKCS12_add_safe(STACK_OF(PKCS7) **psafes, STACK_OF(PKCS12_SAFEBAG) *bags,
     PKCS7 *p7 = NULL;
     int free_safes = 0;
 
-    if (*psafes == NULL) {
+    if (!*psafes) {
         *psafes = sk_PKCS7_new_null();
-        if (*psafes == NULL)
+        if (!*psafes)
             return 0;
         free_safes = 1;
-    }
+    } else
+        free_safes = 0;
 
     if (nid_safe == 0)
 #ifdef OPENSSL_NO_RC2
@@ -226,7 +228,7 @@ int PKCS12_add_safe(STACK_OF(PKCS7) **psafes, STACK_OF(PKCS12_SAFEBAG) *bags,
         p7 = PKCS12_pack_p7data(bags);
     else
         p7 = PKCS12_pack_p7encdata(nid_safe, pass, -1, NULL, 0, iter, bags);
-    if (p7 == NULL)
+    if (!p7)
         goto err;
 
     if (!sk_PKCS7_push(*psafes, p7))
@@ -247,16 +249,16 @@ int PKCS12_add_safe(STACK_OF(PKCS7) **psafes, STACK_OF(PKCS12_SAFEBAG) *bags,
 static int pkcs12_add_bag(STACK_OF(PKCS12_SAFEBAG) **pbags,
                           PKCS12_SAFEBAG *bag)
 {
-    int free_bags = 0;
-
-    if (pbags == NULL)
+    int free_bags;
+    if (!pbags)
         return 1;
-    if (*pbags == NULL) {
+    if (!*pbags) {
         *pbags = sk_PKCS12_SAFEBAG_new_null();
-        if (*pbags == NULL)
+        if (!*pbags)
             return 0;
         free_bags = 1;
-    }
+    } else
+        free_bags = 0;
 
     if (!sk_PKCS12_SAFEBAG_push(*pbags, bag)) {
         if (free_bags) {
@@ -273,11 +275,11 @@ static int pkcs12_add_bag(STACK_OF(PKCS12_SAFEBAG) **pbags,
 PKCS12 *PKCS12_add_safes(STACK_OF(PKCS7) *safes, int nid_p7)
 {
     PKCS12 *p12;
-
     if (nid_p7 <= 0)
         nid_p7 = NID_pkcs7_data;
     p12 = PKCS12_init(nid_p7);
-    if (p12 == NULL)
+
+    if (!p12)
         return NULL;
 
     if (!PKCS12_pack_authsafes(p12, safes)) {

@@ -1,8 +1,8 @@
 /*
- * Copyright 2004-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 2004-2020 The OpenSSL Project Authors. All Rights Reserved.
  * Copyright (c) 2004, EdelKey Project. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -12,28 +12,24 @@
  */
 
 #include <openssl/opensslconf.h>
-#ifdef OPENSSL_NO_SRP
-NON_EMPTY_TRANSLATION_UNIT
-#else
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <openssl/conf.h>
+#include <openssl/bio.h>
+#include <openssl/err.h>
+#include <openssl/txt_db.h>
+#include <openssl/buffer.h>
+#include <openssl/srp.h>
+#include "apps.h"
+#include "progs.h"
 
-# include <stdio.h>
-# include <stdlib.h>
-# include <string.h>
-# include <openssl/conf.h>
-# include <openssl/bio.h>
-# include <openssl/err.h>
-# include <openssl/txt_db.h>
-# include <openssl/buffer.h>
-# include <openssl/srp.h>
-# include "apps.h"
-# include "progs.h"
-
-# define BASE_SECTION    "srp"
-# define CONFIG_FILE "openssl.cnf"
+#define BASE_SECTION    "srp"
+#define CONFIG_FILE "openssl.cnf"
 
 
-# define ENV_DATABASE            "srpvfile"
-# define ENV_DEFAULT_SRP         "default_srp"
+#define ENV_DATABASE            "srpvfile"
+#define ENV_DEFAULT_SRP         "default_srp"
 
 static int get_index(CA_DB *db, char *id, char type)
 {
@@ -197,29 +193,24 @@ typedef enum OPTION_choice {
 } OPTION_CHOICE;
 
 const OPTIONS srp_options[] = {
-    OPT_SECTION("General"),
     {"help", OPT_HELP, '-', "Display this summary"},
     {"verbose", OPT_VERBOSE, '-', "Talk a lot while doing things"},
     {"config", OPT_CONFIG, '<', "A config file"},
     {"name", OPT_NAME, 's', "The particular srp definition to use"},
-# ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
-# endif
-
-    OPT_SECTION("Action"),
+    {"srpvfile", OPT_SRPVFILE, '<', "The srp verifier file name"},
     {"add", OPT_ADD, '-', "Add a user and srp verifier"},
-    {"modify", OPT_MODIFY, '-', "Modify the srp verifier of an existing user"},
+    {"modify", OPT_MODIFY, '-',
+     "Modify the srp verifier of an existing user"},
     {"delete", OPT_DELETE, '-', "Delete user from verifier file"},
     {"list", OPT_LIST, '-', "List users"},
-
-    OPT_SECTION("Configuration"),
-    {"srpvfile", OPT_SRPVFILE, '<', "The srp verifier file name"},
     {"gn", OPT_GN, 's', "Set g and N values to be used for new verifier"},
     {"userinfo", OPT_USERINFO, 's', "Additional info to be set for user"},
     {"passin", OPT_PASSIN, 's', "Input file pass phrase source"},
     {"passout", OPT_PASSOUT, 's', "Output file pass phrase source"},
-
     OPT_R_OPTIONS,
+#ifndef OPENSSL_NO_ENGINE
+    {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
+#endif
     {NULL}
 };
 
@@ -615,4 +606,3 @@ int srp_main(int argc, char **argv)
     release_engine(e);
     return ret;
 }
-#endif

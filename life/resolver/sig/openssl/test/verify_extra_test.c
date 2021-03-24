@@ -1,14 +1,13 @@
 /*
- * Copyright 2015-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 2015-2021 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
  */
 
 #include <stdio.h>
-#include <string.h>
 #include <openssl/crypto.h>
 #include <openssl/bio.h>
 #include <openssl/x509.h>
@@ -19,7 +18,21 @@
 static const char *roots_f;
 static const char *untrusted_f;
 static const char *bad_f;
-static const char *req_f;
+static const char *good_f;
+
+static X509 *load_cert_pem(const char *file)
+{
+    X509 *cert = NULL;
+    BIO *bio = NULL;
+
+    if (!TEST_ptr(bio = BIO_new(BIO_s_file())))
+        return NULL;
+    if (TEST_int_gt(BIO_read_filename(bio, file), 0))
+        (void)TEST_ptr(cert = PEM_read_bio_X509(bio, NULL, NULL, NULL));
+
+    BIO_free(bio);
+    return cert;
+}
 
 static STACK_OF(X509) *load_certs_from_file(const char *filename)
 {
@@ -60,7 +73,7 @@ static STACK_OF(X509) *load_certs_from_file(const char *filename)
     return certs;
 }
 
-/*
+/*-
  * Test for CVE-2015-1793 (Alternate Chains Certificate Forgery)
  *
  * Chain is as follows:
@@ -177,103 +190,48 @@ static int test_store_ctx(void)
     return testresult;
 }
 
-OPT_TEST_DECLARE_USAGE("roots.pem untrusted.pem bad.pem\n")
-
-#ifndef OPENSSL_NO_SM2
-static int test_sm2_id(void)
+static int test_self_signed(const char *filename, int expected)
 {
-    /* we only need an X509 structure, no matter if it's a real SM2 cert */
-    X509 *x = NULL;
-    BIO *bio = NULL;
-    int ret = 0;
-    ASN1_OCTET_STRING *v = NULL, *v2 = NULL;
-    char *sm2id = "this is an ID";
+    X509 *cert = load_cert_pem(filename);
+    STACK_OF(X509) *trusted = sk_X509_new_null();
+    X509_STORE_CTX *ctx = X509_STORE_CTX_new();
+    int ret;
 
-    bio = BIO_new_file(bad_f, "r");
-    if (bio == NULL)
-        goto err;
+    ret = TEST_ptr(cert)
+        && TEST_true(sk_X509_push(trusted, cert))
+        && TEST_true(X509_STORE_CTX_init(ctx, NULL, cert, NULL));
+    X509_STORE_CTX_set0_trusted_stack(ctx, trusted);
+    ret = ret && TEST_int_eq(X509_verify_cert(ctx), expected);
 
-    x = PEM_read_bio_X509(bio, NULL, 0, NULL);
-    if (x == NULL)
-        goto err;
-
-    v = ASN1_OCTET_STRING_new();
-    if (v == NULL)
-        goto err;
-
-    if (!ASN1_OCTET_STRING_set(v, (unsigned char *)sm2id, (int)strlen(sm2id))) {
-        ASN1_OCTET_STRING_free(v);
-        goto err;
-    }
-
-    X509_set0_sm2_id(x, v);
-
-    v2 = X509_get0_sm2_id(x);
-    if (!TEST_ptr(v2)
-            || !TEST_int_eq(ASN1_OCTET_STRING_cmp(v, v2), 0))
-        goto err;
-
-    ret = 1;
- err:
-    X509_free(x);
-    BIO_free(bio);
+    X509_STORE_CTX_free(ctx);
+    sk_X509_free(trusted);
+    X509_free(cert);
     return ret;
 }
 
-static int test_req_sm2_id(void)
+static int test_self_signed_good(void)
 {
-    /* we only need an X509_REQ structure, no matter if it's a real SM2 cert */
-    X509_REQ *x = NULL;
-    BIO *bio = NULL;
-    int ret = 0;
-    ASN1_OCTET_STRING *v = NULL, *v2 = NULL;
-    char *sm2id = "this is an ID";
-
-    bio = BIO_new_file(req_f, "r");
-    if (bio == NULL)
-        goto err;
-
-    x = PEM_read_bio_X509_REQ(bio, NULL, 0, NULL);
-    if (x == NULL)
-        goto err;
-
-    v = ASN1_OCTET_STRING_new();
-    if (v == NULL)
-        goto err;
-
-    if (!ASN1_OCTET_STRING_set(v, (unsigned char *)sm2id, (int)strlen(sm2id))) {
-        ASN1_OCTET_STRING_free(v);
-        goto err;
-    }
-
-    X509_REQ_set0_sm2_id(x, v);
-
-    v2 = X509_REQ_get0_sm2_id(x);
-    if (!TEST_ptr(v2)
-            || !TEST_int_eq(ASN1_OCTET_STRING_cmp(v, v2), 0))
-        goto err;
-
-    ret = 1;
- err:
-    X509_REQ_free(x);
-    BIO_free(bio);
-    return ret;
+    return test_self_signed(good_f, 1);
 }
-#endif
+
+static int test_self_signed_bad(void)
+{
+    return test_self_signed(bad_f, 0);
+}
 
 int setup_tests(void)
 {
     if (!TEST_ptr(roots_f = test_get_argument(0))
             || !TEST_ptr(untrusted_f = test_get_argument(1))
             || !TEST_ptr(bad_f = test_get_argument(2))
-            || !TEST_ptr(req_f = test_get_argument(3)))
+            || !TEST_ptr(good_f = test_get_argument(3))) {
+        TEST_error("usage: verify_extra_test roots.pem untrusted.pem bad.pem good.pem\n");
         return 0;
+    }
 
     ADD_TEST(test_alt_chains_cert_forgery);
     ADD_TEST(test_store_ctx);
-#ifndef OPENSSL_NO_SM2
-    ADD_TEST(test_sm2_id);
-    ADD_TEST(test_req_sm2_id);
-#endif
+    ADD_TEST(test_self_signed_good);
+    ADD_TEST(test_self_signed_bad);
     return 1;
 }

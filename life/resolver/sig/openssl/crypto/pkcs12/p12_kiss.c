@@ -1,7 +1,7 @@
 /*
  * Copyright 1999-2016 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -42,7 +42,7 @@ int PKCS12_parse(PKCS12 *p12, const char *pass, EVP_PKEY **pkey, X509 **cert,
 
     /* Check for NULL PKCS12 structure */
 
-    if (p12 == NULL) {
+    if (!p12) {
         PKCS12err(PKCS12_F_PKCS12_PARSE,
                   PKCS12_R_INVALID_NULL_PKCS12_POINTER);
         return 0;
@@ -57,7 +57,7 @@ int PKCS12_parse(PKCS12 *p12, const char *pass, EVP_PKEY **pkey, X509 **cert,
      * password are two different things...
      */
 
-    if (pass == NULL || *pass == '\0') {
+    if (!pass || !*pass) {
         if (PKCS12_verify_mac(p12, NULL, 0))
             pass = NULL;
         else if (PKCS12_verify_mac(p12, "", 0))
@@ -85,8 +85,7 @@ int PKCS12_parse(PKCS12 *p12, const char *pass, EVP_PKEY **pkey, X509 **cert,
     }
 
     while ((x = sk_X509_pop(ocerts))) {
-        if (pkey != NULL && *pkey != NULL
-                && cert != NULL && *cert == NULL) {
+        if (pkey && *pkey && cert && !*cert) {
             ERR_set_mark();
             if (X509_check_private_key(x, *pkey)) {
                 *cert = x;
@@ -96,9 +95,9 @@ int PKCS12_parse(PKCS12 *p12, const char *pass, EVP_PKEY **pkey, X509 **cert,
         }
 
         if (ca && x) {
-            if (*ca == NULL)
+            if (!*ca)
                 *ca = sk_X509_new_null();
-            if (*ca == NULL)
+            if (!*ca)
                 goto err;
             if (!sk_X509_push(*ca, x))
                 goto err;
@@ -192,7 +191,7 @@ static int parse_bag(PKCS12_SAFEBAG *bag, const char *pass, int passlen,
 
     switch (PKCS12_SAFEBAG_get_nid(bag)) {
     case NID_keyBag:
-        if (pkey == NULL || *pkey != NULL)
+        if (!pkey || *pkey)
             return 1;
         *pkey = EVP_PKCS82PKEY(PKCS12_SAFEBAG_get0_p8inf(bag));
         if (*pkey == NULL)
@@ -200,7 +199,7 @@ static int parse_bag(PKCS12_SAFEBAG *bag, const char *pass, int passlen,
         break;
 
     case NID_pkcs8ShroudedKeyBag:
-        if (pkey == NULL || *pkey != NULL)
+        if (!pkey || *pkey)
             return 1;
         if ((p8 = PKCS12_decrypt_skey(bag, pass, passlen)) == NULL)
             return 0;

@@ -1,8 +1,8 @@
 /*
- * Copyright 2004-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 2004-2021 The OpenSSL Project Authors. All Rights Reserved.
  * Copyright (c) 2004, EdelKey Project. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -45,13 +45,13 @@ static BIGNUM *srp_Calc_xy(const BIGNUM *x, const BIGNUM *y, const BIGNUM *N)
 
 static BIGNUM *srp_Calc_k(const BIGNUM *N, const BIGNUM *g)
 {
-    /* k = SHA1(N | PAD(g)) -- tls-srp RFC 5054 */
+    /* k = SHA1(N | PAD(g)) -- tls-srp draft 8 */
     return srp_Calc_xy(N, g, N);
 }
 
 BIGNUM *SRP_Calc_u(const BIGNUM *A, const BIGNUM *B, const BIGNUM *N)
 {
-    /* u = SHA1(PAD(A) || PAD(B) ) -- tls-srp RFC 5054 */
+    /* k = SHA1(PAD(A) || PAD(B) ) -- tls-srp draft 8 */
     return srp_Calc_xy(A, B, N);
 }
 
@@ -177,6 +177,7 @@ BIGNUM *SRP_Calc_client_key(const BIGNUM *N, const BIGNUM *B, const BIGNUM *g,
                             const BIGNUM *x, const BIGNUM *a, const BIGNUM *u)
 {
     BIGNUM *tmp = NULL, *tmp2 = NULL, *tmp3 = NULL, *k = NULL, *K = NULL;
+    BIGNUM *xtmp = NULL;
     BN_CTX *bn_ctx;
 
     if (u == NULL || B == NULL || N == NULL || g == NULL || x == NULL
@@ -185,10 +186,13 @@ BIGNUM *SRP_Calc_client_key(const BIGNUM *N, const BIGNUM *B, const BIGNUM *g,
 
     if ((tmp = BN_new()) == NULL ||
         (tmp2 = BN_new()) == NULL ||
-        (tmp3 = BN_new()) == NULL)
+        (tmp3 = BN_new()) == NULL ||
+        (xtmp = BN_new()) == NULL)
         goto err;
 
-    if (!BN_mod_exp(tmp, g, x, N, bn_ctx))
+    BN_with_flags(xtmp, x, BN_FLG_CONSTTIME);
+    BN_set_flags(tmp, BN_FLG_CONSTTIME);
+    if (!BN_mod_exp(tmp, g, xtmp, N, bn_ctx))
         goto err;
     if ((k = srp_Calc_k(N, g)) == NULL)
         goto err;
@@ -196,7 +200,7 @@ BIGNUM *SRP_Calc_client_key(const BIGNUM *N, const BIGNUM *B, const BIGNUM *g,
         goto err;
     if (!BN_mod_sub(tmp, B, tmp2, N, bn_ctx))
         goto err;
-    if (!BN_mul(tmp3, u, x, bn_ctx))
+    if (!BN_mul(tmp3, u, xtmp, bn_ctx))
         goto err;
     if (!BN_add(tmp2, a, tmp3))
         goto err;
@@ -208,6 +212,7 @@ BIGNUM *SRP_Calc_client_key(const BIGNUM *N, const BIGNUM *B, const BIGNUM *g,
 
  err:
     BN_CTX_free(bn_ctx);
+    BN_free(xtmp);
     BN_clear_free(tmp);
     BN_clear_free(tmp2);
     BN_clear_free(tmp3);
@@ -256,13 +261,13 @@ static SRP_gN knowngN[] = {
 
 /*
  * Check if G and N are known parameters. The values have been generated
- * from the IETF RFC 5054
+ * from the ietf-tls-srp draft version 8
  */
 char *SRP_check_known_gN_param(const BIGNUM *g, const BIGNUM *N)
 {
     size_t i;
     if ((g == NULL) || (N == NULL))
-        return NULL;
+        return 0;
 
     for (i = 0; i < KNOWN_GN_NUMBER; i++) {
         if (BN_cmp(knowngN[i].g, g) == 0 && BN_cmp(knowngN[i].N, N) == 0)
