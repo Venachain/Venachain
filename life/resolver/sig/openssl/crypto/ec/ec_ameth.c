@@ -1,7 +1,7 @@
 /*
- * Copyright 2006-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 2006-2020 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -23,7 +23,7 @@ static int ecdh_cms_decrypt(CMS_RecipientInfo *ri);
 static int ecdh_cms_encrypt(CMS_RecipientInfo *ri);
 #endif
 
-static int eckey_param2type(int *pptype, void **ppval, EC_KEY *ec_key)
+static int eckey_param2type(int *pptype, void **ppval, const EC_KEY *ec_key)
 {
     const EC_GROUP *group;
     int nid;
@@ -35,7 +35,14 @@ static int eckey_param2type(int *pptype, void **ppval, EC_KEY *ec_key)
         && (nid = EC_GROUP_get_curve_name(group)))
         /* we have a 'named curve' => just set the OID */
     {
-        *ppval = OBJ_nid2obj(nid);
+        ASN1_OBJECT *asn1obj = OBJ_nid2obj(nid);
+
+        if (asn1obj == NULL || OBJ_length(asn1obj) == 0) {
+            ASN1_OBJECT_free(asn1obj);
+            ECerr(EC_F_ECKEY_PARAM2TYPE, EC_R_MISSING_OID);
+            return 0;
+        }
+        *ppval = asn1obj;
         *pptype = V_ASN1_OBJECT;
     } else {                    /* explicit parameters */
 
@@ -43,7 +50,17 @@ static int eckey_param2type(int *pptype, void **ppval, EC_KEY *ec_key)
         pstr = ASN1_STRING_new();
         if (pstr == NULL)
             return 0;
-        pstr->length = i2d_ECParameters(ec_key, &pstr->data);
+
+        /*
+         * The cast in the following line is intentional as the
+         * `i2d_ECParameters` signature can't be constified (see discussion at
+         * https://github.com/openssl/openssl/pull/9347 where related and
+         * required constification backports were rejected).
+         *
+         * This cast should be safe anyway, because we can expect
+         * `i2d_ECParameters()` to treat the first argument as if it was const.
+         */
+        pstr->length = i2d_ECParameters((EC_KEY *)ec_key, &pstr->data);
         if (pstr->length <= 0) {
             ASN1_STRING_free(pstr);
             ECerr(EC_F_ECKEY_PARAM2TYPE, ERR_R_EC_LIB);
@@ -57,7 +74,7 @@ static int eckey_param2type(int *pptype, void **ppval, EC_KEY *ec_key)
 
 static int eckey_pub_encode(X509_PUBKEY *pk, const EVP_PKEY *pkey)
 {
-    EC_KEY *ec_key = pkey->pkey.ec;
+    const EC_KEY *ec_key = pkey->pkey.ec;
     void *pval = NULL;
     int ptype;
     unsigned char *penc = NULL, *p;
@@ -196,7 +213,7 @@ static int eckey_priv_decode(EVP_PKEY *pkey, const PKCS8_PRIV_KEY_INFO *p8)
 
     eckey = eckey_type2param(ptype, pval);
 
-    if (eckey == NULL)
+    if (!eckey)
         goto ecliberr;
 
     /* We have parameters now set private key */
@@ -650,7 +667,7 @@ static int ecdh_cms_set_peerkey(EVP_PKEY_CTX *pctx,
         const EC_GROUP *grp;
         EVP_PKEY *pk;
         pk = EVP_PKEY_CTX_get0_pkey(pctx);
-        if (pk == NULL)
+        if (!pk)
             goto err;
         grp = EC_KEY_get0_group(pk->pkey.ec);
         ecpeer = EC_KEY_new();
@@ -666,7 +683,7 @@ static int ecdh_cms_set_peerkey(EVP_PKEY_CTX *pctx,
     /* We have parameters now set public key */
     plen = ASN1_STRING_length(pubkey);
     p = ASN1_STRING_get0_data(pubkey);
-    if (p == NULL || plen == 0)
+    if (!p || !plen)
         goto err;
     if (!o2i_ECPublicKey(&ecpeer, &p, plen))
         goto err;

@@ -1,7 +1,7 @@
 /*
- * Copyright 2013-2016 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 2013-2019 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -159,10 +159,10 @@ int CMS_RecipientInfo_kari_set0_pkey(CMS_RecipientInfo *ri, EVP_PKEY *pk)
 
     EVP_PKEY_CTX_free(kari->pctx);
     kari->pctx = NULL;
-    if (pk == NULL)
+    if (!pk)
         return 1;
     pctx = EVP_PKEY_CTX_new(pk, NULL);
-    if (pctx == NULL || EVP_PKEY_derive_init(pctx) <= 0)
+    if (!pctx || EVP_PKEY_derive_init(pctx) <= 0)
         goto err;
     kari->pctx = pctx;
     return 1;
@@ -260,9 +260,8 @@ static int cms_kari_create_ephemeral_key(CMS_KeyAgreeRecipientInfo *kari,
     EVP_PKEY_CTX *pctx = NULL;
     EVP_PKEY *ekey = NULL;
     int rv = 0;
-
     pctx = EVP_PKEY_CTX_new(pk, NULL);
-    if (pctx == NULL)
+    if (!pctx)
         goto err;
     if (EVP_PKEY_keygen_init(pctx) <= 0)
         goto err;
@@ -270,7 +269,7 @@ static int cms_kari_create_ephemeral_key(CMS_KeyAgreeRecipientInfo *kari,
         goto err;
     EVP_PKEY_CTX_free(pctx);
     pctx = EVP_PKEY_CTX_new(ekey, NULL);
-    if (pctx == NULL)
+    if (!pctx)
         goto err;
     if (EVP_PKEY_derive_init(pctx) <= 0)
         goto err;
@@ -364,7 +363,7 @@ static int cms_wrap_init(CMS_KeyAgreeRecipientInfo *kari,
 
 /* Encrypt content key in key agreement recipient info */
 
-int cms_RecipientInfo_kari_encrypt(const CMS_ContentInfo *cms,
+int cms_RecipientInfo_kari_encrypt(CMS_ContentInfo *cms,
                                    CMS_RecipientInfo *ri)
 {
     CMS_KeyAgreeRecipientInfo *kari;

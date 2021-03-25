@@ -65,17 +65,40 @@ function unlock_account() {
 }
 
 function create_ctooljson() {
+    os=`uname`
+    if [ "${os}" = "Darwin" ]; then
+        create_ctooljson_darwin "$@"
+        return
+    fi
+
     if [ -f ${CONF_PATH}/ctool.json ]; then
         mkdir -p ${CONF_PATH}/bak
         mv ${CONF_PATH}/ctool.json ${CONF_PATH}/bak/ctool.json.bak.`date '+%Y%m%d%H%M%S'`
     fi
     cp ${CONF_PATH}/ctool.json.template ${CONF_PATH}/ctool.json
-
     ${BIN_PATH}/repstr ${CONF_PATH}/ctool.json "NODE-IP" ${IP}
     ${BIN_PATH}/repstr ${CONF_PATH}/ctool.json "RPC-PORT" ${RPC_PORT}
     echo "${IP}:${RPC_PORT}"
 
     ${BIN_PATH}/repstr ${CONF_PATH}/ctool.json "DEFAULT-ACCOUNT" ${ACCOUNT:2}
+    echo ${ACCOUNT:2}
+
+    echo "[INFO]: Create ctool.json succ. File: ${CONF_PATH}/ctool.json"
+}
+
+function create_ctooljson_darwin() {
+    if [ -f ${CONF_PATH}/ctool.json ]; then
+        mkdir -p ${CONF_PATH}/bak
+        mv ${CONF_PATH}/ctool.json ${CONF_PATH}/bak/ctool.json.bak.`date '+%Y%m%d%H%M%S'`
+    fi
+    cp ${CONF_PATH}/ctool.json.template ${CONF_PATH}/ctool.json
+    sed -i '' "s/NODE-IP/${IP}/g" ${CONF_PATH}/ctool.json
+    sed -i '' "s/RPC-PORT/${RPC_PORT}/g" ${CONF_PATH}/ctool.json
+
+    echo "${IP}:${RPC_PORT}"
+
+    sed -i '' "s/DEFAULT-ACCOUNT/${ACCOUNT:2}/g" ${CONF_PATH}/ctool.json
+
     echo ${ACCOUNT:2}
 
     echo "[INFO]: Create ctool.json succ. File: ${CONF_PATH}/ctool.json"

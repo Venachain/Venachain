@@ -1,7 +1,7 @@
 /*
- * Copyright 2000-2016 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 2000-2019 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -132,7 +132,8 @@ int OCSP_parse_url(const char *url, char **phost, char **pport, char **ppath,
 
     /* Check for initial colon */
     p = strchr(buf, ':');
-    if (p == NULL)
+
+    if (!p)
         goto parse_err;
 
     *(p++) = '\0';
@@ -155,8 +156,10 @@ int OCSP_parse_url(const char *url, char **phost, char **pport, char **ppath,
     host = p;
 
     /* Check for trailing part of path */
+
     p = strchr(p, '/');
-    if (p == NULL)
+
+    if (!p)
         *ppath = OPENSSL_strdup("/");
     else {
         *ppath = OPENSSL_strdup(p);
@@ -164,7 +167,7 @@ int OCSP_parse_url(const char *url, char **phost, char **pport, char **ppath,
         *p = '\0';
     }
 
-    if (*ppath == NULL)
+    if (!*ppath)
         goto mem_err;
 
     p = host;
@@ -172,7 +175,7 @@ int OCSP_parse_url(const char *url, char **phost, char **pport, char **ppath,
         /* ipv6 literal */
         host++;
         p = strchr(host, ']');
-        if (p == NULL)
+        if (!p)
             goto parse_err;
         *p = '\0';
         p++;
@@ -185,12 +188,12 @@ int OCSP_parse_url(const char *url, char **phost, char **pport, char **ppath,
     }
 
     *pport = OPENSSL_strdup(port);
-    if (*pport == NULL)
+    if (!*pport)
         goto mem_err;
 
     *phost = OPENSSL_strdup(host);
 
-    if (*phost == NULL)
+    if (!*phost)
         goto mem_err;
 
     OPENSSL_free(buf);

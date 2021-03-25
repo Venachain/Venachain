@@ -1,7 +1,7 @@
 /*
- * Copyright 2006-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 2006-2020 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -28,24 +28,20 @@ typedef enum OPTION_choice {
 } OPTION_CHOICE;
 
 const OPTIONS genpkey_options[] = {
-    OPT_SECTION("General"),
     {"help", OPT_HELP, '-', "Display this summary"},
-#ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
-#endif
+    {"out", OPT_OUT, '>', "Output file"},
+    {"outform", OPT_OUTFORM, 'F', "output format (DER or PEM)"},
+    {"pass", OPT_PASS, 's', "Output file pass phrase source"},
     {"paramfile", OPT_PARAMFILE, '<', "Parameters file"},
     {"algorithm", OPT_ALGORITHM, 's', "The public key algorithm"},
     {"pkeyopt", OPT_PKEYOPT, 's',
      "Set the public key algorithm option as opt:value"},
-
-    OPT_SECTION("Output"),
-    {"out", OPT_OUT, '>', "Output file"},
-    {"outform", OPT_OUTFORM, 'F', "output format (DER or PEM)"},
-    {"pass", OPT_PASS, 's', "Output file pass phrase source"},
     {"genparam", OPT_GENPARAM, '-', "Generate parameters, not key"},
     {"text", OPT_TEXT, '-', "Print the in text"},
     {"", OPT_CIPHER, '-', "Cipher to use to encrypt the key"},
-
+#ifndef OPENSSL_NO_ENGINE
+    {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
+#endif
     /* This is deliberately last. */
     {OPT_HELP_STR, 1, 1,
      "Order of options may be important!  See the documentation.\n"},
@@ -181,9 +177,12 @@ int genpkey_main(int argc, char **argv)
         goto end;
     }
 
+    ret = 0;
+
     if (rv <= 0) {
         BIO_puts(bio_err, "Error writing key\n");
         ERR_print_errors(bio_err);
+        ret = 1;
     }
 
     if (text) {
@@ -195,10 +194,9 @@ int genpkey_main(int argc, char **argv)
         if (rv <= 0) {
             BIO_puts(bio_err, "Error printing key\n");
             ERR_print_errors(bio_err);
+            ret = 1;
         }
     }
-
-    ret = 0;
 
  end:
     EVP_PKEY_free(pkey);
@@ -221,7 +219,7 @@ static int init_keygen_file(EVP_PKEY_CTX **pctx, const char *file, ENGINE *e)
     }
 
     pbio = BIO_new_file(file, "r");
-    if (pbio == NULL) {
+    if (!pbio) {
         BIO_printf(bio_err, "Can't open parameter file %s\n", file);
         return 0;
     }
@@ -229,7 +227,7 @@ static int init_keygen_file(EVP_PKEY_CTX **pctx, const char *file, ENGINE *e)
     pkey = PEM_read_bio_Parameters(pbio, NULL);
     BIO_free(pbio);
 
-    if (pkey == NULL) {
+    if (!pkey) {
         BIO_printf(bio_err, "Error reading parameter file %s\n", file);
         return 0;
     }

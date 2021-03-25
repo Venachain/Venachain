@@ -1,7 +1,7 @@
 /*
  * Copyright 2006-2018 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -22,20 +22,15 @@ typedef enum OPTION_choice {
 } OPTION_CHOICE;
 
 const OPTIONS pkeyparam_options[] = {
-    OPT_SECTION("General"),
     {"help", OPT_HELP, '-', "Display this summary"},
+    {"in", OPT_IN, '<', "Input file"},
+    {"out", OPT_OUT, '>', "Output file"},
+    {"text", OPT_TEXT, '-', "Print parameters as text"},
+    {"noout", OPT_NOOUT, '-', "Don't output encoded parameters"},
 #ifndef OPENSSL_NO_ENGINE
     {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
 #endif
     {"check", OPT_CHECK, '-', "Check key param consistency"},
-
-    OPT_SECTION("Input"),
-    {"in", OPT_IN, '<', "Input file"},
-
-    OPT_SECTION("Output"),
-    {"out", OPT_OUT, '>', "Output file"},
-    {"text", OPT_TEXT, '-', "Print parameters as text"},
-    {"noout", OPT_NOOUT, '-', "Don't output encoded parameters"},
     {NULL}
 };
 

@@ -1,20 +1,14 @@
 /*
- * Copyright 1999-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1999-2021 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
  */
 
-#ifndef OPENSSL_X509V3_H
-# define OPENSSL_X509V3_H
-# pragma once
-
-# include <openssl/macros.h>
-# ifndef OPENSSL_NO_DEPRECATED_3_0
-#  define HEADER_X509V3_H
-# endif
+#ifndef HEADER_X509V3_H
+# define HEADER_X509V3_H
 
 # include <openssl/bio.h>
 # include <openssl/x509.h>
@@ -34,7 +28,7 @@ struct v3_ext_ctx;
 typedef void *(*X509V3_EXT_NEW)(void);
 typedef void (*X509V3_EXT_FREE) (void *);
 typedef void *(*X509V3_EXT_D2I)(void *, const unsigned char **, long);
-typedef int (*X509V3_EXT_I2D) (const void *, unsigned char **);
+typedef int (*X509V3_EXT_I2D) (void *, unsigned char **);
 typedef STACK_OF(CONF_VALUE) *
     (*X509V3_EXT_I2V) (const struct v3_ext_method *method, void *ext,
                        STACK_OF(CONF_VALUE) *extlist);
@@ -370,8 +364,9 @@ struct ISSUING_DIST_POINT_st {
 
 # define EXFLAG_INVALID_POLICY   0x800
 # define EXFLAG_FRESHEST         0x1000
-/* Self signed */
-# define EXFLAG_SS               0x2000
+# define EXFLAG_SS               0x2000 /* cert is apparently self-signed */
+
+# define EXFLAG_NO_FINGERPRINT   0x100000
 
 # define KU_DIGITAL_SIGNATURE    0x0080
 # define KU_NON_REPUDIATION      0x0040
@@ -473,7 +468,7 @@ DECLARE_ASN1_FUNCTIONS(AUTHORITY_KEYID)
 DECLARE_ASN1_FUNCTIONS(PKEY_USAGE_PERIOD)
 
 DECLARE_ASN1_FUNCTIONS(GENERAL_NAME)
-DECLARE_ASN1_DUP_FUNCTION(GENERAL_NAME)
+GENERAL_NAME *GENERAL_NAME_dup(GENERAL_NAME *a);
 int GENERAL_NAME_cmp(GENERAL_NAME *a, GENERAL_NAME *b);
 
 ASN1_BIT_STRING *v2i_ASN1_BIT_STRING(X509V3_EXT_METHOD *method,
@@ -556,7 +551,7 @@ GENERAL_NAME *a2i_GENERAL_NAME(GENERAL_NAME *out,
                                X509V3_CTX *ctx, int gen_type,
                                const char *value, int is_nc);
 
-# ifdef OPENSSL_CONF_H
+# ifdef HEADER_CONF_H
 GENERAL_NAME *v2i_GENERAL_NAME(const X509V3_EXT_METHOD *method,
                                X509V3_CTX *ctx, CONF_VALUE *cnf);
 GENERAL_NAME *v2i_GENERAL_NAME_ex(GENERAL_NAME *out,
@@ -635,7 +630,7 @@ X509_EXTENSION *X509V3_EXT_i2d(int ext_nid, int crit, void *ext_struc);
 int X509V3_add1_i2d(STACK_OF(X509_EXTENSION) **x, int nid, void *value,
                     int crit, unsigned long flags);
 
-#ifndef OPENSSL_NO_DEPRECATED_1_1_0
+#if OPENSSL_API_COMPAT < 0x10100000L
 /* The new declarations are in crypto.h, but the old ones were here. */
 # define hex_to_string OPENSSL_buf2hexstr
 # define string_to_hex OPENSSL_hexstr2buf

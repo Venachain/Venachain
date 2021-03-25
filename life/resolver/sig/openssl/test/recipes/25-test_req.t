@@ -1,7 +1,7 @@
 #! /usr/bin/env perl
-# Copyright 2015-2018 The OpenSSL Project Authors. All Rights Reserved.
+# Copyright 2015-2020 The OpenSSL Project Authors. All Rights Reserved.
 #
-# Licensed under the Apache License 2.0 (the "License").  You may not use
+# Licensed under the OpenSSL license (the "License").  You may not use
 # this file except in compliance with the License.  You can obtain a copy
 # in the file LICENSE in the source distribution or at
 # https://www.openssl.org/source/license.html
@@ -15,7 +15,7 @@ use OpenSSL::Test qw/:DEFAULT srctop_file/;
 
 setup("test_req");
 
-plan tests => 13;
+plan tests => 14;
 
 require_ok(srctop_file('test','recipes','tconversion.pl'));
 
@@ -106,6 +106,46 @@ subtest "generating certificate requests with ECDSA" => sub {
     }
 };
 
+subtest "generating certificate requests with Ed25519" => sub {
+    plan tests => 2;
+
+    SKIP: {
+        skip "Ed25519 is not supported by this OpenSSL build", 2
+            if disabled("ec");
+
+        ok(run(app(["openssl", "req",
+                    "-config", srctop_file("test", "test.cnf"),
+                    "-new", "-out", "testreq.pem", "-utf8",
+                    "-key", srctop_file("test", "tested25519.pem")])),
+           "Generating request");
+
+        ok(run(app(["openssl", "req",
+                    "-config", srctop_file("test", "test.cnf"),
+                    "-verify", "-in", "testreq.pem", "-noout"])),
+           "Verifying signature on request");
+    }
+};
+
+subtest "generating certificate requests with Ed448" => sub {
+    plan tests => 2;
+
+    SKIP: {
+        skip "Ed448 is not supported by this OpenSSL build", 2
+            if disabled("ec");
+
+        ok(run(app(["openssl", "req",
+                    "-config", srctop_file("test", "test.cnf"),
+                    "-new", "-out", "testreq.pem", "-utf8",
+                    "-key", srctop_file("test", "tested448.pem")])),
+           "Generating request");
+
+        ok(run(app(["openssl", "req",
+                    "-config", srctop_file("test", "test.cnf"),
+                    "-verify", "-in", "testreq.pem", "-noout"])),
+           "Verifying signature on request");
+    }
+};
+
 subtest "generating certificate requests" => sub {
     plan tests => 2;
 
@@ -116,40 +156,6 @@ subtest "generating certificate requests" => sub {
     ok(run(app(["openssl", "req", "-config", srctop_file("test", "test.cnf"),
                 "-verify", "-in", "testreq.pem", "-noout"])),
        "Verifying signature on request");
-};
-
-subtest "generating SM2 certificate requests" => sub {
-    plan tests => 4;
-
-    SKIP: {
-        skip "SM2 is not supported by this OpenSSL build", 4
-        if disabled("sm2");
-        ok(run(app(["openssl", "req",
-                    "-config", srctop_file("test", "test.cnf"),
-                    "-new", "-key", srctop_file("test", "certs", "sm2.key"),
-                    "-sigopt", "sm2_id:1234567812345678",
-                    "-out", "testreq.pem", "-sm3"])),
-           "Generating SM2 certificate request");
-
-        ok(run(app(["openssl", "req",
-                    "-config", srctop_file("test", "test.cnf"),
-                    "-verify", "-in", "testreq.pem", "-noout",
-                    "-sm2-id", "1234567812345678", "-sm3"])),
-           "Verifying signature on SM2 certificate request");
-
-        ok(run(app(["openssl", "req",
-                    "-config", srctop_file("test", "test.cnf"),
-                    "-new", "-key", srctop_file("test", "certs", "sm2.key"),
-                    "-sigopt", "sm2_hex_id:DEADBEEF",
-                    "-out", "testreq.pem", "-sm3"])),
-           "Generating SM2 certificate request with hex id");
-
-        ok(run(app(["openssl", "req",
-                    "-config", srctop_file("test", "test.cnf"),
-                    "-verify", "-in", "testreq.pem", "-noout",
-                    "-sm2-hex-id", "DEADBEEF", "-sm3"])),
-           "Verifying signature on SM2 certificate request");
-    }
 };
 
 my @openssl_args = ("req", "-config", srctop_file("apps", "openssl.cnf"));

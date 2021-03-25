@@ -1,7 +1,7 @@
 /*
  * Copyright 2000-2018 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -59,22 +59,15 @@ typedef enum OPTION_choice {
 } OPTION_CHOICE;
 
 const OPTIONS passwd_options[] = {
-    OPT_SECTION("General"),
     {"help", OPT_HELP, '-', "Display this summary"},
-
-    OPT_SECTION("Input"),
     {"in", OPT_IN, '<', "Read passwords from file"},
     {"noverify", OPT_NOVERIFY, '-',
      "Never verify when reading password from terminal"},
-    {"stdin", OPT_STDIN, '-', "Read passwords from stdin"},
-
-    OPT_SECTION("Output"),
     {"quiet", OPT_QUIET, '-', "No warnings"},
     {"table", OPT_TABLE, '-', "Format output as table"},
     {"reverse", OPT_REVERSE, '-', "Switch table columns"},
-
-    OPT_SECTION("Cryptographic"),
     {"salt", OPT_SALT, 's', "Use provided salt"},
+    {"stdin", OPT_STDIN, '-', "Read passwords from stdin"},
     {"6", OPT_6, '-', "SHA512-based password algorithm"},
     {"5", OPT_5, '-', "SHA256-based password algorithm"},
     {"apr1", OPT_APR1, '-', "MD5-based password algorithm, Apache variant"},
@@ -83,7 +76,6 @@ const OPTIONS passwd_options[] = {
 #ifndef OPENSSL_NO_DES
     {"crypt", OPT_CRYPT, '-', "Standard Unix password algorithm (default)"},
 #endif
-
     OPT_R_OPTIONS,
     {NULL}
 };
@@ -815,7 +807,7 @@ static int do_passwd(int passed_salt, char **salt_p, char **salt_malloc_p,
             (*salt_p)[i] = cov_2char[(*salt_p)[i] & 0x3f]; /* 6 bits */
         (*salt_p)[i] = 0;
 # ifdef CHARSET_EBCDIC
-        /* The password encryption funtion will convert back to ASCII */
+        /* The password encryption function will convert back to ASCII */
         ascii2ebcdic(*salt_p, *salt_p, saltlen);
 # endif
     }

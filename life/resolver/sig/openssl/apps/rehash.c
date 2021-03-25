@@ -1,8 +1,8 @@
 /*
- * Copyright 2015-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 2015-2020 The OpenSSL Project Authors. All Rights Reserved.
  * Copyright (c) 2013-2014 Timo Teräs <timo.teras@gmail.com>
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -274,11 +274,19 @@ static int do_file(const char *filename, const char *fullpath, enum Hash h)
     if (x->x509 != NULL) {
         type = TYPE_CERT;
         name = X509_get_subject_name(x->x509);
-        X509_digest(x->x509, evpmd, digest, NULL);
+        if (!X509_digest(x->x509, evpmd, digest, NULL)) {
+            BIO_printf(bio_err, "out of memory\n");
+            ++errs;
+            goto end;
+        }
     } else if (x->crl != NULL) {
         type = TYPE_CRL;
         name = X509_CRL_get_issuer(x->crl);
-        X509_CRL_digest(x->crl, evpmd, digest, NULL);
+        if (!X509_CRL_digest(x->crl, evpmd, digest, NULL)) {
+            BIO_printf(bio_err, "out of memory\n");
+            ++errs;
+            goto end;
+        }
     } else {
         ++errs;
         goto end;
@@ -452,15 +460,12 @@ typedef enum OPTION_choice {
 
 const OPTIONS rehash_options[] = {
     {OPT_HELP_STR, 1, '-', "Usage: %s [options] [cert-directory...]\n"},
-
-    OPT_SECTION("General"),
+    {OPT_HELP_STR, 1, '-', "Valid options are:\n"},
     {"help", OPT_HELP, '-', "Display this summary"},
     {"h", OPT_HELP, '-', "Display this summary"},
     {"compat", OPT_COMPAT, '-', "Create both new- and old-style hash links"},
     {"old", OPT_OLD, '-', "Use old-style hash to generate links"},
     {"n", OPT_N, '-', "Do not remove existing links"},
-
-    OPT_SECTION("Output"),
     {"v", OPT_VERBOSE, '-', "Verbose output"},
     {NULL}
 };

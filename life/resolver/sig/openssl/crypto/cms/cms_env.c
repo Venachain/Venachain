@@ -1,7 +1,7 @@
 /*
- * Copyright 2008-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 2008-2019 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -56,15 +56,14 @@ int cms_env_asn1_ctrl(CMS_RecipientInfo *ri, int cmd)
         pkey = ri->d.ktri->pkey;
     else if (ri->type == CMS_RECIPINFO_AGREE) {
         EVP_PKEY_CTX *pctx = ri->d.kari->pctx;
-
-        if (pctx == NULL)
+        if (!pctx)
             return 0;
         pkey = EVP_PKEY_CTX_get0_pkey(pctx);
-        if (pkey == NULL)
+        if (!pkey)
             return 0;
     } else
         return 0;
-    if (pkey->ameth == NULL || pkey->ameth->pkey_ctrl == NULL)
+    if (!pkey->ameth || !pkey->ameth->pkey_ctrl)
         return 1;
     i = pkey->ameth->pkey_ctrl(pkey, ASN1_PKEY_CTRL_CMS_ENVELOPE, cmd, ri);
     if (i == -2) {
@@ -192,7 +191,7 @@ CMS_RecipientInfo *CMS_add1_recipient_cert(CMS_ContentInfo *cms,
         goto merr;
 
     pk = X509_get0_pubkey(recip);
-    if (pk == NULL) {
+    if (!pk) {
         CMSerr(CMS_F_CMS_ADD1_RECIPIENT_CERT, CMS_R_ERROR_GETTING_PUBLIC_KEY);
         goto err;
     }
@@ -290,7 +289,7 @@ int CMS_RecipientInfo_set0_pkey(CMS_RecipientInfo *ri, EVP_PKEY *pkey)
 
 /* Encrypt content key in key transport recipient info */
 
-static int cms_RecipientInfo_ktri_encrypt(const CMS_ContentInfo *cms,
+static int cms_RecipientInfo_ktri_encrypt(CMS_ContentInfo *cms,
                                           CMS_RecipientInfo *ri)
 {
     CMS_KeyTransRecipientInfo *ktri;
@@ -627,7 +626,7 @@ int CMS_RecipientInfo_set0_key(CMS_RecipientInfo *ri,
 
 /* Encrypt content key in KEK recipient info */
 
-static int cms_RecipientInfo_kekri_encrypt(const CMS_ContentInfo *cms,
+static int cms_RecipientInfo_kekri_encrypt(CMS_ContentInfo *cms,
                                            CMS_RecipientInfo *ri)
 {
     CMS_EncryptedContentInfo *ec;
@@ -772,7 +771,7 @@ int CMS_RecipientInfo_decrypt(CMS_ContentInfo *cms, CMS_RecipientInfo *ri)
     }
 }
 
-int CMS_RecipientInfo_encrypt(const CMS_ContentInfo *cms, CMS_RecipientInfo *ri)
+int CMS_RecipientInfo_encrypt(CMS_ContentInfo *cms, CMS_RecipientInfo *ri)
 {
     switch (ri->type) {
     case CMS_RECIPINFO_TRANS:
@@ -857,7 +856,7 @@ static void cms_env_set_version(CMS_EnvelopedData *env)
     env->version = 0;
 }
 
-BIO *cms_EnvelopedData_init_bio(const CMS_ContentInfo *cms)
+BIO *cms_EnvelopedData_init_bio(CMS_ContentInfo *cms)
 {
     CMS_EncryptedContentInfo *ec;
     STACK_OF(CMS_RecipientInfo) *rinfos;

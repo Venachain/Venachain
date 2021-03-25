@@ -1,7 +1,7 @@
 /*
- * Copyright 2008-2016 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 2008-2020 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -39,16 +39,15 @@ CMS_ContentInfo *cms_Data_create(void)
 BIO *cms_content_bio(CMS_ContentInfo *cms)
 {
     ASN1_OCTET_STRING **pos = CMS_get0_content(cms);
-
-    if (pos == NULL)
+    if (!pos)
         return NULL;
     /* If content detached data goes nowhere: create NULL BIO */
-    if (*pos == NULL)
+    if (!*pos)
         return BIO_new(BIO_s_null());
     /*
      * If content not detached and created return memory BIO
      */
-    if (*pos == NULL || ((*pos)->flags == ASN1_STRING_FLAG_CONT))
+    if (!*pos || ((*pos)->flags == ASN1_STRING_FLAG_CONT))
         return BIO_new(BIO_s_mem());
     /* Else content was read in: return read only BIO for it */
     return BIO_new_mem_buf((*pos)->data, (*pos)->length);
@@ -93,24 +92,23 @@ BIO *CMS_dataInit(CMS_ContentInfo *cms, BIO *icont)
 
     default:
         CMSerr(CMS_F_CMS_DATAINIT, CMS_R_UNSUPPORTED_TYPE);
-        return NULL;
+        goto err;
     }
 
     if (cmsbio)
         return BIO_push(cmsbio, cont);
 
+err:
     if (!icont)
         BIO_free(cont);
     return NULL;
 
 }
 
-/* unfortunately cannot constify SMIME_write_ASN1() due to this function */
 int CMS_dataFinal(CMS_ContentInfo *cms, BIO *cmsbio)
 {
     ASN1_OCTET_STRING **pos = CMS_get0_content(cms);
-
-    if (pos == NULL)
+    if (!pos)
         return 0;
     /* If embedded content find memory BIO and set content */
     if (*pos && ((*pos)->flags & ASN1_STRING_FLAG_CONT)) {
@@ -236,14 +234,13 @@ const ASN1_OBJECT *CMS_get0_eContentType(CMS_ContentInfo *cms)
 int CMS_set1_eContentType(CMS_ContentInfo *cms, const ASN1_OBJECT *oid)
 {
     ASN1_OBJECT **petype, *etype;
-
     petype = cms_get0_econtent_type(cms);
-    if (petype == NULL)
+    if (!petype)
         return 0;
-    if (oid == NULL)
+    if (!oid)
         return 1;
     etype = OBJ_dup(oid);
-    if (etype == NULL)
+    if (!etype)
         return 0;
     ASN1_OBJECT_free(*petype);
     *petype = etype;
@@ -253,11 +250,10 @@ int CMS_set1_eContentType(CMS_ContentInfo *cms, const ASN1_OBJECT *oid)
 int CMS_is_detached(CMS_ContentInfo *cms)
 {
     ASN1_OCTET_STRING **pos;
-
     pos = CMS_get0_content(cms);
-    if (pos == NULL)
+    if (!pos)
         return -1;
-    if (*pos != NULL)
+    if (*pos)
         return 0;
     return 1;
 }
@@ -265,9 +261,8 @@ int CMS_is_detached(CMS_ContentInfo *cms)
 int CMS_set_detached(CMS_ContentInfo *cms, int detached)
 {
     ASN1_OCTET_STRING **pos;
-
     pos = CMS_get0_content(cms);
-    if (pos == NULL)
+    if (!pos)
         return 0;
     if (detached) {
         ASN1_OCTET_STRING_free(*pos);
@@ -367,13 +362,12 @@ CMS_CertificateChoices *CMS_add0_CertificateChoices(CMS_ContentInfo *cms)
 {
     STACK_OF(CMS_CertificateChoices) **pcerts;
     CMS_CertificateChoices *cch;
-
     pcerts = cms_get0_certificate_choices(cms);
-    if (pcerts == NULL)
+    if (!pcerts)
         return NULL;
-    if (*pcerts == NULL)
+    if (!*pcerts)
         *pcerts = sk_CMS_CertificateChoices_new_null();
-    if (*pcerts == NULL)
+    if (!*pcerts)
         return NULL;
     cch = M_ASN1_new_of(CMS_CertificateChoices);
     if (!cch)
@@ -390,9 +384,8 @@ int CMS_add0_cert(CMS_ContentInfo *cms, X509 *cert)
     CMS_CertificateChoices *cch;
     STACK_OF(CMS_CertificateChoices) **pcerts;
     int i;
-
     pcerts = cms_get0_certificate_choices(cms);
-    if (pcerts == NULL)
+    if (!pcerts)
         return 0;
     for (i = 0; i < sk_CMS_CertificateChoices_num(*pcerts); i++) {
         cch = sk_CMS_CertificateChoices_value(*pcerts, i);
@@ -446,16 +439,15 @@ CMS_RevocationInfoChoice *CMS_add0_RevocationInfoChoice(CMS_ContentInfo *cms)
 {
     STACK_OF(CMS_RevocationInfoChoice) **pcrls;
     CMS_RevocationInfoChoice *rch;
-
     pcrls = cms_get0_revocation_choices(cms);
-    if (pcrls == NULL)
+    if (!pcrls)
         return NULL;
-    if (*pcrls == NULL)
+    if (!*pcrls)
         *pcrls = sk_CMS_RevocationInfoChoice_new_null();
-    if (*pcrls == NULL)
+    if (!*pcrls)
         return NULL;
     rch = M_ASN1_new_of(CMS_RevocationInfoChoice);
-    if (rch == NULL)
+    if (!rch)
         return NULL;
     if (!sk_CMS_RevocationInfoChoice_push(*pcrls, rch)) {
         M_ASN1_free_of(rch, CMS_RevocationInfoChoice);
@@ -490,9 +482,8 @@ STACK_OF(X509) *CMS_get1_certs(CMS_ContentInfo *cms)
     CMS_CertificateChoices *cch;
     STACK_OF(CMS_CertificateChoices) **pcerts;
     int i;
-
     pcerts = cms_get0_certificate_choices(cms);
-    if (pcerts == NULL)
+    if (!pcerts)
         return NULL;
     for (i = 0; i < sk_CMS_CertificateChoices_num(*pcerts); i++) {
         cch = sk_CMS_CertificateChoices_value(*pcerts, i);
@@ -519,9 +510,8 @@ STACK_OF(X509_CRL) *CMS_get1_crls(CMS_ContentInfo *cms)
     STACK_OF(CMS_RevocationInfoChoice) **pcrls;
     CMS_RevocationInfoChoice *rch;
     int i;
-
     pcrls = cms_get0_revocation_choices(cms);
-    if (pcrls == NULL)
+    if (!pcrls)
         return NULL;
     for (i = 0; i < sk_CMS_RevocationInfoChoice_num(*pcrls); i++) {
         rch = sk_CMS_RevocationInfoChoice_value(*pcrls, i);

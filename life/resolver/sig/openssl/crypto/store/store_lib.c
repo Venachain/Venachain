@@ -1,7 +1,7 @@
 /*
- * Copyright 2016-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 2016-2020 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -16,7 +16,6 @@
 
 #include <openssl/crypto.h>
 #include <openssl/err.h>
-#include <openssl/trace.h>
 #include <openssl/store.h>
 #include "internal/thread_once.h"
 #include "crypto/store.h"
@@ -75,14 +74,9 @@ OSSL_STORE_CTX *OSSL_STORE_open(const char *uri, const UI_METHOD *ui_method,
 
     /* Try each scheme until we find one that could open the URI */
     for (i = 0; loader_ctx == NULL && i < schemes_n; i++) {
-        OSSL_TRACE1(STORE, "Looking up scheme %s\n", schemes[i]);
-        if ((loader = ossl_store_get0_loader_int(schemes[i])) != NULL) {
-            OSSL_TRACE1(STORE, "Found loader for scheme %s\n", schemes[i]);
+        if ((loader = ossl_store_get0_loader_int(schemes[i])) != NULL)
             loader_ctx = loader->open(loader, uri, ui_method, ui_data);
-            OSSL_TRACE2(STORE, "Opened %s => %p\n", uri, (void *)loader_ctx);
-        }
     }
-
     if (loader_ctx == NULL)
         goto err;
 
@@ -153,7 +147,7 @@ int OSSL_STORE_expect(OSSL_STORE_CTX *ctx, int expected_type)
     return 1;
 }
 
-int OSSL_STORE_find(OSSL_STORE_CTX *ctx, const OSSL_STORE_SEARCH *search)
+int OSSL_STORE_find(OSSL_STORE_CTX *ctx, OSSL_STORE_SEARCH *search)
 {
     if (ctx->loading) {
         OSSL_STOREerr(OSSL_STORE_F_OSSL_STORE_FIND,
@@ -178,7 +172,6 @@ OSSL_STORE_INFO *OSSL_STORE_load(OSSL_STORE_CTX *ctx)
     if (OSSL_STORE_eof(ctx))
         return NULL;
 
-    OSSL_TRACE(STORE, "Loading next object\n");
     v = ctx->loader->load(ctx->loader_ctx, ctx->ui_method, ctx->ui_data);
 
     if (ctx->post_process != NULL && v != NULL) {
@@ -210,10 +203,6 @@ OSSL_STORE_INFO *OSSL_STORE_load(OSSL_STORE_CTX *ctx)
         }
     }
 
-    if (v != NULL)
-        OSSL_TRACE1(STORE, "Got a %s\n",
-                    OSSL_STORE_INFO_type_string(OSSL_STORE_INFO_get_type(v)));
-
     return v;
 }
 
@@ -231,7 +220,8 @@ int OSSL_STORE_close(OSSL_STORE_CTX *ctx)
 {
     int loader_ret;
 
-    OSSL_TRACE1(STORE, "Closing %p\n", (void *)ctx->loader_ctx);
+    if (ctx == NULL)
+        return 1;
     loader_ret = ctx->loader->close(ctx->loader_ctx);
 
     OPENSSL_free(ctx);
@@ -583,7 +573,7 @@ int OSSL_STORE_SEARCH_get_type(const OSSL_STORE_SEARCH *criterion)
     return criterion->search_type;
 }
 
-X509_NAME *OSSL_STORE_SEARCH_get0_name(const OSSL_STORE_SEARCH *criterion)
+X509_NAME *OSSL_STORE_SEARCH_get0_name(OSSL_STORE_SEARCH *criterion)
 {
     return criterion->name;
 }

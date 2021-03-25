@@ -1,7 +1,7 @@
 /*
  * Copyright 1995-2019 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -49,40 +49,36 @@ const OPTIONS dgst_options[] = {
     {OPT_HELP_STR, 1, '-', "Usage: %s [options] [file...]\n"},
     {OPT_HELP_STR, 1, '-',
         "  file... files to digest (default is stdin)\n"},
-    OPT_SECTION("General"),
     {"help", OPT_HELP, '-', "Display this summary"},
     {"list", OPT_LIST, '-', "List digests"},
-#ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's', "Use engine e, possibly a hardware device"},
-    {"engine_impl", OPT_ENGINE_IMPL, '-',
-     "Also use engine given by -engine for digest operations"},
-#endif
-    {"passin", OPT_PASSIN, 's', "Input file pass phrase source"},
-
-    OPT_SECTION("Output"),
     {"c", OPT_C, '-', "Print the digest with separating colons"},
     {"r", OPT_R, '-', "Print the digest in coreutils format"},
     {"out", OPT_OUT, '>', "Output to filename rather than stdout"},
+    {"passin", OPT_PASSIN, 's', "Input file pass phrase source"},
+    {"sign", OPT_SIGN, 's', "Sign digest using private key"},
+    {"verify", OPT_VERIFY, 's',
+     "Verify a signature using public key"},
+    {"prverify", OPT_PRVERIFY, 's',
+     "Verify a signature using private key"},
+    {"signature", OPT_SIGNATURE, '<', "File with signature to verify"},
     {"keyform", OPT_KEYFORM, 'f', "Key file format (PEM or ENGINE)"},
     {"hex", OPT_HEX, '-', "Print as hex dump"},
     {"binary", OPT_BINARY, '-', "Print in binary form"},
     {"d", OPT_DEBUG, '-', "Print debug info"},
     {"debug", OPT_DEBUG, '-', "Print debug info"},
-
-    OPT_SECTION("Signing"),
-    {"sign", OPT_SIGN, 's', "Sign digest using private key"},
-    {"verify", OPT_VERIFY, 's', "Verify a signature using public key"},
-    {"prverify", OPT_PRVERIFY, 's', "Verify a signature using private key"},
-    {"sigopt", OPT_SIGOPT, 's', "Signature parameter in n:v form"},
-    {"signature", OPT_SIGNATURE, '<', "File with signature to verify"},
-    {"hmac", OPT_HMAC, 's', "Create hashed MAC with key"},
-    {"mac", OPT_MAC, 's', "Create MAC (not necessarily HMAC)"},
-    {"macopt", OPT_MACOPT, 's', "MAC algorithm parameters in n:v form or key"},
-    {"", OPT_DIGEST, '-', "Any supported digest"},
     {"fips-fingerprint", OPT_FIPS_FINGERPRINT, '-',
      "Compute HMAC with the key used in OpenSSL-FIPS fingerprint"},
-
+    {"hmac", OPT_HMAC, 's', "Create hashed MAC with key"},
+    {"mac", OPT_MAC, 's', "Create MAC (not necessarily HMAC)"},
+    {"sigopt", OPT_SIGOPT, 's', "Signature parameter in n:v form"},
+    {"macopt", OPT_MACOPT, 's', "MAC algorithm parameters in n:v form or key"},
+    {"", OPT_DIGEST, '-', "Any supported digest"},
     OPT_R_OPTIONS,
+#ifndef OPENSSL_NO_ENGINE
+    {"engine", OPT_ENGINE, 's', "Use engine e, possibly a hardware device"},
+    {"engine_impl", OPT_ENGINE_IMPL, '-',
+     "Also use engine given by -engine for digest operations"},
+#endif
     {NULL}
 };
 
@@ -98,7 +94,6 @@ int dgst_main(int argc, char **argv)
     const EVP_MD *md = NULL, *m;
     const char *outfile = NULL, *keyfile = NULL, *prog = NULL;
     const char *sigfile = NULL;
-    const char *md_name = NULL;
     OPTION_CHOICE o;
     int separator = 0, debug = 0, keyform = FORMAT_PEM, siglen = 0;
     int i, ret = 1, out_bin = -1, want_pub = 0, do_verify = 0;
@@ -388,15 +383,13 @@ int dgst_main(int argc, char **argv)
         BIO_get_md_ctx(bmd, &tctx);
         md = EVP_MD_CTX_md(tctx);
     }
-    if (md != NULL)
-        md_name = EVP_MD_name(md);
 
     if (argc == 0) {
         BIO_set_fp(in, stdin, BIO_NOCLOSE);
         ret = do_fp(out, buf, inp, separator, out_bin, sigkey, sigbuf,
-                    siglen, NULL, md_name, "stdin");
+                    siglen, NULL, NULL, "stdin");
     } else {
-        const char *sig_name = NULL;
+        const char *md_name = NULL, *sig_name = NULL;
         if (!out_bin) {
             if (sigkey != NULL) {
                 const EVP_PKEY_ASN1_METHOD *ameth;
@@ -405,6 +398,8 @@ int dgst_main(int argc, char **argv)
                     EVP_PKEY_asn1_get0_info(NULL, NULL,
                                             NULL, NULL, &sig_name, ameth);
             }
+            if (md != NULL)
+                md_name = EVP_MD_name(md);
         }
         ret = 0;
         for (i = 0; i < argc; i++) {
