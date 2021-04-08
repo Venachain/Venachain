@@ -133,24 +133,30 @@ func newPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) *peer {
 // broadcast is a write loop that multiplexes block propagations, announcements
 // and transaction broadcasts into the remote peer. The goal is to have an async
 // writer that does not lock up node internals.
-func (p *peer) broadcast() {
+func (p *peer) broadcast(removePeer func(string)) {
 	go func() {
 		for {
 			select {
 			case prop := <-p.queuedProps:
 				if err := p.SendNewBlock(prop.block); err != nil {
+					p.Log().Error("Propagated block", "number", prop.block.Number(), "hash", prop.block.Hash(), "err", err)
+					removePeer(p.id)
 					return
 				}
 				p.Log().Trace("Propagated block", "number", prop.block.Number(), "hash", prop.block.Hash())
 
 			case block := <-p.queuedAnns:
 				if err := p.SendNewBlockHashes([]common.Hash{block.Hash()}, []uint64{block.NumberU64()}); err != nil {
+					p.Log().Error("Announced block", "number", block.Number(), "hash", block.Hash(), "err", err)
+					removePeer(p.id)
 					return
 				}
 				p.Log().Trace("Announced block", "number", block.Number(), "hash", block.Hash())
 
 			case prop := <-p.queuedPreBlock:
 				if err := p.SendPrepareBlock(prop.block); err != nil {
+					p.Log().Error("Propagated prepare block", "number", prop.block.Number(), "hash", prop.block.Hash(), "err", err)
+					removePeer(p.id)
 					return
 				}
 				p.Log().Trace("Propagated prepare block", "number", prop.block.Number(), "hash", prop.block.Hash())
@@ -166,6 +172,8 @@ func (p *peer) broadcast() {
 			select {
 			case txs := <-p.queuedTxs:
 				if err := p.SendTransactions(txs); err != nil {
+					p.Log().Error("Broadcast transactions err", "err", err)
+					removePeer(p.id)
 					return
 				}
 				p.Log().Trace("Broadcast transactions", "count", len(txs))
@@ -182,6 +190,7 @@ func (p *peer) broadcast() {
 			case hashes := <-p.queuedHashes:
 				if err := p.sendPooledTransactionHashes(hashes); err != nil {
 					p.Log().Error("Broadcast transaction hashes error ", "err", err)
+					removePeer(p.id)
 					return
 				}
 				p.Log().Trace("Broadcast transaction hashes", "count", len(hashes))
@@ -563,7 +572,7 @@ func newPeerSet() *peerSet {
 // Register injects a new peer into the working set, or returns an error if the
 // peer is already known. If a new peer it registered, its broadcast loop is also
 // started.
-func (ps *peerSet) Register(p *peer) error {
+func (ps *peerSet) Register(p *peer, removePeer func(string)) error {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
 
@@ -574,7 +583,7 @@ func (ps *peerSet) Register(p *peer) error {
 		return errAlreadyRegistered
 	}
 	ps.peers[p.id] = p
-	go p.broadcast()
+	go p.broadcast(removePeer)
 
 	return nil
 }
