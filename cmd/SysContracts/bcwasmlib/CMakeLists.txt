@@ -1,9 +1,0 @@
-file(GLOB BCWASM_SOURCE  "src/RLP.cpp")
-
-
-add_wast_library(TARGET libbcwasm
-        NOWARNINGS
-        SOURCE_FILES ${BCWASM_SOURCE}
-        INCLUDE_FOLDERS ${STANDARD_INCLUDE_FOLDERS}
-        DESTINATION_FOLDER ${CMAKE_CURRENT_BINARY_DIR}
-        )

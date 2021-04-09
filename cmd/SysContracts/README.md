@@ -2,6 +2,8 @@
 
 Welcome to the System Contract source code repository! It's based on BCWasm.
 
+**this repo is abandoned ！ ！ ！**
+
 ## Building the source
 * Building system contracts for the first time requires you to do the following steps:
 ```shell

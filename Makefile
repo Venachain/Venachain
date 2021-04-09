@@ -12,13 +12,13 @@ GOBIN = $(shell pwd)/build/bin
 GO ?= latest
 
 platonecli:
-	@go generate ./cmd/platonecli/main.go
 	build/build_deps.sh
+	build/env.sh go get -u github.com/go-bindata/go-bindata/...
+	build/env.sh go generate ./cmd/platonecli/main.go
 	build/env.sh go run build/ci.go install ./cmd/platonecli
 	@cp $(GOBIN)/platonecli $(shell pwd)/release/linux/bin/
 	@echo "Done building."
-	@echo "Run \"$(GOBIN)/platone\" to launch platone."
-
+	@echo "Run \"$(GOBIN)/platonecli\" to launch platonecli."
 
 platone:
 	build/build_deps.sh
@@ -27,11 +27,7 @@ platone:
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/platone\" to launch platone."
 
-#syscontract:
-#	build/build_syscontracts.sh
-
 all:
-	@go generate ./cmd/platonecli/main.go
 	build/build_deps.sh
 	build/env.sh go run build/ci.go install
 	build/move_bin_to_release.sh
@@ -57,12 +53,8 @@ clean:
 	./build/clean_go_build_cache.sh
 	rm -fr build/_workspace/pkg/ $(GOBIN)/*
 
-# The devtools target installs tools required for 'go generate'.
-# You need to put $GOBIN (or $GOPATH/bin) in your PATH to use 'go generate'.
-
 devtools:
 	env GOBIN= go get -u golang.org/x/tools/cmd/stringer
-	env GOBIN= go get -u github.com/kevinburke/go-bindata/go-bindata
 	env GOBIN= go get -u github.com/fjl/gencodec
 	env GOBIN= go get -u github.com/golang/protobuf/protoc-gen-go
 	env GOBIN= go install ./cmd/abigen

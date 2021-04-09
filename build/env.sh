@@ -26,6 +26,7 @@ echo "ln -s success."
 # Set up the environment to use the workspace.
 GOPATH="$workspace"
 export GOPATH
+export PATH=$PATH:$GOPATH
 
 # Run the command inside the workspace.
 cd "$platonedir/PlatONE-Go"
