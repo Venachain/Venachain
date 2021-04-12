@@ -78,6 +78,10 @@ cmd/SysContracts/*.s
 cmd/SysContracts/*.wasm
 cmd/SysContracts/*.wast
 
+#platonecli precompiled system contract bin-data
+
+cmd/platonecli/client/precompiled/bindata.go
+
 release/linux/conf/bak
 release/linux/bin/abigen
 release/linux/bin/bootnode

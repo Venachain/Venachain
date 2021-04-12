@@ -17,6 +17,7 @@ require (
 	github.com/fjl/memsize v0.0.0-20180418122429-ca190fb6ffbc
 	github.com/gin-gonic/gin v1.6.3
 	github.com/gizak/termui v2.2.1-0.20170117222342-991cd3d38091+incompatible
+	github.com/go-bindata/go-bindata v3.1.2+incompatible // indirect
 	github.com/go-interpreter/wagon v0.6.0
 	github.com/go-stack/stack v1.8.0
 	github.com/golang/protobuf v1.4.2

@@ -18,10 +18,9 @@ if [ ! -L "$platonedir/PlatONE-Go" ]; then
     mkdir -p "$platonedir"
     cd "$platonedir"
     ln -s ../../../../../. PlatONE-Go
+    echo "ln -s success."
     cd "$root"
 fi
-
-echo "ln -s success."
 
 # Set up the environment to use the workspace.
 GOPATH="$workspace"

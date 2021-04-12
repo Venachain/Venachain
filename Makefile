@@ -13,8 +13,6 @@ GO ?= latest
 
 platonecli:
 	build/build_deps.sh
-	build/env.sh go get -u github.com/go-bindata/go-bindata/...
-	build/env.sh go generate ./cmd/platonecli/main.go
 	build/env.sh go run build/ci.go install ./cmd/platonecli
 	@cp $(GOBIN)/platonecli $(shell pwd)/release/linux/bin/
 	@echo "Done building."
@@ -29,8 +27,6 @@ platone:
 
 all:
 	build/build_deps.sh
-	build/env.sh go get -u github.com/go-bindata/go-bindata/...
-	build/env.sh go generate ./cmd/platonecli/main.go
 	build/env.sh go run build/ci.go install
 	build/move_bin_to_release.sh
 
