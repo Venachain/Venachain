@@ -168,7 +168,8 @@ func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, ne
 				return nil
 			},
 			UpdatePeer: func(info *common.NodeInfo) {
-				if p := manager.peers.Peer(info.PublicKey); p != nil {
+				id := info.PublicKey[:16]
+				if p := manager.peers.Peer(id); p != nil {
 					p.setTypes(info.Types)
 				}
 			},
