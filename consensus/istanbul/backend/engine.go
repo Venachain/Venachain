@@ -295,12 +295,14 @@ func (sb *backend) verifyCommittedSeals(chain consensus.ChainReader, header *typ
 		if validators.RemoveValidator(addr) {
 			validSeal += 1
 		} else {
+			log.Error("errInvalidCommittedSeals", "blockNumber", number, "validateSet", snap.validators(), "commitedSeal addr", addr, "parentHash", header.ParentHash)
 			return errInvalidCommittedSeals
 		}
 	}
 
 	// The length of validSeal should be larger than number of faulty node + 1
 	if validSeal < snap.ValSet.Size()-snap.ValSet.F() /*2*snap.ValSet.F()*/ {
+		log.Error("errInvalidCommittedSeals", "validSeal", validSeal, "snap.ValSet.Size()", snap.ValSet.Size(), "snap.ValSet.F()", snap.ValSet.F())
 		return errInvalidCommittedSeals
 	}
 
@@ -373,7 +375,7 @@ func (sb *backend) Finalize(chain consensus.ChainReader, header *types.Header, s
 	// vrf election
 	scNode := vm.NewSCNode(state)
 	scNode.SetBlockNumber(header.Number)
-	parent := chain.GetHeaderByNumber(header.Number.Uint64()-1)
+	parent := chain.GetHeaderByNumber(header.Number.Uint64() - 1)
 	if parent != nil {
 		if _, err := scNode.VrfElection(parent.Nonce[:]); err != nil {
 			return nil, err

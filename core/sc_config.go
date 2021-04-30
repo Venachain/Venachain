@@ -115,6 +115,8 @@ func UpdateNodeSysContractConfig(bc *BlockChain, sysContractConf *common.SystemC
 	} else if tmp.RetCode != 0 {
 		log.Debug("contract inner error", "code", tmp.RetCode, "msg", tmp.RetMsg)
 	} else {
+		sysContractConf.SystemConfigMu.Lock()
+		defer sysContractConf.SystemConfigMu.Unlock()
 		sysContractConf.Nodes = tmp.Data
 		sysContractConf.GenerateNodeData()
 		p2p.UpdatePeer()

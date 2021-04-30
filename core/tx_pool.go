@@ -289,9 +289,9 @@ func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoo
 	if !config.NoLocals && config.Journal != "" {
 		pool.journal = newTxJournal(config.Journal)
 
-		//if err := pool.journal.load(pool.AddLocals); err != nil {
-		//	log.Warn("Failed to load transaction journal", "err", err)
-		//}
+		if err := pool.journal.load(pool.AddLocals); err != nil {
+			log.Warn("Failed to load transaction journal", "err", err)
+		}
 		if err := pool.journal.rotate(pool.local()); err != nil {
 			log.Warn("Failed to rotate transaction journal", "err", err)
 		}
