@@ -1,7 +1,7 @@
 /*
  * Copyright 1995-2016 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -94,7 +94,7 @@ int ASN1_item_verify(const ASN1_ITEM *it, X509_ALGOR *a,
     int mdnid, pknid;
     size_t inll = 0;
 
-    if (pkey == NULL) {
+    if (!pkey) {
         ASN1err(ASN1_F_ASN1_ITEM_VERIFY, ERR_R_PASSED_NULL_PARAMETER);
         return -1;
     }
@@ -116,7 +116,7 @@ int ASN1_item_verify(const ASN1_ITEM *it, X509_ALGOR *a,
         goto err;
     }
     if (mdnid == NID_undef) {
-        if (pkey->ameth == NULL || pkey->ameth->item_verify == NULL) {
+        if (!pkey->ameth || !pkey->ameth->item_verify) {
             ASN1err(ASN1_F_ASN1_ITEM_VERIFY,
                     ASN1_R_UNKNOWN_SIGNATURE_ALGORITHM);
             goto err;
@@ -150,6 +150,7 @@ int ASN1_item_verify(const ASN1_ITEM *it, X509_ALGOR *a,
             ret = 0;
             goto err;
         }
+
     }
 
     inl = ASN1_item_i2d(asn, &buf_in, it);

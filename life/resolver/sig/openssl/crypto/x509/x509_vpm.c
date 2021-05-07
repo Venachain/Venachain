@@ -1,7 +1,7 @@
 /*
  * Copyright 2004-2018 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -332,9 +332,9 @@ void X509_VERIFY_PARAM_set_time(X509_VERIFY_PARAM *param, time_t t)
 int X509_VERIFY_PARAM_add0_policy(X509_VERIFY_PARAM *param,
                                   ASN1_OBJECT *policy)
 {
-    if (param->policies == NULL) {
+    if (!param->policies) {
         param->policies = sk_ASN1_OBJECT_new_null();
-        if (param->policies == NULL)
+        if (!param->policies)
             return 0;
     }
     if (!sk_ASN1_OBJECT_push(param->policies, policy))
@@ -348,17 +348,17 @@ int X509_VERIFY_PARAM_set1_policies(X509_VERIFY_PARAM *param,
     int i;
     ASN1_OBJECT *oid, *doid;
 
-    if (param == NULL)
+    if (!param)
         return 0;
     sk_ASN1_OBJECT_pop_free(param->policies, ASN1_OBJECT_free);
 
-    if (policies == NULL) {
+    if (!policies) {
         param->policies = NULL;
         return 1;
     }
 
     param->policies = sk_ASN1_OBJECT_new_null();
-    if (param->policies == NULL)
+    if (!param->policies)
         return 0;
 
     for (i = 0; i < sk_ASN1_OBJECT_num(policies); i++) {

@@ -1,7 +1,7 @@
 /*
  * Copyright 2001-2016 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -343,7 +343,7 @@ static int dynamic_ctrl(ENGINE *e, int cmd, long i, void *p, void (*f) (void))
         return 1;
     case DYNAMIC_CMD_DIR_ADD:
         /* a NULL 'p' or a string of zero-length is the same thing */
-        if (p == NULL || (strlen((const char *)p) < 1)) {
+        if (!p || (strlen((const char *)p) < 1)) {
             ENGINEerr(ENGINE_F_DYNAMIC_CTRL, ENGINE_R_INVALID_ARGUMENT);
             return 0;
         }

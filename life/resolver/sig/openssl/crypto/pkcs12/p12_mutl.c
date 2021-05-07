@@ -1,7 +1,7 @@
 /*
  * Copyright 1999-2018 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -95,7 +95,7 @@ static int pkcs12_gen_mac(PKCS12 *p12, const char *pass, int passlen,
 
     salt = p12->mac->salt->data;
     saltlen = p12->mac->salt->length;
-    if (p12->mac->iter == NULL)
+    if (!p12->mac->iter)
         iter = 1;
     else
         iter = ASN1_INTEGER_get(p12->mac->iter);

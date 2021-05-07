@@ -51,9 +51,9 @@ const (
 	defaultGasPrice = params.GWei
 )
 
-//func init(){
-//	rand.Seed(time.Now().UnixNano())
-//}
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 // PublicEthereumAPI provides an API to access Ethereum related information.
 // It offers only methods that operate on public data that is freely available to anyone.
@@ -358,10 +358,7 @@ func (s *PrivateAccountAPI) signTransaction(ctx context.Context, args SendTxArgs
 	// Assemble the transaction and sign with the wallet
 	tx := args.toTransaction()
 
-	var chainID *big.Int
-	if config := s.b.ChainConfig(); config.IsEIP155(s.b.CurrentBlock().Number()) {
-		chainID = config.ChainID
-	}
+	chainID := s.b.ChainConfig().ChainID
 	return wallet.SignTxWithPassphrase(account, passwd, tx, chainID)
 }
 
@@ -490,15 +487,14 @@ func NewPublicBlockChainAPI(b Backend) *PublicBlockChainAPI {
 	return &PublicBlockChainAPI{b}
 }
 
-
-func (s *PublicBlockChainAPI) Monitor(ctx context.Context, hash common.Hash, monitorType string) (map[string]interface{}) {
+func (s *PublicBlockChainAPI) Monitor(ctx context.Context, hash common.Hash, monitorType string) map[string]interface{} {
 	// Determine whether it is a transaction or a block of information
 	// Parse query type
-	typeArry := strings.Split(monitorType,"|")
+	typeArry := strings.Split(monitorType, "|")
 	respond := map[string]interface{}{}
 	if block, _ := s.b.GetBlock(ctx, hash); block != nil {
 		// get block info
-		for i:= 0; i < len(typeArry); i++ {
+		for i := 0; i < len(typeArry); i++ {
 			sType := typeArry[i]
 			iType, _ := strconv.Atoi(sType)
 			if rpc.BlockConsensusStartTime == iType || rpc.BlockConsensusEndTime == iType ||
@@ -562,13 +558,14 @@ func (s *PublicBlockChainAPI) GetBalance(ctx context.Context, address common.Add
 // GetAccountBaseInfo returns the account Information for the given address in the state of the
 // given block number. The rpc.LatestBlockNumber and rpc.PendingBlockNumber meta
 // block numbers are also allowed.
-type AccountBaseInfo struct{
-	Address common.Address
-	Creator common.Address
+type AccountBaseInfo struct {
+	Address    common.Address
+	Creator    common.Address
 	IsContract bool
-	Nonce uint64
-	Balance *big.Int
+	Nonce      uint64
+	Balance    *big.Int
 }
+
 func (s *PublicBlockChainAPI) GetAccountBaseInfo(ctx context.Context, address common.Address, blockNr rpc.BlockNumber) (*AccountBaseInfo, error) {
 	state, _, err := s.b.StateAndHeaderByNumber(ctx, blockNr)
 	if state == nil || err != nil {
@@ -641,7 +638,6 @@ type CallArgs struct {
 	GasPrice hexutil.Big     `json:"gasPrice"`
 	Value    hexutil.Big     `json:"value"`
 	Data     hexutil.Bytes   `json:"data"`
-	TxType   uint64 			 `json:"txType"`
 }
 
 func (s *PublicBlockChainAPI) doCall(ctx context.Context, args CallArgs, blockNr rpc.BlockNumber, vmCfg vm.Config, timeout time.Duration) ([]byte, uint64, bool, error) {
@@ -670,8 +666,7 @@ func (s *PublicBlockChainAPI) doCall(ctx context.Context, args CallArgs, blockNr
 	}
 
 	// Create new call message
-	msg := types.NewMessage(addr, args.To, 0, args.Value.ToInt(), 0x999999999, gasPrice, args.Data, false, args.TxType)
-	log.Debug("evm call", "txtpe", args.TxType)
+	msg := types.NewMessage(addr, args.To, 0, args.Value.ToInt(), 0x999999999, gasPrice, args.Data, false)
 	// Setup context so it may be cancelled the call has completed
 	// or, in case of unmetered gas, setup a context with a timeout.
 	var cancel context.CancelFunc
@@ -895,7 +890,6 @@ type RPCTransaction struct {
 	V                *hexutil.Big    `json:"v"`
 	R                *hexutil.Big    `json:"r"`
 	S                *hexutil.Big    `json:"s"`
-	TxType   		  hexutil.Uint64 `json:"txType"`
 }
 
 // newRPCTransaction returns a transaction that will serialize to the RPC
@@ -920,7 +914,7 @@ func newRPCTransaction(tx *types.Transaction, blockHash common.Hash, blockNumber
 		V:        (*hexutil.Big)(v),
 		R:        (*hexutil.Big)(r),
 		S:        (*hexutil.Big)(s),
-		TxType:	  hexutil.Uint64(tx.Type()),
+		//TxType:   hexutil.Uint64(tx.Type()),
 	}
 	if blockHash != (common.Hash{}) {
 		result.BlockHash = blockHash
@@ -1125,11 +1119,17 @@ func (s *PublicTransactionPoolAPI) sign(addr common.Address, tx *types.Transacti
 		return nil, err
 	}
 	// Request the wallet to sign the transaction
-	var chainID *big.Int
-	if config := s.b.ChainConfig(); config.IsEIP155(s.b.CurrentBlock().Number()) {
-		chainID = config.ChainID
-	}
+	chainID := s.b.ChainConfig().ChainID
 	return wallet.SignTx(account, tx, chainID)
+}
+
+func (s *PublicTransactionPoolAPI) RunBenchmark(ctx context.Context, encodedTx hexutil.Bytes) {
+	log.Info("start run bench***************")
+	bm := new(types.Benchmark)
+	if err := rlp.DecodeBytes(encodedTx, bm); err != nil {
+		return
+	}
+	s.b.GenerateTxs(bm)
 }
 
 // SendTxArgs represents the arguments to sumbit a new transaction into the transaction pool.
@@ -1142,9 +1142,8 @@ type SendTxArgs struct {
 	Nonce    *hexutil.Uint64 `json:"nonce"`
 	// We accept "data" and "input" for backwards-compatibility reasons. "input" is the
 	// newer name and should be preferred by clients.
-	Data  *hexutil.Bytes `json:"data"`
-	Input *hexutil.Bytes `json:"input"`
-	TxType    uint64        `json:"txType"`
+	Data   *hexutil.Bytes `json:"data"`
+	Input  *hexutil.Bytes `json:"input"`
 }
 
 // setDefaults is a helper function that fills in default values for unspecified tx fields.
@@ -1169,7 +1168,7 @@ func (args *SendTxArgs) setDefaults(ctx context.Context, b Backend) error {
 		//	return err
 		//}
 		//rand.Seed(time.Now().UnixNano())
-		nonce := rand.Uint64()
+		nonce := rand.Uint64() % (1<<50 - 1)
 		args.Nonce = (*hexutil.Uint64)(&nonce)
 	}
 	if args.Data != nil && args.Input != nil && !bytes.Equal(*args.Data, *args.Input) {
@@ -1200,7 +1199,7 @@ func (args *SendTxArgs) toTransaction() *types.Transaction {
 	if args.To == nil {
 		return types.NewContractCreation(uint64(*args.Nonce), (*big.Int)(args.Value), uint64(*args.Gas), (*big.Int)(args.GasPrice), input)
 	}
-	return types.NewTransaction(uint64(*args.Nonce), *args.To, (*big.Int)(args.Value), uint64(*args.Gas), (*big.Int)(args.GasPrice), input, args.TxType)
+	return types.NewTransaction(uint64(*args.Nonce), *args.To, (*big.Int)(args.Value), uint64(*args.Gas), (*big.Int)(args.GasPrice), input)
 }
 
 // submitTransaction is a helper function that submits tx to txPool and logs a message.
@@ -1234,17 +1233,17 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 		return common.Hash{}, err
 	}
 	//
-	if args.Nonce == nil {
-		// Hold the addresse's mutex around signing to prevent concurrent assignment of
-		// the same nonce to multiple accounts.
+	//if args.Nonce == nil {
+	// Hold the addresse's mutex around signing to prevent concurrent assignment of
+	// the same nonce to multiple accounts.
 
-		//r := rand.New(rand.NewSource(time.Now().UnixNano()))
-		//randNonce := hexutil.Uint64(r.Uint64())
-		//args.Nonce = &randNonce
+	//r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	//randNonce := hexutil.Uint64(r.Uint64())
+	//args.Nonce = &randNonce
 
-		s.nonceLock.LockAddr(args.From)
-		defer s.nonceLock.UnlockAddr(args.From)
-	}
+	//	s.nonceLock.LockAddr(args.From)
+	//	defer s.nonceLock.UnlockAddr(args.From)
+	//}
 
 	// Set some sanity defaults and terminate on failure
 	if err := args.setDefaults(ctx, s.b); err != nil {
@@ -1253,10 +1252,7 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 	// Assemble the transaction and sign with the wallet
 	tx := args.toTransaction()
 
-	var chainID *big.Int
-	if config := s.b.ChainConfig(); config.IsEIP155(s.b.CurrentBlock().Number()) {
-		chainID = config.ChainID
-	}
+	chainID := s.b.ChainConfig().ChainID
 	signed, err := wallet.SignTx(account, tx, chainID)
 	if err != nil {
 		return common.Hash{}, err

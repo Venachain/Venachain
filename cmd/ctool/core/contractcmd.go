@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"io/ioutil"
 	"strings"
 	"time"
@@ -79,7 +80,7 @@ func CodeGen(abiFilePath string, codeFilePath string) error {
 	codeBytes := parseFileToBytes(codeFilePath)
 
 	param := [3][]byte{
-		Int64ToBytes(deployContract),
+		Int64ToBytes(defaultContractType),
 		codeBytes,
 		abiBytes,
 	}
@@ -113,7 +114,7 @@ func DeployContract(abiFilePath string, codeFilePath string) error {
 	codeBytes := parseFileToBytes(codeFilePath)
 
 	param := [3][]byte{
-		Int64ToBytes(deployContract),
+		Int64ToBytes(defaultContractType),
 		codeBytes,
 		abiBytes,
 	}
@@ -148,7 +149,11 @@ func DeployContract(abiFilePath string, codeFilePath string) error {
 
 	select {
 	case address := <-ch:
-		fmt.Printf("contract address: %s\n", address)
+		if common.IsHexAddress(address){
+			fmt.Printf("contract address: %s\n", address)
+		}else {
+			fmt.Printf("contract deploy failed\n")
+		}
 	case <-time.After(time.Second * 200):
 		fmt.Printf("get contract receipt timeout...more than 200 second.\n")
 	}
@@ -168,8 +173,6 @@ func fwInvoke(c *cli.Context) error {
 	addr := c.String("addr")
 	funcName := c.String("func")
 	funcParams := c.StringSlice("param")
-	// txType := c.Int("type")
-	txType := fwTxType
 
 	if addr == "" {
 		fmt.Printf("addr can't be empty!")
@@ -185,7 +188,7 @@ func fwInvoke(c *cli.Context) error {
 
 	parseConfigJson(c.String(ConfigPathFlag.Name))
 
-	err := FwInvokeContract(addr,funcName, funcParams, txType, hasBracket)
+	err := FwInvokeContract(addr,funcName, funcParams, hasBracket)
 	if err != nil {
 		panic(fmt.Errorf("FwInvokeContract contract error, %s", err.Error()))
 	}
@@ -196,8 +199,6 @@ func migInvoke(c *cli.Context) error {
 	addr := c.String("addr")
 	funcName := c.String("func")
 	funcParams := c.StringSlice("param")
-	// txType := c.Int("type")
-	txType := migTxType
 
 	if addr == "" {
 		fmt.Printf("addr can't be empty!")
@@ -214,7 +215,7 @@ func migInvoke(c *cli.Context) error {
 
 	parseConfigJson(c.String(ConfigPathFlag.Name))
 
-	err := migInvokeContract(addr, funcName, funcParams, txType, hasBracket)
+	err := migInvokeContract(addr, funcName, funcParams, hasBracket)
 	if err != nil {
 		panic(fmt.Errorf("MigInvokeContract contract error, %s", err.Error()))
 	}
@@ -230,7 +231,6 @@ func cnsInvoke(c *cli.Context) error {
 	abiPath := c.String("abi")
 	funcName := c.String("func")
 	funcParams := c.StringSlice("param")
-	txType := cnsTxType
 
 	//param check
 	if abiPath == "" {
@@ -251,7 +251,7 @@ func cnsInvoke(c *cli.Context) error {
 
 	parseConfigJson(c.String(ConfigPathFlag.Name))
 
-	err := CnsInvokeContract(cnsName, abiPath, funcName,funcParams, txType, hasBracket)
+	err := CnsInvokeContract(cnsName, abiPath, funcName,funcParams, hasBracket)
 	if err != nil {
 		panic(fmt.Errorf("invokeContract contract error, %s", err.Error()))
 	}
@@ -263,7 +263,6 @@ func invoke(c *cli.Context) error {
 	abiPath := c.String("abi")
 	funcName := c.String("func")
 	funcParams := c.StringSlice("param")
-	txType := c.Int("type")
 
 	//param check
 	if abiPath == "" {
@@ -283,7 +282,7 @@ func invoke(c *cli.Context) error {
 	hasBracket := strings.Contains(funcName, "(") && strings.Contains(funcName,")")
 	parseConfigJson(c.String(ConfigPathFlag.Name))
 
-	err := InvokeContract(addr, abiPath, funcName, funcParams, txType,hasBracket)
+	err := InvokeContract(addr, abiPath, funcName, funcParams,hasBracket)
 	if err != nil {
 		panic(fmt.Errorf("invokeContract contract error, %s", err.Error()))
 	}
@@ -292,13 +291,14 @@ func invoke(c *cli.Context) error {
 
 // FwInvokeContract function
 // set firewall rules for contract
-func FwInvokeContract(contractAddr string, funcName string, inputParams []string, txType int, hasBracket bool) error {
+func FwInvokeContract(contractAddr string, funcName string, inputParams []string, hasBracket bool) error {
 
 	//parse the function and param
 	if hasBracket{
 		funcName, inputParams = GetFuncNameAndParams(funcName)
 	}
 
+	txType:=defaultContractType
 	paramArr := [][]byte{
 		Int64ToBytes(int64(txType)),
 		[]byte(funcName),
@@ -319,7 +319,6 @@ func FwInvokeContract(contractAddr string, funcName string, inputParams []string
 		GasPrice: config.GasPrice,
 		Gas:      config.Gas,
 		Data:     hexutil.Encode(paramBytes),
-		TxType:   txType,
 	}
 
 	var r string
@@ -360,14 +359,14 @@ func FwInvokeContract(contractAddr string, funcName string, inputParams []string
 }
 
 // migrateContract function
-func migInvokeContract(contractAddr string, funcName string, inputParams []string, txType int, hasBracket bool) error {
+func migInvokeContract(contractAddr string, funcName string, inputParams []string, hasBracket bool) error {
 
 	//parse the function and param
 	if hasBracket{
 		funcName, inputParams = GetFuncNameAndParams(funcName)
 	}
 
-
+	txType:=defaultContractType
 	paramArr := [][]byte{
 		Int64ToBytes(int64(txType)),
 		[]byte(funcName),
@@ -388,7 +387,6 @@ func migInvokeContract(contractAddr string, funcName string, inputParams []strin
 		GasPrice: config.GasPrice,
 		Gas:      config.Gas,
 		Data:     hexutil.Encode(paramBytes),
-		TxType:   txType,
 	}
 
 	var r string
@@ -417,7 +415,7 @@ func migInvokeContract(contractAddr string, funcName string, inputParams []strin
 // CnsInvokeContract function
 // invoke a contract with contract name
 // TODO: cnsInvoke相关方法合并到invoke相关方法中
-func CnsInvokeContract(contractName string, abiPath string, funcName string,inputParams []string, txType int, hasBracket bool) error {
+func CnsInvokeContract(contractName string, abiPath string, funcName string,inputParams []string, hasBracket bool) error {
 
 	//parse the function and param
 	if hasBracket{
@@ -434,6 +432,7 @@ func CnsInvokeContract(contractName string, abiPath string, funcName string,inpu
 		return fmt.Errorf("incorrect number of parameters ,request=%d,get=%d\n", len(abiFunc.Inputs), len(inputParams))
 	}
 
+	txType:=defaultContractType
 	paramArr := [][]byte{
 		Int64ToBytes(int64(txType)),
 		[]byte(contractName),
@@ -460,7 +459,6 @@ func CnsInvokeContract(contractName string, abiPath string, funcName string,inpu
 		GasPrice: config.GasPrice,
 		Gas:      config.Gas,
 		Data:     hexutil.Encode(paramBytes),
-		TxType:   txType,
 	}
 
 	var r string
@@ -507,16 +505,16 @@ func CnsInvokeContract(contractName string, abiPath string, funcName string,inpu
 
  */
 func InvokeContract(contractAddr string, abiPath string, funcName string,
-	funcParams []string, txType int, hasBracket bool) error {
+	funcParams []string, hasBracket bool) error {
 
 	//parse the function and param
 	if hasBracket{
 		funcName, funcParams = GetFuncNameAndParams(funcName)
 	}
 	//Judging whether this contract exists or not
-	if !getContractByAddress(contractAddr) {
-		return fmt.Errorf("the contract address is not exist ...")
-	}
+	//if !getContractByAddress(contractAddr) {
+	//	return fmt.Errorf("the contract address is not exist ...")
+	//}
 
 	//Judging whether this method exists or not
 	abiFunc, err := parseFuncFromAbi(abiPath, funcName)
@@ -529,9 +527,7 @@ func InvokeContract(contractAddr string, abiPath string, funcName string,
 			len(abiFunc.Inputs), len(funcParams))
 	}
 
-	if txType == 0 {
-		txType = invokeContract
-	}
+	txType := defaultContractType
 
 	paramArr := [][]byte{
 		Int64ToBytes(int64(txType)),
@@ -558,7 +554,6 @@ func InvokeContract(contractAddr string, abiPath string, funcName string,
 		GasPrice: config.GasPrice,
 		Gas:      config.Gas,
 		Data:     hexutil.Encode(paramBytes),
-		TxType:   txType,
 	}
 
 	var r string
@@ -605,7 +600,7 @@ func InvokeContract(contractAddr string, abiPath string, funcName string,
   Judging whether a contract exists through eth_getCode
 */
 func getContractByAddress(addr string) bool {
-
+	return true
 	params := []string{addr, "latest"}
 	r, err := Send(params, "eth_getCode")
 	if err != nil {
@@ -646,7 +641,7 @@ func GetTransactionReceipt(txHash string, ch chan string) {
 			panic(fmt.Sprintf("parse get receipt result error ! \n %s", e.Error()))
 		}
 		contractAddr = receipt.Result.ContractAddress
-		if contractAddr != "" {
+		if receipt.Result.BlockNumber != "" {
 			ch <- contractAddr
 			break
 		}

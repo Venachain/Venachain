@@ -17,6 +17,8 @@
 package node
 
 import (
+	"errors"
+	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
 	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
@@ -24,8 +26,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
-	"errors"
-	"fmt"
 	"github.com/prometheus/prometheus/util/flock"
 	"net"
 	"os"
@@ -180,8 +180,11 @@ func (n *Node) Start() error {
 
 		// Construct and save the service
 		service, err := constructor(ctx)
-		if err != nil {
+		if err != nil{
 			return err
+		}
+		if  reflect.ValueOf(service).IsNil(){
+			return fmt.Errorf("service is nil")
 		}
 		kind := reflect.TypeOf(service)
 		if _, exists := services[kind]; exists {
@@ -226,7 +229,6 @@ func (n *Node) Start() error {
 	n.stop = make(chan struct{})
 	running.SetServer()
 	p2p.UpdatePeer() // when start, update one time
-
 	return nil
 }
 

@@ -59,8 +59,6 @@ coverage.txt
 *.exe
 *.test
 
-go.sum
-
 life/resolver/builtins/build
 life/resolver/softfloat/build
 # life/resolver/softfloat/*
@@ -80,7 +78,10 @@ cmd/SysContracts/*.s
 cmd/SysContracts/*.wasm
 cmd/SysContracts/*.wast
 
-release/linux/conf/contracts
+#platonecli precompiled system contract bin-data
+
+cmd/platonecli/client/precompiled/bindata.go
+
 release/linux/conf/bak
 release/linux/bin/abigen
 release/linux/bin/bootnode
@@ -105,5 +106,19 @@ release/linux/bin/wasm
 release/linux/bin/wnode
 release/linux/conf/ctool.json
 release/linux/conf/genesis.json
+release/linux/conf/keyfile.json
 release/linux/data/
+release/linux/bin/cmd
+release/linux/bin/build
+release/linux/bin/platonecli
 
+cmd/data-manager/cmd/cmd
+cmd/platonecli/platonecli
+release/linux/bin/build
+release/linux/bin/cmd
+
+cmd/localtestnet/localtestnet
+cmd/localtestnet/localtestnetdata/
+cmd/localtestnet/nohup.out
+cmd/localtestnet/platone
+release/linux/bin/localtestnet

@@ -117,7 +117,9 @@ cat <<EOF
 #c11           --help, -h                   show help
 #c0        unlock                           unlock node account
 #c12       unlock OPTIONS
-#c12           --nodeid, -n                 unlock specified node account
+#c12           --nodeid, -n                 unlock account on specified node
+#c12           --account, -a                account to unlock
+#c12           --phrase, -p                 phrase of the account
 #c12           --help, -h                   show help
 #c0        get                              display all nodes in the system contract
 #c0        setupgen                         create the genesis.json and compile sys contract
@@ -504,18 +506,19 @@ function restart() {
 function getAllNodes() {
     config="${CONF_PATH}/ctool.json"
     abi="${CONF_PATH}/contracts/nodeManager.cpp.abi.json"
-    abiCNS="${CONF_PATH}/contracts/cnsManager.cpp.abi.json"
-    addrCNS="0x0000000000000000000000000000000000000011"
-    func="getContractAddress"
-    param1="__sys_NodeManager"
-    param2="latest"
+#    abiCNS="${CONF_PATH}/contracts/cnsManager.cpp.abi.json"
+#    addrCNS="0x0000000000000000000000000000000000000011"
+#    func="getContractAddress"
+#    param1="__sys_NodeManager"
+#    param2="latest"
+#
+#    echo "${BIN_PATH}/ctool invoke --config $config --abi $abiCNS --addr $addrCNS --func $func --param $param1 --param $param2 | sed s/[[:space:]]//g"
+#    ret=`${BIN_PATH}/ctool invoke --config $config --abi $abiCNS --addr $addrCNS --func $func --param $param1 --param $param2 | sed s/[[:space:]]//g`
+#    addr=${ret#*result:}
 
-    echo "${BIN_PATH}/ctool invoke --config $config --abi $abiCNS --addr $addrCNS --func $func --param $param1 --param $param2 | sed s/[[:space:]]//g"
-    ret=`${BIN_PATH}/ctool invoke --config $config --abi $abiCNS --addr $addrCNS --func $func --param $param1 --param $param2 | sed s/[[:space:]]//g`
-    addr=${ret#*result:}
-
+    node_manager_addr="0x1000000000000000000000000000000000000002"
     echo "[INFO]: get all nodes from nodeManager system contract"
-    ${BIN_PATH}/ctool invoke --config $config --addr $addr --abi $abi --func getAllNodes
+    ${BIN_PATH}/ctool invoke --config $config --addr $node_manager_addr --abi $abi --func getAllNodes
 }
 
 function clearConf() {
@@ -548,24 +551,38 @@ function clear() {
 }
 
 function unlockAccount() {
+    IP=${1}
+    PORT=${2}
+    account=${3}
+    pw=${4}
+    
     echo "[INFO]: unlock node account, nodeid: ${NODE_ID}"
-    read -p "Your account password?: " pw
-    # get node owner address
-    keystore=${DATA_PATH}/node-${NODE_ID}/keystore/
-    echo $keystore
-    keys=`ls $keystore`
-    echo "$keys"
-    for k in $keys
-    do
-        keyinfo=`cat $keystore/$k | sed s/[[:space:]]//g`
-        keyinfo=${keyinfo,,}sss
-        account=${keyinfo:12:40}
-        echo "account: ${account}"
-        break
-    done
 
-    echo "curl -X POST  -H 'Content-Type: application/json' --data '{\"jsonrpc\":\"2.0\",\"method\": \"personal_unlockAccount\", \"params\": [\"0x${account}\",\"${pw}\",0],\"id\":1}' http://${1}:${2}"
-    curl -X POST  -H "Content-Type: application/json" --data "{\"jsonrpc\":\"2.0\",\"method\": \"personal_unlockAccount\", \"params\": [\"0x${account}\",\"${pw}\",0],\"id\":1}" http://${1}:${2}
+    if [ -z ${account} ]
+    then 
+        # get node owner address
+        keystore=${DATA_PATH}/node-${NODE_ID}/keystore/
+        echo $keystore
+        keys=`ls $keystore`
+        echo "$keys"
+        for k in $keys
+        do
+            keyinfo=`cat $keystore/$k | sed s/[[:space:]]//g`
+            keyinfo=${keyinfo,,}sss
+            account=${keyinfo:12:40}
+            account="0x${account}"
+            echo "account: ${account}"
+            break
+        done
+    fi
+
+    if [ -z ${pw} ]
+    then
+        read -p "Your account password?: " pw
+    fi
+
+    echo "curl -X POST  -H 'Content-Type: application/json' --data '{\"jsonrpc\":\"2.0\",\"method\": \"personal_unlockAccount\", \"params\": [\"${account}\",\"${pw}\",0],\"id\":1}' http://${1}:${2}"
+    curl -X POST  -H "Content-Type: application/json" --data "{\"jsonrpc\":\"2.0\",\"method\": \"personal_unlockAccount\", \"params\": [\"${account}\",\"${pw}\",0],\"id\":1}" http://${1}:${2}
 }
 
 function unlock() {
@@ -582,6 +599,42 @@ function unlock() {
         ;;
     *) showUsage 12; exit;;
     esac
+}
+
+
+function unlockAcc(){
+
+    ACC=""
+    PHRASE=""
+
+    while [ ! $# -eq 0 ]
+    do
+        case "$1" in
+            --nodeid | -n)
+                nodeHome=${DATA_PATH}/node-${2}
+                NODE_ID=$2
+                echo $nodeHome
+                ip=`getInformation ${nodeHome} node.ip`
+                rpc_port=`getInformation ${nodeHome} node.rpc_port`
+                echo ${ip} ${rpc_port}
+                ;;
+            --account | -a)
+                echo "account: $2"
+                ACC=${2}
+                ;;
+            --phrase | -p)
+                PHRASE=${2}
+                ;;
+            *)
+                showUsage 12
+                exit
+                ;;
+        esac
+        shiftOption2 $#
+        shift 2
+    done
+
+    unlockAccount ${ip} ${rpc_port} ${ACC} ${PHRASE}
 }
 
 function setupGenesis() {
@@ -642,7 +695,7 @@ updatesys) shift; updateSys "$@";;
 createacc) shift; createAcc "$@";;
 setupgen) shift; setupGenesis "$@";;
 addnode) shift; addNode "$@";;
-unlock) shift; unlock "$@";;
+unlock) shift; unlockAcc "$@";;
 version | -v) showVersion;;
 status) shift; show "$@";;
 clear) shift; clear "$@";;

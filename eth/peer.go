@@ -17,10 +17,10 @@
 package eth
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/cbfttypes"
 	"math/big"
 	"sync"
 	"time"
@@ -47,6 +47,8 @@ const (
 	// contain a single transaction, or thousands.
 	maxQueuedTxs = 128
 
+	maxQueuedTxHashes = 128
+
 	// maxQueuedProps is the maximum number of block propagations to queue up before
 	// dropping broadcasts. There's not much point in queueing stale blocks, so a few
 	// that might cover uncles should be enough.
@@ -63,12 +65,20 @@ const (
 	handshakeTimeout = 5 * time.Second
 )
 
+// max is a helper function which returns the larger of the two given integers.
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
 // PeerInfo represents a short summary of the Ethereum sub-protocol metadata known
 // about a connected peer.
 type PeerInfo struct {
-	Version    int      `json:"version"`    // Ethereum protocol version negotiated
-	BN         *big.Int `json:"number"`     // The block number of the peer's blockchain
-	Head       string   `json:"head"`       // SHA3 hash of the peer's best owned block
+	Version int      `json:"version"` // Ethereum protocol version negotiated
+	BN      *big.Int `json:"number"`  // The block number of the peer's blockchain
+	Head    string   `json:"head"`    // SHA3 hash of the peer's best owned block
 }
 
 // propEvent is a block propagation, waiting for its turn in the broadcast queue.
@@ -93,66 +103,67 @@ type peer struct {
 	knownBlocks        mapset.Set                // Set of block hashes known to be known by this peer
 	knownPrepareBlocks mapset.Set                // Set of prepareblock hashes known to be known by this peer
 	queuedTxs          chan []*types.Transaction // Queue of transactions to broadcast to the peer
+	queuedHashes       chan []common.Hash        // Queue of transaction hashes to broadcast to the peer
 	queuedProps        chan *propEvent           // Queue of blocks to broadcast to the peer
 	queuedAnns         chan *types.Block         // Queue of blocks to announce to the peer
 	term               chan struct{}             // Termination channel to stop the broadcaster
 	queuedPreBlock     chan *preBlockEvent
-	queuedSignature    chan *signatureEvent
+	types              int32 // remote node's types   consensus(1) / observer(0)
+	replayParam        common.ReplayParam
 }
 
 func newPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) *peer {
 	return &peer{
-		Peer:            p,
-		rw:              rw,
-		version:         version,
-		id:              fmt.Sprintf("%x", p.ID().Bytes()[:8]),
-		knownTxs:        mapset.NewSet(),
-		knownBlocks:     mapset.NewSet(),
-		queuedTxs:       make(chan []*types.Transaction, maxQueuedTxs),
-		queuedProps:     make(chan *propEvent, maxQueuedProps),
-		queuedAnns:      make(chan *types.Block, maxQueuedAnns),
-		term:            make(chan struct{}),
-		queuedPreBlock:  make(chan *preBlockEvent, maxQueuedPreBlock),
-		queuedSignature: make(chan *signatureEvent, maxQueuedSignature),
+		Peer:           p,
+		rw:             rw,
+		version:        version,
+		id:             fmt.Sprintf("%x", p.ID().Bytes()[:8]),
+		knownTxs:       mapset.NewSet(),
+		knownBlocks:    mapset.NewSet(),
+		queuedTxs:      make(chan []*types.Transaction, maxQueuedTxs),
+		queuedHashes:   make(chan []common.Hash, maxQueuedTxHashes),
+		queuedProps:    make(chan *propEvent, maxQueuedProps),
+		queuedAnns:     make(chan *types.Block, maxQueuedAnns),
+		term:           make(chan struct{}),
+		queuedPreBlock: make(chan *preBlockEvent, maxQueuedPreBlock),
+		types:          common.SysCfg.GetNodeTypes(p.ID().String()),
 	}
 }
 
 // broadcast is a write loop that multiplexes block propagations, announcements
 // and transaction broadcasts into the remote peer. The goal is to have an async
 // writer that does not lock up node internals.
-func (p *peer) broadcast() {
+func (p *peer) broadcast(removePeer func(string)) {
 	go func() {
 		for {
 			select {
 			case prop := <-p.queuedProps:
 				if err := p.SendNewBlock(prop.block); err != nil {
+					p.Log().Error("Propagated block", "number", prop.block.Number(), "hash", prop.block.Hash(), "err", err)
+					removePeer(p.id)
 					return
 				}
 				p.Log().Trace("Propagated block", "number", prop.block.Number(), "hash", prop.block.Hash())
 
 			case block := <-p.queuedAnns:
 				if err := p.SendNewBlockHashes([]common.Hash{block.Hash()}, []uint64{block.NumberU64()}); err != nil {
+					p.Log().Error("Announced block", "number", block.Number(), "hash", block.Hash(), "err", err)
+					removePeer(p.id)
 					return
 				}
 				p.Log().Trace("Announced block", "number", block.Number(), "hash", block.Hash())
 
 			case prop := <-p.queuedPreBlock:
 				if err := p.SendPrepareBlock(prop.block); err != nil {
+					p.Log().Error("Propagated prepare block", "number", prop.block.Number(), "hash", prop.block.Hash(), "err", err)
+					removePeer(p.id)
 					return
 				}
 				p.Log().Trace("Propagated prepare block", "number", prop.block.Number(), "hash", prop.block.Hash())
 
-			case prop := <-p.queuedSignature:
-				signature := &cbfttypes.BlockSignature{prop.SignHash, prop.Hash, prop.Number, prop.Signature}
-				if err := p.SendSignature(signature); err != nil {
-					return
-				}
-				p.Log().Trace("Propagated block signature", "hash", signature.Hash)
-
 			case <-p.term:
 				return
 			}
-
 		}
 	}()
 
@@ -161,6 +172,8 @@ func (p *peer) broadcast() {
 			select {
 			case txs := <-p.queuedTxs:
 				if err := p.SendTransactions(txs); err != nil {
+					p.Log().Error("Broadcast transactions err", "err", err)
+					removePeer(p.id)
 					return
 				}
 				p.Log().Trace("Broadcast transactions", "count", len(txs))
@@ -170,6 +183,24 @@ func (p *peer) broadcast() {
 			}
 		}
 	}()
+
+	go func() {
+		for {
+			select {
+			case hashes := <-p.queuedHashes:
+				if err := p.sendPooledTransactionHashes(hashes); err != nil {
+					p.Log().Error("Broadcast transaction hashes error ", "err", err)
+					removePeer(p.id)
+					return
+				}
+				p.Log().Trace("Broadcast transaction hashes", "count", len(hashes))
+
+			case <-p.term:
+				return
+			}
+		}
+	}()
+
 }
 
 // close signals the broadcast goroutine to terminate.
@@ -177,14 +208,22 @@ func (p *peer) close() {
 	close(p.term)
 }
 
+func (p *peer) setTypes(types int32) {
+	p.types = types
+}
+
+func (p *peer) IsConsensus() bool {
+	return p.types == 1
+}
+
 // Info gathers and returns a collection of metadata known about a peer.
 func (p *peer) Info() *PeerInfo {
 	hash, bn := p.Head()
 
 	return &PeerInfo{
-		Version:    p.version,
-		BN: bn,
-		Head:       hash.Hex(),
+		Version: p.version,
+		BN:      bn,
+		Head:    hash.Hex(),
 	}
 }
 
@@ -205,6 +244,19 @@ func (p *peer) SetHead(hash common.Hash, bn *big.Int) {
 
 	copy(p.head[:], hash[:])
 	p.bn.Set(bn)
+}
+
+func (p *peer) SetReplayParam(param common.ReplayParam) {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+
+	p.replayParam = param
+}
+
+func (p *peer) GetReplayParam() common.ReplayParam {
+	p.lock.RLock()
+	defer p.lock.RUnlock()
+	return p.replayParam
 }
 
 // MarkBlock marks a block as known for the peer, ensuring that the block will
@@ -252,6 +304,34 @@ func (p *peer) AsyncSendTransactions(txs []*types.Transaction) {
 		}
 	default:
 		//p.Log().Debug("Dropping transaction propagation", "count", len(txs))
+	}
+}
+
+// sendPooledTransactionHashes sends transaction hashes to the peer and includes
+// them in its transaction hash set for future reference.
+//
+// This method is a helper used by the async transaction announcer. Don't call it
+// directly as the queueing (memory) and transmission (bandwidth) costs should
+// not be managed directly.
+func (p *peer) sendPooledTransactionHashes(hashes []common.Hash) error {
+
+	for _, hash := range hashes {
+		p.knownTxs.Add(hash)
+	}
+	return p2p.Send(p.rw, TxHashesMsg, hashes)
+}
+
+// AsyncSendPooledTransactionHashes queues a list of transactions hashes to eventually
+// announce to a remote peer.  The number of pending sends are capped (new ones
+// will force old sends to be dropped)
+func (p *peer) AsyncSendPooledTransactionHashes(hashes []common.Hash) {
+	select {
+	case p.queuedHashes <- hashes:
+		for _, hash := range hashes {
+			p.knownTxs.Add(hash)
+		}
+	case <-p.term:
+		p.Log().Debug("Dropping transaction hashes", "count", len(hashes))
 	}
 }
 
@@ -326,6 +406,22 @@ func (p *peer) SendReceiptsRLP(receipts []rlp.RawValue) error {
 	return p2p.Send(p.rw, ReceiptsMsg, receipts)
 }
 
+// SendPooledTransactionsRLP sends requested transactions to the peer and adds the
+// hashes in its transaction hash set for future reference.
+//
+// Note, the method assumes the hashes are correct and correspond to the list of
+// transactions being sent.
+func (p *peer) SendPooledTransactionsRLP(hashes []common.Hash, txs []rlp.RawValue) error {
+	// Mark all the transactions as known, but ensure we don't overflow our limits
+	for p.knownTxs.Cardinality() > max(0, maxKnownTxs-len(hashes)) {
+		p.knownTxs.Pop()
+	}
+	for _, hash := range hashes {
+		p.knownTxs.Add(hash)
+	}
+	return p2p.Send(p.rw, PooledTxMsg, txs)
+}
+
 // RequestOneHeader is a wrapper around the header query functions to fetch a
 // single header. It is used solely by the fetcher.
 func (p *peer) RequestOneHeader(hash common.Hash) error {
@@ -367,6 +463,12 @@ func (p *peer) RequestReceipts(hashes []common.Hash) error {
 	return p2p.Send(p.rw, GetReceiptsMsg, hashes)
 }
 
+// RequestTxs fetches a batch of transactions from a remote node.
+func (p *peer) RequestTxs(hashes []common.Hash) error {
+	p.Log().Debug("Fetching batch of transactions", "count", len(hashes))
+	return p2p.Send(p.rw, GetPooledTxMsg, hashes)
+}
+
 // Handshake executes the eth protocol handshake, negotiating version number,
 // network IDs, difficulties, head and genesis blocks.
 func (p *peer) Handshake(network uint64, bn *big.Int, head common.Hash, genesis common.Hash) error {
@@ -375,12 +477,20 @@ func (p *peer) Handshake(network uint64, bn *big.Int, head common.Hash, genesis 
 	var status statusData // safe to read after two values have been received from errc
 
 	go func() {
+		scb, err := json.Marshal(common.SysCfg.ReplayParam.OldSysContracts)
+		if err != nil {
+			errc <- err
+			return
+		}
 		errc <- p2p.Send(p.rw, StatusMsg, &statusData{
-			ProtocolVersion: uint32(p.version),
-			NetworkId:       network,
-			BN:              bn,
-			CurrentBlock:    head,
-			GenesisBlock:    genesis,
+			ProtocolVersion:       uint32(p.version),
+			NetworkId:             network,
+			BN:                    bn,
+			CurrentBlock:          head,
+			GenesisBlock:          genesis,
+			ReplayPovit:           common.SysCfg.ReplayParam.Pivot,
+			ReplayOldSuperAdmin:   common.SysCfg.ReplayParam.OldSuperAdmin,
+			ReplayOldSysContracts: scb,
 		})
 	}()
 	go func() {
@@ -399,6 +509,14 @@ func (p *peer) Handshake(network uint64, bn *big.Int, head common.Hash, genesis 
 		}
 	}
 	p.bn, p.head = status.BN, status.CurrentBlock
+	p.replayParam.Pivot = status.ReplayPovit
+	p.replayParam.OldSuperAdmin = status.ReplayOldSuperAdmin
+
+	m := make(map[common.Address]string)
+	if err := json.Unmarshal(status.ReplayOldSysContracts, &m); err != nil {
+		return err
+	}
+	p.replayParam.OldSysContracts = m
 	return nil
 }
 
@@ -454,7 +572,7 @@ func newPeerSet() *peerSet {
 // Register injects a new peer into the working set, or returns an error if the
 // peer is already known. If a new peer it registered, its broadcast loop is also
 // started.
-func (ps *peerSet) Register(p *peer) error {
+func (ps *peerSet) Register(p *peer, removePeer func(string)) error {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
 
@@ -465,7 +583,7 @@ func (ps *peerSet) Register(p *peer) error {
 		return errAlreadyRegistered
 	}
 	ps.peers[p.id] = p
-	go p.broadcast()
+	go p.broadcast(removePeer)
 
 	return nil
 }
@@ -544,9 +662,22 @@ func (ps *peerSet) PeersWithoutTx(hash common.Hash) []*peer {
 	return list
 }
 
+func (ps *peerSet) ConsensusPeers() []*peer {
+	ps.lock.RLock()
+	defer ps.lock.RUnlock()
+
+	list := make([]*peer, 0, len(ps.peers))
+	for _, p := range ps.peers {
+		if p.IsConsensus() {
+			list = append(list, p)
+		}
+	}
+	return list
+}
+
 // ConsensusPeersWithoutTx retrieves a list of consensus peers that do not have a given transaction
 // in their set of known hashes.
-func (ps *peerSet) ConsensusPeersWithoutTx(csPeers []*peer, hash common.Hash) []*peer{
+func (ps *peerSet) ConsensusPeersWithoutTx(csPeers []*peer, hash common.Hash) []*peer {
 	ps.lock.RLock()
 	defer ps.lock.RUnlock()
 
@@ -594,18 +725,6 @@ func (ps *peerSet) PeersWithConsensus(engine consensus.Engine) []*peer {
 	ps.lock.RLock()
 	defer ps.lock.RUnlock()
 
-	if cbftEngine, ok := engine.(consensus.Bft); ok {
-		if consensusNodes, err := cbftEngine.ConsensusNodes(); err == nil && len(consensusNodes) > 0 {
-			list := make([]*peer, 0, len(consensusNodes))
-			for _, nodeID := range consensusNodes {
-				nodeID := fmt.Sprintf("%x", nodeID.Bytes()[:8])
-				if peer, ok := ps.peers[nodeID]; ok {
-					list = append(list, peer)
-				}
-			}
-			return list
-		}
-	}
 	return nil
 }
 
@@ -614,15 +733,6 @@ func (ps *peerSet) PeersWithoutConsensus(engine consensus.Engine) []*peer {
 	defer ps.lock.RUnlock()
 
 	consensusNodeMap := make(map[string]string)
-	if cbftEngine, ok := engine.(consensus.Bft); ok {
-		if consensusNodes, err := cbftEngine.ConsensusNodes(); err == nil && len(consensusNodes) > 0 {
-			for _, nodeID := range consensusNodes {
-				nodeID := fmt.Sprintf("%x", nodeID.Bytes()[:8])
-				consensusNodeMap[nodeID] = nodeID
-			}
-		}
-	}
-
 	list := make([]*peer, 0, len(ps.peers))
 	for nodeId, peer := range ps.peers {
 		if _, ok := consensusNodeMap[nodeId]; !ok {
@@ -655,17 +765,5 @@ func (p *peer) AsyncSendPrepareBlock(block *types.Block) {
 		p.Log().Debug("Send prepare block propagation", "number", block.NumberU64(), "hash", block.Hash())
 	default:
 		p.Log().Debug("Dropping prepare block propagation", "number", block.NumberU64(), "hash", block.Hash())
-	}
-}
-
-func (p *peer) SendSignature(signature *cbfttypes.BlockSignature) error {
-	return p2p.Send(p.rw, BlockSignatureMsg, []interface{}{signature.SignHash, signature.Hash, signature.Number, signature.Signature})
-}
-
-func (p *peer) AsyncSendSignature(signature *cbfttypes.BlockSignature) {
-	select {
-	case p.queuedSignature <- &signatureEvent{SignHash: signature.SignHash, Hash: signature.Hash, Number: signature.Number, Signature: signature.Signature}:
-	default:
-		p.Log().Debug("Dropping block Signature", "Hash", signature.Hash)
 	}
 }

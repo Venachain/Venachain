@@ -31,6 +31,11 @@ var (
 	ErrInvalidChainId = errors.New("invalid chain id for signer")
 )
 
+var (
+	OldTxPrefix    = []byte("old_Tx_Prefix")
+	OldTxPrefixLen = len(OldTxPrefix)
+)
+
 // sigCache is used to cache the derived sender and contains
 // the signer used to derive it.
 type sigCache struct {
@@ -39,16 +44,9 @@ type sigCache struct {
 }
 
 // MakeSigner returns a Signer based on the given chain config and block number.
-func MakeSigner(config *params.ChainConfig, blockNumber *big.Int) Signer {
-	var signer Signer
-	switch {
-	case config.IsEIP155(blockNumber):
-		signer = NewEIP155Signer(config.ChainID)
-	case config.IsHomestead(blockNumber):
-		signer = HomesteadSigner{}
-	default:
-		signer = FrontierSigner{}
-	}
+func MakeSigner(config *params.ChainConfig) Signer {
+	signer := NewEIP155Signer(config.ChainID)
+
 	return signer
 }
 
@@ -135,7 +133,7 @@ func (s EIP155Signer) Sender(tx *Transaction) (common.Address, error) {
 	}
 	V := new(big.Int).Sub(tx.data.V, s.chainIdMul)
 	V.Sub(V, big8)
-	return recoverPlain(s.Hash(tx), tx.data.R, tx.data.S, V, true)
+	return RecoverPlain(s.Hash(tx), tx.data.R, tx.data.S, V, true)
 }
 
 // WithSignature returns a new transaction with the given signature. This signature
@@ -162,7 +160,6 @@ func (s EIP155Signer) Hash(tx *Transaction) common.Hash {
 		tx.data.Recipient,
 		tx.data.Amount,
 		tx.data.Payload,
-		tx.data.TxType,
 		s.chainId, uint(0), uint(0),
 	})
 }
@@ -195,7 +192,7 @@ func (hs HomesteadSigner) SignatureValues(tx *Transaction, sig []byte) (r, s, v 
 }
 
 func (hs HomesteadSigner) Sender(tx *Transaction) (common.Address, error) {
-	return recoverPlain(hs.Hash(tx), tx.data.R, tx.data.S, tx.data.V, true)
+	return RecoverPlain(hs.Hash(tx), tx.data.R, tx.data.S, tx.data.V, true)
 }
 
 func (hs HomesteadSigner) SignatureAndSender(tx *Transaction) (common.Address, []byte, error) {
@@ -231,19 +228,18 @@ func (fs FrontierSigner) Hash(tx *Transaction) common.Hash {
 		tx.data.Recipient,
 		tx.data.Amount,
 		tx.data.Payload,
-		tx.data.TxType,
 	})
 }
 
 func (fs FrontierSigner) Sender(tx *Transaction) (common.Address, error) {
-	return recoverPlain(fs.Hash(tx), tx.data.R, tx.data.S, tx.data.V, false)
+	return RecoverPlain(fs.Hash(tx), tx.data.R, tx.data.S, tx.data.V, false)
 }
 
 func (fs FrontierSigner) SignatureAndSender(tx *Transaction) (common.Address, []byte, error) {
 	return recoverPubKeyAndSender(fs.Hash(tx), tx.data.R, tx.data.S, tx.data.V, false)
 }
 
-func recoverPlain(sighash common.Hash, R, S, Vb *big.Int, homestead bool) (common.Address, error) {
+func RecoverPlain(sighash common.Hash, R, S, Vb *big.Int, homestead bool) (common.Address, error) {
 	if Vb.BitLen() > 8 {
 		return common.Address{}, ErrInvalidSig
 	}

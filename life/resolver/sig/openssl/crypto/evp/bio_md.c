@@ -1,7 +1,7 @@
 /*
  * Copyright 1995-2016 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -9,8 +9,11 @@
 
 #include <stdio.h>
 #include <errno.h>
+#include "internal/cryptlib.h"
 #include <openssl/buffer.h>
 #include <openssl/evp.h>
+#include "crypto/evp.h"
+#include "evp_local.h"
 #include "internal/bio.h"
 
 /*
@@ -145,7 +148,7 @@ static long md_ctrl(BIO *b, int cmd, long num, void *ptr)
     switch (cmd) {
     case BIO_CTRL_RESET:
         if (BIO_get_init(b))
-            ret = EVP_DigestInit_ex(ctx, EVP_MD_CTX_md(ctx), NULL);
+            ret = EVP_DigestInit_ex(ctx, ctx->digest, NULL);
         else
             ret = 0;
         if (ret > 0)
@@ -154,7 +157,7 @@ static long md_ctrl(BIO *b, int cmd, long num, void *ptr)
     case BIO_C_GET_MD:
         if (BIO_get_init(b)) {
             ppmd = ptr;
-            *ppmd = EVP_MD_CTX_md(ctx);
+            *ppmd = ctx->digest;
         } else
             ret = 0;
         break;
@@ -220,7 +223,7 @@ static int md_gets(BIO *bp, char *buf, int size)
 
     ctx = BIO_get_data(bp);
 
-    if (size < EVP_MD_CTX_size(ctx))
+    if (size < ctx->digest->md_size)
         return 0;
 
     if (EVP_DigestFinal_ex(ctx, (unsigned char *)buf, &ret) <= 0)

@@ -1,7 +1,7 @@
 /*
  * Copyright 2001-2017 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -142,7 +142,7 @@ int OCSP_REQ_CTX_http(OCSP_REQ_CTX *rctx, const char *op, const char *path)
 {
     static const char http_hdr[] = "%s %s HTTP/1.0\r\n";
 
-    if (path == NULL)
+    if (!path)
         path = "/";
 
     if (BIO_printf(rctx->mem, http_hdr, op, path) <= 0)
@@ -211,7 +211,7 @@ static int parse_http_line1(char *line)
 
     for (p = line; *p && !ossl_isspace(*p); p++)
         continue;
-    if (*p == '\0') {
+    if (!*p) {
         OCSPerr(OCSP_F_PARSE_HTTP_LINE1, OCSP_R_SERVER_RESPONSE_PARSE_ERROR);
         return 0;
     }
@@ -220,7 +220,7 @@ static int parse_http_line1(char *line)
     while (*p && ossl_isspace(*p))
         p++;
 
-    if (*p == '\0') {
+    if (!*p) {
         OCSPerr(OCSP_F_PARSE_HTTP_LINE1, OCSP_R_SERVER_RESPONSE_PARSE_ERROR);
         return 0;
     }
@@ -229,7 +229,7 @@ static int parse_http_line1(char *line)
     for (q = p; *q && !ossl_isspace(*q); q++)
         continue;
 
-    if (*q == '\0') {
+    if (!*q) {
         OCSPerr(OCSP_F_PARSE_HTTP_LINE1, OCSP_R_SERVER_RESPONSE_PARSE_ERROR);
         return 0;
     }
@@ -258,7 +258,7 @@ static int parse_http_line1(char *line)
     }
     if (retcode != 200) {
         OCSPerr(OCSP_F_PARSE_HTTP_LINE1, OCSP_R_SERVER_RESPONSE_ERROR);
-        if (*q == '\0')
+        if (!*q)
             ERR_add_error_data(2, "Code=", p);
         else
             ERR_add_error_data(4, "Code=", p, ",Reason=", q);

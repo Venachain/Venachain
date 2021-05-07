@@ -18,10 +18,13 @@ package backend
 
 import (
 	"bytes"
+	"crypto/ecdsa"
 	"errors"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"fmt"
 	"math/big"
 	"time"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
@@ -31,11 +34,12 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/validator"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto/sha3"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
-	"github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 const (
@@ -84,7 +88,6 @@ var (
 	errMismatchTxhashes = errors.New("mismatch transcations hashes")
 )
 var (
-	defaultDifficulty = big.NewInt(1)
 	//nilUncleHash      = types.CalcUncleHash(nil) // Always Keccak256(RLP([])) as uncles are meaningless outside of PoW.
 	emptyNonce = types.BlockNonce{}
 	now        = time.Now
@@ -94,6 +97,7 @@ var (
 
 	inmemoryAddresses  = 20 // Number of recent addresses from ecrecover
 	recentAddresses, _ = lru.NewARC(inmemoryAddresses)
+	recentPubkeys, _   = lru.NewARC(inmemoryAddresses)
 )
 
 // Author retrieves the Ethereum address of the account that minted the given
@@ -107,6 +111,9 @@ func (sb *backend) Author(header *types.Header) (common.Address, error) {
 // given engine. Verifying the seal may be done optionally here, or explicitly
 // via the VerifySeal method.
 func (sb *backend) VerifyHeader(chain consensus.ChainReader, header *types.Header, seal bool) error {
+	if header.Number.Uint64() <= common.SysCfg.ReplayParam.Pivot {
+		return nil
+	}
 	return sb.verifyHeader(chain, header, nil)
 }
 
@@ -119,7 +126,7 @@ func (sb *backend) verifyHeader(chain consensus.ChainReader, header *types.Heade
 		return errUnknownBlock
 	}
 	// Don't waste time checking blocks from the future
-	if header.Time.Cmp(big.NewInt(now().Unix()+30)) > 0 {
+	if header.Time.Cmp(big.NewInt(now().UnixNano()/1e6+30000)) > 0 {
 		return consensus.ErrFutureBlock
 	}
 
@@ -128,23 +135,6 @@ func (sb *backend) verifyHeader(chain consensus.ChainReader, header *types.Heade
 		// TODO: 先不检查header的extra字段
 		//return errInvalidExtraDataFormat
 	}
-
-	// Ensure that the coinbase is valid
-	if header.Nonce != (emptyNonce) && !bytes.Equal(header.Nonce[:], nonceAuthVote) && !bytes.Equal(header.Nonce[:], nonceDropVote) {
-		return errInvalidNonce
-	}
-	// Ensure that the mix digest is zero as we don't have fork protection currently
-	//if header.MixDigest != types.IstanbulDigest {
-	//	return errInvalidMixDigest
-	//}
-	// Ensure that the block doesn't contain any uncles which are meaningless in Istanbul
-	//if header.UncleHash != nilUncleHash {
-	//	return errInvalidUncleHash
-	//}
-	// Ensure that the block's difficulty is meaningful (may not be correct at this point)
-	//if header.Difficulty == nil || header.Difficulty.Cmp(defaultDifficulty) != 0 {
-	//	return errInvalidDifficulty
-	//}
 
 	return sb.verifyCascadingFields(chain, header, parents)
 }
@@ -186,6 +176,13 @@ func (sb *backend) verifyCascadingFields(chain consensus.ChainReader, header *ty
 		return err
 	}
 
+	//// Verify VRF Nonce
+	if common.SysCfg.SysParam.VRF.ElectionEpoch != 0 {
+		if err := sb.verifyVRF(chain, header); err != nil {
+			return err
+		}
+	}
+
 	return sb.verifyCommittedSeals(chain, header, parents)
 }
 
@@ -208,15 +205,6 @@ func (sb *backend) VerifyHeaders(chain consensus.ChainReader, headers []*types.H
 		}
 	}()
 	return abort, results
-}
-
-// VerifyUncles verifies that the given block's uncles conform to the consensus
-// rules of a given engine.
-func (sb *backend) VerifyUncles(chain consensus.ChainReader, block *types.Block) error {
-	//if len(block.Uncles()) > 0 {
-	//	return errInvalidUncleHash
-	//}
-	return nil
 }
 
 // verifySigner checks whether the signer is in parent's validator set
@@ -245,6 +233,27 @@ func (sb *backend) verifySigner(chain consensus.ChainReader, header *types.Heade
 		return errUnauthorized
 	}
 	return nil
+}
+
+// verifyVRF checks whether the Nonce is a valid VRF Nonce
+func (sb *backend) verifyVRF(chain consensus.ChainReader, header *types.Header) error {
+	// Verifying the genesis block is not supported
+	number := header.Number.Uint64()
+	if number == 0 {
+		return errUnknownBlock
+	}
+
+	parent := chain.GetHeader(header.ParentHash, number-1)
+	if parent == nil {
+		return consensus.ErrUnknownAncestor
+	}
+
+	pubkey, err := recoverPubkey(header)
+	if err != nil {
+		return err
+	}
+
+	return sb.VerifyVrf(&pubkey, parent.Nonce[:], header.Nonce[:])
 }
 
 // verifyCommittedSeals checks whether every committed seal is signed by one of the parent's validators
@@ -286,12 +295,14 @@ func (sb *backend) verifyCommittedSeals(chain consensus.ChainReader, header *typ
 		if validators.RemoveValidator(addr) {
 			validSeal += 1
 		} else {
+			log.Error("errInvalidCommittedSeals", "blockNumber", number, "validateSet", snap.validators(), "commitedSeal addr", addr, "parentHash", header.ParentHash)
 			return errInvalidCommittedSeals
 		}
 	}
 
 	// The length of validSeal should be larger than number of faulty node + 1
 	if validSeal < snap.ValSet.Size()-snap.ValSet.F() /*2*snap.ValSet.F()*/ {
+		log.Error("errInvalidCommittedSeals", "validSeal", validSeal, "snap.ValSet.Size()", snap.ValSet.Size(), "snap.ValSet.F()", snap.ValSet.F())
 		return errInvalidCommittedSeals
 	}
 
@@ -307,10 +318,6 @@ func (sb *backend) VerifySeal(chain consensus.ChainReader, header *types.Header)
 		return errUnknownBlock
 	}
 
-	// ensure that the difficulty equals to defaultDifficulty
-	//if header.Difficulty.Cmp(defaultDifficulty) != 0 {
-	//	return errInvalidDifficulty
-	//}
 	return sb.verifySigner(chain, header, nil)
 }
 
@@ -329,8 +336,12 @@ func (sb *backend) Prepare(chain consensus.ChainReader, header *types.Header) er
 	if parent == nil {
 		return consensus.ErrUnknownAncestor
 	}
-	// use the same difficulty for all blocks
-	//header.Difficulty = defaultDifficulty
+
+	nonce, err := sb.GenerateNonce(parent.Nonce[:])
+	if err != nil {
+		return err
+	}
+	header.Nonce = types.EncodeByteNonce(nonce)
 
 	// Assemble the voting snapshot
 	snap, err := sb.snapshot(chain, number-1, header.ParentHash, nil)
@@ -338,31 +349,6 @@ func (sb *backend) Prepare(chain consensus.ChainReader, header *types.Header) er
 		return err
 	}
 
-	/*
-		// get valid candidate list
-		sb.candidatesLock.RLock()
-		var addresses []common.Address
-		var authorizes []bool
-		for address, authorize := range sb.candidates {
-			if snap.checkVote(address, authorize) {
-				addresses = append(addresses, address)
-				authorizes = append(authorizes, authorize)
-			}
-		}
-		sb.candidatesLock.RUnlock()
-
-		// pick one of the candidates randomly
-		if len(addresses) > 0 {
-			index := rand.Intn(len(addresses))
-			// add validator voting in coinbase
-			header.Coinbase = addresses[index]
-			if authorizes[index] {
-				copy(header.Nonce[:], nonceAuthVote)
-			} else {
-				copy(header.Nonce[:], nonceDropVote)
-			}
-		}
-	*/
 	// add validators in snapshot to extraData's validators section
 	extra, err := prepareExtra(header, snap.validators())
 	if err != nil {
@@ -372,8 +358,9 @@ func (sb *backend) Prepare(chain consensus.ChainReader, header *types.Header) er
 
 	// set header's timestamp
 	header.Time = new(big.Int).Add(parent.Time, new(big.Int).SetUint64(sb.config.BlockPeriod))
-	if header.Time.Int64() < time.Now().Unix() {
-		header.Time = big.NewInt(time.Now().Unix())
+	now := time.Now().UnixNano() / 1e6
+	if header.Time.Int64() < now {
+		header.Time = big.NewInt(now)
 	}
 	return nil
 }
@@ -384,10 +371,19 @@ func (sb *backend) Prepare(chain consensus.ChainReader, header *types.Header) er
 // Note, the block header and state database might be updated to reflect any
 // consensus rules that happen at finalization (e.g. block rewards).
 func (sb *backend) Finalize(chain consensus.ChainReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, receipts []*types.Receipt) (*types.Block, error) {
-	// No block rewards in Istanbul, so the state remains as is and uncles are dropped
-	header.Root = state.IntermediateRoot(chain.Config().IsEIP158(header.Number))
-	//header.UncleHash = nilUncleHash
+	log.Debug(fmt.Errorf("root before:%x", header.Root).Error())
+	// vrf election
+	scNode := vm.NewSCNode(state)
+	scNode.SetBlockNumber(header.Number)
+	parent := chain.GetHeaderByNumber(header.Number.Uint64() - 1)
+	if parent != nil {
+		if _, err := scNode.VrfElection(parent.Nonce[:]); err != nil {
+			return nil, err
+		}
+	}
 
+	header.Root = state.IntermediateRoot(true)
+	log.Debug(fmt.Errorf("root after:%x", header.Root).Error())
 	// Assemble and return the final block for sealing
 	return types.NewBlock(header, txs, receipts), nil
 }
@@ -417,13 +413,13 @@ func (sb *backend) Seal(chain consensus.ChainReader, block *types.Block, sealRes
 		return nil, err
 	}
 
-	// wait for the timestamp of header, use this to adjust the block period
-	delay := time.Unix(block.Header().Time.Int64(), 0).Sub(now())
-	select {
-	case <-time.After(delay):
-	case <-stop:
-		return nil, nil
-	}
+	//// wait for the timestamp of header, use this to adjust the block period
+	//delay := time.Unix(block.Header().Time.Int64(), 0).Sub(now())
+	//select {
+	//case <-time.After(delay):
+	//case <-stop:
+	//	return nil, nil
+	//}
 
 	// get the proposed block hash and clear it if the seal() is completed.
 	sb.sealMu.Lock()
@@ -433,11 +429,19 @@ func (sb *backend) Seal(chain consensus.ChainReader, block *types.Block, sealRes
 		sb.sealMu.Unlock()
 	}
 	defer clear()
+	sb.logger.Debug("post seal", "block number", block.Number(), "hash", block.Hash())
 
-	// post block into Istanbul engine
-	go sb.EventMux().Post(istanbul.RequestEvent{
-		Proposal: block,
-	})
+	if snap.ValSet.Size() == 1 {
+		// post block into Istanbul engine
+		go sb.EventMux().Post(istanbul.SingleCommittedEvent{
+			Proposal: block,
+		})
+	} else {
+		// post block into Istanbul engine
+		go sb.EventMux().Post(istanbul.RequestEvent{
+			Proposal: block,
+		})
+	}
 
 	go func() {
 		for {
@@ -490,7 +494,7 @@ func (sb *backend) APIs(chain consensus.ChainReader) []rpc.API {
 }
 
 // Start implements consensus.Istanbul.Start
-func (sb *backend) Start(chain consensus.ChainReader, currentBlock func() *types.Block, hasBadBlock func(hash common.Hash) bool) error {
+func (sb *backend) Start(chain consensus.ChainReader, currentBlock func() *types.Block) error {
 	sb.coreMu.Lock()
 	defer sb.coreMu.Unlock()
 	if sb.coreStarted {
@@ -506,7 +510,6 @@ func (sb *backend) Start(chain consensus.ChainReader, currentBlock func() *types
 
 	sb.chain = chain
 	sb.currentBlock = currentBlock
-	sb.hasBadBlock = hasBadBlock
 
 	if err := sb.core.Start(); err != nil {
 		return err
@@ -546,7 +549,7 @@ func (sb *backend) snapshot(chain consensus.ChainReader, number uint64, hash com
 		}
 		// If an on-disk checkpoint snapshot can be found, use that
 		if number%checkpointInterval == 0 {
-			if s, err := loadSnapshot(sb.config.Epoch, sb.db, hash); err == nil {
+			if s, err := loadSnapshot(sb.db, hash); err == nil {
 				log.Trace("Loaded voting snapshot form disk", "number", number, "hash", hash)
 				snap = s
 				break
@@ -560,35 +563,29 @@ func (sb *backend) snapshot(chain consensus.ChainReader, number uint64, hash com
 				return nil, err
 			}
 
-			//istanbulExtra, err := types.ExtractIstanbulExtra(genesis)
-			//if err != nil {
-			//	return nil, err
-			//}
-
 			addrs := make([]common.Address, 0)
 
-			if len(sb.config.ValidatorNodes) == 0 {
-				log.Crit("genesis.json not specified ValidatorNodes")
+			if sb.config.FirstValidatorNode.ID.String() == "" {
+				log.Crit("genesis.json not specified FirstValidatorNode")
 			}
 
-			for _, nodeId := range sb.config.ValidatorNodes[:1] {
-				prefix := make([]byte, 1)
-				prefix[0] = 4
-				nodeID := append(prefix, nodeId.ID[:]...)
+			nodeId := sb.config.FirstValidatorNode
+			prefix := make([]byte, 1)
+			prefix[0] = 4
+			nodeID := append(prefix, nodeId.ID[:]...)
 
-				pubKey, err := crypto.UnmarshalPubkey(nodeID)
-				if err != nil {
-					log.Info("NodeID unmarshal to pubKey failed")
-					continue
-				}
-
-				addr := crypto.PubkeyToAddress(*pubKey).Hex()
-
-				addrs = append(addrs, common.HexToAddress(addr))
+			pubKey, err := crypto.UnmarshalPubkey(nodeID)
+			if err != nil {
+				log.Info("NodeID unmarshal to pubKey failed")
+				continue
 			}
+
+			addr := crypto.PubkeyToAddress(*pubKey).Hex()
+
+			addrs = append(addrs, common.HexToAddress(addr))
 
 			//snap = newSnapshot(sb.config.Epoch, 0, genesis.Hash(), validator.NewSet(istanbulExtra.Validators, sb.config.ProposerPolicy))
-			snap = newSnapshot(sb.config.Epoch, 0, genesis.Hash(), validator.NewSet(addrs, sb.config.ProposerPolicy))
+			snap = newSnapshot(0, genesis.Hash(), validator.NewSet(addrs, sb.config.ProposerPolicy))
 			if err := snap.store(sb.db); err != nil {
 				return nil, err
 			}
@@ -672,6 +669,27 @@ func ecrecover(header *types.Header) (common.Address, error) {
 	}
 	recentAddresses.Add(hash, addr)
 	return addr, nil
+}
+
+// recoverPubkey extracts the Ethereum account pubkey from a signed header.
+func recoverPubkey(header *types.Header) (ecdsa.PublicKey, error) {
+	hash := header.Hash()
+	if pubkey, ok := recentPubkeys.Get(hash); ok {
+		return pubkey.(ecdsa.PublicKey), nil
+	}
+
+	// Retrieve the signature from the header extra-data
+	istanbulExtra, err := types.ExtractIstanbulExtra(header)
+	if err != nil {
+		return ecdsa.PublicKey{}, err
+	}
+
+	pubkey, err := istanbul.GetSignaturePubkey(sigHash(header).Bytes(), istanbulExtra.Seal)
+	if err != nil {
+		return *pubkey, err
+	}
+	recentPubkeys.Add(hash, *pubkey)
+	return *pubkey, nil
 }
 
 // prepareExtra returns a extra-data of the given header and validators

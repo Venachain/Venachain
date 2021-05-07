@@ -18,18 +18,14 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
-	"math"
-	"math/big"
+	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"os"
 	"runtime"
 	"strconv"
 	"sync/atomic"
 	"time"
-	lutils "github.com/PlatONEnetwork/PlatONE-Go/life/utils"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/console"
@@ -90,6 +86,7 @@ processing will proceed even if an individual RLP-file import failure occurs.`,
 		ArgsUsage: "<filename> [<blockNumFirst> <blockNumLast>]",
 		Flags: []cli.Flag{
 			utils.DataDirFlag,
+			utils.ReleaseFlag,
 			utils.CacheFlag,
 			utils.SyncModeFlag,
 		},
@@ -139,8 +136,6 @@ The export-preimages command export hash preimages to an RLP encoded stream`,
 			utils.CacheFlag,
 			utils.SyncModeFlag,
 			utils.FakePoWFlag,
-			utils.TestnetFlag,
-			utils.RinkebyFlag,
 		},
 		Category: "BLOCKCHAIN COMMANDS",
 		Description: `
@@ -180,7 +175,7 @@ Use "ethereum dump 0" to dump the genesis block.`,
 func initGenesis(ctx *cli.Context) error {
 	// Make sure we have a valid genesis JSON
 	genesisPath := ctx.Args().First()
-	log.Debug("initGenesis","genesisPath", genesisPath)
+	log.Debug("initGenesis", "genesisPath", genesisPath)
 	if len(genesisPath) == 0 {
 		utils.Fatalf("Must supply path to genesis JSON file")
 	}
@@ -216,8 +211,9 @@ func importChain(ctx *cli.Context) error {
 	}
 	stack := makeFullNode(ctx)
 	chain, chainDb := utils.MakeChain(ctx, stack)
+
 	defer chainDb.Close()
-	InitInnerCallFuncFromChain(chain)
+	//InitInnerCallFuncFromChain(chain)
 	// Start periodically gathering memory profiles
 	var peakMemAlloc, peakMemSys uint64
 	go func() {
@@ -308,14 +304,20 @@ func exportChain(ctx *cli.Context) error {
 	if len(ctx.Args()) < 1 {
 		utils.Fatalf("This command requires an argument.")
 	}
+
+	version := ctx.String(utils.ReleaseFlag.Name)
+	if version == "" {
+		utils.Fatalf("\"relese\" flag is required\n")
+	}
+	params.Version = version
+
 	stack := makeFullNode(ctx)
 	chain, _ := utils.MakeChain(ctx, stack)
 	start := time.Now()
-
 	var err error
 	fp := ctx.Args().First()
 	if len(ctx.Args()) < 3 {
-		err = utils.ExportChain(chain, fp)
+		err = utils.ExportChain(chain, fp, version)
 	} else {
 		// This can be improved to allow for numbers larger than 9223372036854775807
 		first, ferr := strconv.ParseInt(ctx.Args().Get(1), 10, 64)
@@ -326,7 +328,7 @@ func exportChain(ctx *cli.Context) error {
 		if first < 0 || last < 0 {
 			utils.Fatalf("Export error: block number must be greater than 0\n")
 		}
-		err = utils.ExportAppendChain(chain, fp, uint64(first), uint64(last))
+		err = utils.ExportAppendChain(chain, fp, ctx.GlobalString(utils.ReleaseFlag.Name), uint64(first), uint64(last))
 	}
 
 	if err != nil {
@@ -475,171 +477,4 @@ func dump(ctx *cli.Context) error {
 func hashish(x string) bool {
 	_, err := strconv.Atoi(x)
 	return err != nil
-}
-
-func InitInnerCallFuncFromChain(bc *core.BlockChain) {
-	innerCall := func(conAddr common.Address, data []byte) ([]byte, error) {
-		// Get the state
-		state, err := bc.State()
-		// state, header, err := ethPtr.APIBackend.StateAndHeaderByNumber(ctx, -1)
-		if err != nil {
-			return nil, err
-		} else if state == nil {
-			return nil, errors.New("state is nil")
-		}
-
-		from := common.Address{}
-		to := &conAddr
-		gas := uint64(0x999999999)
-		gasPrice := (hexutil.Big)(*big.NewInt(0x333333))
-		nonce := uint64(0)
-		value := (hexutil.Big)(*big.NewInt(0))
-
-		// Create new call message
-		msg := types.NewMessage(from, to, nonce, value.ToInt(), gas, gasPrice.ToInt(), data, false, types.NormalTxType)
-
-		header := bc.CurrentHeader()
-
-		context := core.NewEVMContext(msg, header, bc, nil)
-		evm :=  vm.NewEVM(context, state, bc.Config(), vm.Config{})
-
-		// Setup the gas pool (also for unmetered requests)
-		// and apply the message.
-		gp := new(core.GasPool).AddGas(math.MaxUint64)
-		res, _, _, _, err := core.ApplyMessage(evm, msg, gp)
-		return res, err
-	}
-
-	sysContractCall := func(sc *common.SystemConfig) {
-		// Get the state
-		state, err := bc.State()
-		// state, header, err := ethPtr.APIBackend.StateAndHeaderByNumber(ctx, -1)
-		if err != nil {
-			return
-		} else if state == nil {
-			return
-		}
-
-		// Create new call message
-		msg := types.NewMessage(common.Address{}, nil, 1, big.NewInt(1), 0x1, big.NewInt(1), nil, false, types.NormalTxType)
-
-		header := bc.CurrentHeader()
-
-		context := core.NewEVMContext(msg, header, bc, nil)
-		evm :=  vm.NewEVM(context, state, bc.Config(), vm.Config{})
-
-		// clusure method for call Contract
-		callContract := func(conAddr common.Address, data []byte) []byte {
-			res, _, _ := evm.Call(vm.AccountRef(common.Address{}), conAddr, data, uint64(0xffffffffff), big.NewInt(0))
-			return res
-		}
-
-		// Get all system contracts' address
-		var fh string = "getContractAddress"
-
-		// Update system contract address
-		for _, contractName := range common.SystemContractList {
-			callParams := []interface{}{contractName, "latest"}
-			btsRes := callContract(common.HexToAddress(core.CnsManagerAddr), common.GenCallData(fh, callParams))
-			strRes := common.CallResAsString(btsRes)
-			if !(len(strRes) == 0 || common.IsHexZeroAddress(strRes)) {
-				sc.ContractAddress[contractName] = common.HexToAddress(strRes)
-			}
-		}
-
-		// Get contract parameters from contract
-		paramAddr := sc.ContractAddress["__sys_ParamManager"]
-		if paramAddr != (common.Address{}) {
-			funcName := "getTxGasLimit"
-			funcParams := []interface{}{}
-			res := callContract(paramAddr, common.GenCallData(funcName, funcParams))
-			if res != nil {
-				ret := common.CallResAsInt64(res)
-				if ret > 0 {
-					sc.SysParam.TxGasLimit = ret
-				}
-			}
-			funcName = "getBlockGasLimit"
-			funcParams = []interface{}{}
-			res = callContract(paramAddr, common.GenCallData(funcName, funcParams))
-			if res != nil {
-				ret := common.CallResAsInt64(res)
-				if ret > 0 {
-					sc.SysParam.BlockGasLimit = ret
-				}
-			}
-			funcName = "getCheckContractDeployPermission"
-			funcParams = []interface{}{}
-			res = callContract(paramAddr, common.GenCallData(funcName, funcParams))
-			if res != nil {
-				ret := common.CallResAsInt64(res)
-				sc.SysParam.CheckContractDeployPermission = ret
-			}
-
-			funcName = "getIsProduceEmptyBlock"
-			funcParams = []interface{}{}
-			res = callContract(paramAddr, common.GenCallData(funcName, funcParams))
-			if res != nil {
-				ret := common.CallResAsInt64(res)
-				sc.SysParam.IsProduceEmptyBlock = ret == 1
-			}
-
-			funcName = "getCBFTTimeParam"
-			funcParams = []interface{}{}
-			res = callContract(paramAddr, common.GenCallData(funcName, funcParams))
-			if res != nil {
-				strRes := common.CallResAsString(res)
-
-				var cbftCfgTime common.CBFTProduceBlockCfg
-				if err := json.Unmarshal([]byte(strRes), &cbftCfgTime); err != nil {
-					log.Error("contract return invalid data", "result", strRes, "err", err.Error())
-				} else {
-					sc.SysParam.CBFTTime = cbftCfgTime
-				}
-			}
-			funcName = "getGasContractName"
-			funcParams = []interface{}{}
-			res = callContract(paramAddr, common.GenCallData(funcName, funcParams))
-			if res != nil {
-				sc.SysParam.GasContractName = common.CallResAsString(res)
-			}
-		}
-
-		if sc.SysParam.GasContractName != "" {
-			cnsAddr := common.HexToAddress(core.CnsManagerAddr)
-			funcName := "getContractAddress"
-			funcParams := []interface{}{sc.SysParam.GasContractName, "latest"}
-			res := callContract(cnsAddr, common.GenCallData(funcName, funcParams))
-			if res != nil {
-				sc.SysParam.GasContractAddr = common.HexToAddress(common.CallResAsString(res))
-			}
-		}
-
-		// Get nodes from contract
-		nodeManagerAddr := sc.ContractAddress["__sys_NodeManager"]
-		if nodeManagerAddr != (common.Address{}) {
-			funcName := "getAllNodes"
-			funcParams := []interface{}{}
-			res := callContract(nodeManagerAddr, common.GenCallData(funcName, funcParams))
-			if res != nil {
-				sc.SysParam.GasContractAddr = common.HexToAddress(common.CallResAsString(res))
-			}
-
-			strRes := common.CallResAsString(res)
-
-			var tmp common.CommonResult
-			if err := json.Unmarshal(lutils.String2bytes(strRes), &tmp); err != nil {
-				log.Warn("unmarshal consensus node list failed", "result", strRes, "err", err.Error())
-			} else if tmp.RetCode != 0 {
-				log.Debug("contract inner error", "code", tmp.RetCode, "msg", tmp.RetMsg)
-			} else {
-				sc.Nodes = tmp.Data
-			}
-		}
-	}
-
-	common.SetSysContractCallFunc(sysContractCall)
-	common.SetInnerCallFunc(innerCall)
-
-	common.InitSystemconfig(common.NodeInfo{})
 }

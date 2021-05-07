@@ -23,16 +23,12 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"math"
 	"math/big"
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/core/cbfttypes"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
-	"github.com/PlatONEnetwork/PlatONE-Go/consensus/misc"
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
@@ -84,6 +80,7 @@ type ProtocolManager struct {
 
 	downloader *downloader.Downloader
 	fetcher    *fetcher.Fetcher
+	txFetcher  *fetcher.TxFetcher
 	peers      *peerSet
 
 	SubProtocols []p2p.Protocol
@@ -112,7 +109,8 @@ type ProtocolManager struct {
 
 // NewProtocolManager returns a new Ethereum sub protocol manager. The Ethereum sub protocol manages peers capable
 // with the Ethereum network.
-func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb ethdb.Database) (*ProtocolManager, error) {
+func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux,
+	txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb ethdb.Database) (*ProtocolManager, error) {
 	// Create the protocol manager with the base fields
 	manager := &ProtocolManager{
 		networkID:   networkID,
@@ -143,10 +141,6 @@ func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, ne
 	// Initiate a sub-protocol for every implemented version we can handle
 	manager.SubProtocols = make([]p2p.Protocol, 0, len(ProtocolVersions))
 	for i, version := range ProtocolVersions {
-		// Skip protocol version if incompatible with the mode of operation
-		if mode == downloader.FastSync && version < eth63 {
-			continue
-		}
 		// Compatible; initialise the sub-protocol
 		version := version // Closure for the run
 		manager.SubProtocols = append(manager.SubProtocols, p2p.Protocol{
@@ -172,6 +166,12 @@ func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, ne
 					return p.Info()
 				}
 				return nil
+			},
+			UpdatePeer: func(info *common.NodeInfo) {
+				id := info.PublicKey[:16]
+				if p := manager.peers.Peer(id); p != nil {
+					p.setTypes(info.Types)
+				}
 			},
 		})
 	}
@@ -199,6 +199,15 @@ func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, ne
 
 	manager.fetcher = fetcher.New(blockchain.GetBlockByHash, validator, manager.BroadcastBlock, heighter, inserter, manager.removePeer)
 
+	fetchTx := func(peer string, hashes []common.Hash) error {
+		p := manager.peers.Peer(peer)
+		if p == nil {
+			return errors.New("unknown peer")
+		}
+		return p.RequestTxs(hashes)
+	}
+	manager.txFetcher = fetcher.NewTxFetcher(txpool.Has, txpool.AddRemotes, fetchTx)
+
 	return manager, nil
 }
 
@@ -212,6 +221,7 @@ func (pm *ProtocolManager) removePeer(id string) {
 
 	// Unregister the peer from the downloader and Ethereum peer set
 	pm.downloader.UnregisterPeer(id)
+	pm.txFetcher.Drop(id)
 	if err := pm.peers.Unregister(id); err != nil {
 		log.Error("Peer removal failed", "peer", id, "err", err)
 	}
@@ -233,10 +243,8 @@ func (pm *ProtocolManager) Start(maxPeers int) {
 	pm.minedBlockSub = pm.eventMux.Subscribe(core.NewMinedBlockEvent{})
 	// broadcast prepare mined blocks
 	pm.prepareMinedBlockSub = pm.eventMux.Subscribe(core.PrepareMinedBlockEvent{})
-	pm.blockSignatureSub = pm.eventMux.Subscribe(core.BlockSignatureEvent{})
 	go pm.minedBroadcastLoop()
 	go pm.prepareMinedBlockcastLoop()
-	go pm.blockSignaturecastLoop()
 
 	// start sync handlers
 	go pm.syncer()
@@ -291,11 +299,40 @@ func (pm *ProtocolManager) handle(p *peer) error {
 		p.Log().Debug("Ethereum handshake failed", "err", err)
 		return err
 	}
+	if pm.blockchain.CurrentHeader().Number.Cmp(big.NewInt(0)) == 0 &&
+		p.GetReplayParam().Pivot != 0 &&
+		common.SysCfg.ReplayParam.Pivot == 0 {
+
+		b, err := rlp.EncodeToBytes(p.GetReplayParam().Pivot)
+		if err != nil {
+			return err
+		}
+		pm.blockchain.Put(common.Sys_pivot_key, b)
+
+		b, err = json.Marshal(p.GetReplayParam().OldSysContracts)
+		if err != nil {
+			return err
+		}
+		b, err = rlp.EncodeToBytes(b)
+		if err != nil {
+			return err
+		}
+		pm.blockchain.Put(common.Sys_old_system_contract_key, b)
+
+		b, err = rlp.EncodeToBytes(p.GetReplayParam().OldSuperAdmin)
+		if err != nil {
+			return err
+		}
+		pm.blockchain.Put(common.Sys_old_super_admin_key, b)
+
+		core.InitBlockReplayConfig(pm.blockchain, common.SysCfg)
+	}
+
 	if rw, ok := p.rw.(*meteredMsgReadWriter); ok {
 		rw.Init(p.version)
 	}
 	// Register the peer locally
-	if err := pm.peers.Register(p); err != nil {
+	if err := pm.peers.Register(p, pm.removePeer); err != nil {
 		p.Log().Error("Ethereum peer registration failed", "err", err)
 		return err
 	}
@@ -307,27 +344,10 @@ func (pm *ProtocolManager) handle(p *peer) error {
 	}
 	// Propagate existing transactions. new transactions appearing
 	// after this will be sent via broadcasts.
-	pm.syncTransactions(p)
-
-	// If we're DAO hard-fork aware, validate any remote peer with regard to the hard-fork
-	if daoBlock := pm.chainconfig.DAOForkBlock; daoBlock != nil {
-		// Request the peer's DAO fork header for extra-data validation
-		if err := p.RequestHeadersByNumber(daoBlock.Uint64(), 1, 0, false); err != nil {
-			return err
-		}
-		// Start a timer to disconnect if the peer doesn't reply in time
-		p.forkDrop = time.AfterFunc(daoChallengeTimeout, func() {
-			p.Log().Debug("Timed out DAO fork-check, dropping")
-			pm.removePeer(p.id)
-		})
-		// Make sure it's cleaned up if the peer dies off
-		defer func() {
-			if p.forkDrop != nil {
-				p.forkDrop.Stop()
-				p.forkDrop = nil
-			}
-		}()
+	if p.IsConsensus() {
+		pm.syncTransactionHashes(p)
 	}
+
 	// main loop. handle incoming messages.
 	for {
 		if err := pm.handleMsg(p); err != nil {
@@ -466,43 +486,10 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		if err := msg.Decode(&headers); err != nil {
 			return errResp(ErrDecode, "msg %v: %v", msg, err)
 		}
-		// If no headers were received, but we're expending a DAO fork check, maybe it's that
-		if len(headers) == 0 && p.forkDrop != nil {
-			// Possibly an empty reply to the fork header checks, sanity check TDs
-			verifyDAO := true
 
-			// If we already have a DAO header, we can check the peer's TD against it. If
-			// the peer's ahead of this, it too must have a reply to the DAO check
-			if daoHeader := pm.blockchain.GetHeaderByNumber(pm.chainconfig.DAOForkBlock.Uint64()); daoHeader != nil {
-				if _, bn := p.Head(); bn.Cmp(daoHeader.Number) >= 0 {
-					verifyDAO = false
-				}
-			}
-			// If we're seemingly on the same chain, disable the drop timer
-			if verifyDAO {
-				p.Log().Debug("Seems to be on the same side of the DAO fork")
-				p.forkDrop.Stop()
-				p.forkDrop = nil
-				return nil
-			}
-		}
 		// Filter out any explicitly requested headers, deliver the rest to the downloader
 		filter := len(headers) == 1
 		if filter {
-			// If it's a potential DAO fork check, validate against the rules
-			if p.forkDrop != nil && pm.chainconfig.DAOForkBlock.Cmp(headers[0].Number) == 0 {
-				// Disable the fork drop timer
-				p.forkDrop.Stop()
-				p.forkDrop = nil
-
-				// Validate the header and either drop the peer or continue
-				if err := misc.VerifyDAOHeaderExtraData(pm.chainconfig, headers[0]); err != nil {
-					p.Log().Debug("Verified to be on the other side of the DAO fork, dropping")
-					return err
-				}
-				p.Log().Debug("Verified to be on the same side of the DAO fork")
-				return nil
-			}
 			// Irrelevant of the fork checks, send the header to the fetcher just in case
 			headers = pm.fetcher.FilterHeaders(p.id, headers, time.Now())
 		}
@@ -564,7 +551,7 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 			}
 		}
 
-	case p.version >= eth63 && msg.Code == GetNodeDataMsg:
+	case msg.Code == GetNodeDataMsg:
 		// Decode the retrieval message
 		msgStream := rlp.NewStream(msg.Payload, uint64(msg.Size))
 		if _, err := msgStream.List(); err != nil {
@@ -591,7 +578,7 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		}
 		return p.SendNodeData(data)
 
-	case p.version >= eth63 && msg.Code == NodeDataMsg:
+	case msg.Code == NodeDataMsg:
 		// A batch of node state data arrived to one of our previous requests
 		var data [][]byte
 		if err := msg.Decode(&data); err != nil {
@@ -602,7 +589,7 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 			log.Debug("Failed to deliver node state data", "err", err)
 		}
 
-	case p.version >= eth63 && msg.Code == GetReceiptsMsg:
+	case msg.Code == GetReceiptsMsg:
 		// Decode the retrieval message
 		msgStream := rlp.NewStream(msg.Payload, uint64(msg.Size))
 		if _, err := msgStream.List(); err != nil {
@@ -638,7 +625,7 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		}
 		return p.SendReceiptsRLP(receipts)
 
-	case p.version >= eth63 && msg.Code == ReceiptsMsg:
+	case msg.Code == ReceiptsMsg:
 		// A batch of receipts arrived to one of our previous requests
 		var receipts [][]*types.Receipt
 		if err := msg.Decode(&receipts); err != nil {
@@ -690,7 +677,6 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 			if hDiff := request.Block.NumberU64() - pm.blockchain.CurrentBlock().NumberU64(); hDiff == 1 || hDiff == 0 {
 				log.Info("enable boot nodes not exemption: ", "local", "at new block msg")
 				p2p.BootNodesNotExempt = true
-				p2p.UpdatePeer()
 			}
 		}
 		// Assuming the block is importable by the peer, but possibly not yet done so,
@@ -713,7 +699,59 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 			}
 		}
 
-	case msg.Code == TxMsg:
+	case msg.Code == TxHashesMsg:
+		// New transaction announcement arrived, make sure we have
+		// a valid and fresh chain to handle them
+		if atomic.LoadUint32(&pm.acceptTxs) == 0 {
+			break
+		}
+		var hashes []common.Hash
+		if err := msg.Decode(&hashes); err != nil {
+			return errResp(ErrDecode, "msg %v: %v", msg, err)
+		}
+		// Schedule all the unknown hashes for retrieval
+		for _, hash := range hashes {
+			p.MarkTransaction(hash)
+		}
+		pm.txFetcher.Notify(p.id, hashes)
+
+	case msg.Code == GetPooledTxMsg:
+		// Decode the retrieval message
+		msgStream := rlp.NewStream(msg.Payload, uint64(msg.Size))
+		if _, err := msgStream.List(); err != nil {
+			return err
+		}
+		// Gather transactions until the fetch or network limits is reached
+		var (
+			hash   common.Hash
+			bytes  int
+			hashes []common.Hash
+			txs    []rlp.RawValue
+		)
+		for bytes < softResponseLimit {
+			// Retrieve the hash of the next block
+			if err := msgStream.Decode(&hash); err == rlp.EOL {
+				break
+			} else if err != nil {
+				return errResp(ErrDecode, "msg %v: %v", msg, err)
+			}
+			// Retrieve the requested transaction, skipping if unknown to us
+			tx := pm.txpool.Get(hash)
+			if tx == nil {
+				continue
+			}
+			// If known, encode and queue for response packet
+			if encoded, err := rlp.EncodeToBytes(tx); err != nil {
+				log.Error("Failed to encode transaction", "err", err)
+			} else {
+				hashes = append(hashes, hash)
+				txs = append(txs, encoded)
+				bytes += len(encoded)
+			}
+		}
+		return p.SendPooledTransactionsRLP(hashes, txs)
+
+	case msg.Code == TxMsg || msg.Code == PooledTxMsg:
 		// Transactions arrived, make sure we have a valid and fresh chain to handle them
 		if atomic.LoadUint32(&pm.acceptTxs) == 0 {
 			break
@@ -731,12 +769,12 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 
 			// This node is the node that receives the broadcast transaction
 			strTx := tx.Hash().String()
+			tx.RouterMark()
 			rpc.MonitorWriteData(rpc.TransactionReceiveTime, strTx, "", pm.txpool.ExtendedDb())
 			rpc.MonitorWriteData(rpc.TransactionReceiveNode, strTx, "false", pm.txpool.ExtendedDb())
 			p.MarkTransaction(tx.Hash())
 		}
-
-		go pm.txpool.AddRemotes(txs)
+		go pm.txFetcher.Enqueue(p.id, txs, msg.Code == PooledTxMsg)
 
 	case msg.Code == PrepareBlockMsg:
 		// Retrieve and decode the propagated block
@@ -757,80 +795,6 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		if pm.blockchain.HasBlock(request.Block.Hash(), request.Block.NumberU64()) {
 			log.Warn("Block already in blockchain,discard this msg", "err", err)
 			return nil
-		}
-		if cbftEngine, ok := pm.engine.(consensus.Bft); ok {
-			if flag, err := cbftEngine.IsConsensusNode(); !flag || err != nil {
-				log.Warn("local node is not consensus node,discard this msg")
-			} else if flag, err := cbftEngine.CheckConsensusNode(p.Peer.ID()); !flag || err != nil {
-				log.Warn("remote node is not consensus node,discard this msg")
-			} else if err := cbftEngine.OnNewBlock(pm.blockchain, request.Block); err != nil {
-				log.Error("deliver prepareBlockMsg data to cbft engine failed", "err", err)
-			}
-			return nil
-		} else {
-			log.Warn("Consensus engine is not cbft", "GoRoutineID", common.CurrentGoRoutineID(), "peerId", p.id, "hash", request.Block.Hash(), "number", request.Block.NumberU64())
-		}
-
-	case msg.Code == BlockSignatureMsg:
-		// Retrieve and decode the propagated block
-		var request blockSignature
-		if err := msg.Decode(&request); err != nil {
-			return errResp(ErrDecode, "%v: %v", msg, err)
-		}
-		log.Debug("~ Received a broadcast message[BlockSignatureMsg]------------", "GoRoutineID", common.CurrentGoRoutineID(), "peerId", p.id, "SignHash", request.SignHash, "Hash", request.Hash, "Number", request.Number, "Signature", request.Signature.String())
-		engineBlockSignature := &cbfttypes.BlockSignature{request.SignHash, request.Hash, request.Number, request.Signature}
-		if cbftEngine, ok := pm.engine.(consensus.Bft); ok {
-			//if pm.downloader.IsRunning() {
-			//	log.Warn("downloader is running,discard this msg")
-			//}
-			strValue := rpc.MonitorReadData(rpc.BlockConsensusStartTime, engineBlockSignature.SignHash.String(), pm.txpool.ExtendedDb())
-			if 0 == len(strValue) {
-				rpc.MonitorWriteData(rpc.BlockConsensusStartTime, engineBlockSignature.SignHash.String(), "", pm.txpool.ExtendedDb())
-			}
-
-			if flag, err := cbftEngine.IsConsensusNode(); !flag || err != nil {
-				log.Warn("local node is not consensus node,discard this msg")
-			} else if flag, err := cbftEngine.CheckConsensusNode(p.Peer.ID()); !flag || err != nil {
-				log.Warn("remote node is not consensus node,discard this msg")
-			} else if err := cbftEngine.OnBlockSignature(pm.blockchain, p.Peer.ID(), engineBlockSignature); err != nil {
-				log.Error("deliver blockSignatureMsg data to cbft engine failed", "blockHash", request.Hash, "err", err)
-			}
-			return nil
-		}
-
-	case msg.Code == PongMsg:
-		curTime := time.Now().UnixNano()
-		log.Debug("handle a eth Pong message", "curTime", curTime)
-		if cbftEngine, ok := pm.engine.(consensus.Bft); ok {
-			var pingTime [1]string
-			if err := msg.Decode(&pingTime); err != nil {
-				return errResp(ErrDecode, "%v: %v", msg, err)
-			}
-			p.lock.Lock()
-			defer p.lock.Unlock()
-			for {
-				e := p.PingList.Front()
-				if e != nil {
-					log.Trace("Front element of p.PingList", "element", e)
-					if t, ok := p.PingList.Remove(e).(string); ok {
-						if t == pingTime[0] {
-
-							tInt64, err := strconv.ParseInt(t, 10, 64)
-							if err != nil {
-								return errResp(ErrDecode, "%v: %v", msg, err)
-							}
-
-							log.Trace("calculate net latency", "sendPingTime", tInt64, "receivePongTime", curTime)
-							latency := (curTime - tInt64) / 2 / 1000000
-							cbftEngine.OnPong(p.Peer.ID(), latency)
-							break
-						}
-					}
-				} else {
-					log.Trace("end of p.PingList")
-					break
-				}
-			}
 		}
 	default:
 		return errResp(ErrInvalidMsgCode, "%v", msg.Code)
@@ -892,16 +856,6 @@ func (pm *ProtocolManager) MulticastConsensus(a interface{}) {
 				"peerId", peer.id, "Hash", block.Hash(), "Number", block.Number())
 			peer.AsyncSendPrepareBlock(block)
 		}
-	} else if signature, ok := a.(*cbfttypes.BlockSignature); ok {
-		for _, peer := range peers {
-			strValue := rpc.MonitorReadData(rpc.BlockConsensusStartTime, signature.Hash.String(), pm.txpool.ExtendedDb())
-			if 0 == len(strValue) {
-				rpc.MonitorWriteData(rpc.BlockConsensusStartTime, signature.Hash.String(), "", pm.txpool.ExtendedDb())
-			}
-			log.Warn("~ Send a broadcast message[BlockSignatureMsg]------------",
-				"peerId", peer.id, "SignHash", signature.SignHash, "Hash", signature.Hash, "Number", signature.Number, "SignHash", signature.SignHash)
-			peer.AsyncSendSignature(signature)
-		}
 	}
 }
 
@@ -909,20 +863,36 @@ func (pm *ProtocolManager) MulticastConsensus(a interface{}) {
 // already have the given transaction.
 func (pm *ProtocolManager) BroadcastTxs(txs types.Transactions) {
 	var txset = make(map[*peer]types.Transactions)
+	var hashSet = make(map[*peer][]common.Hash)
 
 	// Broadcast transactions to a batch of peers not knowing about it
+	consensusPeers := pm.peers.ConsensusPeers()
 	for _, tx := range txs {
-		peers := pm.peers.PeersWithoutTx(tx.Hash())
-		for _, peer := range peers {
-			txset[peer] = append(txset[peer], tx)
-		}
 		txHash := tx.Hash()
-		log.Trace("Broadcast transaction", "hash", fmt.Sprintf("%x", txHash[:log.LogHashLen]), "recipients", len(peers))
+		if tx.FromRemote() {
+			transfer := consensusPeers[:int(math.Sqrt(float64(len(consensusPeers))))]
+			for _, peer := range transfer {
+				if !peer.knownTxs.Contains(txHash) {
+					hashSet[peer] = append(hashSet[peer], tx.Hash())
+				}
+			}
+			log.Trace("Broadcast transaction", "hash", fmt.Sprintf("%x", txHash[:log.LogHashLen]), "recipients", len(transfer))
+		} else {
+			for _, peer := range consensusPeers {
+				if !peer.knownTxs.Contains(txHash) {
+					txset[peer] = append(txset[peer], tx)
+				}
+			}
+			log.Trace("Broadcast transaction", "hash", fmt.Sprintf("%x", txHash[:log.LogHashLen]), "recipients", len(consensusPeers))
+		}
 	}
 
 	// FIXME include this again: peers = peers[:int(math.Sqrt(float64(len(peers))))]
 	for peer, txs := range txset {
 		peer.AsyncSendTransactions(txs)
+	}
+	for peer, hashes := range hashSet {
+		peer.AsyncSendPooledTransactionHashes(hashes)
 	}
 }
 
@@ -960,14 +930,6 @@ func (pm *ProtocolManager) prepareMinedBlockcastLoop() {
 	for obj := range pm.prepareMinedBlockSub.Chan() {
 		if ev, ok := obj.Data.(core.PrepareMinedBlockEvent); ok {
 			pm.MulticastConsensus(ev.Block) // propagate block to consensus peers
-		}
-	}
-}
-
-func (pm *ProtocolManager) blockSignaturecastLoop() {
-	for obj := range pm.blockSignatureSub.Chan() {
-		if ev, ok := obj.Data.(core.BlockSignatureEvent); ok {
-			pm.MulticastConsensus(ev.BlockSignature) // propagate blockSignature to consensus peers
 		}
 	}
 }

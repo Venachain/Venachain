@@ -19,13 +19,14 @@ package backend
 import (
 	"crypto/ecdsa"
 	"errors"
+	"math/big"
+	"sync"
+	"time"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
-	"math/big"
-	"sync"
-	"time"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
@@ -38,7 +39,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 const (
@@ -52,31 +53,19 @@ func New(config *params.IstanbulConfig, privateKey *ecdsa.PrivateKey, db ethdb.D
 	recents, _ := lru.NewARC(inmemorySnapshots)
 	recentMessages, _ := lru.NewARC(inmemoryPeers)
 	knownMessages, _ := lru.NewARC(inmemoryMessages)
+
+	var address common.Address
 	if privateKey == nil {
-		backend := &backend{
-			config:           config,
-			istanbulEventMux: new(event.TypeMux),
-			msgFeed:		  new(event.Feed),
-			privateKey:       privateKey,
-			address:          common.BytesToAddress([]byte("0x0000000000000000000000000000000000000112")),
-			logger:           log.New(),
-			db:               db,
-			commitCh:         make(chan *types.Block, 1),
-			recents:          recents,
-			candidates:       make(map[common.Address]bool),
-			coreStarted:      false,
-			recentMessages:   recentMessages,
-			knownMessages:    knownMessages,
-		}
-		backend.core = istanbulCore.New(backend, backend.config)
-		return backend
+		address = common.BytesToAddress([]byte("0x0000000000000000000000000000000000000112"))
+	} else {
+		address = crypto.PubkeyToAddress(privateKey.PublicKey)
 	}
 	backend := &backend{
 		config:           config,
 		istanbulEventMux: new(event.TypeMux),
-		msgFeed:		  new(event.Feed),
+		msgFeed:          new(event.Feed),
 		privateKey:       privateKey,
-		address:          crypto.PubkeyToAddress(privateKey.PublicKey),
+		address:          address,
 		logger:           log.New(),
 		db:               db,
 		commitCh:         make(chan *types.Block, 1),
@@ -93,8 +82,8 @@ func New(config *params.IstanbulConfig, privateKey *ecdsa.PrivateKey, db ethdb.D
 // ----------------------------------------------------------------------------
 // environment is the engine's current environment and holds all of the current state information.
 type environment struct {
-	signer types.Signer
-	block  *types.Block
+	//signer types.Signer
+	block *types.Block
 
 	state   *state.StateDB // apply state changes here
 	tcount  int            // tx count in cycle
@@ -108,7 +97,7 @@ type environment struct {
 type backend struct {
 	config           *params.IstanbulConfig
 	istanbulEventMux *event.TypeMux
-	msgFeed 		 *event.Feed
+	msgFeed          *event.Feed
 	privateKey       *ecdsa.PrivateKey
 	address          common.Address
 	core             istanbulCore.Engine
@@ -116,7 +105,6 @@ type backend struct {
 	db               ethdb.Database
 	chain            consensus.ChainReader
 	currentBlock     func() *types.Block
-	hasBadBlock      func(hash common.Hash) bool
 	current          *environment
 
 	// the channels for istanbul engine notifications
@@ -138,11 +126,6 @@ type backend struct {
 
 	recentMessages *lru.ARCCache // the cache of peer's messages
 	knownMessages  *lru.ARCCache // the cache of self messages
-}
-
-// zekun: HACK
-func (sb *backend) CalcDifficulty(chain consensus.ChainReader, time uint64, parent *types.Header) *big.Int {
-	return new(big.Int)
 }
 
 // Address implements istanbul.Backend.Address
@@ -205,11 +188,11 @@ func (sb *backend) Gossip(valSet istanbul.ValidatorSet, payload []byte) error {
 
 func (sb *backend) writeCommitedBlockWithState(block *types.Block) error {
 	var (
-		chain    *core.BlockChain
-		receipts = make([]*types.Receipt, len(sb.current.receipts))
-		logs     []*types.Log
-		events   []interface{}
-		ok       bool
+		chain *core.BlockChain
+		//receipts = make([]*types.Receipt, len(sb.current.receipts))
+		logs   []*types.Log
+		events []interface{}
+		ok     bool
 	)
 
 	if chain, ok = sb.chain.(*core.BlockChain); !ok {
@@ -218,13 +201,13 @@ func (sb *backend) writeCommitedBlockWithState(block *types.Block) error {
 	if sb.current == nil {
 		return errors.New("sb.current is nil")
 	}
-	if chain.HasBlock(block.Hash(), block.NumberU64()){
+	if chain.HasBlock(block.Hash(), block.NumberU64()) {
 		return nil
 	}
 
-	for i, receipt := range sb.current.receipts {
-		receipts[i] = new(types.Receipt)
-		*receipts[i] = *receipt
+	for _, receipt := range sb.current.receipts {
+		//receipts[i] = new(types.Receipt)
+		//*receipts[i] = *receipt
 		// Update the block hash in all logs since it is now available and not when the
 		// receipt/log of individual transactions were created.
 		for _, log := range receipt.Logs {
@@ -233,7 +216,9 @@ func (sb *backend) writeCommitedBlockWithState(block *types.Block) error {
 		logs = append(logs, receipt.Logs...)
 	}
 
-	stat, err := chain.WriteBlockWithState(block, sb.current.receipts, sb.current.state)
+	now := time.Now()
+	stat, err := chain.WriteBlockWithState(block, sb.current.receipts, sb.current.state, false)
+	log.Info("write block with state ----------------------", "duration", time.Since(now))
 	if err != nil {
 		return err
 	}
@@ -353,11 +338,11 @@ func (sb *backend) makeCurrent(parentRoot common.Hash, header *types.Header) err
 	}
 
 	env := &environment{
-		signer:    types.NewEIP155Signer(chain.Config().ChainID),
-		state:     state,
-		header:    header,
-		gasPool:   gp,
-		txs: make([]*types.Transaction,0),
+		//signer:  types.NewEIP155Signer(chain.Config().ChainID),
+		state:   state,
+		header:  header,
+		gasPool: gp,
+		txs:     make([]*types.Transaction, 0),
 	}
 
 	// Keep track of transactions which return errors so they can be removed
@@ -390,9 +375,9 @@ func (sb *backend) excuteBlock(proposal istanbul.Proposal) error {
 		return errors.New("Proposal's parent block is not in current chain")
 	}
 
-	if err = sb.makeCurrent(parent.Root(), header);err != nil{
+	if err = sb.makeCurrent(parent.Root(), header); err != nil {
 		return err
-	}else{
+	} else {
 		// Iterate over and process the individual transactios
 		txsMap := make(map[common.Hash]struct{})
 		for _, tx := range block.Transactions() {
@@ -416,18 +401,20 @@ func (sb *backend) excuteBlock(proposal istanbul.Proposal) error {
 			sb.current.receipts = append(sb.current.receipts, receipt)
 			sb.current.tcount++
 
-			if chain.Config().IsByzantium(chain.CurrentHeader().Number) {
-				sb.current.state.Finalise(true)
-			} else {
-				sb.current.state.IntermediateRoot(chain.Config().IsEIP158(chain.CurrentHeader().Number))
-			}
+			sb.current.state.Finalise(true)
 		}
 
-		if sb.current.state.IntermediateRoot(true) != block.Root() {
+		cblock, err := sb.Finalize(chain, header, sb.current.state, block.Transactions(), sb.current.receipts)
+		if err != nil {
+			return err
+		}
+
+		if cblock.Root() != block.Root() {
 			sb.current = nil
 			return errors.New("Invalid block root")
 		}
 		sb.current.block = block
+		sb.current.header = block.Header()
 	}
 
 	return nil
@@ -441,11 +428,6 @@ func (sb *backend) Verify(proposal istanbul.Proposal, isProposer bool) (time.Dur
 	if !ok {
 		sb.logger.Error("Invalid proposal", "proposal", proposal)
 		return 0, errInvalidProposal
-	}
-
-	// check bad block
-	if sb.HasBadProposal(block.Hash()) {
-		return 0, core.ErrBlacklistedHash
 	}
 
 	// check block body
@@ -472,7 +454,8 @@ func (sb *backend) Verify(proposal istanbul.Proposal, isProposer bool) (time.Dur
 	if err == nil || err == errEmptyCommittedSeals {
 		return 0, nil
 	} else if err == consensus.ErrFutureBlock {
-		return time.Unix(block.Header().Time.Int64(), 0).Sub(now()), consensus.ErrFutureBlock
+		headTime := block.Header().Time.Int64()
+		return time.Unix(headTime/1000, (headTime%1000)*1e6).Sub(now()), consensus.ErrFutureBlock
 	}
 	return 0, err
 }
@@ -544,13 +527,6 @@ func (sb *backend) LastProposal() (istanbul.Proposal, common.Address) {
 	return block, proposer
 }
 
-func (sb *backend) HasBadProposal(hash common.Hash) bool {
-	if sb.hasBadBlock == nil {
-		return false
-	}
-	return sb.hasBadBlock(hash)
-}
-
 // SealHash returns the hash of a block prior to it being sealed.
 func (sb *backend) SealHash(header *types.Header) common.Hash {
 	return header.SealHash()
@@ -570,10 +546,10 @@ func (sb *backend) ShouldSeal() bool {
 // Check if the first node of the network is allowed to produce blocks
 func (sb *backend) CheckFirstNodeCommitAtWrongTime() error {
 	block := sb.currentBlock()
-	if block.NumberU64() != 0 || len(sb.config.ValidatorNodes) == 0 {
+	if block.NumberU64() != 0 || sb.config.FirstValidatorNode.ID.String() == "" {
 		return nil
 	}
-	nodeId := sb.config.ValidatorNodes[0].ID.String()
+	nodeId := sb.config.FirstValidatorNode.ID.String()
 	// 1. self is the first node of validatorNodes in genesis
 	// 2. The node startup specifies bootNodes,
 	// 	  and if it is not specified itself, no block generation is performed.

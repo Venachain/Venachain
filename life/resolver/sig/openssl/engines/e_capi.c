@@ -1,7 +1,7 @@
 /*
  * Copyright 2008-2018 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -1301,14 +1301,13 @@ static void capi_dump_prov_info(CAPI_CTX *ctx, BIO *out,
                                 CRYPT_KEY_PROV_INFO *pinfo)
 {
     char *provname = NULL, *contname = NULL;
-
-    if (pinfo == NULL) {
+    if (!pinfo) {
         BIO_printf(out, "  No Private Key\n");
         return;
     }
     provname = wide_to_asc(pinfo->pwszProvName);
     contname = wide_to_asc(pinfo->pwszContainerName);
-    if (provname == NULL || contname == NULL)
+    if (!provname || !contname)
         goto err;
 
     BIO_printf(out, "  Private Key Info:\n");
@@ -1778,7 +1777,7 @@ static int capi_load_ssl_client_cert(ENGINE *e, SSL *ssl,
 
     sk_X509_free(certs);
 
-    if (*pcert == NULL)
+    if (!*pcert)
         return 0;
 
     /* Setup key for selected certificate */

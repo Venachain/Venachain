@@ -28,21 +28,22 @@ import (
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto/sha3"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
 // Lengths of hashes and addresses in bytes.
 const (
 	// HashLength is the expected length of the hash
 	HashLength = 32
+
 	// AddressLength is the expected length of the address
 	AddressLength = 20
-
 	BlockConfirmSignLength = 65
 )
 
 // tx-type
 const (
-	CALL_CANTRACT_FLAG = 9
+	CallContractFlag             = 9
 	TxTypeCallSollCompatibleWasm = 14
 )
 
@@ -176,6 +177,7 @@ func (h UnprefixedHash) MarshalText() ([]byte, error) {
 
 // Address represents the 20 byte address of an Ethereum account.
 type Address [AddressLength]byte
+var NullAddress Address = Address{}
 
 // BytesToAddress returns Address with value b.
 // If b is larger than len(h), b will be cropped from the left.
@@ -402,3 +404,17 @@ func NewBlockConfirmSign(signSlice []byte) *BlockConfirmSign {
 	copy(sign[:], signSlice[:])
 	return &sign
 }
+
+func RlpHash(x interface{}) (h Hash) {
+	hw := sha3.NewKeccak256()
+	rlp.Encode(hw, x)
+	hw.Sum(h[:0])
+	return h
+}
+
+type DBItem struct {
+	Key   []byte
+	Value []byte
+}
+
+type DBItems []*DBItem

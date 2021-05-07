@@ -34,7 +34,7 @@ function check_ip() {
 function create_account() {
     phrase=0
 
-    if [ "${AUTO}" = "true" ]; then 
+    if [ "${AUTO}" = "true" ]; then
         echo "[INFO]: auto use default password 0 to create the account"
     else
         echo "[INFO]: Input account passphrase."
@@ -51,6 +51,7 @@ function create_account() {
         echo "New account: "${ACCOUNT}
         echo "passphrase: "${phrase}
         unlock_account ${ACCOUNT} ${phrase}
+        cp $DATA_DIR/node-0/keystore/UTC* $CONF_PATH/keyfile.json
     else
         echo "[ERROR]: create account failed!!!"
         exit
@@ -64,17 +65,40 @@ function unlock_account() {
 }
 
 function create_ctooljson() {
+    os=`uname`
+    if [ "${os}" = "Darwin" ]; then
+        create_ctooljson_darwin "$@"
+        return
+    fi
+
     if [ -f ${CONF_PATH}/ctool.json ]; then
         mkdir -p ${CONF_PATH}/bak
         mv ${CONF_PATH}/ctool.json ${CONF_PATH}/bak/ctool.json.bak.`date '+%Y%m%d%H%M%S'`
     fi
     cp ${CONF_PATH}/ctool.json.template ${CONF_PATH}/ctool.json
-
     ${BIN_PATH}/repstr ${CONF_PATH}/ctool.json "NODE-IP" ${IP}
     ${BIN_PATH}/repstr ${CONF_PATH}/ctool.json "RPC-PORT" ${RPC_PORT}
     echo "${IP}:${RPC_PORT}"
 
     ${BIN_PATH}/repstr ${CONF_PATH}/ctool.json "DEFAULT-ACCOUNT" ${ACCOUNT:2}
+    echo ${ACCOUNT:2}
+
+    echo "[INFO]: Create ctool.json succ. File: ${CONF_PATH}/ctool.json"
+}
+
+function create_ctooljson_darwin() {
+    if [ -f ${CONF_PATH}/ctool.json ]; then
+        mkdir -p ${CONF_PATH}/bak
+        mv ${CONF_PATH}/ctool.json ${CONF_PATH}/bak/ctool.json.bak.`date '+%Y%m%d%H%M%S'`
+    fi
+    cp ${CONF_PATH}/ctool.json.template ${CONF_PATH}/ctool.json
+    sed -i '' "s/NODE-IP/${IP}/g" ${CONF_PATH}/ctool.json
+    sed -i '' "s/RPC-PORT/${RPC_PORT}/g" ${CONF_PATH}/ctool.json
+
+    echo "${IP}:${RPC_PORT}"
+
+    sed -i '' "s/DEFAULT-ACCOUNT/${ACCOUNT:2}/g" ${CONF_PATH}/ctool.json
+
     echo ${ACCOUNT:2}
 
     echo "[INFO]: Create ctool.json succ. File: ${CONF_PATH}/ctool.json"
@@ -130,6 +154,14 @@ function add_first_node() {
     ${SCRIPT_PATH}/add-node.sh --nodeid $NODE_ID
 }
 
+function set_super_admin(){
+    ${BIN_PATH}/ctool invoke --config ${CONF_PATH}/ctool.json --abi ${CONF_PATH}/contracts/userManager.cpp.abi.json --addr 0x1000000000000000000000000000000000000001 --func setSuperAdmin
+}
+
+function add_chain_admin(){
+    ${BIN_PATH}/ctool invoke --config ${CONF_PATH}/ctool.json --abi ${CONF_PATH}/contracts/userManager.cpp.abi.json --addr 0x1000000000000000000000000000000000000001 --func addChainAdminByAddress --param ${ACCOUNT}
+}
+
 function main() {
     readEnv
 
@@ -137,15 +169,18 @@ function main() {
     create_account
     echo "[INFO] to create ctool.json"
     create_ctooljson
-    
-    deploy cnsManager
-    deploy paramManager
-    deploy userManager 
-    deploy userRegister 
-    deploy roleManager
-    deploy roleRegister 
-    deploy nodeManager 
+
+    #deploy cnsManager
+    #deploy paramManager
+    #deploy userManager
+    #deploy userRegister
+    #deploy roleManager
+    #deploy roleRegister
+    #deploy nodeManager
 #    deploy nodeRegister
+
+    set_super_admin
+    add_chain_admin
 
     add_first_node
 
@@ -154,7 +189,7 @@ function main() {
 }
 
 function help() {
-    echo 
+    echo
     echo "
 USAGE: platonectl.sh deploysys [options]
 

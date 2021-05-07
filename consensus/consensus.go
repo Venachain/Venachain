@@ -18,16 +18,13 @@
 package consensus
 
 import (
-	"crypto/ecdsa"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/cbfttypes"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
-	)
+)
 
 // ChainReader defines a small collection of methods needed to access the local
 // blockchain during header verification.
@@ -82,7 +79,7 @@ type Engine interface {
 	// Note: The block header and state database might be updated to reflect any
 	// consensus rules that happen at finalization (e.g. block rewards).
 	Finalize(chain ChainReader, header *types.Header, state *state.StateDB, txs []*types.Transaction,
-		 receipts []*types.Receipt) (*types.Block, error)
+		receipts []*types.Receipt) (*types.Block, error)
 
 	// Seal generates a new sealing request for the given input block and pushes
 	// the result into the given channel.
@@ -99,46 +96,6 @@ type Engine interface {
 
 	// Close terminates any background threads maintained by the consensus engine.
 	Close() error
-}
-
-type Bft interface {
-	Engine
-
-	// Returns the current consensus node address list.
-	ConsensusNodes() ([]discover.NodeID, error)
-
-	// Returns whether the current node is out of the block
-	ShouldSeal() (bool, error)
-
-	// Received a new block signature
-	// Need to verify if the signature is signed by nodeID
-	OnBlockSignature(chain ChainReader, nodeID discover.NodeID, sig *cbfttypes.BlockSignature) error
-
-	// Process the BFT signatures
-	OnNewBlock(chain ChainReader, block *types.Block) error
-
-	// Process the BFT signatures
-	OnPong(nodeID discover.NodeID, netLatency int64) error
-
-	// Send a signal if a block synced from other peer.
-	OnBlockSynced()
-
-	CheckConsensusNode(nodeID discover.NodeID) (bool, error)
-
-	IsConsensusNode() (bool, error)
-
-	// At present, the highest reasonable block, when the node is out of the block, it needs to generate the block based on the highest reasonable block.
-	HighestLogicalBlock() *types.Block
-
-	HighestConfirmedBlock() *types.Block
-
-	GetBlock(hash common.Hash, number uint64) *types.Block
-
-	SetPrivateKey(privateKey *ecdsa.PrivateKey)
-
-	IsPrimaryNode() bool
-
-	//SetBlockChain(blockChain *core.BlockChain)
 }
 
 // Handler should be implemented is the consensus needs to handle and send peer's message
@@ -160,7 +117,7 @@ type Istanbul interface {
 	ShouldSeal() bool
 
 	// Start starts the engine
-	Start(chain ChainReader, currentBlock func() *types.Block, hasBadBlock func(hash common.Hash) bool) error
+	Start(chain ChainReader, currentBlock func() *types.Block) error
 
 	// Stop stops the engine
 	Stop() error

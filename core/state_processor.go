@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
-	"github.com/PlatONEnetwork/PlatONE-Go/consensus/misc"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
@@ -30,7 +29,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
 )
-
 
 // StateProcessor is a basic Processor, which takes care of transitioning
 // state from one point to another.
@@ -58,7 +56,7 @@ func NewStateProcessor(config *params.ChainConfig, bc *BlockChain, engine consen
 // Process returns the receipts and logs accumulated during the process and
 // returns the amount of gas that was used in the process. If any of the
 // transactions failed to execute due to insufficient gas it will return an error.
-func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg vm.Config) (types.Receipts, []*types.Log, uint64, error) {
+func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg vm.Config) (*types.Block, types.Receipts, []*types.Log, uint64, error) {
 	var (
 		receipts types.Receipts
 		usedGas  = new(uint64)
@@ -66,10 +64,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 		allLogs  []*types.Log
 		gp       = new(GasPool).AddGas(block.GasLimit())
 	)
-	// Mutate the block and state according to any hard-fork specs
-	if p.config.DAOForkSupport && p.config.DAOForkBlock != nil && p.config.DAOForkBlock.Cmp(block.Number()) == 0 {
-		misc.ApplyDAOHardFork(statedb)
-	}
+
 	// Iterate over and process the individual transactios
 	for i, tx := range block.Transactions() {
 		rpc.MonitorWriteData(rpc.TransactionExecuteStartTime, tx.Hash().String(), "", p.bc.extdb)
@@ -80,66 +75,18 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 		rpc.MonitorWriteData(rpc.TransactionExecuteEndTime, tx.Hash().String(), "", p.bc.extdb)
 		if err != nil {
 			rpc.MonitorWriteData(rpc.TransactionExecuteStatus, tx.Hash().String(), "false", p.bc.extdb)
-			return nil, nil, 0, err
+			return nil, nil, nil, 0, err
 		}
 		rpc.MonitorWriteData(rpc.TransactionExecuteStatus, tx.Hash().String(), "true", p.bc.extdb)
 		receipts = append(receipts, receipt)
 		allLogs = append(allLogs, receipt.Logs...)
 	}
 	// Finalize the block, applying any consensus engine specific extras (e.g. block rewards)
-	p.engine.Finalize(p.bc, header, statedb, block.Transactions(), receipts)
-
-	return receipts, allLogs, *usedGas, nil
-}
-
-
-func migProcess(stateDb *state.StateDB, contractAddr common.Address, caller common.Address, input []byte) ([]byte, uint64, error) {
-	var err error
-	var migData [][]byte
-	var funcName string
-	var sourceAddr common.Address
-
-	if !addressCompare(stateDb.GetContractCreator(contractAddr), caller) {
-		log.Error("MIG : error, only contract owner can set migrate data from old contract!")
-		return nil, 0, migErr
+	cblock, err := p.engine.Finalize(p.bc, header, statedb, block.Transactions(), receipts)
+	if err != nil {
+		return nil, nil, nil, 0, err
 	}
-
-	if err = rlp.DecodeBytes(input, &migData); err != nil {
-		log.Debug("MIG : error, fwData decoded failure!")
-		return nil, 0, migErr
-	}
-
-	// check parameters
-	if len(migData) < 2 {
-		log.Debug("MIG : error, require function name!")
-		return nil, 0, migErr
-	}
-	funcName = string(migData[1])
-	if funcName == "migrateFrom" {
-		if len(migData) != 3 {
-			log.Debug("MIG : error, wrong function parameters!")
-			return nil, 0, migErr
-		}
-		sourceAddr = common.HexToAddress(string(migData[2]))
-
-		if !addressCompare(stateDb.GetContractCreator(sourceAddr), caller) {
-			log.Error("MIG : error, the owner of the contract where data is migrate from should be the caller!")
-			return nil, 0, migErr
-		}
-
-	} else {
-		log.Debug("MIG : error, wrong function name!")
-		return nil, 0, migErr
-	}
-
-	switch funcName {
-	case "migrateFrom":
-		return stateDb.CloneAccount(sourceAddr, contractAddr)
-	default:
-	}
-
-	var returnBytes []byte
-	return makeReturnBytes(returnBytes), 0, nil
+	return cblock, receipts, allLogs, *usedGas, nil
 }
 
 // ApplyTransaction attempts to apply a transaction to the given state database
@@ -147,115 +94,104 @@ func migProcess(stateDb *state.StateDB, contractAddr common.Address, caller comm
 // for the transaction, gas used and an error if the transaction failed,
 // indicating the block was invalid.
 func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *common.Address, gp *GasPool, statedb *state.StateDB, header *types.Header, tx *types.Transaction, usedGas *uint64, cfg vm.Config) (*types.Receipt, uint64, error) {
-	msg, err := tx.AsMessage(types.MakeSigner(config, header.Number))
-	if err != nil {
-		return nil, 0, err
+	var from common.Address
+	var gas uint64
+	var gasPrice int64
+	var failed bool
+	var err error
+	signer := types.MakeSigner(config)
+	to := common.Address{}
+	if tx.To() != nil {
+		to = *tx.To()
 	}
-
-	if msg.TxType() == types.MigTxType {
-		_, _, err :=  migProcess(statedb, *msg.To(), msg.From(), msg.Data())
-
-		statedb.SetNonce(msg.From(), statedb.GetNonce(msg.From())+1)
-
-		// Update the state with pending changes
-		var root []byte
-		if config.IsByzantium(header.Number) {
-			statedb.Finalise(true)
+	if (tx.Data() == nil || len(tx.Data()) == 0) && statedb.GetCode(to) == nil {
+		value := tx.Value()
+		from, _ = types.Sender(signer, tx)
+		if statedb.GetBalance(from).Cmp(value) < 0 {
+			failed = true
+			err = vm.ErrInsufficientBalance
 		} else {
-			root = statedb.IntermediateRoot(config.IsEIP158(header.Number)).Bytes()
+			statedb.SetNonce(from, statedb.GetNonce(from)+1)
+			statedb.SubBalance(from, value)
+			statedb.AddBalance(to, value)
+			failed = false
+			err = nil
 		}
-		*usedGas += 0
-
-		// Create a new receipt for the transaction, storing the intermediate root and gas used by the tx
-		// based on the eip phase, we're passing whether the root touch-delete accounts.
-		receipt := types.NewReceipt(root, false, *usedGas)
-		receipt.TxHash = tx.Hash()
-		receipt.GasUsed = 0
-		// Set the receipt logs and create a bloom for filtering
-		receipt.Logs = statedb.GetLogs(tx.Hash())
-		receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
-
-		if err != nil {
-			switch err {
-
-			case migErr:
-				data :=[][]byte{}
-				data = append(data, []byte(err.Error()))
-				encodeData,_:= rlp.EncodeToBytes(data)
-				topics := []common.Hash{common.BytesToHash(crypto.Keccak256([]byte("contract permission")))}
-				log := &types.Log{
-					Address:     msg.From(),
-					Topics:      topics,
-					Data:        encodeData,
-					BlockNumber: header.Number.Uint64(),
-				}
-				statedb.AddLog(log)
-			default:
-				return nil, 0, err
+		gp.AddGas(params.TxGas)
+		gas = params.TxGas
+		gasPrice = 0
+	} else {
+		var msg *types.Message
+		var err error
+		if header.Number.Uint64() <= common.SysCfg.ReplayParam.Pivot {
+			msg, err = tx.OldAsMessage()
+			if err == types.ErrInvalidOldTrx {
+				msg, err = tx.AsMessage(signer)
 			}
+		} else {
+			msg, err = tx.AsMessage(signer)
 		}
 
-		return receipt, 0, nil
-	}
+		// Replay situation,reflect address
+		if header.Number.Uint64() < common.SysCfg.ReplayParam.Pivot && msg.To() != nil {
+			if n := common.SysCfg.ReplayParam.OldSysContracts[*msg.To()]; n != "" {
+				msg.SetTo(vm.CnsSysContractsMap[n])
+			}
+			//else if msg.TxType() == types.CnsTxType {
+			//	msg.SetTo(syscontracts.CnsInvokeAddress)
+			//} else if msg.TxType() == types.FwTxType {
+			//	msg.SetTo(syscontracts.FirewallManagementAddress)
+			//}
+		}
+		from = msg.From()
+		if err != nil {
+			return nil, 0, err
+		}
 
-	// Create a new context to be used in the EVM environment
-	context := NewEVMContext(msg, header, bc, author)
-	// Create a new environment which holds all relevant information
-	// about the transaction and calling mechanisms.
-	vmenv := vm.NewEVM(context, statedb, config, cfg)
-	// Apply the transaction to the current state (included in the env)
-	_, gas, gasPrice, failed, err := ApplyMessage(vmenv, msg, gp)
+		// Create a new context to be used in the EVM environment
+		context := NewEVMContext(msg, header, bc, author)
+		// Create a new environment which holds all relevant information
+		// about the transaction and calling mechanisms.
+		vmenv := vm.NewEVM(context, statedb, config, cfg)
+		// Apply the transaction to the current state (included in the env)
+		_, gas, gasPrice, failed, err = ApplyMessage(vmenv, msg, gp)
+	}
 
 	if err != nil {
 		switch err {
 		case PermissionErr:
-			data :=[][]byte{}
+			data := [][]byte{}
 			data = append(data, []byte(err.Error()))
-			encodeData,_:= rlp.EncodeToBytes(data)
+			encodeData, _ := rlp.EncodeToBytes(data)
 			topics := []common.Hash{common.BytesToHash(crypto.Keccak256([]byte("contract permission")))}
 			log := &types.Log{
-				Address:     msg.From(),
+				Address:     from,
 				Topics:      topics,
 				Data:        encodeData,
-				BlockNumber: vmenv.BlockNumber.Uint64(),
-			}
-			statedb.AddLog(log)
-		case CnsQueryErr:
-			data :=[][]byte{}
-			data = append(data, []byte(err.Error()))
-			encodeData,_:= rlp.EncodeToBytes(data)
-			topics := []common.Hash{common.BytesToHash(crypto.Keccak256([]byte("CnsQueryErr")))}
-			log := &types.Log{
-				Address:     msg.From(),
-				Topics:      topics,
-				Data:        encodeData,
-				BlockNumber: vmenv.BlockNumber.Uint64(),
+				BlockNumber: header.Number.Uint64(),
 			}
 			statedb.AddLog(log)
 		default:
 			return nil, 0, err
 		}
 	}
+
 	if common.SysCfg.GetIsTxUseGas() {
-		data :=[][]byte{}
+		data := [][]byte{}
 		data = append(data, []byte(common.Int64ToBytes(gasPrice)))
-		encodeData,_:= rlp.EncodeToBytes(data)
+		encodeData, _ := rlp.EncodeToBytes(data)
 		topics := []common.Hash{common.BytesToHash(crypto.Keccak256([]byte("GasPrice")))}
 		log := &types.Log{
-			Address:     msg.From(),
+			Address:     from,
 			Topics:      topics,
 			Data:        encodeData,
-			BlockNumber: vmenv.BlockNumber.Uint64(),
+			BlockNumber: header.Number.Uint64(),
 		}
 		statedb.AddLog(log)
 	}
 	// Update the state with pending changes
 	var root []byte
-	if config.IsByzantium(header.Number) {
-		statedb.Finalise(true)
-	} else {
-		root = statedb.IntermediateRoot(config.IsEIP158(header.Number)).Bytes()
-	}
+	statedb.Finalise(true)
 	*usedGas += gas
 
 	// Create a new receipt for the transaction, storing the intermediate root and gas used by the tx
@@ -264,8 +200,8 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	receipt.TxHash = tx.Hash()
 	receipt.GasUsed = gas
 	// if the transaction created a contract, store the creation address in the receipt.
-	if msg.To() == nil {
-		receipt.ContractAddress = crypto.CreateAddress(vmenv.Context.Origin, statedb.GetNonce(msg.From()) - 1)
+	if tx.To() == nil && err == nil {
+		receipt.ContractAddress = crypto.CreateAddress(from, statedb.GetNonce(from)-1)
 	}
 	// Set the receipt logs and create a bloom for filtering
 

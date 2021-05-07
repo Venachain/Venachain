@@ -1,7 +1,7 @@
 /*
- * Copyright 1999-2019 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1999-2020 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -42,9 +42,8 @@ int setup_tests(void)
                         BN_bin2bn(dmp1, sizeof(dmp1)-1, NULL),  \
                         BN_bin2bn(dmq1, sizeof(dmq1)-1, NULL),  \
                         BN_bin2bn(iqmp, sizeof(iqmp)-1, NULL)); \
-    if (c == NULL)                                              \
-        return 0;                                               \
-    memcpy(c, ctext_ex, sizeof(ctext_ex) - 1);                  \
+    if (c != NULL)                                              \
+        memcpy(c, ctext_ex, sizeof(ctext_ex) - 1);              \
     return sizeof(ctext_ex) - 1;
 
 static int key1(RSA *key, unsigned char *c)
@@ -213,97 +212,99 @@ static int key3(RSA *key, unsigned char *c)
     SetKey;
 }
 
-static int pad_unknown(void)
-{
-    unsigned long l;
-    while ((l = ERR_get_error()) != 0)
-        if (ERR_GET_REASON(l) == RSA_R_UNKNOWN_PADDING_TYPE)
-            return 1;
-    return 0;
-}
-
-static int rsa_setkey(RSA** key, unsigned char* ctext, int idx)
+static int rsa_setkey(RSA** key, unsigned char *ctext, int idx)
 {
     int clen = 0;
+
     *key = RSA_new();
-    switch (idx) {
-    case 0:
-        clen = key1(*key, ctext);
-        break;
-    case 1:
-        clen = key2(*key, ctext);
-        break;
-    case 2:
-        clen = key3(*key, ctext);
-        break;
-    }
+    if (*key != NULL)
+        switch (idx) {
+        case 0:
+            clen = key1(*key, ctext);
+            break;
+        case 1:
+            clen = key2(*key, ctext);
+            break;
+        case 2:
+            clen = key3(*key, ctext);
+            break;
+        }
     return clen;
 }
 
-static int test_rsa_pkcs1(int idx)
+static int test_rsa_simple(int idx, int en_pad_type, int de_pad_type,
+                           int success, unsigned char *ctext_ex, int *clen,
+                           RSA **retkey)
 {
     int ret = 0;
     RSA *key;
     unsigned char ptext[256];
     unsigned char ctext[256];
     static unsigned char ptext_ex[] = "\x54\x85\x9b\x34\x2c\x49\xea\x2a";
-    unsigned char ctext_ex[256];
     int plen;
-    int clen = 0;
+    int clentmp = 0;
     int num;
 
     plen = sizeof(ptext_ex) - 1;
-    clen = rsa_setkey(&key, ctext_ex, idx);
+    clentmp = rsa_setkey(&key, ctext_ex, idx);
+    if (clen != NULL)
+        *clen = clentmp;
 
-    num = RSA_public_encrypt(plen, ptext_ex, ctext, key,
-                             RSA_PKCS1_PADDING);
-    if (!TEST_int_eq(num, clen))
+    num = RSA_public_encrypt(plen, ptext_ex, ctext, key, en_pad_type);
+    if (!TEST_int_eq(num, clentmp))
         goto err;
 
-    num = RSA_private_decrypt(num, ctext, ptext, key, RSA_PKCS1_PADDING);
-    if (!TEST_mem_eq(ptext, num, ptext_ex, plen))
-        goto err;
+    num = RSA_private_decrypt(num, ctext, ptext, key, de_pad_type);
+    if (success) {
+        if (!TEST_int_gt(num, 0) || !TEST_mem_eq(ptext, num, ptext_ex, plen))
+            goto err;
+    } else {
+        if (!TEST_int_lt(num, 0))
+            goto err;
+    }
 
     ret = 1;
+    if (retkey != NULL) {
+        *retkey = key;
+        key = NULL;
+    }
 err:
     RSA_free(key);
     return ret;
 }
 
+static int test_rsa_pkcs1(int idx)
+{
+    return test_rsa_simple(idx, RSA_PKCS1_PADDING, RSA_PKCS1_PADDING, 1, NULL,
+                           NULL, NULL);
+}
+
 static int test_rsa_sslv23(int idx)
 {
-    int ret = 0;
-    RSA *key;
-    unsigned char ptext[256];
-    unsigned char ctext[256];
-    static unsigned char ptext_ex[] = "\x54\x85\x9b\x34\x2c\x49\xea\x2a";
-    unsigned char ctext_ex[256];
-    int plen;
-    int clen = 0;
-    int num;
+    int ret;
 
-    plen = sizeof(ptext_ex) - 1;
-    clen = rsa_setkey(&key, ctext_ex, idx);
+    /* Simulate an SSLv2 only client talking to a TLS capable server */
+    ret = test_rsa_simple(idx, RSA_PKCS1_PADDING, RSA_SSLV23_PADDING, 1, NULL,
+                          NULL, NULL);
 
-    num = RSA_public_encrypt(plen, ptext_ex, ctext, key,
-                             RSA_SSLV23_PADDING);
-    if (!TEST_int_eq(num, clen))
-        goto err;
+    /* Simulate a TLS capable client talking to an SSLv2 only server */
+    ret &= test_rsa_simple(idx, RSA_SSLV23_PADDING, RSA_PKCS1_PADDING, 1, NULL,
+                           NULL, NULL);
 
-    num = RSA_private_decrypt(num, ctext, ptext, key, RSA_SSLV23_PADDING);
-    if (!TEST_mem_eq(ptext, num, ptext_ex, plen))
-        goto err;
+    /*
+     * Simulate a TLS capable client talking to a TLS capable server. Should
+     * fail due to detecting a rollback attack.
+     */
+    ret &= test_rsa_simple(idx, RSA_SSLV23_PADDING, RSA_SSLV23_PADDING, 0, NULL,
+                           NULL, NULL);
 
-    ret = 1;
-err:
-    RSA_free(key);
     return ret;
 }
 
 static int test_rsa_oaep(int idx)
 {
     int ret = 0;
-    RSA *key;
+    RSA *key = NULL;
     unsigned char ptext[256];
     unsigned char ctext[256];
     static unsigned char ptext_ex[] = "\x54\x85\x9b\x34\x2c\x49\xea\x2a";
@@ -313,28 +314,16 @@ static int test_rsa_oaep(int idx)
     int num;
     int n;
 
+    if (!test_rsa_simple(idx, RSA_PKCS1_OAEP_PADDING, RSA_PKCS1_OAEP_PADDING, 1,
+                         ctext_ex, &clen, &key))
+        goto err;
+
     plen = sizeof(ptext_ex) - 1;
-    clen = rsa_setkey(&key, ctext_ex, idx);
-
-    num = RSA_public_encrypt(plen, ptext_ex, ctext, key,
-                             RSA_PKCS1_OAEP_PADDING);
-    if (num == -1 && pad_unknown()) {
-        TEST_info("Skipping: No OAEP support");
-        ret = 1;
-        goto err;
-    }
-    if (!TEST_int_eq(num, clen))
-        goto err;
-
-    num = RSA_private_decrypt(num, ctext, ptext, key,
-                              RSA_PKCS1_OAEP_PADDING);
-    if (!TEST_mem_eq(ptext, num, ptext_ex, plen))
-        goto err;
 
     /* Different ciphertexts. Try decrypting ctext_ex */
     num = RSA_private_decrypt(clen, ctext_ex, ptext, key,
                               RSA_PKCS1_OAEP_PADDING);
-    if (!TEST_mem_eq(ptext, num, ptext_ex, plen))
+    if (num <= 0 || !TEST_mem_eq(ptext, num, ptext_ex, plen))
         goto err;
 
     /* Try decrypting corrupted ciphertexts. */
@@ -361,71 +350,11 @@ err:
     return ret;
 }
 
-static const struct {
-    int bits;
-    unsigned int r;
-} rsa_security_bits_cases[] = {
-    /* NIST SP 800-56B rev 2 (draft) Appendix D Table 5 */
-    { 2048,     112 },
-    { 3072,     128 },
-    { 4096,     152 },
-    { 6144,     176 },
-    { 8192,     200 },
-    /* Older values */
-    { 256,      40  },
-    { 512,      56  },
-    { 1024,     80  },
-    /* Slightly different value to the 256 that NIST lists in their tables */
-    { 15360,    264 },
-    /* Some other values */
-    { 8888,     208 },
-    { 2468,     120 },
-    { 13456,    248 }
-};
-
-static int test_rsa_security_bit(int n)
-{
-    static const unsigned char vals[8] = {
-        0x80, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40
-    };
-    RSA *key = RSA_new();
-    const int bits = rsa_security_bits_cases[n].bits;
-    const int result = rsa_security_bits_cases[n].r;
-    const int bytes = (bits + 7) / 8;
-    int r = 0;
-    unsigned char num[2000];
-
-    if (!TEST_ptr(key) || !TEST_int_le(bytes, (int)sizeof(num)))
-        goto err;
-
-    /*
-     * It is necessary to set the RSA key in order to ask for the strength.
-     * A BN of an appropriate size is created, in general it won't have the
-     * properties necessary for RSA to function.  This is okay here since
-     * the RSA key is never used.
-     */
-    memset(num, vals[bits % 8], bytes);
-
-    /*
-     * The 'e' parameter is set to the same value as 'n'.  This saves having
-     * an extra BN to hold a sensible value for 'e'.  This is safe since the
-     * RSA key is not used.  The 'd' parameter can be NULL safely.
-     */
-    if (TEST_true(RSA_set0_key(key, BN_bin2bn(num, bytes, NULL),
-                               BN_bin2bn(num, bytes, NULL), NULL))
-            && TEST_uint_eq(RSA_security_bits(key), result))
-        r = 1;
-err:
-    RSA_free(key);
-    return r;
-}
-
 int setup_tests(void)
 {
     ADD_ALL_TESTS(test_rsa_pkcs1, 3);
     ADD_ALL_TESTS(test_rsa_sslv23, 3);
     ADD_ALL_TESTS(test_rsa_oaep, 3);
-    ADD_ALL_TESTS(test_rsa_security_bit, OSSL_NELEM(rsa_security_bits_cases));
     return 1;
 }
 #endif

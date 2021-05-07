@@ -1,7 +1,7 @@
 /*
- * Copyright 1995-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1995-2020 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -9,7 +9,7 @@
 
 #include <stdio.h>
 #include "ssl_local.h"
-#include "internal/packet.h"
+#include "packet_local.h"
 #include <openssl/bio.h>
 #include <openssl/objects.h>
 #include <openssl/evp.h>
@@ -148,15 +148,6 @@ static int ssl_set_pkey(CERT *c, EVP_PKEY *pkey)
         EVP_PKEY_copy_parameters(pktmp, pkey);
         ERR_clear_error();
 
-#ifndef OPENSSL_NO_RSA
-        /*
-         * Don't check the public/private key, this is mostly for smart
-         * cards.
-         */
-        if (EVP_PKEY_id(pkey) == EVP_PKEY_RSA
-            && RSA_flags(EVP_PKEY_get0_RSA(pkey)) & RSA_METHOD_FLAG_NO_CHECK) ;
-        else
-#endif
         if (!X509_check_private_key(c->pkeys[i].x509, pkey)) {
             X509_free(c->pkeys[i].x509);
             c->pkeys[i].x509 = NULL;
@@ -342,16 +333,6 @@ static int ssl_set_cert(CERT *c, X509 *x)
         EVP_PKEY_copy_parameters(pkey, c->pkeys[i].privatekey);
         ERR_clear_error();
 
-#ifndef OPENSSL_NO_RSA
-        /*
-         * Don't check the public/private key, this is mostly for smart
-         * cards.
-         */
-        if (EVP_PKEY_id(c->pkeys[i].privatekey) == EVP_PKEY_RSA
-            && RSA_flags(EVP_PKEY_get0_RSA(c->pkeys[i].privatekey)) &
-            RSA_METHOD_FLAG_NO_CHECK) ;
-        else
-#endif                          /* OPENSSL_NO_RSA */
         if (!X509_check_private_key(x, c->pkeys[i].privatekey)) {
             /*
              * don't fail for a cert/key mismatch, just free current private
@@ -914,9 +895,8 @@ int SSL_CTX_use_serverinfo_file(SSL_CTX *ctx, const char *file)
     long extension_length = 0;
     char *name = NULL;
     char *header = NULL;
-    static const char namePrefix1[] = "SERVERINFO FOR ";
-    static const char namePrefix2[] = "SERVERINFOV2 FOR ";
-    unsigned int name_len;
+    char namePrefix1[] = "SERVERINFO FOR ";
+    char namePrefix2[] = "SERVERINFOV2 FOR ";
     int ret = 0;
     BIO *bin = NULL;
     size_t num_extensions = 0, contextoff = 0;
@@ -952,20 +932,19 @@ int SSL_CTX_use_serverinfo_file(SSL_CTX *ctx, const char *file)
                 break;
         }
         /* Check that PEM name starts with "BEGIN SERVERINFO FOR " */
-        name_len = strlen(name);
-        if (name_len < sizeof(namePrefix1) - 1) {
+        if (strlen(name) < strlen(namePrefix1)) {
             SSLerr(SSL_F_SSL_CTX_USE_SERVERINFO_FILE, SSL_R_PEM_NAME_TOO_SHORT);
             goto end;
         }
-        if (strncmp(name, namePrefix1, sizeof(namePrefix1) - 1) == 0) {
+        if (strncmp(name, namePrefix1, strlen(namePrefix1)) == 0) {
             version = SSL_SERVERINFOV1;
         } else {
-            if (name_len < sizeof(namePrefix2) - 1) {
+            if (strlen(name) < strlen(namePrefix2)) {
                 SSLerr(SSL_F_SSL_CTX_USE_SERVERINFO_FILE,
                        SSL_R_PEM_NAME_TOO_SHORT);
                 goto end;
             }
-            if (strncmp(name, namePrefix2, sizeof(namePrefix2) - 1) != 0) {
+            if (strncmp(name, namePrefix2, strlen(namePrefix2)) != 0) {
                 SSLerr(SSL_F_SSL_CTX_USE_SERVERINFO_FILE,
                        SSL_R_PEM_NAME_BAD_PREFIX);
                 goto end;
@@ -1084,13 +1063,6 @@ static int ssl_set_cert_and_key(SSL *ssl, SSL_CTX *ctx, X509 *x509, EVP_PKEY *pr
             EVP_PKEY_copy_parameters(pubkey, privatekey);
         } /* else both have parameters */
 
-        /* Copied from ssl_set_cert/pkey */
-#ifndef OPENSSL_NO_RSA
-        if ((EVP_PKEY_id(privatekey) == EVP_PKEY_RSA) &&
-            ((RSA_flags(EVP_PKEY_get0_RSA(privatekey)) & RSA_METHOD_FLAG_NO_CHECK)))
-            /* no-op */ ;
-        else
-#endif
         /* check that key <-> cert match */
         if (EVP_PKEY_cmp(pubkey, privatekey) != 1) {
             SSLerr(SSL_F_SSL_SET_CERT_AND_KEY, SSL_R_PRIVATE_KEY_MISMATCH);

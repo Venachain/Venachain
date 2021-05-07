@@ -17,8 +17,6 @@
 package main
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -41,31 +39,15 @@ func (w *wizard) makeGenesis() {
 		GasLimit:   3150000000,
 		Alloc:      make(core.GenesisAlloc),
 		Config: &params.ChainConfig{
-			HomesteadBlock: big.NewInt(1),
-			EIP150Block:    big.NewInt(2),
-			EIP155Block:    big.NewInt(3),
-			EIP158Block:    big.NewInt(3),
-			ByzantiumBlock: big.NewInt(4),
 		},
 	}
 	// Figure out which consensus engine to choose
 	fmt.Println()
-	fmt.Println("Which consensus engine to use? (default = CBFT)")
-	fmt.Println(" 1. Clique - proof-of-authority")
-	fmt.Println(" 2. CBFT -   Concurrent Byzantine Fault Tolerance")
+	fmt.Println("Which consensus engine to use? ")
 
 	choice := w.read()
 	switch {
 	case choice == "1":
-		// In the case of clique, configure the consensus parameters
-		genesis.Config.Clique = &params.CliqueConfig{
-			Period: 15,
-			Epoch:  30000,
-		}
-		fmt.Println()
-		fmt.Println("How many seconds should blocks take? (default = 15)")
-		genesis.Config.Clique.Period = uint64(w.readDefaultInt(15))
-
 		// We also need the initial list of signers
 		fmt.Println()
 		fmt.Println("Which accounts are allowed to seal? (mandatory at least one)")
@@ -93,36 +75,6 @@ func (w *wizard) makeGenesis() {
 			copy(genesis.ExtraData[32+i*common.AddressLength:], signer[:])
 		}
 
-	case choice == "" || choice == "2":
-		// In the case of cbft, configure the consensus parameters
-		genesis.Config.Cbft = &params.CbftConfig{}
-		// We also need the initial list of signers
-		fmt.Println()
-		fmt.Println("Which nodes are allowed to seal? (mandatory at least four)")
-
-		var nodes []discover.Node
-		for {
-			if node := w.readNodeURL(); node != nil {
-				nodes = append(nodes, *node)
-				continue
-			}
-			if len(nodes) >= 4 {
-				break
-			}
-		}
-		// Sort the signers and embed into the extra-data section
-		for i := 0; i < len(nodes); i++ {
-			for j := i + 1; j < len(nodes); j++ {
-				if bytes.Compare(nodes[i].ID[:], nodes[j].ID[:]) > 0 {
-					nodes[i], nodes[j] = nodes[j], nodes[i]
-				}
-			}
-		}
-		genesis.ExtraData = make([]byte, 32+len(nodes)*common.AddressLength+65)
-		for i, node := range nodes {
-			copy(genesis.ExtraData[32+i*common.AddressLength:], crypto.Keccak256(node.ID[:])[12:])
-		}
-		genesis.Config.Cbft.InitialNodes = nodes
 	default:
 		log.Crit("Invalid consensus engine choice", "choice", choice)
 	}
@@ -168,26 +120,6 @@ func (w *wizard) manageGenesis() {
 	switch {
 	case choice == "1":
 		// Fork rule updating requested, iterate over each fork
-		fmt.Println()
-		fmt.Printf("Which block should Homestead come into effect? (default = %v)\n", w.conf.Genesis.Config.HomesteadBlock)
-		w.conf.Genesis.Config.HomesteadBlock = w.readDefaultBigInt(w.conf.Genesis.Config.HomesteadBlock)
-
-		fmt.Println()
-		fmt.Printf("Which block should EIP150 come into effect? (default = %v)\n", w.conf.Genesis.Config.EIP150Block)
-		w.conf.Genesis.Config.EIP150Block = w.readDefaultBigInt(w.conf.Genesis.Config.EIP150Block)
-
-		fmt.Println()
-		fmt.Printf("Which block should EIP155 come into effect? (default = %v)\n", w.conf.Genesis.Config.EIP155Block)
-		w.conf.Genesis.Config.EIP155Block = w.readDefaultBigInt(w.conf.Genesis.Config.EIP155Block)
-
-		fmt.Println()
-		fmt.Printf("Which block should EIP158 come into effect? (default = %v)\n", w.conf.Genesis.Config.EIP158Block)
-		w.conf.Genesis.Config.EIP158Block = w.readDefaultBigInt(w.conf.Genesis.Config.EIP158Block)
-
-		fmt.Println()
-		fmt.Printf("Which block should Byzantium come into effect? (default = %v)\n", w.conf.Genesis.Config.ByzantiumBlock)
-		w.conf.Genesis.Config.ByzantiumBlock = w.readDefaultBigInt(w.conf.Genesis.Config.ByzantiumBlock)
-
 		out, _ := json.MarshalIndent(w.conf.Genesis.Config, "", "  ")
 		fmt.Printf("Chain configuration updated:\n\n%s\n", out)
 

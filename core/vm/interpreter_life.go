@@ -112,7 +112,7 @@ func (in *WASMInterpreter) preCheckFunction(contract *Contract, input []byte, ab
 //
 // It's important to note that any errors returned by the interpreter should be
 // considered a revert-and-consume-all-gas operations except for
-// errExecutionReverted which means revert-and-keep-gas-lfet.
+// errExecutionReverted which means revert-and-keep-gas-left.
 func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (ret []byte, err error) {
 	defer func() {
 		if er := recover(); er != nil {
@@ -138,6 +138,8 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 		return nil, er
 	}
 
+	// 2020.12.2 yzk
+	// this is reserved because we depend on it to extract cns info from old version chain(0.9.x)
 	if contract.self.Address() == common.HexToAddress("0x0000000000000000000000000000000000000011") {
 		containFunction, addr, err := in.preCheckFunction(contract, input, abi)
 		if err != nil {
@@ -223,7 +225,7 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 		log.Error("RunWithGasLimit error", "err", err.Error())
 		return nil, err
 	}
-	if contract.Gas > context.GasUsed {
+	if contract.Gas >= context.GasUsed {
 		contract.Gas = contract.Gas - context.GasUsed
 	} else {
 		return nil, fmt.Errorf("out of gas.")
@@ -235,7 +237,7 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 	// todo: more type need to be completed
 	switch returnType {
 	case "void", "int8", "int", "int32", "int64":
-		if txType == common.CALL_CANTRACT_FLAG {
+		if txType == common.CallContractFlag {
 			return utils.Int64ToBytes(res), nil
 		}
 		bigRes := new(big.Int)
@@ -243,7 +245,7 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 		finalRes := utils.Align32Bytes(math.U256(bigRes).Bytes())
 		return finalRes, nil
 	case "uint8", "uint16", "uint32", "uint64":
-		if txType == common.CALL_CANTRACT_FLAG {
+		if txType == common.CallContractFlag {
 			return utils.Uint64ToBytes(uint64(res)), nil
 		}
 		finalRes := utils.Align32Bytes(utils.Uint64ToBytes((uint64(res))))
@@ -251,7 +253,7 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 	case "float32", "float64":
 		bytes := make([]byte, 8)
 		binary.BigEndian.PutUint64(bytes, uint64(res))
-		if txType == common.CALL_CANTRACT_FLAG {
+		if txType == common.CallContractFlag {
 			return bytes, nil
 		}
 		finalRes := utils.Align32Bytes(bytes)
@@ -261,7 +263,7 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 		// wo should revert bytes from little edian to big edian
 		returnBytes := lvm.Memory.Memory[params[0] : params[0]+16]
 		common.RevertBytes(returnBytes)
-		if txType == common.CALL_CANTRACT_FLAG {
+		if txType == common.CallContractFlag {
 			return returnBytes, nil
 		}
 		returnBytes = utils.Align32Bytes(returnBytes)
@@ -275,7 +277,7 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 			}
 			returnBytes = append(returnBytes, v)
 		}
-		if txType == common.CALL_CANTRACT_FLAG || txType == common.TxTypeCallSollCompatibleWasm {
+		if txType == common.CallContractFlag || txType == common.TxTypeCallSollCompatibleWasm {
 			return returnBytes, nil
 		}
 		strHash := common.BytesToHash(common.Int32ToBytes(32))

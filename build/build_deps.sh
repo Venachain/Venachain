@@ -6,15 +6,17 @@ if [ ! -f "build/build_deps.sh" ]; then
 fi
 
 root=`pwd`
-root=$root/life/resolver
 
-if [ "`ls $root/softfloat`" = "" ]; then
+# rroot represent for life/resolver dir
+rroot=$root/life/resolver  
+
+if [ "`ls $rroot/softfloat`" = "" ]; then
     # pull softfloat
     git submodule update --init
 fi
 
 # Build softfloat
-SF_BUILD=$root/softfloat/build
+SF_BUILD=$rroot/softfloat/build
 CMAKE_GEN="Unix Makefiles"
 MAKE="make"
 if [ "$(uname)" = "Darwin" ]; then
@@ -46,7 +48,7 @@ $MAKE
 cp ./softfloat.a ../libsoftfloat.a
 
 # Build builtins
-cd $root/builtins
+cd $rroot/builtins
 mkdir -p build
 cd build
 #rm -rf *
@@ -54,9 +56,9 @@ cmake .. -G "$CMAKE_GEN" -DCMAKE_SH="CMAKE_SH-NOTFOUND" -Wno-dev
 $MAKE
 
 #Build sm
-cd $root/sig
+cd $rroot/sig
 if [ ! -f ./libcrypto.a ];then 
-    cd $root/sig/openssl
+    cd $rroot/sig/openssl
     ./config
     make
     cp ./libcrypto.a ../
@@ -64,8 +66,14 @@ if [ ! -f ./libcrypto.a ];then
 fi
 
 if [ ! -f ./libsig.a ];then
-    cd $root/sig/sig
+    cd $rroot/sig/sig
     ./build.sh
     ar -r libsig.a sig.o
     mv ./libsig.a ../
 fi
+
+#download go pkg
+cd $root
+build/env.sh go get -u github.com/go-bindata/go-bindata/...
+build/env.sh go generate ./cmd/platonecli/main.go
+build/env.sh go mod download

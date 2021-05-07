@@ -12,17 +12,8 @@ import (
 )
 
 const (
-	transfer       = 0
-	deployContract = 1
-	invokeContract = 2
-	vote           = 3
-	permission     = 4
-
-	cnsTxType = 0x11 // Used for sending transactions without address
-	fwTxType  = 0x12 // Used fot sending transactions  about firewall
-	migTxType = 0x13 //Used for update system contract.
-
-	DefaultConfigFilePath = "/config.json"
+	defaultContractType = 2
+	DefaultConfigFilePath = "/../conf/ctool.json"
 )
 
 var (
@@ -43,7 +34,6 @@ type TxParams struct {
 	GasPrice string `json:"gasPrice"`
 	Value    string `json:"value"`
 	Data     string `json:"data"`
-	TxType   int    `json:"txType"`
 }
 
 type RawTxParams struct {

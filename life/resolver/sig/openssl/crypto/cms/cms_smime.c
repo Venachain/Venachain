@@ -1,7 +1,7 @@
 /*
- * Copyright 2008-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 2008-2020 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -78,8 +78,7 @@ static int cms_copy_content(BIO *out, BIO *in, unsigned int flags)
 static int check_content(CMS_ContentInfo *cms)
 {
     ASN1_OCTET_STRING **pos = CMS_get0_content(cms);
-
-    if (pos == NULL || *pos == NULL) {
+    if (!pos || !*pos) {
         CMSerr(CMS_F_CHECK_CONTENT, CMS_R_NO_CONTENT);
         return 0;
     }
@@ -88,13 +87,14 @@ static int check_content(CMS_ContentInfo *cms)
 
 static void do_free_upto(BIO *f, BIO *upto)
 {
-    if (upto != NULL) {
+    if (upto) {
         BIO *tbio;
         do {
             tbio = BIO_pop(f);
             BIO_free(f);
             f = tbio;
-        } while (f != NULL && f != upto);
+        }
+        while (f && f != upto);
     } else
         BIO_free_all(f);
 }
@@ -341,7 +341,7 @@ int CMS_verify(CMS_ContentInfo *cms, STACK_OF(X509) *certs,
         char *ptr;
         long len;
         len = BIO_get_mem_data(dcont, &ptr);
-        tmpin = BIO_new_mem_buf(ptr, len);
+        tmpin = (len == 0) ? dcont : BIO_new_mem_buf(ptr, len);
         if (tmpin == NULL) {
             CMSerr(CMS_F_CMS_VERIFY, ERR_R_MALLOC_FAILURE);
             goto err2;
@@ -488,7 +488,7 @@ CMS_ContentInfo *CMS_sign_receipt(CMS_SignerInfo *si,
     flags &= ~(CMS_STREAM | CMS_TEXT);
     /* Not really detached but avoids content being allocated */
     flags |= CMS_PARTIAL | CMS_BINARY | CMS_DETACHED;
-    if (pkey == NULL || signcert == NULL) {
+    if (!pkey || !signcert) {
         CMSerr(CMS_F_CMS_SIGN_RECEIPT, CMS_R_NO_KEY_OR_CERT);
         return NULL;
     }
@@ -733,7 +733,6 @@ int CMS_decrypt(CMS_ContentInfo *cms, EVP_PKEY *pk, X509 *cert,
 {
     int r;
     BIO *cont;
-
     if (OBJ_obj2nid(CMS_get0_type(cms)) != NID_pkcs7_enveloped) {
         CMSerr(CMS_F_CMS_DECRYPT, CMS_R_TYPE_NOT_ENVELOPED_DATA);
         return 0;
@@ -748,12 +747,12 @@ int CMS_decrypt(CMS_ContentInfo *cms, EVP_PKEY *pk, X509 *cert,
         cms->d.envelopedData->encryptedContentInfo->havenocert = 1;
     else
         cms->d.envelopedData->encryptedContentInfo->havenocert = 0;
-    if (pk == NULL && cert == NULL && dcont == NULL && out == NULL)
+    if (!pk && !cert && !dcont && !out)
         return 1;
-    if (pk != NULL && !CMS_decrypt_set1_pkey(cms, pk, cert))
+    if (pk && !CMS_decrypt_set1_pkey(cms, pk, cert))
         return 0;
     cont = CMS_dataInit(cms, dcont);
-    if (cont == NULL)
+    if (!cont)
         return 0;
     r = cms_copy_content(out, cont, flags);
     do_free_upto(cont, dcont);

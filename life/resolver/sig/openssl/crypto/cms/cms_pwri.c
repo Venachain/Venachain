@@ -1,7 +1,7 @@
 /*
  * Copyright 2009-2018 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -146,7 +146,7 @@ CMS_RecipientInfo *CMS_add0_recipient_password(CMS_ContentInfo *cms,
 
     pwri->keyDerivationAlgorithm = PKCS5_pbkdf2_set(iter, NULL, 0, -1, -1);
 
-    if (pwri->keyDerivationAlgorithm == NULL)
+    if (!pwri->keyDerivationAlgorithm)
         goto err;
 
     CMS_RecipientInfo_set0_password(ri, pass, passlen);
@@ -273,7 +273,7 @@ static int kek_wrap_key(unsigned char *out, size_t *outlen,
 
 /* Encrypt/Decrypt content key in PWRI recipient info */
 
-int cms_RecipientInfo_pwri_crypt(const CMS_ContentInfo *cms, CMS_RecipientInfo *ri,
+int cms_RecipientInfo_pwri_crypt(CMS_ContentInfo *cms, CMS_RecipientInfo *ri,
                                  int en_de)
 {
     CMS_EncryptedContentInfo *ec;
@@ -289,7 +289,7 @@ int cms_RecipientInfo_pwri_crypt(const CMS_ContentInfo *cms, CMS_RecipientInfo *
 
     pwri = ri->d.pwri;
 
-    if (pwri->pass == NULL) {
+    if (!pwri->pass) {
         CMSerr(CMS_F_CMS_RECIPIENTINFO_PWRI_CRYPT, CMS_R_NO_PASSWORD);
         return 0;
     }

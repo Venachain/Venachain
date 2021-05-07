@@ -8,23 +8,7 @@ import (
 	"math/big"
 )
 
-var (
-	innerCallRead func(Address, []byte) ([]byte, error) = nil
-)
-
-func SetInnerCallFunc(f func(Address, []byte) ([]byte, error)) {
-	innerCallRead = f
-}
-
-func InnerCall(conAddr Address, funcName string, params []interface{}) ([]byte, error) {
-	if innerCallRead == nil {
-		return nil, nil
-	} else {
-		return innerCallRead(conAddr, GenCallData(funcName, params))
-	}
-}
-
-func GenCallData(funcName string, params []interface{}) []byte {
+func GenCallData(funcName string, params []interface{}) ([]byte) {
 	data := [][]byte{}
 	data = append(data, Int64ToBytes(2)) // tx type, 2 for normal
 	data = append(data, []byte(funcName))

@@ -1,62 +1,48 @@
 /*
- * Copyright 1995-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1995-2020 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
  */
 
 #include <openssl/opensslconf.h>
-#ifdef OPENSSL_NO_DSA
-NON_EMPTY_TRANSLATION_UNIT
-#else
-
-# include <stdio.h>
-# include <stdlib.h>
-# include <time.h>
-# include <string.h>
-# include "apps.h"
-# include "progs.h"
-# include <openssl/bio.h>
-# include <openssl/err.h>
-# include <openssl/bn.h>
-# include <openssl/dsa.h>
-# include <openssl/x509.h>
-# include <openssl/pem.h>
-
-static int verbose = 0;
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <string.h>
+#include "apps.h"
+#include "progs.h"
+#include <openssl/bio.h>
+#include <openssl/err.h>
+#include <openssl/bn.h>
+#include <openssl/dsa.h>
+#include <openssl/x509.h>
+#include <openssl/pem.h>
 
 static int dsa_cb(int p, int n, BN_GENCB *cb);
 
 typedef enum OPTION_choice {
     OPT_ERR = -1, OPT_EOF = 0, OPT_HELP,
     OPT_INFORM, OPT_OUTFORM, OPT_IN, OPT_OUT, OPT_TEXT, OPT_C,
-    OPT_NOOUT, OPT_GENKEY, OPT_ENGINE, OPT_VERBOSE,
-    OPT_R_ENUM
+    OPT_NOOUT, OPT_GENKEY, OPT_ENGINE, OPT_R_ENUM
 } OPTION_CHOICE;
 
 const OPTIONS dsaparam_options[] = {
-    OPT_SECTION("General"),
     {"help", OPT_HELP, '-', "Display this summary"},
-# ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's', "Use engine e, possibly a hardware device"},
-# endif
-
-    OPT_SECTION("Input"),
-    {"in", OPT_IN, '<', "Input file"},
     {"inform", OPT_INFORM, 'F', "Input format - DER or PEM"},
-
-    OPT_SECTION("Output"),
-    {"out", OPT_OUT, '>', "Output file"},
+    {"in", OPT_IN, '<', "Input file"},
     {"outform", OPT_OUTFORM, 'F', "Output format - DER or PEM"},
+    {"out", OPT_OUT, '>', "Output file"},
     {"text", OPT_TEXT, '-', "Print as text"},
     {"C", OPT_C, '-', "Output C code"},
     {"noout", OPT_NOOUT, '-', "No output"},
-    {"verbose", OPT_VERBOSE, '-', "Verbose output"},
     {"genkey", OPT_GENKEY, '-', "Generate a DSA key"},
-
     OPT_R_OPTIONS,
+#ifndef OPENSSL_NO_ENGINE
+    {"engine", OPT_ENGINE, 's', "Use engine e, possibly a hardware device"},
+#endif
     {NULL}
 };
 
@@ -117,9 +103,6 @@ int dsaparam_main(int argc, char **argv)
         case OPT_NOOUT:
             noout = 1;
             break;
-        case OPT_VERBOSE:
-            verbose = 1;
-            break;
         }
     }
     argc = opt_num_rest();
@@ -158,11 +141,9 @@ int dsaparam_main(int argc, char **argv)
             BIO_printf(bio_err, "Error allocating DSA object\n");
             goto end;
         }
-        if (verbose) {
-            BIO_printf(bio_err, "Generating DSA parameters, %d bit long prime\n",
-                       num);
-            BIO_printf(bio_err, "This could take some time\n");
-        }
+        BIO_printf(bio_err, "Generating DSA parameters, %d bit long prime\n",
+                   num);
+        BIO_printf(bio_err, "This could take some time\n");
         if (!DSA_generate_parameters_ex(dsa, num, NULL, 0, NULL, NULL, cb)) {
             ERR_print_errors(bio_err);
             BIO_printf(bio_err, "Error, DSA key generation failed\n");
@@ -266,11 +247,7 @@ static int dsa_cb(int p, int n, BN_GENCB *cb)
     static const char symbols[] = ".+*\n";
     char c = (p >= 0 && (size_t)p < sizeof(symbols) - 1) ? symbols[p] : '?';
 
-    if (!verbose)
-        return 1;
-
     BIO_write(BN_GENCB_get_arg(cb), &c, 1);
     (void)BIO_flush(BN_GENCB_get_arg(cb));
     return 1;
 }
-#endif

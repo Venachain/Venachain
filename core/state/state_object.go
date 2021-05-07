@@ -22,9 +22,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"io"
 	"math/big"
+	"strings"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
@@ -41,10 +43,13 @@ type Abi []byte
 type Action uint64
 
 const (
-	ACCEPT Action = 0
-	REJECT Action = 1
+	accept Action = 0
+	reject Action = 1
 )
-const FWALLADDR = "0xffffffffffffffffffffffffffffffffffffffff"
+
+var FwWildchardAddr = common.HexToAddress("0xffffffffffffffffffffffffffffffffffffffff")
+
+var ErrInvalidFwAction = errors.New("FW: error, action is invalid")
 
 type FwElem struct {
 	Addr     common.Address
@@ -54,15 +59,48 @@ type FwElem struct {
 type FwElems []FwElem
 
 type FwStatus struct {
-	ContractAddress common.Address
-	FwActive        bool
-	AcceptedList    []FwElem
-	RejectedList    []FwElem
+	ContractAddr common.Address
+	Active       bool
+	AcceptedList []FwElem
+	RejectedList []FwElem
+}
+
+func (fw *FwStatus) canFindInList(funcName string, caller common.Address, act Action) bool {
+	list := fw.RejectedList
+	if act == accept {
+		list = fw.AcceptedList
+	}
+
+	for _, fwElem := range list {
+		if (fwElem.Addr == FwWildchardAddr || fwElem.Addr == caller) &&
+			(fwElem.FuncName == "*" || fwElem.FuncName == funcName) {
+			return true
+		}
+	}
+	return false
+}
+
+func (fw *FwStatus) IsRejected(funcName string, caller common.Address) bool {
+	return fw.canFindInList(funcName, caller, reject)
+}
+
+func (fw *FwStatus) IsAccepted(funcName string, caller common.Address) bool {
+	return fw.canFindInList(funcName, caller, accept)
 }
 
 type FwData struct {
 	AcceptedList map[string]bool
 	DeniedList   map[string]bool
+}
+
+func NewAction(action string) (Action, error) {
+	if strings.EqualFold(action, "ACCEPT") {
+		return accept, nil
+	} else if strings.EqualFold(action, "REJECT") {
+		return reject, nil
+	} else {
+		return 0, ErrInvalidFwAction
+	}
 }
 
 func (l FwElems) Len() int {
@@ -94,7 +132,7 @@ func FwMarshal(fw FwData) []byte {
 	return rawData
 }
 
-func FwUnMarshal(raw []byte, fw *FwData) (*FwData) {
+func FwUnMarshal(raw []byte, fw *FwData) *FwData {
 	err := json.Unmarshal(raw, fw)
 	if err != nil {
 		log.Warn(err.Error())

@@ -85,7 +85,6 @@ func InvokeContract(contractAddr string, abiPath string, funcParams string, txTy
 		GasPrice: config.GasPrice,
 		Gas:      config.Gas,
 		Data:     hexutil.Encode(paramBytes),
-		TxType:   txType,
 	}
 
 	var r string
@@ -197,7 +196,6 @@ func AssembleParamsByWs(contractAddr string, abiPath string, funcParams string, 
 		GasPrice: config.GasPrice,
 		Gas:      config.Gas,
 		Data:     hexutil.Encode(paramBytes),
-		TxType:   txType,
 	}
 
 	if abiFunc.Constant == "true" {

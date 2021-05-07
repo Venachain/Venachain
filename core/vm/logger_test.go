@@ -17,10 +17,11 @@
 package vm
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"bytes"
 	"math/big"
 	"testing"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
@@ -45,7 +46,7 @@ func (d *dummyContractRef) Balance() *big.Int          { return new(big.Int) }
 
 func TestStoreCapture(t *testing.T) {
 	var (
-		env      = NewEVM(Context{}, nil, params.TestChainConfig, Config{})
+		env      = NewEVM(Context{}, nil, &params.ChainConfig{}, Config{})
 		logger   = NewStructLogger(nil)
 		mem      = NewMemory()
 		stack    = newstack()
@@ -75,7 +76,7 @@ func TestNewWasmLogger(t *testing.T) {
 		return []byte(r.Msg)
 	}))))
 
-	wasmLog := NewWasmLogger(Config{Debug:true}, logger)
+	wasmLog := NewWasmLogger(Config{Debug: true}, logger)
 
 	wasmLog.Info("hello")
 	wasmLog.Flush()

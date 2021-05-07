@@ -17,43 +17,36 @@
 package types
 
 import (
+	"bytes"
 	"container/heap"
 	"errors"
-	"io"
-	"math/big"
-	"sync/atomic"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto/sha3"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	lru "github.com/hashicorp/golang-lru"
+	"io"
+	"math/big"
+	"sync/atomic"
 )
 
 //go:generate gencodec -type txdata -field-override txdataMarshaling -out gen_tx_json.go
 
 var (
-	ErrInvalidSig = errors.New("invalid transaction v, r, s values")
-)
-
-// txType
-const (
-	CreateTxType uint64 = 1
-	NormalTxType uint64 = 2
-
-	CnsTxType uint64 = 0x11	// Used for sending transactions without address
-	FwTxType  uint64 = 0x12 // Used fot sending transactions about firewall
-	MigTxType uint64 = 0x13 //Used for update system contract.
-	MigDpType uint64 = 0x14 //Used for update system contract.
-
+	ErrInvalidSig           = errors.New("invalid transaction v, r, s values")
+	ErrInvalidOldTrx        = errors.New("invalid old transaction payload")
+	TransactionsRlpCache, _ = lru.NewARC(4)
 )
 
 type Transaction struct {
 	data txdata
 	// caches
-	hash atomic.Value
-	size atomic.Value
-	from atomic.Value
+	hash   atomic.Value
+	size   atomic.Value
+	from   atomic.Value
+	router int32
 }
 
 type txdata struct {
@@ -64,7 +57,6 @@ type txdata struct {
 	Amount       *big.Int        `json:"value"    gencodec:"required"`
 	Payload      []byte          `json:"input"    gencodec:"required"`
 	//CnsData      []byte          `json:"cnsData"`
-	TxType uint64 `json:"txType" gencodec:"required"`
 
 	// Signature values
 	V *big.Int `json:"v" gencodec:"required"`
@@ -82,21 +74,20 @@ type txdataMarshaling struct {
 	Amount       *hexutil.Big
 	Payload      hexutil.Bytes
 	//CnsData	     hexutil.Bytes
-	TxType  hexutil.Uint64
-	V      *hexutil.Big
-	R      *hexutil.Big
-	S      *hexutil.Big
+	V *hexutil.Big
+	R *hexutil.Big
+	S *hexutil.Big
 }
 
-func NewTransaction(nonce uint64, to common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte, txType uint64) *Transaction {
-	return newTransaction(nonce, &to, amount, gasLimit, gasPrice, data, txType)
+func NewTransaction(nonce uint64, to common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte) *Transaction {
+	return newTransaction(nonce, &to, amount, gasLimit, gasPrice, data)
 }
 
 func NewContractCreation(nonce uint64, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte) *Transaction {
-	return newTransaction(nonce, nil, amount, gasLimit, gasPrice, data, CreateTxType)
+	return newTransaction(nonce, nil, amount, gasLimit, gasPrice, data)
 }
 
-func newTransaction(nonce uint64, to *common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte, txType uint64) *Transaction {
+func newTransaction(nonce uint64, to *common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte) *Transaction {
 	if len(data) > 0 {
 		data = common.CopyBytes(data)
 	}
@@ -104,7 +95,6 @@ func newTransaction(nonce uint64, to *common.Address, amount *big.Int, gasLimit 
 		AccountNonce: nonce,
 		Recipient:    to,
 		Payload:      data,
-		TxType:       txType,
 		Amount:       new(big.Int),
 		GasLimit:     gasLimit,
 		Price:        new(big.Int),
@@ -185,8 +175,6 @@ func (tx *Transaction) UnmarshalJSON(input []byte) error {
 	return nil
 }
 
-func (tx *Transaction) Type() uint64 { return tx.data.TxType }
-
 //func (tx *Transaction) Cns() []byte    { return common.CopyBytes(tx.data.CnsData) }
 func (tx *Transaction) Data() []byte       { return common.CopyBytes(tx.data.Payload) }
 func (tx *Transaction) Gas() uint64        { return tx.data.GasLimit }
@@ -242,12 +230,32 @@ func (tx *Transaction) AsMessage(s Signer) (*Message, error) {
 		amount:     tx.data.Amount,
 		data:       tx.data.Payload,
 		checkNonce: true,
-		txType:     tx.data.TxType,
 	}
 
 	var err error
 	msg.from, err = Sender(s, tx)
 	return &msg, err
+}
+
+// transactions from below 1.0 version do not have a correct signature,extract sender address from payload
+func (tx *Transaction) OldAsMessage() (*Message, error) {
+	if len(tx.data.Payload) < OldTxPrefixLen+common.AddressLength ||
+		!bytes.Equal(tx.data.Payload[:OldTxPrefixLen], OldTxPrefix) {
+		return nil, ErrInvalidOldTrx
+	}
+
+	msg := Message{
+		nonce:      tx.data.AccountNonce,
+		gasLimit:   tx.data.GasLimit,
+		gasPrice:   new(big.Int).Set(tx.data.Price),
+		to:         tx.data.Recipient,
+		amount:     tx.data.Amount,
+		data:       tx.data.Payload[OldTxPrefixLen+common.AddressLength:],
+		checkNonce: true,
+	}
+
+	msg.from = common.BytesToAddress(tx.data.Payload[OldTxPrefixLen : OldTxPrefixLen+common.AddressLength])
+	return &msg, nil
 }
 
 // WithSignature returns a new transaction with the given signature.
@@ -273,6 +281,14 @@ func (tx *Transaction) RawSignatureValues() (*big.Int, *big.Int, *big.Int) {
 	return tx.data.V, tx.data.R, tx.data.S
 }
 
+func (tx *Transaction) RouterMark() {
+	tx.router++
+}
+
+func (tx *Transaction) FromRemote() bool {
+	return tx.router == 1
+}
+
 // Transactions is a Transaction slice type for basic sorting.
 type Transactions []*Transaction
 
@@ -286,6 +302,25 @@ func (s Transactions) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 func (s Transactions) GetRlp(i int) []byte {
 	enc, _ := rlp.EncodeToBytes(s[i])
 	return enc
+}
+
+func (s Transactions) GetHash() common.Hash {
+	var h common.Hash
+	d := sha3.NewKeccak256()
+	body := &Body{s}
+	bytes, _ := rlp.EncodeToBytes(body)
+	d.Write(bytes)
+	d.Sum(h[:0])
+	//cache the rlp bytes
+	TransactionsRlpCache.Add(h, bytes)
+	return h
+}
+
+func GetbodyRlpByCache(h common.Hash) []byte {
+	if data, ok := TransactionsRlpCache.Get(h); ok {
+		return data.([]byte)
+	}
+	return nil
 }
 
 // TxDifference returns a new set which is the difference between a and b.
@@ -353,7 +388,7 @@ func NewTransactionsByPriceAndNonce(signer Signer, txs map[common.Address]Transa
 	// Initialize a price based heap with the head transactions
 	heads := make(TxByPrice, 0, len(txs))
 	for from, accTxs := range txs {
-		if accTxs == nil || accTxs.Len() == 0{
+		if accTxs == nil || accTxs.Len() == 0 {
 			continue
 		}
 		heads = append(heads, accTxs[0])
@@ -413,10 +448,9 @@ type Message struct {
 	gasPrice   *big.Int
 	data       []byte
 	checkNonce bool
-	txType     uint64
 }
 
-func NewMessage(from common.Address, to *common.Address, nonce uint64, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte, checkNonce bool, txType uint64) *Message {
+func NewMessage(from common.Address, to *common.Address, nonce uint64, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte, checkNonce bool) *Message {
 
 	msg := Message{
 		from:       from,
@@ -427,7 +461,6 @@ func NewMessage(from common.Address, to *common.Address, nonce uint64, amount *b
 		gasPrice:   gasPrice,
 		data:       data,
 		checkNonce: checkNonce,
-		txType:     txType,
 	}
 	return &msg
 }
@@ -440,9 +473,7 @@ func (m *Message) Gas() uint64          { return m.gasLimit }
 func (m *Message) Nonce() uint64        { return m.nonce }
 func (m *Message) Data() []byte         { return m.data }
 func (m *Message) CheckNonce() bool     { return m.checkNonce }
-func (m *Message) TxType() uint64       { return m.txType }
 
-func (m *Message) SetTo(to common.Address) { m.to=&to }
+func (m *Message) SetTo(to common.Address) { m.to = &to }
 func (m *Message) SetData(b []byte)        { m.data = b }
-func (m *Message) SetTxType(src uint64)    { m.txType = src }
 func (m *Message) SetNonce(n uint64)       { m.nonce = n }

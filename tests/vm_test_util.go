@@ -139,11 +139,15 @@ func (t *VMTest) newEVM(statedb *state.StateDB, vmconfig vm.Config) *vm.EVM {
 		BlockNumber: new(big.Int).SetUint64(t.json.Env.Number),
 		Time:        new(big.Int).SetUint64(t.json.Env.Timestamp),
 		GasLimit:    t.json.Env.GasLimit,
-		Difficulty:  t.json.Env.Difficulty,
 		GasPrice:    t.json.Exec.GasPrice,
 	}
 	vmconfig.NoRecursion = true
-	return vm.NewEVM(context, statedb, params.MainnetChainConfig, vmconfig)
+
+	testChainConfig := &params.ChainConfig{
+		ChainID:       big.NewInt(1),
+		VMInterpreter: "wasm",
+	}
+	return vm.NewEVM(context, statedb, testChainConfig, vmconfig)
 }
 
 func vmTestBlockHash(n uint64) common.Hash {

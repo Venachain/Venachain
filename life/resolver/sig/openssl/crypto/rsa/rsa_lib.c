@@ -1,7 +1,7 @@
 /*
- * Copyright 1995-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1995-2019 The OpenSSL Project Authors. All Rights Reserved.
  *
- * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
@@ -9,14 +9,12 @@
 
 #include <stdio.h>
 #include <openssl/crypto.h>
-#include <openssl/core_names.h>
-#include <openssl/engine.h>
-#include <openssl/evp.h>
 #include "internal/cryptlib.h"
 #include "internal/refcount.h"
 #include "crypto/bn.h"
+#include <openssl/engine.h>
+#include <openssl/evp.h>
 #include "crypto/evp.h"
-#include "crypto/rsa.h"
 #include "rsa_local.h"
 
 RSA *RSA_new(void)
@@ -165,133 +163,6 @@ void *RSA_get_ex_data(const RSA *r, int idx)
     return CRYPTO_get_ex_data(&r->ex_data, idx);
 }
 
-/*
- * Define a scaling constant for our fixed point arithmetic.
- * This value must be a power of two because the base two logarithm code
- * makes this assumption.  The exponent must also be a multiple of three so
- * that the scale factor has an exact cube root.  Finally, the scale factor
- * should not be so large that a multiplication of two scaled numbers
- * overflows a 64 bit unsigned integer.
- */
-static const unsigned int scale = 1 << 18;
-static const unsigned int cbrt_scale = 1 << (2 * 18 / 3);
-
-/* Define some constants, none exceed 32 bits */
-static const unsigned int log_2  = 0x02c5c8;    /* scale * log(2) */
-static const unsigned int log_e  = 0x05c551;    /* scale * log2(M_E) */
-static const unsigned int c1_923 = 0x07b126;    /* scale * 1.923 */
-static const unsigned int c4_690 = 0x12c28f;    /* scale * 4.690 */
-
-/*
- * Multiply two scaled integers together and rescale the result.
- */
-static ossl_inline uint64_t mul2(uint64_t a, uint64_t b)
-{
-    return a * b / scale;
-}
-
-/*
- * Calculate the cube root of a 64 bit scaled integer.
- * Although the cube root of a 64 bit number does fit into a 32 bit unsigned
- * integer, this is not guaranteed after scaling, so this function has a
- * 64 bit return.  This uses the shifting nth root algorithm with some
- * algebraic simplifications.
- */
-static uint64_t icbrt64(uint64_t x)
-{
-    uint64_t r = 0;
-    uint64_t b;
-    int s;
-
-    for (s = 63; s >= 0; s -= 3) {
-        r <<= 1;
-        b = 3 * r * (r + 1) + 1;
-        if ((x >> s) >= b) {
-            x -= b << s;
-            r++;
-        }
-    }
-    return r * cbrt_scale;
-}
-
-/*
- * Calculate the natural logarithm of a 64 bit scaled integer.
- * This is done by calculating a base two logarithm and scaling.
- * The maximum logarithm (base 2) is 64 and this reduces base e, so
- * a 32 bit result should not overflow.  The argument passed must be
- * greater than unity so we don't need to handle negative results.
- */
-static uint32_t ilog_e(uint64_t v)
-{
-    uint32_t i, r = 0;
-
-    /*
-     * Scale down the value into the range 1 .. 2.
-     *
-     * If fractional numbers need to be processed, another loop needs
-     * to go here that checks v < scale and if so multiplies it by 2 and
-     * reduces r by scale.  This also means making r signed.
-     */
-    while (v >= 2 * scale) {
-        v >>= 1;
-        r += scale;
-    }
-    for (i = scale / 2; i != 0; i /= 2) {
-        v = mul2(v, v);
-        if (v >= 2 * scale) {
-            v >>= 1;
-            r += i;
-        }
-    }
-    r = (r * (uint64_t)scale) / log_e;
-    return r;
-}
-
-/*
- * NIST SP 800-56B rev 2 Appendix D: Maximum Security Strength Estimates for IFC
- * Modulus Lengths.
- *
- * E = \frac{1.923 \sqrt[3]{nBits \cdot log_e(2)}
- *           \cdot(log_e(nBits \cdot log_e(2))^{2/3} - 4.69}{log_e(2)}
- * The two cube roots are merged together here.
- */
-uint16_t rsa_compute_security_bits(int n)
-{
-    uint64_t x;
-    uint32_t lx;
-    uint16_t y;
-
-    /* Look for common values as listed in SP 800-56B rev 2 Appendix D */
-    switch (n) {
-    case 2048:
-        return 112;
-    case 3072:
-        return 128;
-    case 4096:
-        return 152;
-    case 6144:
-        return 176;
-    case 8192:
-        return 200;
-    }
-    /*
-     * The first incorrect result (i.e. not accurate or off by one low) occurs
-     * for n = 699668.  The true value here is 1200.  Instead of using this n
-     * as the check threshold, the smallest n such that the correct result is
-     * 1200 is used instead.
-     */
-    if (n >= 687737)
-        return 1200;
-    if (n < 8)
-        return 0;
-
-    x = n * (uint64_t)log_2;
-    lx = ilog_e(x);
-    y = (uint16_t)((mul2(c1_923, icbrt64(mul2(mul2(x, lx), lx))) - c4_690)
-                   / log_2);
-    return (y + 4) & ~7;
-}
-
 int RSA_security_bits(const RSA *rsa)
 {
     int bits = BN_num_bits(rsa->n);
@@ -303,7 +174,7 @@ int RSA_security_bits(const RSA *rsa)
         if (ex_primes <= 0 || (ex_primes + 2) > rsa_multip_cap(bits))
             return 0;
     }
-    return rsa_compute_security_bits(bits);
+    return BN_security_bits(bits, -1);
 }
 
 int RSA_set0_key(RSA *r, BIGNUM *n, BIGNUM *e, BIGNUM *d)
@@ -329,7 +200,6 @@ int RSA_set0_key(RSA *r, BIGNUM *n, BIGNUM *e, BIGNUM *d)
         r->d = d;
         BN_set_flags(r->d, BN_FLG_CONSTTIME);
     }
-    r->dirty_cnt++;
 
     return 1;
 }
@@ -353,7 +223,6 @@ int RSA_set0_factors(RSA *r, BIGNUM *p, BIGNUM *q)
         r->q = q;
         BN_set_flags(r->q, BN_FLG_CONSTTIME);
     }
-    r->dirty_cnt++;
 
     return 1;
 }
@@ -383,7 +252,6 @@ int RSA_set0_crt_params(RSA *r, BIGNUM *dmp1, BIGNUM *dmq1, BIGNUM *iqmp)
         r->iqmp = iqmp;
         BN_set_flags(r->iqmp, BN_FLG_CONSTTIME);
     }
-    r->dirty_cnt++;
 
     return 1;
 }
@@ -448,7 +316,6 @@ int RSA_set0_multi_prime_params(RSA *r, BIGNUM *primes[], BIGNUM *exps[],
     }
 
     r->version = RSA_ASN1_VERSION_MULTI;
-    r->dirty_cnt++;
 
     return 1;
  err:
@@ -584,6 +451,11 @@ const BIGNUM *RSA_get0_iqmp(const RSA *r)
     return r->iqmp;
 }
 
+const RSA_PSS_PARAMS *RSA_get0_pss_params(const RSA *r)
+{
+    return r->pss;
+}
+
 void RSA_clear_flags(RSA *r, int flags)
 {
     r->flags &= ~flags;
@@ -618,507 +490,4 @@ int RSA_pkey_ctx_ctrl(EVP_PKEY_CTX *ctx, int optype, int cmd, int p1, void *p2)
         && ctx->pmeth->pkey_id != EVP_PKEY_RSA_PSS)
         return -1;
      return EVP_PKEY_CTX_ctrl(ctx, -1, optype, cmd, p1, p2);
-}
-
-DEFINE_STACK_OF(BIGNUM)
-
-int rsa_set0_all_params(RSA *r, const STACK_OF(BIGNUM) *primes,
-                        const STACK_OF(BIGNUM) *exps,
-                        const STACK_OF(BIGNUM) *coeffs)
-{
-    STACK_OF(RSA_PRIME_INFO) *prime_infos, *old_infos = NULL;
-    int pnum;
-
-    if (primes == NULL || exps == NULL || coeffs == NULL)
-        return 0;
-
-    pnum = sk_BIGNUM_num(primes);
-    if (pnum < 2
-        || pnum != sk_BIGNUM_num(exps)
-        || pnum != sk_BIGNUM_num(coeffs) + 1)
-        return 0;
-
-    if (!RSA_set0_factors(r, sk_BIGNUM_value(primes, 0),
-                          sk_BIGNUM_value(primes, 1))
-        || !RSA_set0_crt_params(r, sk_BIGNUM_value(exps, 0),
-                                sk_BIGNUM_value(exps, 1),
-                                sk_BIGNUM_value(coeffs, 0)))
-        return 0;
-
-    old_infos = r->prime_infos;
-
-    if (pnum > 2) {
-        int i;
-
-        prime_infos = sk_RSA_PRIME_INFO_new_reserve(NULL, pnum);
-        if (prime_infos == NULL)
-            return 0;
-
-        for (i = 2; i < pnum; i++) {
-            BIGNUM *prime = sk_BIGNUM_value(primes, i);
-            BIGNUM *exp = sk_BIGNUM_value(exps, i);
-            BIGNUM *coeff = sk_BIGNUM_value(coeffs, i - 1);
-            RSA_PRIME_INFO *pinfo = NULL;
-
-            if (!ossl_assert(prime != NULL && exp != NULL && coeff != NULL))
-                goto err;
-
-            /* Using rsa_multip_info_new() is wasteful, so allocate directly */
-            if ((pinfo = OPENSSL_zalloc(sizeof(*pinfo))) == NULL) {
-                ERR_raise(ERR_LIB_RSA, ERR_R_MALLOC_FAILURE);
-                goto err;
-            }
-
-            pinfo->r = prime;
-            pinfo->d = exp;
-            pinfo->t = coeff;
-            BN_set_flags(pinfo->r, BN_FLG_CONSTTIME);
-            BN_set_flags(pinfo->d, BN_FLG_CONSTTIME);
-            BN_set_flags(pinfo->t, BN_FLG_CONSTTIME);
-            (void)sk_RSA_PRIME_INFO_push(prime_infos, pinfo);
-        }
-
-        r->prime_infos = prime_infos;
-
-        if (!rsa_multip_calc_product(r)) {
-            r->prime_infos = old_infos;
-            goto err;
-        }
-    }
-
-    if (old_infos != NULL) {
-        /*
-         * This is hard to deal with, since the old infos could
-         * also be set by this function and r, d, t should not
-         * be freed in that case. So currently, stay consistent
-         * with other *set0* functions: just free it...
-         */
-        sk_RSA_PRIME_INFO_pop_free(old_infos, rsa_multip_info_free);
-    }
-
-    r->version = pnum > 2 ? RSA_ASN1_VERSION_MULTI : RSA_ASN1_VERSION_DEFAULT;
-    r->dirty_cnt++;
-
-    return 1;
- err:
-    /* r, d, t should not be freed */
-    sk_RSA_PRIME_INFO_pop_free(prime_infos, rsa_multip_info_free_ex);
-    return 0;
-}
-
-DEFINE_SPECIAL_STACK_OF_CONST(BIGNUM_const, BIGNUM)
-
-int rsa_get0_all_params(RSA *r, STACK_OF(BIGNUM_const) *primes,
-                        STACK_OF(BIGNUM_const) *exps,
-                        STACK_OF(BIGNUM_const) *coeffs)
-{
-    RSA_PRIME_INFO *pinfo;
-    int i, pnum;
-
-    if (r == NULL)
-        return 0;
-
-    pnum = RSA_get_multi_prime_extra_count(r);
-
-    sk_BIGNUM_const_push(primes, RSA_get0_p(r));
-    sk_BIGNUM_const_push(primes, RSA_get0_q(r));
-    sk_BIGNUM_const_push(exps, RSA_get0_dmp1(r));
-    sk_BIGNUM_const_push(exps, RSA_get0_dmq1(r));
-    sk_BIGNUM_const_push(coeffs, RSA_get0_iqmp(r));
-    for (i = 0; i < pnum; i++) {
-        pinfo = sk_RSA_PRIME_INFO_value(r->prime_infos, i);
-        sk_BIGNUM_const_push(primes, pinfo->r);
-        sk_BIGNUM_const_push(exps, pinfo->d);
-        sk_BIGNUM_const_push(coeffs, pinfo->t);
-    }
-
-    return 1;
-}
-
-int EVP_PKEY_CTX_set_rsa_padding(EVP_PKEY_CTX *ctx, int pad_mode)
-{
-    OSSL_PARAM pad_params[2], *p = pad_params;
-
-    if (ctx == NULL) {
-        ERR_raise(ERR_LIB_EVP, EVP_R_COMMAND_NOT_SUPPORTED);
-        /* Uses the same return values as EVP_PKEY_CTX_ctrl */
-        return -2;
-    }
-
-    /* If key type not RSA or RSA-PSS return error */
-    if (ctx->pmeth != NULL
-            && ctx->pmeth->pkey_id != EVP_PKEY_RSA
-            && ctx->pmeth->pkey_id != EVP_PKEY_RSA_PSS)
-        return -1;
-
-    /* TODO(3.0): Remove this eventually when no more legacy */
-    if (!EVP_PKEY_CTX_IS_ASYM_CIPHER_OP(ctx)
-            || ctx->op.ciph.ciphprovctx == NULL)
-        return EVP_PKEY_CTX_ctrl(ctx, -1, -1, EVP_PKEY_CTRL_RSA_PADDING,
-                                 pad_mode, NULL);
-
-    *p++ = OSSL_PARAM_construct_int(OSSL_ASYM_CIPHER_PARAM_PAD_MODE, &pad_mode);
-    *p++ = OSSL_PARAM_construct_end();
-
-    return EVP_PKEY_CTX_set_params(ctx, pad_params);
-}
-
-int EVP_PKEY_CTX_get_rsa_padding(EVP_PKEY_CTX *ctx, int *pad_mode)
-{
-    OSSL_PARAM pad_params[2], *p = pad_params;
-
-    if (ctx == NULL || pad_mode == NULL) {
-        ERR_raise(ERR_LIB_EVP, EVP_R_COMMAND_NOT_SUPPORTED);
-        /* Uses the same return values as EVP_PKEY_CTX_ctrl */
-        return -2;
-    }
-
-    /* If key type not RSA or RSA-PSS return error */
-    if (ctx->pmeth != NULL
-            && ctx->pmeth->pkey_id != EVP_PKEY_RSA
-            && ctx->pmeth->pkey_id != EVP_PKEY_RSA_PSS)
-        return -1;
-
-    /* TODO(3.0): Remove this eventually when no more legacy */
-    if (!EVP_PKEY_CTX_IS_ASYM_CIPHER_OP(ctx)
-            || ctx->op.ciph.ciphprovctx == NULL)
-        return EVP_PKEY_CTX_ctrl(ctx, -1, -1, EVP_PKEY_CTRL_GET_RSA_PADDING, 0,
-                                 pad_mode);
-
-    *p++ = OSSL_PARAM_construct_int(OSSL_ASYM_CIPHER_PARAM_PAD_MODE, pad_mode);
-    *p++ = OSSL_PARAM_construct_end();
-
-    if (!EVP_PKEY_CTX_get_params(ctx, pad_params))
-        return 0;
-
-    return 1;
-
-}
-
-int EVP_PKEY_CTX_set_rsa_oaep_md(EVP_PKEY_CTX *ctx, const EVP_MD *md)
-{
-    const char *name;
-
-    if (ctx == NULL || !EVP_PKEY_CTX_IS_ASYM_CIPHER_OP(ctx)) {
-        ERR_raise(ERR_LIB_EVP, EVP_R_COMMAND_NOT_SUPPORTED);
-        /* Uses the same return values as EVP_PKEY_CTX_ctrl */
-        return -2;
-    }
-
-    /* If key type not RSA return error */
-    if (ctx->pmeth != NULL && ctx->pmeth->pkey_id != EVP_PKEY_RSA)
-        return -1;
-
-    /* TODO(3.0): Remove this eventually when no more legacy */
-    if (ctx->op.ciph.ciphprovctx == NULL)
-        return EVP_PKEY_CTX_ctrl(ctx, EVP_PKEY_RSA, EVP_PKEY_OP_TYPE_CRYPT,
-                                 EVP_PKEY_CTRL_RSA_OAEP_MD, 0, (void *)md);
-
-    name = (md == NULL) ? "" : EVP_MD_name(md);
-
-    return EVP_PKEY_CTX_set_rsa_oaep_md_name(ctx, name, NULL);
-}
-
-int EVP_PKEY_CTX_set_rsa_oaep_md_name(EVP_PKEY_CTX *ctx, const char *mdname,
-                                      const char *mdprops)
-{
-    OSSL_PARAM rsa_params[3], *p = rsa_params;
-
-    if (ctx == NULL || !EVP_PKEY_CTX_IS_ASYM_CIPHER_OP(ctx)) {
-        ERR_raise(ERR_LIB_EVP, EVP_R_COMMAND_NOT_SUPPORTED);
-        /* Uses the same return values as EVP_PKEY_CTX_ctrl */
-        return -2;
-    }
-
-    /* If key type not RSA return error */
-    if (ctx->pmeth != NULL && ctx->pmeth->pkey_id != EVP_PKEY_RSA)
-        return -1;
-
-
-    *p++ = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST,
-                                            /*
-                                             * Cast away the const. This is read
-                                             * only so should be safe
-                                             */
-                                            (char *)mdname,
-                                            strlen(mdname) + 1);
-    if (mdprops != NULL) {
-        *p++ = OSSL_PARAM_construct_utf8_string(
-                    OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST_PROPS,
-                    /*
-                     * Cast away the const. This is read
-                     * only so should be safe
-                     */
-                    (char *)mdprops,
-                    strlen(mdprops) + 1);
-    }
-    *p++ = OSSL_PARAM_construct_end();
-
-    return EVP_PKEY_CTX_set_params(ctx, rsa_params);
-}
-
-int EVP_PKEY_CTX_get_rsa_oaep_md_name(EVP_PKEY_CTX *ctx, char *name,
-                                      size_t namelen)
-{
-    OSSL_PARAM rsa_params[2], *p = rsa_params;
-
-    if (ctx == NULL || !EVP_PKEY_CTX_IS_ASYM_CIPHER_OP(ctx)) {
-        ERR_raise(ERR_LIB_EVP, EVP_R_COMMAND_NOT_SUPPORTED);
-        /* Uses the same return values as EVP_PKEY_CTX_ctrl */
-        return -2;
-    }
-
-    /* If key type not RSA return error */
-    if (ctx->pmeth != NULL && ctx->pmeth->pkey_id != EVP_PKEY_RSA)
-        return -1;
-
-    *p++ = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST,
-                                            name, namelen);
-    *p++ = OSSL_PARAM_construct_end();
-
-    if (!EVP_PKEY_CTX_get_params(ctx, rsa_params))
-        return -1;
-
-    return 1;
-}
-
-int EVP_PKEY_CTX_get_rsa_oaep_md(EVP_PKEY_CTX *ctx, const EVP_MD **md)
-{
-    /* 80 should be big enough */
-    char name[80] = "";
-
-    if (ctx == NULL || md == NULL || !EVP_PKEY_CTX_IS_ASYM_CIPHER_OP(ctx)) {
-        ERR_raise(ERR_LIB_EVP, EVP_R_COMMAND_NOT_SUPPORTED);
-        /* Uses the same return values as EVP_PKEY_CTX_ctrl */
-        return -2;
-    }
-
-    /* If key type not RSA return error */
-    if (ctx->pmeth != NULL && ctx->pmeth->pkey_id != EVP_PKEY_RSA)
-        return -1;
-
-    /* TODO(3.0): Remove this eventually when no more legacy */
-    if (ctx->op.ciph.ciphprovctx == NULL)
-        return EVP_PKEY_CTX_ctrl(ctx, EVP_PKEY_RSA, EVP_PKEY_OP_TYPE_CRYPT,
-                                 EVP_PKEY_CTRL_GET_RSA_OAEP_MD, 0, (void *)md);
-
-    if (EVP_PKEY_CTX_get_rsa_oaep_md_name(ctx, name, sizeof(name)) <= 0)
-        return -1;
-
-    /* May be NULL meaning "unknown" */
-    *md = EVP_get_digestbyname(name);
-
-    return 1;
-}
-
-int EVP_PKEY_CTX_set_rsa_mgf1_md(EVP_PKEY_CTX *ctx, const EVP_MD *md)
-{
-    const char *name;
-
-    if (ctx == NULL
-            || (!EVP_PKEY_CTX_IS_ASYM_CIPHER_OP(ctx)
-                && !EVP_PKEY_CTX_IS_SIGNATURE_OP(ctx))) {
-        ERR_raise(ERR_LIB_EVP, EVP_R_COMMAND_NOT_SUPPORTED);
-        /* Uses the same return values as EVP_PKEY_CTX_ctrl */
-        return -2;
-    }
-
-    /* If key type not RSA return error */
-    if (ctx->pmeth != NULL
-            && ctx->pmeth->pkey_id != EVP_PKEY_RSA
-            && ctx->pmeth->pkey_id != EVP_PKEY_RSA_PSS)
-        return -1;
-
-    /* TODO(3.0): Remove this eventually when no more legacy */
-    if ((EVP_PKEY_CTX_IS_ASYM_CIPHER_OP(ctx)
-                && ctx->op.ciph.ciphprovctx == NULL)
-            || (EVP_PKEY_CTX_IS_SIGNATURE_OP(ctx)
-                && ctx->op.sig.sigprovctx == NULL))
-        return EVP_PKEY_CTX_ctrl(ctx, EVP_PKEY_RSA,
-                                 EVP_PKEY_OP_TYPE_SIG | EVP_PKEY_OP_TYPE_CRYPT,
-                                 EVP_PKEY_CTRL_RSA_MGF1_MD, 0, (void *)md);
-
-    name = (md == NULL) ? "" : EVP_MD_name(md);
-
-    return EVP_PKEY_CTX_set_rsa_mgf1_md_name(ctx, name, NULL);
-}
-
-int EVP_PKEY_CTX_set_rsa_mgf1_md_name(EVP_PKEY_CTX *ctx, const char *mdname,
-                                      const char *mdprops)
-{
-    OSSL_PARAM rsa_params[3], *p = rsa_params;
-
-    if (ctx == NULL
-            || mdname == NULL
-            || (!EVP_PKEY_CTX_IS_ASYM_CIPHER_OP(ctx)
-                && !EVP_PKEY_CTX_IS_SIGNATURE_OP(ctx))) {
-        ERR_raise(ERR_LIB_EVP, EVP_R_COMMAND_NOT_SUPPORTED);
-        /* Uses the same return values as EVP_PKEY_CTX_ctrl */
-        return -2;
-    }
-
-    /* If key type not RSA return error */
-    if (ctx->pmeth != NULL
-            && ctx->pmeth->pkey_id != EVP_PKEY_RSA
-            && ctx->pmeth->pkey_id != EVP_PKEY_RSA_PSS)
-        return -1;
-
-    *p++ = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_MGF1_DIGEST,
-                                            /*
-                                             * Cast away the const. This is read
-                                             * only so should be safe
-                                             */
-                                            (char *)mdname,
-                                            strlen(mdname) + 1);
-    if (mdprops != NULL) {
-        *p++ = OSSL_PARAM_construct_utf8_string(
-                    OSSL_ASYM_CIPHER_PARAM_MGF1_DIGEST_PROPS,
-                    /*
-                     * Cast away the const. This is read
-                     * only so should be safe
-                     */
-                    (char *)mdprops,
-                    strlen(mdprops) + 1);
-    }
-    *p++ = OSSL_PARAM_construct_end();
-
-    return EVP_PKEY_CTX_set_params(ctx, rsa_params);
-}
-
-int EVP_PKEY_CTX_get_rsa_mgf1_md_name(EVP_PKEY_CTX *ctx, char *name,
-                                      size_t namelen)
-{
-    OSSL_PARAM rsa_params[2], *p = rsa_params;
-
-    if (ctx == NULL
-            || (!EVP_PKEY_CTX_IS_ASYM_CIPHER_OP(ctx)
-                && !EVP_PKEY_CTX_IS_SIGNATURE_OP(ctx))) {
-        ERR_raise(ERR_LIB_EVP, EVP_R_COMMAND_NOT_SUPPORTED);
-        /* Uses the same return values as EVP_PKEY_CTX_ctrl */
-        return -2;
-    }
-
-    /* If key type not RSA or RSA-PSS return error */
-    if (ctx->pmeth != NULL
-            && ctx->pmeth->pkey_id != EVP_PKEY_RSA
-            && ctx->pmeth->pkey_id != EVP_PKEY_RSA_PSS)
-        return -1;
-
-    *p++ = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_MGF1_DIGEST,
-                                            name, namelen);
-    *p++ = OSSL_PARAM_construct_end();
-
-    if (!EVP_PKEY_CTX_get_params(ctx, rsa_params))
-        return -1;
-
-    return 1;
-}
-
-int EVP_PKEY_CTX_get_rsa_mgf1_md(EVP_PKEY_CTX *ctx, const EVP_MD **md)
-{
-    /* 80 should be big enough */
-    char name[80] = "";
-
-    if (ctx == NULL
-            || (!EVP_PKEY_CTX_IS_ASYM_CIPHER_OP(ctx)
-                && !EVP_PKEY_CTX_IS_SIGNATURE_OP(ctx))) {
-        ERR_raise(ERR_LIB_EVP, EVP_R_COMMAND_NOT_SUPPORTED);
-        /* Uses the same return values as EVP_PKEY_CTX_ctrl */
-        return -2;
-    }
-
-    /* If key type not RSA or RSA-PSS return error */
-    if (ctx->pmeth != NULL
-            && ctx->pmeth->pkey_id != EVP_PKEY_RSA
-            && ctx->pmeth->pkey_id != EVP_PKEY_RSA_PSS)
-        return -1;
-
-    /* TODO(3.0): Remove this eventually when no more legacy */
-    if ((EVP_PKEY_CTX_IS_ASYM_CIPHER_OP(ctx)
-                && ctx->op.ciph.ciphprovctx == NULL)
-            || (EVP_PKEY_CTX_IS_SIGNATURE_OP(ctx)
-                && ctx->op.sig.sigprovctx == NULL))
-        return EVP_PKEY_CTX_ctrl(ctx, -1,
-                                 EVP_PKEY_OP_TYPE_SIG | EVP_PKEY_OP_TYPE_CRYPT,
-                                 EVP_PKEY_CTRL_GET_RSA_MGF1_MD, 0, (void *)md);
-
-    if (EVP_PKEY_CTX_get_rsa_mgf1_md_name(ctx, name, sizeof(name)) <= 0)
-        return -1;
-
-    /* May be NULL meaning "unknown" */
-    *md = EVP_get_digestbyname(name);
-
-    return 1;
-}
-
-int EVP_PKEY_CTX_set0_rsa_oaep_label(EVP_PKEY_CTX *ctx, void *label, int llen)
-{
-    OSSL_PARAM rsa_params[2], *p = rsa_params;
-
-    if (ctx == NULL || !EVP_PKEY_CTX_IS_ASYM_CIPHER_OP(ctx)) {
-        ERR_raise(ERR_LIB_EVP, EVP_R_COMMAND_NOT_SUPPORTED);
-        /* Uses the same return values as EVP_PKEY_CTX_ctrl */
-        return -2;
-    }
-
-    /* If key type not RSA return error */
-    if (ctx->pmeth != NULL && ctx->pmeth->pkey_id != EVP_PKEY_RSA)
-        return -1;
-
-    /* TODO(3.0): Remove this eventually when no more legacy */
-    if (ctx->op.ciph.ciphprovctx == NULL)
-        return EVP_PKEY_CTX_ctrl(ctx, EVP_PKEY_RSA, EVP_PKEY_OP_TYPE_CRYPT,
-                                 EVP_PKEY_CTRL_RSA_OAEP_LABEL, llen,
-                                 (void *)label);
-
-    *p++ = OSSL_PARAM_construct_octet_string(OSSL_ASYM_CIPHER_PARAM_OAEP_LABEL,
-                                            /*
-                                             * Cast away the const. This is read
-                                             * only so should be safe
-                                             */
-                                            (void *)label,
-                                            (size_t)llen);
-    *p++ = OSSL_PARAM_construct_end();
-
-    if (!EVP_PKEY_CTX_set_params(ctx, rsa_params))
-        return 0;
-
-    OPENSSL_free(label);
-    return 1;
-}
-
-int EVP_PKEY_CTX_get0_rsa_oaep_label(EVP_PKEY_CTX *ctx, unsigned char **label)
-{
-    OSSL_PARAM rsa_params[3], *p = rsa_params;
-    size_t labellen;
-
-    if (ctx == NULL || !EVP_PKEY_CTX_IS_ASYM_CIPHER_OP(ctx)) {
-        ERR_raise(ERR_LIB_EVP, EVP_R_COMMAND_NOT_SUPPORTED);
-        /* Uses the same return values as EVP_PKEY_CTX_ctrl */
-        return -2;
-    }
-
-    /* If key type not RSA return error */
-    if (ctx->pmeth != NULL && ctx->pmeth->pkey_id != EVP_PKEY_RSA)
-        return -1;
-
-    /* TODO(3.0): Remove this eventually when no more legacy */
-    if (ctx->op.ciph.ciphprovctx == NULL)
-        return EVP_PKEY_CTX_ctrl(ctx, EVP_PKEY_RSA, EVP_PKEY_OP_TYPE_CRYPT,
-                                 EVP_PKEY_CTRL_GET_RSA_OAEP_LABEL, 0,
-                                 (void *)label);
-
-    *p++ = OSSL_PARAM_construct_octet_ptr(OSSL_ASYM_CIPHER_PARAM_OAEP_LABEL,
-                                          (void **)label, 0);
-    *p++ = OSSL_PARAM_construct_size_t(OSSL_ASYM_CIPHER_PARAM_OAEP_LABEL_LEN,
-                                       &labellen);
-    *p++ = OSSL_PARAM_construct_end();
-
-    if (!EVP_PKEY_CTX_get_params(ctx, rsa_params))
-        return -1;
-
-    if (labellen > INT_MAX)
-        return -1;
-
-    return (int)labellen;
 }

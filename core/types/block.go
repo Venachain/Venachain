@@ -19,6 +19,7 @@ package types
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"math/big"
@@ -34,18 +35,32 @@ import (
 )
 
 var (
-	EmptyRootHash  = DeriveSha(Transactions{})
+	EmptyRootHash = DeriveSha(Transactions{})
 )
 
-// A BlockNonce is a 64-bit hash which proves (combined with the
-// mix-hash) that a sufficient amount of computation has been carried
-// out on a block.
-type BlockNonce [8]byte
+var (
+	ErrInvalidBlockNonce = errors.New("invalid Block Nonce length")
+)
+
+// BlockNonce is an 81-byte vrf proof containing random numbers
+// Used to verify the block when receiving the block
+const (
+	BlockNonceLen = 81
+)
+type BlockNonce [BlockNonceLen]byte
+
 
 // EncodeNonce converts the given integer to a block nonce.
 func EncodeNonce(i uint64) BlockNonce {
 	var n BlockNonce
 	binary.BigEndian.PutUint64(n[:], i)
+	return n
+}
+
+// EncodeNonce converts the given byte to a block nonce.
+func EncodeByteNonce(v []byte) BlockNonce {
+	var n BlockNonce
+	copy(n[:], v)
 	return n
 }
 
@@ -62,6 +77,27 @@ func (n BlockNonce) MarshalText() ([]byte, error) {
 // UnmarshalText implements encoding.TextUnmarshaler.
 func (n *BlockNonce) UnmarshalText(input []byte) error {
 	return hexutil.UnmarshalFixedText("BlockNonce", input, n[:])
+}
+
+
+func (n *BlockNonce) DecodeRLP(s *rlp.Stream) error {
+	_, size, err := s.Kind()
+	if err != nil {
+		return err
+	}
+
+	if BlockNonceLen < size {
+		return errors.New(fmt.Sprint("input string too long"))
+	}
+	slice := n[:size]
+	if err := s.ReadFull(slice); err != nil {
+		return err
+	}
+	// Reject cases where single byte encoding should have been used.
+	if size == 1 && slice[0] < 128 {
+		return rlp.ErrCanonSize
+	}
+	return nil
 }
 
 //go:generate gencodec -type Header -field-override headerMarshaling -out gen_header_json.go
@@ -315,7 +351,7 @@ func (b *Block) ReceiptHash() common.Hash { return b.header.ReceiptHash }
 func (b *Block) Extra() []byte            { return common.CopyBytes(b.header.Extra) }
 
 func (b *Block) Header() *Header { return CopyHeader(b.header) }
-func (b *Block) String() string {return fmt.Sprintf("{BlockHeader: %v", b.header)}
+func (b *Block) String() string  { return fmt.Sprintf("{BlockHeader: %v", b.header) }
 
 // Body returns the non-header content of the block.
 func (b *Block) Body() *Body { return &Body{b.transactions} }
@@ -363,7 +399,7 @@ func (b *Block) WithBody(transactions []*Transaction) *Block {
 // Hash returns the keccak256 hash of b's header.
 // The hash is computed on the first call and cached thereafter.
 func (b *Block) Hash() common.Hash {
-	if b == nil{
+	if b == nil {
 		return common.Hash{}
 	}
 

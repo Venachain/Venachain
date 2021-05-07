@@ -1,0 +1,393 @@
+[
+    {
+        "name": "setGasContractName",
+        "inputs": [
+            {
+                "name": "contractName",
+                "type": "string"
+            }
+        ],
+        "outputs": [],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "getGasContractName",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "setIsProduceEmptyBlock",
+        "inputs": [
+            {
+                "name": "isProduceEmptyBlock",
+                "type": "uint32"
+            }
+        ],
+        "outputs": [],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "getIsProduceEmptyBlock",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint32"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "setTxGasLimit",
+        "inputs": [
+            {
+                "name": "txGasLimit",
+                "type": "uint64"
+            }
+        ],
+        "outputs": [],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "getTxGasLimit",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "setBlockGasLimit",
+        "inputs": [
+            {
+                "name": "blockGasLimit",
+                "type": "uint64"
+            }
+        ],
+        "outputs": [],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "getBlockGasLimit",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "setAllowAnyAccountDeployContract",
+        "inputs": [
+            {
+                "name": "isAllowAnyAccountDeployContract",
+                "type": "uint"
+            }
+        ],
+        "outputs": [],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "setCheckContractDeployPermission",
+        "inputs": [
+            {
+                "name": "checkPermission",
+                "type": "uint32"
+            }
+        ],
+        "outputs": [],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "getCheckContractDeployPermission",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint32"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "getAllowAnyAccountDeployContract",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint32"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "setIsApproveDeployedContract",
+        "inputs": [
+            {
+                "name": "isApproveDeployedContract",
+                "type": "uint32"
+            }
+        ],
+        "outputs": [],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "getIsApproveDeployedContract",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint32"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "setIsTxUseGas",
+        "inputs": [
+            {
+                "name": "isTxUseGas",
+                "type": "uint32"
+            }
+        ],
+        "outputs": [],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "getIsTxUseGas",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint32"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "setIsBlockUseTrieHash",
+        "inputs": [
+            {
+                "name": "isBlockUseTrieHash",
+                "type": "uint32"
+            }
+        ],
+        "outputs": [],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "getIsBlockUseTrieHash",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint32"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name":"GasContractName",
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"IsProduceEmptyBlock",
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"TxGasLimit",
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"BlockGasLimit",
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"IsCheckContractDeployPermission",
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"IsApproveDeployedContract",
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"IsTxUseGas",
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    } ,
+    {
+        "name": "Notify",
+        "inputs": [
+            {
+                "type": "uint32"
+            },
+            {
+                "type": "string"
+            }
+        ],
+        "type": "event"
+    },
+    {
+        "name": "getVRFParams",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "setVRFParams",
+        "inputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "outputs": [],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name":"VRFParams",
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"IsBlockUseTrieHash",
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name": "getIntParam",
+        "inputs": [
+            {
+            "name": "",
+            "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "setIntParam",
+        "inputs": [
+            {
+                "name": "",
+                "type": "string"
+            },
+            {
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "outputs": [],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "getStrParam",
+        "inputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "setStrParam",
+        "inputs": [
+            {
+                "name": "",
+                "type": "string"
+            },
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "outputs": [],
+        "constant": "false",
+        "type": "function"
+    }
+]
+
