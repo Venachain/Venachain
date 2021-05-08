@@ -236,9 +236,8 @@ func (c *core) commit() {
 			if err == ErrFirstCommitAtWrongTime || err == ErrEmpty && !common.SysCfg.IsProduceEmptyBlock() {
 				c.current.UnlockHash() //Unlock block when insertion fails
 				cur := c.currentView().Round
-				//time.Sleep(time.Second)
+				time.Sleep(time.Second)
 				c.startNewRoundWhenEmpty(big.NewInt(0).Add(cur, big.NewInt(1)))
-
 				return
 			}
 
