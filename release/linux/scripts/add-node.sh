@@ -147,7 +147,6 @@ function readEnv() {
         for k in $keys
         do
             keyinfo=`cat ${keystore}/${k} | sed s/[[:space:]]//g`
-            keyinfo=${keyinfo,,}sss
             ACCOUNT=${keyinfo:12:40}
             echo "account: ${ACCOUNT}"
             break

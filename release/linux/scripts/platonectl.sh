@@ -429,7 +429,6 @@ function showNodeInformation() {
         for k in $keys
         do
             keyinfo=`cat ${keystore}/${k} | sed s/[[:space:]]//g`
-            keyinfo=${keyinfo,,}sss
             account=${keyinfo:12:40}
             echo "                  account: ${account}"
             break
@@ -568,7 +567,6 @@ function unlockAccount() {
         for k in $keys
         do
             keyinfo=`cat $keystore/$k | sed s/[[:space:]]//g`
-            keyinfo=${keyinfo,,}sss
             account=${keyinfo:12:40}
             account="0x${account}"
             echo "account: ${account}"
