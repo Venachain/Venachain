@@ -5,14 +5,16 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"path"
 	"reflect"
+	"runtime"
 	"strings"
 
-	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/packet"
 	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/precompiled"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/utils"
+	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/gin-gonic/gin"
 )
@@ -206,12 +208,28 @@ func parseKeyfile(from string) (*utils.Keyfile, error) {
 	if strings.HasPrefix(from, "0x") {
 		from = from[2:]
 	}
-	fileName, err := utils.GetFileByKey(defaultKeyfile, from)
+
+	keyfileDirt := getKeyFilePath()
+	fileName, err := utils.GetFileByKey(keyfileDirt, from)
 	if err != nil {
 		return &utils.Keyfile{}, err
 	}
 
-	path := defaultKeyfile + "/" + fileName
+	path := keyfileDirt + "/" + fileName
 	keyfile, _ := utils.NewKeyfile(path)
 	return keyfile, nil
+}
+
+func getKeyFilePath()string{
+	_, filename, _, ok := runtime.Caller(1)
+	var cwdPath string
+	if ok {
+		cwdPath = path.Join(path.Dir(filename), "")
+	} else {
+		cwdPath = "./"
+	}
+	cwdPath = cwdPath + "/../../../release/linux/data/node-0/"
+
+	keyfileDirt := cwdPath + defaultKeyfile
+	return keyfileDirt
 }

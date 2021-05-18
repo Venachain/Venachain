@@ -6,7 +6,7 @@ replace github.com/go-interpreter/wagon v0.6.0 => github.com/perlin-network/wago
 
 require (
 	github.com/aristanetworks/goarista v0.0.0-20170210015632-ea17b1a17847
-	github.com/btcsuite/btcd v0.0.0-20171128150713-2e60448ffcc6
+	github.com/btcsuite/btcd v0.21.0-beta
 	github.com/cespare/cp v0.1.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/deckarep/golang-set v0.0.0-20180603214616-504e848d77ea
@@ -15,17 +15,17 @@ require (
 	github.com/ethereum/go-ethereum v1.9.21
 	github.com/fatih/color v1.3.0
 	github.com/fjl/memsize v0.0.0-20180418122429-ca190fb6ffbc
-	github.com/gin-gonic/gin v1.6.3
+	github.com/gin-gonic/gin v1.7.1
 	github.com/gizak/termui v2.2.1-0.20170117222342-991cd3d38091+incompatible
 	github.com/go-bindata/go-bindata v3.1.2+incompatible // indirect
 	github.com/go-interpreter/wagon v0.6.0
 	github.com/go-stack/stack v1.8.0
 	github.com/golang/protobuf v1.4.2
-	github.com/golang/snappy v0.0.3 // indirect
+	github.com/golang/snappy v0.0.3
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/huin/goupnp v1.0.0
 	github.com/influxdata/influxdb v1.2.3-0.20180221223340-01288bdb0883
-	github.com/jackpal/go-nat-pmp v1.0.2-0.20160603034137-1fa385a6f458
+	github.com/jackpal/go-nat-pmp v1.0.2
 	github.com/jpmorganchase/quorum v2.7.0+incompatible
 	github.com/julienschmidt/httprouter v1.1.1-0.20170430222011-975b5c4c7c21
 	github.com/karalabe/hid v0.0.0-20170821103837-f00545f9f374
@@ -51,8 +51,8 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/syndtr/goleveldb v1.0.1-0.20200815110645-5c35d600f0ca
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
-	golang.org/x/net v0.0.0-20200822124328-c89045814202
-	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c
+	golang.org/x/net v0.0.0-20210510120150-4163338589ed
+	golang.org/x/sys v0.0.0-20210423082822-04245dca01da
 	golang.org/x/tools v0.0.0-20190531172133-b3315ee88b7d
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127
 	gopkg.in/karalabe/cookiejar.v2 v2.0.0-20150724131613-8dcd6a7f4951

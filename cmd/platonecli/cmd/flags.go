@@ -247,6 +247,10 @@ var (
 		Name:  "gas-contract",
 		Usage: "register the gas contract by contract name",
 	}
+	VrfParamsFlags = cli.StringFlag{
+		Name:"vrf-params",
+		Usage:"VRF params",
+	}
 
 	GetBlockGasLimitFlags = cli.BoolFlag{
 		Name:  "block-gaslimit",
@@ -287,6 +291,11 @@ var (
 		Usage: "register the gas contract by contract name",
 	}
 
+	GetVrfParamsFlags = cli.BoolFlag{
+		Name:  "vrf-params",
+		Usage: "VRF params",
+	}
+
 	// rest
 	RestPortFlags = cli.StringFlag{
 		Name:  "port",
@@ -316,6 +325,7 @@ var (
 		IsCheckContractDeployPermissionFlags,
 		IsProduceEmptyBlockFlags,
 		GasContractNameFlags,
+		VrfParamsFlags,
 	)
 
 	getSysConfigCmdFlags = append(
@@ -327,6 +337,7 @@ var (
 		GetIsCheckContractDeployPermissionFlags,
 		GetIsProduceEmptyBlockFlags,
 		GetGasContractNameFlags,
+		GetVrfParamsFlags,
 	)
 
 	// user

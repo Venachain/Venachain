@@ -12,27 +12,27 @@ import (
 )
 
 var (
-	gasContractNameKey                 string = "GasContractName"
-	isProduceEmptyBlockKey             string = "IsProduceEmptyBlock"
-	txGasLimitKey                      string = "TxGasLimit"
-	blockGasLimitKey                   string = "BlockGasLimit"
-	isCheckContractDeployPermissionKey string = "IsCheckContractDeployPermission"
-	isApproveDeployedContractKey       string = "IsApproveDeployedContract"
-	isTxUseGasKey                      string = "IsTxUseGas"
-	vrfParamsKey                       string = "VRFParams"
-	isBlockUseTrieHashKey              string = "IsBlockUseTrieHash"
+	GasContractNameKey                 string = "GasContractName"
+	IsProduceEmptyBlockKey             string = "IsProduceEmptyBlock"
+	TxGasLimitKey                      string = "TxGasLimit"
+	BlockGasLimitKey                   string = "BlockGasLimit"
+	IsCheckContractDeployPermissionKey string = "IsCheckContractDeployPermission"
+	IsApproveDeployedContractKey       string = "IsApproveDeployedContract"
+	IsTxUseGasKey                      string = "IsTxUseGas"
+	VrfParamsKey                       string = "VRFParams"
+	IsBlockUseTrieHashKey              string = "IsBlockUseTrieHash"
 )
 
 var preDefinedParamKeys = map[string]paramType{
-	gasContractNameKey:                 &gasContractNameType{},
-	isProduceEmptyBlockKey:             &IsProduceEmptyBlockType{},
-	txGasLimitKey:                      &TxGasLimitType{},
-	blockGasLimitKey:                   &BlockGasLimitType{},
-	isCheckContractDeployPermissionKey: &CheckContractDeployPermissionType{},
-	isApproveDeployedContractKey:       &IsApproveDeployedContractype{},
-	isTxUseGasKey:                      &IsTxUseGastype{},
-	vrfParamsKey:                       &VRFParamsType{},
-	isBlockUseTrieHashKey:              &IsBlockUseTrieHashType{},
+	GasContractNameKey:                 &gasContractNameType{},
+	IsProduceEmptyBlockKey:             &IsProduceEmptyBlockType{},
+	TxGasLimitKey:                      &TxGasLimitType{},
+	BlockGasLimitKey:                   &BlockGasLimitType{},
+	IsCheckContractDeployPermissionKey: &CheckContractDeployPermissionType{},
+	IsApproveDeployedContractKey:       &IsApproveDeployedContractype{},
+	IsTxUseGasKey:                      &IsTxUseGastype{},
+	VrfParamsKey:                       &VRFParamsType{},
+	IsBlockUseTrieHashKey:              &IsBlockUseTrieHashType{},
 }
 
 var (
@@ -101,7 +101,7 @@ func (c *gasContractNameType) defalutVal() interface{} {
 func (c *gasContractNameType) decodeAndCheck(ctx *ParamManager, b []byte) (interface{}, error) {
 	contractName := byteutil.BytesToString(b)
 	if b, _ := checkNameFormat(contractName); !b {
-		ctx.emitNotifyEventInParam(gasContractNameKey, paramInvalid, fmt.Sprintf("param is invalid."))
+		ctx.emitNotifyEventInParam(GasContractNameKey, paramInvalid, fmt.Sprintf("param is invalid."))
 		return contractName, errParamInvalid
 	}
 	res, err := getRegisterStatusByName(ctx.stateDB, contractName)
@@ -109,7 +109,7 @@ func (c *gasContractNameType) decodeAndCheck(ctx *ParamManager, b []byte) (inter
 		return contractName, err
 	}
 	if !res {
-		ctx.emitNotifyEventInParam(gasContractNameKey, contractNameNotExists, fmt.Sprintf("contract does not exsits."))
+		ctx.emitNotifyEventInParam(GasContractNameKey, contractNameNotExists, fmt.Sprintf("contract does not exsits."))
 		return contractName, errContactNameNotExist
 	}
 	return contractName, nil
@@ -125,7 +125,7 @@ func (c *IsProduceEmptyBlockType) defalutVal() interface{} {
 func (c *IsProduceEmptyBlockType) decodeAndCheck(ctx *ParamManager, b []byte) (interface{}, error)  {
 	isProduceEmptyBlock := byteutil.BytesToUint32(b)
 	if isProduceEmptyBlock/2 != 0 {
-		ctx.emitNotifyEventInParam(isProduceEmptyBlockKey, paramInvalid, fmt.Sprintf("param is invalid."))
+		ctx.emitNotifyEventInParam(IsProduceEmptyBlockKey, paramInvalid, fmt.Sprintf("param is invalid."))
 		return isProduceEmptyBlock,errParamInvalid
 	}
 	return isProduceEmptyBlock,nil
@@ -141,7 +141,7 @@ func (c *TxGasLimitType) defalutVal() interface{} {
 func (c *TxGasLimitType) decodeAndCheck(ctx *ParamManager, b []byte) (interface{}, error) {
 	txGasLimit := byteutil.BytesToUint64(b)
 	if txGasLimit < TxGasLimitMinValue || txGasLimit > TxGasLimitMaxValue {
-		ctx.emitNotifyEventInParam(txGasLimitKey, paramInvalid, fmt.Sprintf("param is invalid."))
+		ctx.emitNotifyEventInParam(TxGasLimitKey, paramInvalid, fmt.Sprintf("param is invalid."))
 		return txGasLimit,errParamInvalid
 	}
 	// 获取区块 gas limit，其值应大于或等于每笔交易 gas limit 参数的值
@@ -150,7 +150,7 @@ func (c *TxGasLimitType) decodeAndCheck(ctx *ParamManager, b []byte) (interface{
 		return txGasLimit,err
 	}
 	if txGasLimit > blockGasLimit {
-		ctx.emitNotifyEventInParam(txGasLimitKey, paramInvalid, fmt.Sprintf("setting value is larger than block gas limit"))
+		ctx.emitNotifyEventInParam(TxGasLimitKey, paramInvalid, fmt.Sprintf("setting value is larger than block gas limit"))
 		return txGasLimit,errParamInvalid
 	}
 	return txGasLimit,nil
@@ -166,7 +166,7 @@ func (c *BlockGasLimitType) defalutVal() interface{} {
 func (c *BlockGasLimitType) decodeAndCheck(ctx *ParamManager, b []byte) (interface{}, error) {
 	blockGasLimit := byteutil.BytesToUint64(b)
 	if blockGasLimit < BlockGasLimitMinValue || blockGasLimit > BlockGasLimitMaxValue {
-		ctx.emitNotifyEventInParam(blockGasLimitKey, paramInvalid, fmt.Sprintf("param is invalid."))
+		ctx.emitNotifyEventInParam(BlockGasLimitKey, paramInvalid, fmt.Sprintf("param is invalid."))
 		return blockGasLimit,errParamInvalid
 	}
 
@@ -175,7 +175,7 @@ func (c *BlockGasLimitType) decodeAndCheck(ctx *ParamManager, b []byte) (interfa
 		return blockGasLimit,err
 	}
 	if txGasLimit > blockGasLimit {
-		ctx.emitNotifyEventInParam(blockGasLimitKey, paramInvalid, fmt.Sprintf("setting value is smaller than tx gas limit"))
+		ctx.emitNotifyEventInParam(BlockGasLimitKey, paramInvalid, fmt.Sprintf("setting value is smaller than tx gas limit"))
 		return blockGasLimit,nil
 	}
 	return blockGasLimit,nil
@@ -191,7 +191,7 @@ func (c *CheckContractDeployPermissionType) defalutVal() interface{} {
 func (c *CheckContractDeployPermissionType) decodeAndCheck(ctx *ParamManager, b []byte) (interface{}, error)  {
 	permission := byteutil.BytesToUint32(b)
 	if permission/2 != 0 {
-		ctx.emitNotifyEventInParam(isCheckContractDeployPermissionKey, paramInvalid, fmt.Sprintf("param is invalid."))
+		ctx.emitNotifyEventInParam(IsCheckContractDeployPermissionKey, paramInvalid, fmt.Sprintf("param is invalid."))
 		return permission,errParamInvalid
 	}
 	return permission,nil
@@ -207,7 +207,7 @@ func (c *IsApproveDeployedContractype) defalutVal() interface{} {
 func (c *IsApproveDeployedContractype) decodeAndCheck(ctx *ParamManager, b []byte) (interface{}, error) {
 	isApproveDeployedContract := byteutil.BytesToUint32(b)
 	if isApproveDeployedContract/2 != 0 {
-		ctx.emitNotifyEventInParam(isApproveDeployedContractKey, paramInvalid, fmt.Sprintf("param is invalid."))
+		ctx.emitNotifyEventInParam(IsApproveDeployedContractKey, paramInvalid, fmt.Sprintf("param is invalid."))
 		return isApproveDeployedContract,errParamInvalid
 	}
 	return isApproveDeployedContract,nil
@@ -223,7 +223,7 @@ func (c *IsTxUseGastype) defalutVal() interface{} {
 func (c *IsTxUseGastype) decodeAndCheck(ctx *ParamManager, b []byte) (interface{}, error) {
 	isTxUseGas := byteutil.BytesToUint32(b)
 	if isTxUseGas/2 != 0 {
-		ctx.emitNotifyEventInParam(isTxUseGasKey, paramInvalid, fmt.Sprintf("param is invalid."))
+		ctx.emitNotifyEventInParam(IsTxUseGasKey, paramInvalid, fmt.Sprintf("param is invalid."))
 		return isTxUseGas,errParamInvalid
 	}
 	return isTxUseGas,nil
@@ -247,7 +247,7 @@ func (c *VRFParamsType) decodeAndCheck(ctx *ParamManager, b []byte) (interface{}
 	}
 
 	if params.ValidatorCount < 1 {
-		ctx.emitNotifyEventInParam(vrfParamsKey, paramInvalid, errValidatorCountInvalid.Error())
+		ctx.emitNotifyEventInParam(VrfParamsKey, paramInvalid, errValidatorCountInvalid.Error())
 		return params,errValidatorCountInvalid
 	}
 	return params,nil
@@ -263,7 +263,7 @@ func (c *IsBlockUseTrieHashType) defalutVal() interface{} {
 func (c *IsBlockUseTrieHashType) decodeAndCheck(ctx *ParamManager, b []byte) (interface{}, error){
 	isBlockUseTrieHash := byteutil.BytesToUint32(b)
 	if isBlockUseTrieHash/2 != 0 {
-		ctx.emitNotifyEventInParam(isBlockUseTrieHashKey, paramInvalid, fmt.Sprintf("param is invalid."))
+		ctx.emitNotifyEventInParam(IsBlockUseTrieHashKey, paramInvalid, fmt.Sprintf("param is invalid."))
 		return isBlockUseTrieHash,errParamInvalid
 	}
 	return isBlockUseTrieHash,nil
