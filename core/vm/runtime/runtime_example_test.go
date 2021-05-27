@@ -18,17 +18,62 @@ package runtime_test
 
 import (
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"math/big"
+	"time"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm/runtime"
 )
 
 func ExampleExecute() {
-	ret, _, err := runtime.Execute(common.Hex2Bytes("6060604052600a8060106000396000f360606040526008565b00"), nil, nil)
+	cfg := new(runtime.Config)
+	setDefaults(cfg)
+	cfg.ChainConfig.VMInterpreter = "evm"
+	ret, _, err := runtime.Execute([]byte{
+		byte(vm.PUSH1), 10,
+		byte(vm.PUSH1), 0,
+		byte(vm.MSTORE),
+		byte(vm.PUSH1), 32,
+		byte(vm.PUSH1), 0,
+		byte(vm.RETURN),
+	}, nil, cfg)
+
 	if err != nil {
 		fmt.Println(err)
 	}
 	fmt.Println(ret)
 	// Output:
-	// [96 96 96 64 82 96 8 86 91 0]
+	// [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 10]
+}
+func setDefaults(cfg *runtime.Config) {
+	if cfg.ChainConfig == nil {
+		cfg.ChainConfig = &params.ChainConfig{
+			ChainID: big.NewInt(1),
+		}
+	}
+
+	if cfg.Time == nil {
+		cfg.Time = big.NewInt(time.Now().Unix())
+	}
+	if cfg.GasLimit == 0 {
+		cfg.GasLimit = math.MaxUint64
+	}
+	if cfg.GasPrice == nil {
+		cfg.GasPrice = new(big.Int)
+	}
+	if cfg.Value == nil {
+		cfg.Value = new(big.Int)
+	}
+	if cfg.BlockNumber == nil {
+		cfg.BlockNumber = new(big.Int)
+	}
+	if cfg.GetHashFn == nil {
+		cfg.GetHashFn = func(n uint64) common.Hash {
+			return common.BytesToHash(crypto.Keccak256([]byte(new(big.Int).SetUint64(n).String())))
+		}
+	}
 }
