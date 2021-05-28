@@ -17,6 +17,7 @@ func registerSysConfigRouters(r *gin.Engine) {
 		sysConf.PUT("/check-contract-deploy-permission", checkContractDeployPermissionHandler)
 		sysConf.PUT("/is-produce-empty-block", isProduceEmptyBlockHandler)
 		sysConf.PUT("/gas-contract-name", gasContractNameHandler)
+		sysConf.PUT("/vrf-params",vrfParamsHandler)
 
 		sysConf.GET("/block-gas-limit", sysConfigGetHandler)
 		sysConf.GET("/tx-gas-limit", sysConfigGetHandler)
@@ -25,6 +26,7 @@ func registerSysConfigRouters(r *gin.Engine) {
 		sysConf.GET("/check-contract-deploy-permission", sysConfigGetHandler)
 		sysConf.GET("/is-produce-empty-block", sysConfigGetHandler)
 		sysConf.GET("/gas-contract-name", sysConfigGetHandler)
+		sysConf.GET("/vrf-params",sysConfigGetHandler)
 	}
 }
 
@@ -83,6 +85,13 @@ func gasContractNameHandler(ctx *gin.Context) {
 	}{}
 
 	sysConfigHandler(ctx, funcParams)
+}
+
+func vrfParamsHandler(ctx *gin.Context){
+	funcParams := &struct {
+		VRFParams string
+	}{}
+	sysConfigHandler(ctx,funcParams)
 }
 
 func sysConfigHandler(ctx *gin.Context, funcParams interface{}) {

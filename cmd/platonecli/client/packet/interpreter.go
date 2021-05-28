@@ -345,10 +345,15 @@ type EvmDeployInterpreter struct {
 func (i *EvmDeployInterpreter) combineData() (string, error) {
 	if i.constructorAbi != nil {
 		arguments, _ := i.constructorAbi.getArguments()
-		constructorBytes, _ := arguments.PackV2(i.constructorInput)
+		constructorBytes, err := arguments.PackV2(i.constructorInput...)
+
+		if err != nil {
+			println(err.Error())
+		}
 
 		if i.constructorInput != nil {
-			return "0x" + string(i.codeBytes) + common.Bytes2Hex(constructorBytes), nil
+			code := strings.Replace(string(i.codeBytes), "\n", "", -1)
+			return "0x" + code + common.Bytes2Hex(constructorBytes), nil
 		}
 	}
 	return "0x" + string(i.codeBytes), nil
