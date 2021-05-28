@@ -97,7 +97,11 @@ func queryHandlerCommon(ctx *gin.Context, endPoint string, data *contractParams)
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		ctx.JSON(200, jsonStringPatch(res[0]))
+		addr, ok := res[0].(string)
+		if ok {
+			result := strings.ToLower(addr)
+			ctx.JSON(200, jsonStringPatch(result))
+		}
 	}
 }
 
@@ -220,7 +224,7 @@ func parseKeyfile(from string) (*utils.Keyfile, error) {
 	return keyfile, nil
 }
 
-func getKeyFilePath()string{
+func getKeyFilePath() string {
 	_, filename, _, ok := runtime.Caller(1)
 	var cwdPath string
 	if ok {
