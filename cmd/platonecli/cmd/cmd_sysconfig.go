@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"strconv"
 
-	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
 	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/precompiled"
+	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"gopkg.in/urfave/cli.v1"
@@ -25,16 +25,6 @@ const (
 
 	prodEmp    = "allow-empty"
 	notProdEmp = "notallow-empty"
-)
-
-const (
-	txGasLim             = "TxGasLimit"
-	blockGasLim          = "BlockGasLimit"
-	isTxUseGases         = "IsTxUseGas"
-	isApprDeployedCon    = "IsApproveDeployedContract"
-	isCheckConDeployPerm = "CheckContractDeployPermission"
-	isProdEmptyBlock     = "IsProduceEmptyBlock"
-	gasContract          = "GasContractName"
 )
 
 var (
@@ -77,40 +67,37 @@ func setSysConfig(c *cli.Context) {
 	isCheckContractDeployPermission := c.String(IsCheckContractDeployPermissionFlags.Name)
 	isProduceEmptyBlock := c.String(IsProduceEmptyBlockFlags.Name)
 	gasContractName := c.String(GasContractNameFlags.Name)
+	vrfParams := c.String(VrfParamsFlags.Name)
 
 	// temp solution
 	if len(txGasLimit)+len(blockGasLimit)+len(isTxUseGas)+len(isApproveDeployedContract)+
-		len(isCheckContractDeployPermission)+len(isProduceEmptyBlock)+len(gasContractName) > 15 {
+		len(isCheckContractDeployPermission)+len(isProduceEmptyBlock)+len(gasContractName)> 15 {
 		utils.Fatalf("please set one system configuration at a time")
 	}
 	if txGasLimit != "" {
-		setConfig(c, txGasLimit, txGasLim)
+		setConfig(c, txGasLimit, vm.TxGasLimitKey)
 	}
 	if blockGasLimit != "" {
-		setConfig(c, blockGasLimit, blockGasLim)
-
+		setConfig(c, blockGasLimit, vm.BlockGasLimitKey)
 	}
 	if isTxUseGas != "" {
-		setConfig(c, isTxUseGas, isTxUseGases)
-
+		setConfig(c, isTxUseGas, vm.IsTxUseGasKey)
 	}
 	if isApproveDeployedContract != "" {
-		setConfig(c, isApproveDeployedContract, isApprDeployedCon)
-
+		setConfig(c, isApproveDeployedContract, vm.IsApproveDeployedContractKey)
 	}
 	if isCheckContractDeployPermission != "" {
-		setConfig(c, isCheckContractDeployPermission, isCheckConDeployPerm)
-
+		setConfig(c, isCheckContractDeployPermission, vm.IsCheckContractDeployPermissionKey)
 	}
 	if isProduceEmptyBlock != "" {
-		setConfig(c, isProduceEmptyBlock, isProdEmptyBlock)
-
+		setConfig(c, isProduceEmptyBlock, vm.IsProduceEmptyBlockKey)
 	}
 	if gasContractName != "" {
-		setConfig(c, gasContractName, gasContract)
-
+		setConfig(c, gasContractName, vm.GasContractNameKey)
 	}
-
+	if vrfParams != "" {
+		setConfig(c, vrfParams, vm.VrfParamsKey)
+	}
 }
 
 func setConfig(c *cli.Context, param string, name string) {
@@ -182,15 +169,16 @@ func getSysConfig(c *cli.Context) {
 	isCheckContractDeployPermission := c.Bool(IsCheckContractDeployPermissionFlags.Name)
 	isProduceEmptyBlock := c.Bool(IsProduceEmptyBlockFlags.Name)
 	gasContractName := c.Bool(GasContractNameFlags.Name)
+	vrfParams := c.Bool(VrfParamsFlags.Name)
 
-	getConfig(c, txGasLimit, txGasLim)
-	getConfig(c, blockGasLimit, blockGasLim)
-	getConfig(c, isTxUseGas, isTxUseGases)
-	getConfig(c, isApproveDeployedContract, isApprDeployedCon)
-	getConfig(c, isCheckContractDeployPermission, isCheckConDeployPerm)
-	getConfig(c, isProduceEmptyBlock, isProdEmptyBlock)
-	getConfig(c, gasContractName, gasContract)
-
+	getConfig(c, txGasLimit, vm.TxGasLimitKey)
+	getConfig(c, blockGasLimit, vm.BlockGasLimitKey)
+	getConfig(c, isTxUseGas, vm.IsTxUseGasKey)
+	getConfig(c, isApproveDeployedContract, vm.IsApproveDeployedContractKey)
+	getConfig(c, isCheckContractDeployPermission, vm.IsCheckContractDeployPermissionKey)
+	getConfig(c, isProduceEmptyBlock, vm.IsProduceEmptyBlockKey)
+	getConfig(c, gasContractName, vm.GasContractNameKey)
+	getConfig(c, vrfParams, vm.VrfParamsKey)
 }
 
 func getConfig(c *cli.Context, isGet bool, name string) {
@@ -225,7 +213,8 @@ func sysconfigToString(param interface{}) interface{} {
 }
 
 func sysConfigParsing(param interface{}, paramName string) string {
-	if paramName == txGasLim || paramName == blockGasLim || paramName == gasContract {
+	if paramName == vm.TxGasLimitKey || paramName == vm.BlockGasLimitKey ||
+		paramName == vm.GasContractNameKey||paramName==vm.VrfParamsKey {
 		return param.(string)
 	}
 
@@ -235,7 +224,7 @@ func sysConfigParsing(param interface{}, paramName string) string {
 
 func sysConfigConvert(param, paramName string) (string, error) {
 
-	if paramName == txGasLim || paramName == blockGasLim {
+	if paramName == vm.TxGasLimitKey || paramName == vm.BlockGasLimitKey || paramName == vm.VrfParamsKey{
 		return param, nil
 	}
 
@@ -251,13 +240,13 @@ func sysConfigConvert(param, paramName string) (string, error) {
 func genConfigConverter(paramName string) *cmd_common.Convert {
 
 	switch paramName {
-	case isTxUseGases:
+	case vm.IsTxUseGasKey:
 		return cmd_common.NewConvert(txUseGas, txNotUseGas, "1", "0", paramName)
-	case isApprDeployedCon:
+	case vm.IsApproveDeployedContractKey:
 		return cmd_common.NewConvert(conAudit, conNotAudit, "1", "0", paramName)
-	case isCheckConDeployPerm:
+	case vm.IsCheckContractDeployPermissionKey:
 		return cmd_common.NewConvert(checkPerm, notCheckPerm, "1", "0", paramName)
-	case isProdEmptyBlock:
+	case vm.IsProduceEmptyBlockKey:
 		return cmd_common.NewConvert(prodEmp, notProdEmp, "1", "0", paramName)
 	default:
 		utils.Fatalf("invalid system configuration %v", paramName)

@@ -3,6 +3,7 @@ package rest
 import (
 	"encoding/json"
 	"errors"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"reflect"
 	"strings"
 
@@ -115,6 +116,9 @@ func UrlParamConvert(str string) string {
 		slice = append(slice, str[count+index+1]-32)
 		count += index + 2
 	}
-
-	return string(slice)
+	urlParam := string(slice)
+	if strings.ToLower(urlParam) == strings.ToLower(vm.VrfParamsKey){
+		urlParam = vm.VrfParamsKey
+	}
+	return urlParam
 }

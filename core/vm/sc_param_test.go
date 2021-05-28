@@ -211,9 +211,9 @@ func TestParaManager_getsetParam(t *testing.T){
 	um.setSuperAdmin()
 	um.addChainAdminByAddress(caller)
 	p := scParamManagerWrapper{base: &ParamManager{contractAddr: &addr, stateDB: db, caller: caller, blockNumber: big.NewInt(100)}}
-	p.setParam(vrfParamsKey,[]byte("{\"ElectionEpoch\": 1,\"NextElectionBlock\": 5,\"ValidatorCount\": 1}"))
+	p.setParam(VrfParamsKey,[]byte("{\"ElectionEpoch\": 1,\"NextElectionBlock\": 5,\"ValidatorCount\": 1}"))
 
-	ret, err := p.getParam(vrfParamsKey)
+	ret, err := p.getParam(VrfParamsKey)
 	if nil != err {
 		t.Error(err)
 		return

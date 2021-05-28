@@ -107,6 +107,7 @@ func (receipt *Receipt) Parsing() *ReceiptParsingReturn {
 	recpParsing.From = receipt.From
 	recpParsing.To = receipt.To
 	recpParsing.GasUsed, _ = hexutil.DecodeUint64(receipt.GasUsed)
+	recpParsing.TxHash = receipt.TransactionHash
 
 	/// recpParsing.Logs = EventParsingV2(receipt.Logs, events, fn)
 
