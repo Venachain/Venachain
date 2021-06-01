@@ -1,6 +1,13 @@
 # Changelog
 
-## [1.0.0]
+## [1.0.0.0.3]
+
+### Bug Fixes
+* [p2p]   update peer use publicKey[:16]
+* [evm] create contract with parameters in evm
+* [other] fix VRFparam cmd & restful api
+
+## [1.0.0.0.0]
 
 ### Breaking Changes
 * [system contract] 系统合约重构成预编译合约形式
