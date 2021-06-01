@@ -32,10 +32,6 @@ func TestDefaults(t *testing.T) {
 	cfg := new(Config)
 	setDefaults(cfg)
 
-	if cfg.Difficulty == nil {
-		t.Error("expected difficulty to be non nil")
-	}
-
 	if cfg.Time == nil {
 		t.Error("expected time to be non nil")
 	}
@@ -75,14 +71,17 @@ func TestEVM(t *testing.T) {
 }
 
 func TestExecute(t *testing.T) {
+	cfg:= new(Config)
+	setDefaults(cfg)
+	cfg.ChainConfig.VMInterpreter="evm"
 	ret, _, err := Execute([]byte{
-		byte(vm.PUSH1), 8,
+		byte(vm.PUSH1), 10,
 		byte(vm.PUSH1), 0,
 		byte(vm.MSTORE),
 		byte(vm.PUSH1), 32,
 		byte(vm.PUSH1), 0,
 		byte(vm.RETURN),
-	}, nil, nil)
+	}, nil, cfg)
 	if err != nil {
 		t.Fatal("didn't expect error", err)
 	}
@@ -104,8 +103,11 @@ func TestCall(t *testing.T) {
 		byte(vm.PUSH1), 0,
 		byte(vm.RETURN),
 	})
-
-	ret, _, err := Call(address, nil, &Config{State: state})
+	cfg:= new(Config)
+	setDefaults(cfg)
+	cfg.ChainConfig.VMInterpreter="evm"
+	cfg.State = state
+	ret, _, err := Call(address, nil, cfg)
 	if err != nil {
 		t.Fatal("didn't expect error", err)
 	}
