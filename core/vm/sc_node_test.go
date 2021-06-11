@@ -583,5 +583,5 @@ func Test_importOldData(t *testing.T) {
 	if err !=nil{
 		t.Errorf("err:%s\n",err)
 	}
-	fmt.Printf("%+v", res)
+	t.Logf("%+v\n", res)
 }
