@@ -22,26 +22,27 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"reflect"
 	"testing"
-
-
 )
 
 func TestHeaderHash(t *testing.T) {
 	// 0xcefefd3ade63a5955bca4562ed840b67f39e74df217f7e5f7241a6e9552cca70
 	expectedExtra := common.FromHex("0x0000000000000000000000000000000000000000000000000000000000000000f89af8549444add0ec310f115a0e603b2d7db9f067778eaf8a94294fc7e8f22b3bcdcf955dd7ff3ba2ed833f8212946beaaed781d2d2ab6350f5c4566a2c6eaac407a6948be76812f765c24641ec63dc2852b378aba2b440b8410000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0")
-	expectedHash := common.HexToHash("0xcefefd3ade63a5955bca4562ed840b67f39e74df217f7e5f7241a6e9552cca70")
+	//expectedHash := common.HexToHash("0xcefefd3ade63a5955bca4562ed840b67f39e74df217f7e5f7241a6e9552cca70")
+
+	// expectedHash is the hash of the Istanbul consensus block header
+	expectedHash := common.HexToHash("0x8f035f17a835d954e0036e19b015fb7ea5646338b17fe0eaa6c5e5c2be3340ea")
 
 	// for istanbul consensus
 	header := &Header{MixDigest: IstanbulDigest, Extra: expectedExtra}
 	if !reflect.DeepEqual(header.Hash(), expectedHash) {
-		t.Errorf("expected: %v, but got: %v", expectedHash.Hex(), header.Hash().Hex())
+		t.Errorf("istanbul expected: %v, but got: %v", expectedHash.Hex(), header.Hash().Hex())
 	}
 
 	// append useless information to extra-data
 	unexpectedExtra := append(expectedExtra, []byte{1, 2, 3}...)
 	header.Extra = unexpectedExtra
 	if !reflect.DeepEqual(header.Hash(), rlpHash(header)) {
-		t.Errorf("expected: %v, but got: %v", rlpHash(header).Hex(), header.Hash().Hex())
+		t.Errorf("useless expected: %v, but got: %v", rlpHash(header).Hex(), header.Hash().Hex())
 	}
 }
 

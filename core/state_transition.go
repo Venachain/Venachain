@@ -113,6 +113,7 @@ func IntrinsicGas(data []byte, contractCreation bool) (uint64, error) {
 		}
 		gas += z * params.TxDataZeroGas
 	}
+	log.Trace("intrinsic gas is",gas)
 	return gas, nil
 }
 
