@@ -16,6 +16,7 @@ import "C"
 
 import "C"
 import (
+	cryptoZk "github.com/PlatONEnetwork/PlatONE-Go/cmd/ptransfer/client/crypto"
 	"unsafe"
 )
 import (
@@ -223,6 +224,9 @@ func newCfcSet() map[string]map[string]*exec.FunctionImport {
 			"secp256r1SigVerify": &exec.FunctionImport{Execute: envP256r1SigVerify, GasCost: envSMVerifyGasCost},
 			//secp256k1
 			"secp256k1SigVerify": &exec.FunctionImport{Execute: envP256k1SigVerify, GasCost: envSMVerifyGasCost},
+
+			//bulletproof
+			"bulletProofVerify": &exec.FunctionImport{Execute: envBulletProofVerify, GasCost: envSMVerifyGasCost},
 		},
 	}
 }
@@ -861,6 +865,36 @@ func envP256r1SigVerify(vm *exec.VirtualMachine) int64 {
 
 	return 0
 }
+
+func envBulletProofVerify(vm *exec.VirtualMachine) int64 {
+	proofOffset := int(int32(vm.GetCurrentFrame().Locals[0]))
+	proofSize := int(int32(vm.GetCurrentFrame().Locals[1]))
+	resultOffset := int(int32(vm.GetCurrentFrame().Locals[2]))
+	resultSize := int(int32(vm.GetCurrentFrame().Locals[3]))
+
+	proof := vm.Memory.Memory[proofOffset : proofSize + proofOffset]
+
+	//hexproof := hexutil.Encode(proof)
+	statement := cryptoZk.GenerateAggBpStatement(2, 4)
+	result, err := cryptoZk.AggBpVerify_s(string(proof), statement)
+
+	fmt.Println("result:", result)
+	ret := "1"
+	if err !=nil || !result {
+		ret = "0"
+	}
+	resultBts := []byte(ret)
+	resultBts = append(resultBts, 0)
+
+	if resultSize < len(resultBts) {
+		return 0
+	}
+
+	copy(vm.Memory.Memory[resultOffset:], resultBts)
+
+	return 0
+}
+
 //
 //func envPailHomAdd(vm *exec.VirtualMachine) int64 {
 //	cipher1Offset := int(int32(vm.GetCurrentFrame().Locals[0]))
