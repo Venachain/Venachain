@@ -18,7 +18,7 @@ life/resolver/sig/openssl/*
 life/resolver/sig/*.a
 life/resolver/sig/sig/*.o
 life/resolver/sm2
-
+release/
 #*
 .#*
 *#
@@ -77,7 +77,7 @@ cmd/SysContracts/*.cpp.abi.json
 cmd/SysContracts/*.s
 cmd/SysContracts/*.wasm
 cmd/SysContracts/*.wast
-
+cmd/SysContracts/appContract/*.txt
 #platonecli precompiled system contract bin-data
 
 cmd/platonecli/client/precompiled/bindata.go
