@@ -878,7 +878,7 @@ func envBulletProofVerify(vm *exec.VirtualMachine) int64 {
 	statement := cryptoZk.GenerateAggBpStatement(2, 4)
 	result, err := cryptoZk.AggBpVerify_s(string(proof), statement)
 
-	fmt.Println("result:", result)
+	//fmt.Println("result:", result)
 	ret := "1"
 	if err !=nil || !result {
 		ret = "0"
