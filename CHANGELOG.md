@@ -1,4 +1,8 @@
 # Changelog
+## [1.0.1.0.0]
+### Features
+* [chain] 增加隐私token的功能 --王琪
+* [contract]　增加范围证明[range proof]的验证功能  --王琪
 
 ## [1.0.0.0.3]
 
