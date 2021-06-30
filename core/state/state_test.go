@@ -56,7 +56,7 @@ func (s *StateSuite) TestDump(c *checker.C) {
 	// check that dump contains the state objects that are in trie
 	got := string(s.state.Dump())
 	want := `{
-    "root": "71edff0130dd2385947095001c73d9e28d862fc286fca2b922ca6f6f3cddfdd2",
+    "root": "5abc758ddba5a92643ad8d50b682f3b2da40b550de1102b6d37459261dfc3861",
     "accounts": {
         "0000000000000000000000000000000000000001": {
             "balance": "22",
@@ -105,7 +105,7 @@ func (s *StateSuite) TestNull(c *checker.C) {
 	s.state.SetState(address, key, nil)
 	s.state.Commit(false)
 
-	if value := s.state.GetState(address, common.Hash{}.Bytes()); bytes.Compare(value, common.Hash{}.Bytes()) != 0 {
+	if value := s.state.GetState(address, common.Hash{}.Bytes()); bytes.Compare(value, []byte{}) != 0 {
 		c.Errorf("expected empty current value, got %x", value)
 	}
 	if value := s.state.GetCommittedState(address, key); !bytes.Equal(value, []byte{}) {
@@ -130,13 +130,13 @@ func (s *StateSuite) TestSnapshot(c *checker.C) {
 	s.state.SetState(stateobjaddr, storageaddr.Bytes(), data2.Bytes())
 	s.state.RevertToSnapshot(snapshot)
 
-	c.Assert(s.state.GetState(stateobjaddr, storageaddr.Bytes()), checker.DeepEquals, data1)
-	c.Assert(s.state.GetCommittedState(stateobjaddr, storageaddr.Bytes()), checker.DeepEquals, common.Hash{})
+	c.Assert(s.state.GetState(stateobjaddr, storageaddr.Bytes()), checker.DeepEquals, data1.Bytes())
+	c.Assert(s.state.GetCommittedState(stateobjaddr, storageaddr.Bytes()), checker.DeepEquals, []byte(nil))
 
 	// revert up to the genesis state and ensure correct content
 	s.state.RevertToSnapshot(genesis)
-	c.Assert(s.state.GetState(stateobjaddr, storageaddr.Bytes()), checker.DeepEquals, common.Hash{})
-	c.Assert(s.state.GetCommittedState(stateobjaddr, storageaddr.Bytes()), checker.DeepEquals, common.Hash{})
+	c.Assert(s.state.GetState(stateobjaddr, storageaddr.Bytes()), checker.DeepEquals, []byte{})
+	c.Assert(s.state.GetCommittedState(stateobjaddr, storageaddr.Bytes()), checker.DeepEquals, []byte{})
 }
 
 func (s *StateSuite) TestSnapshotEmpty(c *checker.C) {

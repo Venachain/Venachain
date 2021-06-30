@@ -37,6 +37,8 @@ var (
 		CHTRoot:      common.HexToHash("0x5d1027dfae688c77376e842679ceada87fd94738feb9b32ef165473bfbbb317b"),
 		BloomRoot:    common.HexToHash("0xd38be1a06aabd568e10957fee4fcc523bc64996bcf31bae3f55f86e0a583919f"),
 	}
+
+	TestChainConfig = &ChainConfig{big.NewInt(1), nil, ""}
 )
 
 // TrustedCheckpoint represents a set of post-processed trie roots (CHT and
