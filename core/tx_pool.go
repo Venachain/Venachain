@@ -1036,29 +1036,38 @@ func (pool *TxPool) addTxs(txs []*types.Transaction, local bool) []error {
 		errs = make([]error, len(txs))
 		news = make([]*types.Transaction, 0, len(txs))
 	)
-	//atomic.AddInt32(&pool.processCnt,1)
+	wg:=sync.WaitGroup{}
+	mutex := sync.Mutex{}
+	wg.Add(len(txs))
 	for i, tx := range txs {
-		if uint64(pool.all.Count()) >= pool.config.GlobalSlots {
-			errs[i] = ErrTxpoolIsFull
-			log.Error("txpool is full, add transaction failed")
-			continue
-		}
-		// If the transaction is known, pre-set the error slot
-		if pool.all.Get(tx.Hash()) != nil {
-			errs[i] = fmt.Errorf("known transaction: %x", tx.Hash())
-			log.Error("known transaction","tx",tx.Hash())
-			continue
-		}
-		// Exclude transactions with invalid signatures as soon as
-		// possible and cache senders in transactions before
-		// obtaining lock
-		if err := pool.validateTx(tx, local); err != nil {
-			errs[i] = err
-			continue
-		}
-		// Accumulate all unknown transactions for deeper processing
-		news = append(news, tx)
+		go func(i int,tx *types.Transaction) {
+			defer wg.Done()
+			if uint64(pool.all.Count()) >= pool.config.GlobalSlots {
+				errs[i] = ErrTxpoolIsFull
+				log.Error("txpool is full, add transaction failed")
+				return
+			}
+			// If the transaction is known, pre-set the error slot
+			if pool.all.Get(tx.Hash()) != nil {
+				errs[i] = fmt.Errorf("known transaction: %x", tx.Hash())
+				log.Error("known transaction","tx",tx.Hash())
+				return
+			}
+			// Exclude transactions with invalid signatures as soon as
+			// possible and cache senders in transactions before
+			// obtaining lock
+			if err := pool.validateTx(tx, local); err != nil {
+				errs[i] = err
+				return
+			}
+			// Accumulate all unknown transactions for deeper processing
+			mutex.Lock()
+			news = append(news, tx)
+			mutex.Unlock()
+		}(i,tx)
 	}
+	wg.Wait()
+
 	if len(news) == 0 {
 		return errs
 	}
