@@ -464,8 +464,8 @@ func GenerateBpParam(n int64) *BulletProofParams{
 	bpparam.gVector = make([]*bn256.G1, bpparam.n)
 	bpparam.hVector = make([]*bn256.G1, bpparam.n)
 	for i := 0; i < int(bpparam.n); i++ {
-		bpparam.gVector[i] = MapIntoGroup("platone" + "g" + string(i))
-		bpparam.hVector[i] = MapIntoGroup("platone" + "h" + string(i))
+		bpparam.gVector[i] = MapIntoGroup("platone" + "g" + string(rune(i)))
+		bpparam.hVector[i] = MapIntoGroup("platone" + "h" + string(rune(i)))
 	}
 	return &bpparam
 }
@@ -478,8 +478,8 @@ func initbpparam() {
 	bpparam.gVector = make([]*bn256.G1, bpparam.n)
 	bpparam.hVector = make([]*bn256.G1, bpparam.n)
 	for i := 0; i < int(bpparam.n); i++ {
-		bpparam.gVector[i] = MapIntoGroup("platone" + "g" + string(i))
-		bpparam.hVector[i] = MapIntoGroup("platone" + "h" + string(i))
+		bpparam.gVector[i] = MapIntoGroup("platone" + "g" + string(rune(i)))
+		bpparam.hVector[i] = MapIntoGroup("platone" + "h" + string(rune(i)))
 	}
 }
 

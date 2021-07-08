@@ -174,7 +174,7 @@ func TestPolyProduct(t *testing.T) {
 
 func TestMapIntoGroup(t *testing.T) {
 
-	result := MapIntoGroup("platone" + "g" + string(23))
+	result := MapIntoGroup("platone" + "g" + string(rune(23)))
 	fmt.Println(result)
 	Bp()
 	x := new(bn256.G1).ScalarMult(bpparam.h, big.NewInt(2))
