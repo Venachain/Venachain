@@ -720,7 +720,7 @@ func GenerateAggBpStatement(m, n int64) *AggBpStatement{
 func agginitbpparam() {
 	aggbpparam = AggBpStatement{}
 	aggbpparam.m = 2
-	aggbpparam.bpParam.n = 4
+	aggbpparam.bpParam.n = 32
 	aggbpparam.bpParam.g = MapIntoGroup("g")
 	aggbpparam.bpParam.h = MapIntoGroup("h")
 	nm := aggbpparam.bpParam.n * aggbpparam.m
