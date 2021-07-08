@@ -1,4 +1,8 @@
 # Changelog
+## [1.0.1.0.1]
+### Features
+* [chain] 链bp参数修改，与之前版本兼容 --王琪
+
 ## [1.0.1.0.0]
 ### Features
 * [chain] 增加隐私token的功能 --王琪
