@@ -875,7 +875,7 @@ func envBulletProofVerify(vm *exec.VirtualMachine) int64 {
 	proof := vm.Memory.Memory[proofOffset : proofSize + proofOffset]
 
 	//hexproof := hexutil.Encode(proof)
-	statement := cryptoZk.GenerateAggBpStatement(2, 4)
+	statement := cryptoZk.GenerateAggBpStatement(2, 16)
 	result, err := cryptoZk.AggBpVerify_s(string(proof), statement)
 
 	//fmt.Println("result:", result)
