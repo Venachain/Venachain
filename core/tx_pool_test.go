@@ -1818,7 +1818,6 @@ func TestTransactionStatusCheck(t *testing.T) {
 	}
 }
 
-
 // Benchmarks the speed of validating the contents of the pending queue of the
 // transaction pool.
 func BenchmarkPendingDemotion100(b *testing.B)   { benchmarkPendingDemotion(b, 100) }
@@ -1878,14 +1877,14 @@ func BenchmarkPoolInsert(b *testing.B) {
 	account, _ := deriveSender(transaction(0, 0, key))
 	pool.currentState.AddBalance(account, big.NewInt(1000000))
 
-	txs := make(types.Transactions, b.N)
-	for i := 0; i < b.N; i++ {
+	txs := make(types.Transactions, 10000)
+	for i := 0; i < 10000; i++ {
 		txs[i] = transaction(uint64(i), 100000, key)
 	}
 	// Benchmark importing the transactions into the queue
 	b.ResetTimer()
-	for _, tx := range txs {
-		pool.AddRemote(tx)
+	for i := 0; i < b.N; i++ {
+		pool.AddRemotes(txs)
 	}
 }
 
@@ -1913,5 +1912,60 @@ func benchmarkPoolBatchInsert(b *testing.B, size int) {
 	b.ResetTimer()
 	for _, batch := range batches {
 		pool.AddRemotes(batch)
+	}
+}
+
+func TestTxNumber(t *testing.T) {
+	// Generate a batch of transactions to enqueue into the pool
+	pool, key := setupTxPool()
+	defer pool.Stop()
+	//The number of transactions should be greater than config.GlobalSlots. Default GlobalSlots 40960.
+	txsize := 40960
+	account, _ := deriveSender(transaction(0, 0, key))
+	pool.currentState.AddBalance(account, big.NewInt(1000000))
+
+	txs := make(types.Transactions, txsize)
+	for i := 0; i < txsize; i++ {
+		txs[i] = transaction(uint64(i), 100000, key)
+	}
+	pool.AddRemotes(txs);
+	if len(txs) != pool.GetTxCount(){
+		t.Fatalf("tx number is wrong, want %d,got %d",len(txs),pool.GetTxCount())
+	}
+}
+
+func BenchmarkTxPool_AddRemotes(b *testing.B) {
+	pool, key := setupTxPool()
+	defer pool.Stop()
+
+	account, _ := deriveSender(transaction(0, 0, key))
+	pool.currentState.AddBalance(account, big.NewInt(1000000))
+	b.ResetTimer()
+	batches := make([]types.Transactions, b.N)
+	for i := 0; i < b.N; i++ {
+		batches[i] = make(types.Transactions, 40960)
+		for j := 0; j < 40960; j++ {
+			batches[i][j] = transaction(uint64(40960*i+j), uint64(j), key)
+		}
+		pool.AddRemotes(batches[i])
+	}
+}
+
+func BenchmarkTxPool_AddRemote(b *testing.B) {
+	pool, key := setupTxPool()
+	defer pool.Stop()
+
+	account, _ := deriveSender(transaction(0, 0, key))
+	pool.currentState.AddBalance(account, big.NewInt(1000000))
+	b.ResetTimer()
+	batches := make([]types.Transactions, b.N)
+	for i := 0; i < b.N; i++ {
+		batches[i] = make(types.Transactions, 40960)
+		for j := 0; j < 40960; j++ {
+			batches[i][j] = transaction(uint64(40960*i+j), uint64(j), key)
+		}
+		for _,j := range batches[i]{
+			pool.AddRemote(j)
+		}
 	}
 }

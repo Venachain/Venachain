@@ -351,9 +351,10 @@ func (sb *backend) makeCurrent(parentRoot common.Hash, header *types.Header) err
 	return nil
 }
 
-func (sb *backend) excuteBlock(proposal istanbul.Proposal) error {
+//func (sb *backend) excuteBlock(proposal istanbul.Proposal) error {
+func (sb *backend) excuteBlock(block *types.Block) error {
 	var (
-		block  *types.Block
+		//block  *types.Block
 		chain  *core.BlockChain
 		parent *types.Block
 		header *types.Header
@@ -361,9 +362,9 @@ func (sb *backend) excuteBlock(proposal istanbul.Proposal) error {
 		err    error
 	)
 
-	if block, ok = proposal.(*types.Block); !ok {
-		return errors.New("invalid proposal")
-	}
+	//if block, ok = proposal.(*types.Block); !ok {
+	//	return errors.New("invalid proposal")
+	//}
 
 	if chain, ok = sb.chain.(*core.BlockChain); !ok {
 		return errors.New("sb.chain not a core.BlockChain")
@@ -443,7 +444,10 @@ func (sb *backend) Verify(proposal istanbul.Proposal, isProposer bool) (time.Dur
 	// If this node is proposer and the proposal is mined by this node, need not to execute the block
 	if (block.Coinbase() != sb.address) || !isProposer {
 		//excute txs in block
-		if err := sb.excuteBlock(proposal); err != nil {
+		//if err := sb.excuteBlock(proposal); err != nil {
+		//	return 0, err
+		//}
+		if err := sb.excuteBlock(block); err != nil {
 			return 0, err
 		}
 	}
