@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	testName = "tofu"
+	testName = "night"
 )
 
 var (
