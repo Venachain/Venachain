@@ -20,6 +20,7 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"math"
 	"math/big"
 	"strconv"
@@ -1463,7 +1464,16 @@ func (pool *TxPool) generateTxs(cnt string, addr common.Address, preProducer boo
 		var gasLimit = 1 + threadNum
 		for i := 0; i < cnt; i++ {
 			nonce := time.Now().UnixNano()
-			tx := types.NewTransaction(uint64(nonce), addr, big.NewInt(0), uint64(gasLimit), big.NewInt(1), nil)
+			var data []byte = nil
+			paramArr := [][]byte{
+				common.Int64ToBytes(int64(2)),
+				[]byte("saveEvidence"),
+			}
+			paramArr = append(paramArr, []byte(fmt.Sprintf("%v", time.Now().String())))
+			paramArr = append(paramArr, []byte(fmt.Sprintf("%v", "1234")))
+			paramArr = append(paramArr, []byte(fmt.Sprintf("%v", "1234")))
+			data, _ = rlp.EncodeToBytes(paramArr)
+			tx := types.NewTransaction(uint64(nonce), addr, big.NewInt(0), uint64(gasLimit), big.NewInt(1), data)
 			signedTx, _ := types.SignTx(tx, types.HomesteadSigner{}, pool.pk)
 			types.Sender(pool.signer, signedTx) // already validated
 			tx.Hash()
