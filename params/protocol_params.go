@@ -93,11 +93,11 @@ const (
 	CnsManagerGas     uint64 = 80000 //
 	SCNodeGas         uint64 = 80000 //
 	ParamManagerGas   uint64 = 80000 //
-	FireWall          uint64 = 10000
+	FireWall          uint64 = 10000 //
 	CnsInvokeGas      uint64 = 80000 //
-
+	SCEvidenceGas     uint64 = 80000 //
 )
 
 var (
-	DurationLimit          = big.NewInt(13)     // The decision boundary on the blocktime duration used to determine whether difficulty should go up or not.
+	DurationLimit = big.NewInt(13) // The decision boundary on the blocktime duration used to determine whether difficulty should go up or not.
 )
