@@ -347,7 +347,7 @@ func IsSafeNumber(number string, bit int, isUnsigned bool) (res bool) {
 		max = max.Div(big.NewInt(0).Sub(max, big.NewInt(1)), big.NewInt(2))
 		min = big.NewInt(0).Neg(big.NewInt(0).Add(max, big.NewInt(1)))
 	}
-	fmt.Println(max, min)
+	///fmt.Println(max, min)
 	src, ok := big.NewInt(0).SetString(number, 10)
 	if !ok {
 		return
