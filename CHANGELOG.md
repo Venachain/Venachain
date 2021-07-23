@@ -1,4 +1,17 @@
 # Changelog
+
+## [1.1.0.0.0]
+### Features
+* [contract] 增加存证预编译合约。  --李京京
+* [chain] 增加DAG信息，可以并行执行交易 --张玉坚
+
+### Improvements
+* [other] 节点间同步的交易可并行进行验证。 --陈炫慧
+
+### Bug Fixes
+* [evm]   合约运行中的错误信息可以正常返回。 --张玉坚
+* [chain] badBlock问题修复。 -- 张玉坚
+
 ## [1.0.1.0.1]
 ### Features
 * [chain] 链bp参数修改，与之前版本兼容 --王琪
@@ -11,9 +24,9 @@
 ## [1.0.0.0.3]
 
 ### Bug Fixes
-* [p2p]   update peer use publicKey[:16]
-* [evm] create contract with parameters in evm
-* [other] fix VRFparam cmd & restful api
+* [p2p]   peer的id使用 publicKey[:16]
+* [evm]   evm合约部署可以配置参数
+* [other] 修复cmd工具对VRF参数的修改
 
 ## [1.0.0.0.0]
 
