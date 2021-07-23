@@ -218,3 +218,11 @@ func TestTransactionJSON(t *testing.T) {
 		}
 	}
 }
+
+func TestReceipt_DecodeRLP(t *testing.T) {
+	var root []byte
+	rec := NewReceipt(root, false, 0)
+	bytes, _ := rlp.EncodeToBytes(rec)
+	println(bytes)
+
+}

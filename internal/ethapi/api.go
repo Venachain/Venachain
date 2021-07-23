@@ -26,6 +26,8 @@ import (
 	"strconv"
 	"time"
 
+	"strings"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts/keystore"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
@@ -44,7 +46,6 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
-	"strings"
 )
 
 const (
@@ -839,6 +840,7 @@ func RPCMarshalBlock(b *types.Block, inclTx bool, fullTx bool) (map[string]inter
 		"timestamp":        (*hexutil.Big)(head.Time),
 		"transactionsRoot": head.TxHash,
 		"receiptsRoot":     head.ReceiptHash,
+		"dag":              b.Dag(),
 	}
 
 	if inclTx {
@@ -1142,8 +1144,8 @@ type SendTxArgs struct {
 	Nonce    *hexutil.Uint64 `json:"nonce"`
 	// We accept "data" and "input" for backwards-compatibility reasons. "input" is the
 	// newer name and should be preferred by clients.
-	Data   *hexutil.Bytes `json:"data"`
-	Input  *hexutil.Bytes `json:"input"`
+	Data  *hexutil.Bytes `json:"data"`
+	Input *hexutil.Bytes `json:"input"`
 }
 
 // setDefaults is a helper function that fills in default values for unspecified tx fields.

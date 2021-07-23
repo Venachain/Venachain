@@ -18,6 +18,7 @@
 package core
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"math/big"
@@ -179,6 +180,7 @@ func NewBlockChain(db ethdb.Database, extdb ethdb.Database, cacheConfig *CacheCo
 	if err != nil {
 		return nil, nil, err
 	}
+	bc.CheckAndUpdateBody()
 	bc.genesisBlock = bc.GetBlockByNumber(0)
 	if bc.genesisBlock == nil {
 		return nil, nil, ErrNoGenesis
@@ -915,11 +917,27 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 		rawdb.WriteBlock(bc.db, block)
 		bc.cacheData(block, receipts)
 	}
+	// Write other block data using a batch.
+	batch := bc.db.NewBatch()
+
+	if block.ConfirmSigns != nil {
+		rawdb.WriteBlockConfirmSigns(batch, block.Hash(), block.NumberU64(), block.ConfirmSigns)
+	}
+	rawdb.WritePreimages(batch, block.NumberU64(), state.Preimages())
+
+	for i := 0; i < count; i++ {
+		items := <-itemch
+		for _, item := range items {
+			batch.Put(item.Key, item.Value)
+		}
+	}
+	if err := batch.Write(); err != nil {
+		return NonStatTy, err
+	}
 
 	root, err := state.Commit(true)
 	if err != nil {
 		log.Error("check block is EIP158 error", "hash", block.Hash(), "number", block.NumberU64())
-		close(closeCh)
 		return NonStatTy, err
 	}
 	triedb := bc.stateCache.TrieDB()
@@ -928,7 +946,6 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 	if bc.cacheConfig.Disabled {
 		if err := triedb.Commit(root, false); err != nil {
 			log.Error("Commit to triedb error", "root", root)
-			close(closeCh)
 			return NonStatTy, err
 		}
 	} else {
@@ -973,39 +990,14 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 		}
 	}
 
-	// Write other block data using a batch.
-	batch := bc.db.NewBatch()
-
-	//rawdb.WriteReceipts(batch, block.Hash(), block.NumberU64(), receipts)
-	if block.ConfirmSigns != nil {
-		rawdb.WriteBlockConfirmSigns(batch, block.Hash(), block.NumberU64(), block.ConfirmSigns)
-	}
-	//// Write the positional metadata for transaction/receipt lookups and preimages
-	//rawdb.WriteTxLookupEntries(batch, block)
-	rawdb.WritePreimages(batch, block.NumberU64(), state.Preimages())
-
-	for i := 0; i < count; i++ {
-		items := <-itemch
-		for _, item := range items {
-			batch.Put(item.Key, item.Value)
-		}
-	}
-
 	status = CanonStatTy
-	if err := batch.Write(); err != nil {
-		return NonStatTy, err
-	}
 	log.Debug("insert into chain", "WriteStatus", status, "hash", block.Hash(), "number", block.NumberU64(), "signs", rawdb.ReadBlockConfirmSigns(bc.db, block.Hash(), block.NumberU64()))
 
 	// Set new head.
 	if status == CanonStatTy {
 		bc.insert(block)
-
-		// parse block and retrieves txs
-
 	}
-
-	bc.futureBlocks.Remove(block.Hash())
+	//bc.futureBlocks.Remove(block.Hash())
 	return status, nil
 }
 
@@ -1554,4 +1546,37 @@ func (bc *BlockChain) RunInterpreterDirectly(caller common.Address, contractAddr
 	contract := vm.NewContract(vm.AccountRef(caller), vm.AccountRef(contractAddr), big.NewInt(0), uint64(0xffffffffff))
 	contract.SetCallCode(&contractAddr, evm.StateDB.GetCodeHash(contractAddr), evm.StateDB.GetCode(contractAddr))
 	return bc.runInterpreter(evm, contract, input)
+}
+
+func (bc *BlockChain) CheckAndUpdateBody() {
+	if bc.CheckBodyOld() {
+		log.Info("Body is old , need update to new body ,please wait")
+		headHash := rawdb.ReadHeadBlockHash(bc.db)
+		number := bc.hc.GetBlockNumber(headHash)
+		var i uint64
+		for i = 0; i <= *number; i++ {
+			hash := rawdb.ReadCanonicalHash(bc.db, i)
+			rlpData := rawdb.ReadBodyRLP(bc.db, hash, i)
+			oldBody := new(types.BodyOld)
+			if err := rlp.Decode(bytes.NewReader(rlpData), oldBody); err != nil {
+				log.Error("Invalid block body RLP", "hash", hash, "err", err)
+				return
+			}
+			body := &types.Body{Transactions: oldBody.Transactions}
+			rawdb.WriteBody(bc.db, hash, i, body)
+		}
+	}
+}
+
+func (bc *BlockChain) CheckBodyOld() bool {
+	hash := rawdb.ReadCanonicalHash(bc.db, 0)
+	rlpData := rawdb.ReadBodyRLP(bc.db, hash, 0)
+
+	body := new(types.Body)
+	if err := rlp.Decode(bytes.NewReader(rlpData), body); err != nil {
+		if err.Error() == "rlp: too few elements for types.Body" {
+			return true
+		}
+	}
+	return false
 }

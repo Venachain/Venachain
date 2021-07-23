@@ -370,7 +370,7 @@ func (sb *backend) Prepare(chain consensus.ChainReader, header *types.Header) er
 //
 // Note, the block header and state database might be updated to reflect any
 // consensus rules that happen at finalization (e.g. block rewards).
-func (sb *backend) Finalize(chain consensus.ChainReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, receipts []*types.Receipt) (*types.Block, error) {
+func (sb *backend) Finalize(chain consensus.ChainReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, receipts []*types.Receipt, dag types.DAG) (*types.Block, error) {
 	log.Debug(fmt.Errorf("root before:%x", header.Root).Error())
 	// vrf election
 	scNode := vm.NewSCNode(state)
@@ -385,7 +385,7 @@ func (sb *backend) Finalize(chain consensus.ChainReader, header *types.Header, s
 	header.Root = state.IntermediateRoot(true)
 	log.Debug(fmt.Errorf("root after:%x", header.Root).Error())
 	// Assemble and return the final block for sealing
-	return types.NewBlock(header, txs, receipts), nil
+	return types.NewBlockWithDag(header, txs, receipts, dag), nil
 }
 
 // Seal generates a new block for the given input block with the local miner's

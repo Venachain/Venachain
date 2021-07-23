@@ -1,12 +1,13 @@
 package vm
 
 import (
+	"math/big"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
-	"math/big"
 )
 
 type SCEvidence struct {

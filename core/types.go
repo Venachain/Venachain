@@ -46,4 +46,8 @@ type Validator interface {
 //in replay situation, we need the new merkle roots
 type Processor interface {
 	Process(block *types.Block, statedb *state.StateDB, cfg vm.Config) (*types.Block, types.Receipts, []*types.Log, uint64, error)
+
+	CheckAndProcess(block *types.Block, statedb *state.StateDB, cfg vm.Config) (*types.Block, types.Receipts, error)
+
+	ParallelProcessTxs(stateDb *state.StateDB, header *types.Header, txs types.Transactions) error
 }

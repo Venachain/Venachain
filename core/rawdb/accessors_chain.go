@@ -19,12 +19,13 @@ package rawdb
 import (
 	"bytes"
 	"encoding/binary"
+	"math/big"
+	"sync"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
-	"math/big"
-	"sync"
 )
 
 var (
@@ -379,7 +380,7 @@ func ReadBlock(db DatabaseReader, hash common.Hash, number uint64) *types.Block 
 	if body == nil {
 		return nil
 	}
-	return types.NewBlockWithHeader(header).WithBody(body.Transactions)
+	return types.NewBlockWithHeader(header).WithBody(body.Transactions, body.Dag)
 }
 
 // WriteBlock serializes a block into the database, header and body separately.

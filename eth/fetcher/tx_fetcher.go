@@ -739,6 +739,7 @@ func (f *TxFetcher) scheduleFetches(timer *mclock.Timer, timeout chan struct{}, 
 		}
 		hashes := make([]common.Hash, 0, maxTxRetrievals)
 		f.forEachHash(f.announces[peer], func(hash common.Hash) bool {
+
 			if _, ok := f.fetching[hash]; !ok {
 				// Mark the hash as fetching and stash away possible alternates
 				f.fetching[hash] = peer

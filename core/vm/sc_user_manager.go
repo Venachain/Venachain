@@ -30,7 +30,7 @@ func (u *UserManagement) Run(input []byte) ([]byte, error) {
 		}
 		u.emitEvent(fnName, operateFail, err.Error())
 	}
-	return ret, nil
+	return ret, err
 }
 
 func (u *UserManagement) setState(key, value []byte) {

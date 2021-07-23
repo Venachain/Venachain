@@ -20,12 +20,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"math"
 	"math/big"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
@@ -534,18 +535,18 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 			return errResp(ErrDecode, "msg %v: %v", msg, err)
 		}
 		// Deliver them all to the downloader for queuing
-		transactions := make([][]*types.Transaction, len(request))
+		bodies := make([]*types.Body, len(request))
 
 		for i, body := range request {
-			transactions[i] = body.Transactions
+			bodies[i] = &types.Body{Transactions: body.Transactions, Dag: body.Dag}
 		}
 		// Filter out any explicitly requested bodies, deliver the rest to the downloader
-		filter := len(transactions) > 0
+		filter := len(bodies) > 0
 		if filter {
-			transactions = pm.fetcher.FilterBodies(p.id, transactions, time.Now())
+			bodies = pm.fetcher.FilterBodies(p.id, bodies, time.Now())
 		}
-		if len(transactions) > 0 || !filter {
-			err := pm.downloader.DeliverBodies(p.id, transactions)
+		if len(bodies) > 0 || !filter {
+			err := pm.downloader.DeliverBodies(p.id, bodies)
 			if err != nil {
 				log.Debug("Failed to deliver bodies", "err", err)
 			}

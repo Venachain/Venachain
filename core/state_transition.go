@@ -113,7 +113,7 @@ func IntrinsicGas(data []byte, contractCreation bool) (uint64, error) {
 		}
 		gas += z * params.TxDataZeroGas
 	}
-	log.Trace("intrinsic gas is",gas)
+	log.Trace("intrinsic gas is", gas)
 	return gas, nil
 }
 
@@ -160,9 +160,9 @@ func (st *StateTransition) useGas(amount uint64) error {
 
 func (st *StateTransition) buyGas() error {
 	gas := uint64(common.SysCfg.GetTxGasLimit())
-	if err := st.gp.SubGas(gas); err != nil {
-		return err
-	}
+	//if err := st.gp.SubGas(gas); err != nil {
+	//	return err
+	//}
 	st.gas += gas
 
 	st.initialGas = gas
@@ -184,10 +184,10 @@ func (st *StateTransition) buyContractGas(contractAddr common.Address) error {
 		return errInsufficientBalanceForGas
 	}
 
-	if err := st.gp.SubGas(st.msg.Gas()); err != nil {
-		log.Error("gas pool sub gas error", "err", err.Error())
-		return err
-	}
+	//if err := st.gp.SubGas(st.msg.Gas()); err != nil {
+	//	log.Error("gas pool sub gas error", "err", err.Error())
+	//	return err
+	//}
 
 	st.gas += st.msg.Gas()
 
@@ -311,6 +311,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, gasPrice 
 		}
 	} else {
 		if err = st.preCheck(); err != nil {
+			log.Error("preCheck", "err:", err)
 			return
 		}
 	}
@@ -321,6 +322,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, gasPrice 
 	gas, err := IntrinsicGas(st.data, contractCreation)
 	log.Debug("IntrinsicGas amount", "IntrinsicGas:", gas)
 	if err != nil {
+		log.Error("IntrinsicGas error", "err:", err)
 		return nil, 0, gasPrice, false, err
 	}
 	if err = st.useGas(gas); err != nil {
@@ -331,12 +333,12 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, gasPrice 
 	if contractCreation {
 		allowDeployContract := checkContractDeployPermission(sender.Address(), evm)
 		if !allowDeployContract {
-			st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
+			st.state.AddNonce(msg.From())
 			return nil, 0, gasPrice, true, PermissionErr
 		}
 		ret, _, st.gas, vmerr = evm.Create(sender, st.data, st.gas, st.value)
 	} else {
-		st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
+		st.state.AddNonce(msg.From())
 		var pass bool
 		if ret, pass = fwCheck(evm.StateDB, st.to(), msg.From(), msg.Data()); !pass {
 			err = PermissionErr
@@ -354,6 +356,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, gasPrice 
 		// sufficient balance to make the transfer happen. The first
 		// balance transfer may never fail.
 		if vmerr == vm.ErrInsufficientBalance {
+			log.Error("ErrInsufficientBalance")
 			return nil, 0, gasPrice, false, vmerr
 		}
 	}
@@ -402,7 +405,7 @@ func (st *StateTransition) refundContractGas(contractAddr common.Address) error 
 
 	// Also return remaining gas to the block gas counter so it is
 	// available for the next transaction.
-	st.gp.AddGas(st.gas)
+	//st.gp.AddGas(st.gas)
 	return nil
 }
 
@@ -414,7 +417,7 @@ func (st *StateTransition) refundGas() {
 	}
 	st.gas += refund
 
-	st.gp.AddGas(st.gas)
+	//st.gp.AddGas(st.gas)
 }
 
 // gasUsed returns the amount of gas used up by the state transition.

@@ -25,6 +25,7 @@ import (
 	"io"
 	"math/big"
 	"strings"
+	"sync"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 
@@ -218,6 +219,7 @@ type stateObject struct {
 	dirtyCode bool // true if the code was updated
 	suicided  bool
 	deleted   bool
+	lock      sync.Mutex
 }
 
 // empty returns whether the account is considered empty.
@@ -301,6 +303,22 @@ func (c *stateObject) getTrie(db Database) Trie {
 		}
 	}
 	return c.trie
+}
+
+func (c *stateObject) CreateTrie(db Database) {
+	if c.trie == nil {
+		c.lock.Lock()
+		defer c.lock.Unlock()
+		if c.trie != nil {
+			return
+		}
+		var err error
+		c.trie, err = db.OpenStorageTrie(c.addrHash, c.data.Root)
+		if err != nil {
+			c.trie, _ = db.OpenStorageTrie(c.addrHash, common.Hash{})
+			c.setError(fmt.Errorf("can't create storage trie: %v", err))
+		}
+	}
 }
 
 // GetState retrieves a value from the account storage trie.
@@ -389,6 +407,33 @@ func (self *stateObject) GetCommittedState(db Database, key string) []byte {
 	return value
 }
 
+func (self *stateObject) GetCommittedStateNoCache(db Database, key string) []byte {
+	var value []byte
+	var valueKey common.Hash
+
+	// Otherwise load the valueKey from trie
+	enc, err := self.getTrie(db).TryGet([]byte(key))
+	if err != nil {
+		self.setError(err)
+		return []byte{}
+	}
+	if len(enc) > 0 {
+		_, content, _, err := rlp.Split(enc)
+		if err != nil {
+			self.setError(err)
+		}
+		valueKey.SetBytes(content)
+
+		//load value from db
+		value = self.db.trie.GetKey(valueKey.Bytes())
+		if err != nil {
+			self.setError(err)
+		}
+	}
+
+	return value
+}
+
 // SetState updates a value in account storage.
 // set [keyTrie,valueKey] to storage
 // set [valueKey,value] to db
@@ -440,7 +485,7 @@ func (self *stateObject) updateTrie(db Database) Trie {
 		if value, ok := self.dirtyValueStorage[valueKey]; ok {
 			delete(self.originValueStorage, valueKey)
 			self.originValueStorage[valueKey] = value
-			self.setError(self.trie.TryUpdateValue(valueKey.Bytes(), v))
+			self.setError(self.trie.TryUpdateValue(valueKey.Bytes(), value))
 		}
 	}
 
@@ -577,6 +622,14 @@ func (self *stateObject) SetNonce(nonce uint64) {
 		prev:    self.data.Nonce,
 	})
 	self.setNonce(nonce)
+}
+
+func (self *stateObject) AddNonce() {
+	self.db.journal.append(nonceChange{
+		account: &self.address,
+		prev:    self.data.Nonce,
+	})
+	self.setNonce(self.data.Nonce + 1)
 }
 
 func (self *stateObject) setNonce(nonce uint64) {

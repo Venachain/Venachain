@@ -20,7 +20,6 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"math"
 	"math/big"
 	"strconv"
@@ -38,6 +37,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/metrics"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
 const (
@@ -627,8 +627,8 @@ func (pool *TxPool) State() *state.ManagedState {
 func (pool *TxPool) Stats() (int, int) {
 	pool.mu.RLock()
 	defer pool.mu.RUnlock()
-	pending,_ := pool.stats()
-	log.Info("Transaction pool got pending transactions","status",pending)
+	pending, _ := pool.stats()
+	log.Info("Transaction pool got pending transactions", "status", pending)
 	return pool.stats()
 }
 
@@ -664,7 +664,7 @@ func (pool *TxPool) Content() (map[common.Address]types.Transactions, map[common
 	//		queued[addr] = list.Get()
 	//	}
 	//}
-	log.Trace("current pending transactions:",pending)
+	log.Trace("current pending transactions:", pending)
 	return pending, queued
 }
 
@@ -681,26 +681,26 @@ func (pool *TxPool) Pending() (map[common.Address]types.Transactions, error) {
 			pending[addr] = list.Get()
 		}
 	}
-	log.Trace("current pending transactions:",pending)
+	log.Trace("current pending transactions:", pending)
 	return pending, nil
 }
 
 // PendingLimited retrieves `pool.config.GlobalTxCount` processable transactions,
 // grouped by origin account and stored by nonce. The returned transaction set
 // is a copy and can be freely modified by calling code.
-func (pool *TxPool) PendingLimited() (map[common.Address]types.Transactions, error) {
+func (pool *TxPool) PendingLimited() (types.Transactions, error) {
 	now := time.Now()
 	pool.mu.Lock()
 	defer pool.mu.Unlock()
 
 	//log.Info("Pending txs before get", "txCnt", len(pool.pending))
 	txCount := 0
-	var length int
-	pending := make(map[common.Address]types.Transactions)
-	for addr, list := range pool.pending {
+	pending := make(types.Transactions, 0, pool.config.GlobalTxCount)
+	for _, list := range pool.pending {
 		if list != nil {
 			if list.Len() > 0 {
-				pending[addr], length = list.GetByCount(int(pool.config.GlobalTxCount) - txCount)
+				txs, length := list.GetByCount(int(pool.config.GlobalTxCount) - txCount)
+				pending = append(pending, txs...)
 				txCount += length
 				if txCount >= int(pool.config.GlobalTxCount) {
 					break
@@ -742,7 +742,7 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 
 	// Heuristic limit, reject transactions over 32KB to prevent DOS attacks
 	// 32kb -> 1m
-	if tx.Size() > TxSize *1024 {
+	if tx.Size() > TxSize*1024 {
 		return ErrOversizedData
 	}
 	// Transactions can't be negative. This may never happen using RLP decoded
@@ -1024,7 +1024,7 @@ func (pool *TxPool) addTxExt(txExt *txExt) interface{} {
 	errs := make([]error, len(txExt.txs))
 	for i, tx := range txExt.txs {
 		_, errs[i] = pool.add(tx, txExt.local)
-		log.Trace("add transactions into extDb","tx",tx)
+		log.Trace("add transactions into extDb", "tx", tx)
 	}
 	return errs
 }
@@ -1037,11 +1037,11 @@ func (pool *TxPool) addTxs(txs []*types.Transaction, local bool) []error {
 		errs = make([]error, len(txs))
 		news = make([]*types.Transaction, 0, len(txs))
 	)
-	wg:=sync.WaitGroup{}
+	wg := sync.WaitGroup{}
 	mutex := sync.Mutex{}
 	wg.Add(len(txs))
 	for i, tx := range txs {
-		go func(i int,tx *types.Transaction) {
+		go func(i int, tx *types.Transaction) {
 			defer wg.Done()
 			if uint64(pool.all.Count()) >= pool.config.GlobalSlots {
 				errs[i] = ErrTxpoolIsFull
@@ -1051,7 +1051,7 @@ func (pool *TxPool) addTxs(txs []*types.Transaction, local bool) []error {
 			// If the transaction is known, pre-set the error slot
 			if pool.all.Get(tx.Hash()) != nil {
 				errs[i] = fmt.Errorf("known transaction: %x", tx.Hash())
-				log.Error("known transaction","tx",tx.Hash())
+				log.Error("known transaction", "tx", tx.Hash())
 				return
 			}
 			// Exclude transactions with invalid signatures as soon as
@@ -1065,7 +1065,7 @@ func (pool *TxPool) addTxs(txs []*types.Transaction, local bool) []error {
 			mutex.Lock()
 			news = append(news, tx)
 			mutex.Unlock()
-		}(i,tx)
+		}(i, tx)
 	}
 	wg.Wait()
 
@@ -1474,6 +1474,7 @@ func (pool *TxPool) generateTxs(cnt string, addr common.Address, preProducer boo
 			paramArr = append(paramArr, []byte(fmt.Sprintf("%v", "1234")))
 			data, _ = rlp.EncodeToBytes(paramArr)
 			tx := types.NewTransaction(uint64(nonce), addr, big.NewInt(0), uint64(gasLimit), big.NewInt(1), data)
+			//tx := types.NewTransaction(uint64(nonce), addr, big.NewInt(0), uint64(gasLimit), big.NewInt(1), nil)
 			signedTx, _ := types.SignTx(tx, types.HomesteadSigner{}, pool.pk)
 			types.Sender(pool.signer, signedTx) // already validated
 			tx.Hash()
@@ -1481,8 +1482,14 @@ func (pool *TxPool) generateTxs(cnt string, addr common.Address, preProducer boo
 			atomic.AddInt32(&producerCnt, 1)
 		}
 	}
+	left := count
 	for i := 0; i < producerThread; i++ {
-		go producer(i, perCnt)
+		if i == producerThread-1 {
+			go producer(i, left)
+		} else {
+			go producer(i, perCnt)
+			left -= perCnt
+		}
 	}
 	tt := time.NewTicker(500 * time.Millisecond)
 	stopWait := make(chan struct{}, 1)
@@ -1524,8 +1531,8 @@ func (pool *TxPool) generateTxs(cnt string, addr common.Address, preProducer boo
 	}
 
 	checkTxPool := func() {
-		if pool.GetTxCount() > int(pool.config.GlobalTxCount)*2 {
-			time.Sleep(50 * time.Millisecond)
+		for pool.GetTxCount() > int(pool.config.GlobalTxCount)*2 {
+			time.Sleep(500 * time.Millisecond)
 		}
 	}
 
@@ -1551,12 +1558,14 @@ func (pool *TxPool) generateTxs(cnt string, addr common.Address, preProducer boo
 					batch = batch[:0]
 				}
 			case <-consumerTicker.C:
+				log.Info("************************************", "producerCnt", producerCnt)
 				if int(atomic.LoadInt32(&producerCnt)) == count {
-					if insertCnt == count {
+					if insertCnt >= count {
 						log.Info("************************************", "errCnt", errCnt)
 						return
 					}
 					addtx(batch)
+					batch = batch[:0]
 				}
 			}
 		}

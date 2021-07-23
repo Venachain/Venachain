@@ -209,6 +209,7 @@ type blockSignature struct {
 // blockBody represents the data content of a single block.
 type blockBody struct {
 	Transactions []*types.Transaction // Transactions contained within a block
+	Dag          types.DAG
 }
 
 // blockBodiesData is the network packet for block content distribution.

@@ -20,6 +20,10 @@ import (
 	"bytes"
 	"container/heap"
 	"errors"
+	"io"
+	"math/big"
+	"sync/atomic"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
@@ -27,9 +31,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	lru "github.com/hashicorp/golang-lru"
-	"io"
-	"math/big"
-	"sync/atomic"
 )
 
 //go:generate gencodec -type txdata -field-override txdataMarshaling -out gen_tx_json.go
@@ -43,10 +44,11 @@ var (
 type Transaction struct {
 	data txdata
 	// caches
-	hash   atomic.Value
-	size   atomic.Value
-	from   atomic.Value
-	router int32
+	hash       atomic.Value
+	size       atomic.Value
+	from       atomic.Value
+	router     int32
+	processCnt int32
 }
 
 type txdata struct {
@@ -289,6 +291,11 @@ func (tx *Transaction) FromRemote() bool {
 	return tx.router == 1
 }
 
+func (tx *Transaction) Try() bool {
+	tx.processCnt++
+	return tx.processCnt < 5
+}
+
 // Transactions is a Transaction slice type for basic sorting.
 type Transactions []*Transaction
 
@@ -300,19 +307,18 @@ func (s Transactions) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 
 // GetRlp implements Rlpable and returns the i'th element of s in rlp.
 func (s Transactions) GetRlp(i int) []byte {
-	enc, _ := rlp.EncodeToBytes(s[i])
-	return enc
+	return s[i].Hash().Bytes()
 }
 
 func (s Transactions) GetHash() common.Hash {
 	var h common.Hash
 	d := sha3.NewKeccak256()
-	body := &Body{s}
+	body := &Body{s, nil}
 	bytes, _ := rlp.EncodeToBytes(body)
 	d.Write(bytes)
 	d.Sum(h[:0])
 	//cache the rlp bytes
-	TransactionsRlpCache.Add(h, bytes)
+	//TransactionsRlpCache.Add(h, bytes)
 	return h
 }
 

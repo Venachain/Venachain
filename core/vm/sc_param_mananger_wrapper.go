@@ -2,9 +2,10 @@ package vm
 
 import (
 	"encoding/json"
+	"reflect"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
-	"reflect"
 )
 
 type scParamManagerWrapper struct {
@@ -34,7 +35,7 @@ func (u *scParamManagerWrapper) Run(input []byte) ([]byte, error) {
 		}
 		u.base.emitNotifyEventInParam(fnName, operateFail, err.Error())
 	}
-	return ret, nil
+	return ret, err
 }
 
 // Deprecated: Use setParam() instead

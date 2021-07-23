@@ -360,8 +360,7 @@ func (evm *EVM) create(caller ContractRef, code []byte, gas uint64, value *big.I
 	if !evm.CanTransfer(evm.StateDB, caller.Address(), value) {
 		return nil, common.Address{}, gas, ErrInsufficientBalance
 	}
-	nonce := evm.StateDB.GetNonce(caller.Address())
-	evm.StateDB.SetNonce(caller.Address(), nonce+1)
+	evm.StateDB.AddNonce(caller.Address())
 
 	// Ensure there's no existing contract already at the designated address
 	contractHash := evm.StateDB.GetCodeHash(address)
@@ -371,7 +370,7 @@ func (evm *EVM) create(caller ContractRef, code []byte, gas uint64, value *big.I
 	// Create a new account on the state
 	snapshot := evm.StateDB.Snapshot()
 	evm.StateDB.CreateAccount(address)
-	evm.StateDB.SetNonce(address, 1)
+	evm.StateDB.AddNonce(address)
 	evm.Transfer(evm.StateDB, caller.Address(), address, value)
 
 	// initialise a new contract and set the code that is to be used by the
@@ -437,8 +436,7 @@ func (evm *EVM) migcreate(caller ContractRef, code []byte, gas uint64, value *bi
 	if !evm.CanTransfer(evm.StateDB, caller.Address(), value) {
 		return nil, common.Address{}, gas, ErrInsufficientBalance
 	}
-	nonce := evm.StateDB.GetNonce(caller.Address())
-	evm.StateDB.SetNonce(caller.Address(), nonce+1)
+	evm.StateDB.AddNonce(caller.Address())
 
 	// Ensure there's no existing contract already at the designated address
 	//contractHash := evm.StateDB.GetCodeHash(address)
@@ -448,7 +446,7 @@ func (evm *EVM) migcreate(caller ContractRef, code []byte, gas uint64, value *bi
 	// Create a new account on the state
 	snapshot := evm.StateDB.Snapshot()
 	evm.StateDB.CreateAccount(address)
-	evm.StateDB.SetNonce(address, 1)
+	evm.StateDB.AddNonce(address)
 	evm.Transfer(evm.StateDB, caller.Address(), address, value)
 
 	// initialise a new contract and set the code that is to be used by the
