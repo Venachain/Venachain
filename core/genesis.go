@@ -198,7 +198,7 @@ func (g *Genesis) ToBlock(db ethdb.Database) *types.Block {
 		}
 	}
 	for addr, _ := range vm.PlatONEPrecompiledContracts {
-		statedb.SetNonce(addr, 1)
+		statedb.AddNonce(addr)
 	}
 	root := statedb.IntermediateRoot(false)
 	head := &types.Header{

@@ -177,7 +177,7 @@ function main() {
     #deploy roleManager
     #deploy roleRegister
     #deploy nodeManager
-#    deploy nodeRegister
+    #deploy nodeRegister
 
     set_super_admin
     add_chain_admin

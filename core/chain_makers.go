@@ -178,7 +178,7 @@ func GenerateChain(config *params.ChainConfig, parent *types.Block, engine conse
 		}
 		if b.engine != nil {
 			// Finalize and seal the block
-			block, _ := b.engine.Finalize(b.chainReader, b.header, statedb, b.txs, b.receipts)
+			block, _ := b.engine.Finalize(b.chainReader, b.header, statedb, b.txs, b.receipts, nil)
 
 			// Write state changes to db
 			root, err := statedb.Commit(true)

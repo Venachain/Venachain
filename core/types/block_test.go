@@ -18,29 +18,31 @@ package types
 
 import (
 	"bytes"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"math/big"
 	"reflect"
 	"testing"
 
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
-func GenNewBlock() *Block{
+
+func GenNewBlock() *Block {
 	tx1 := NewTransaction(0, common.HexToAddress("095e7baea6a6c7c4c2dfeb977efac326af552d87"), big.NewInt(10), 50000, big.NewInt(10), nil)
 	tx1, _ = tx1.WithSignature(HomesteadSigner{}, common.Hex2Bytes("9bea4c4daac7c7c52e093e6a4c35dbbcf8856f1af7b059ba20253e70848d094f8a8fae537ce25ed8cb5af9adac3f141af69bd515bd2ba031522df09b97dd72b100"))
 	txs := []*Transaction{tx1}
 
 	header := &Header{
-		Number:     big.NewInt(1),
-		Coinbase:   common.HexToAddress("8888f1f195afa192cfee860698584c030f4c9db1"),
-		MixDigest:  common.HexToHash("bd4472abb6659ebe3ee06ee4d7b72a00a9f4d001caca51342001075469aff498"),
-		Root:       common.HexToHash("ef1552a40b7165c3cd773806b9e0c165b75356e0314bf0706f279c729f51e017"),
-		GasLimit:   3141592,
-		GasUsed:    21000,
-		Nonce: 		BlockNonce{1},
-		Time:       big.NewInt(1426516743),
+		Number:    big.NewInt(1),
+		Coinbase:  common.HexToAddress("8888f1f195afa192cfee860698584c030f4c9db1"),
+		MixDigest: common.HexToHash("bd4472abb6659ebe3ee06ee4d7b72a00a9f4d001caca51342001075469aff498"),
+		Root:      common.HexToHash("ef1552a40b7165c3cd773806b9e0c165b75356e0314bf0706f279c729f51e017"),
+		GasLimit:  3141592,
+		GasUsed:   21000,
+		Nonce:     BlockNonce{1},
+		Time:      big.NewInt(1426516743),
 	}
-	block := NewBlock(header,txs,nil)
+	block := NewBlock(header, txs, nil)
 	return block
 }
 
@@ -81,18 +83,36 @@ func TestBlockEncoding(t *testing.T) {
 func TestBlockNonceEncoding(t *testing.T) {
 	b := EncodeByteNonce([]byte("this is a test string,we can transfer it to block nonce bytes"))
 
-	e1,err := rlp.EncodeToBytes(&b)
+	e1, err := rlp.EncodeToBytes(&b)
 	if err != nil {
 		t.Fatal("encode error: ", err)
 	}
 
 	var d BlockNonce
-	err = rlp.DecodeBytes(e1,&d)
+	err = rlp.DecodeBytes(e1, &d)
 	if err != nil {
 		t.Fatal("decode error: ", err)
 	}
 
 	if !bytes.Equal(b[:], d[:]) {
 		t.Errorf("encoded BlockNonce mismatch:\ngot:  %x\nwant: %x", d, b)
+	}
+}
+
+func TestDependcy(t *testing.T) {
+	var d Dependency
+	d = d.Add(1)
+	if len(d) != 1 {
+		t.Errorf("add index mismatch:\ngot:  %x\nwant: %x", len(d), 1)
+	}
+}
+
+func TestDAG(t *testing.T) {
+	var dag DAG
+	var depend0 Dependency
+	var depend1 Dependency
+	dag = append(dag, depend0, depend1)
+	if len(dag) != 2 {
+		t.Errorf("add index mismatch:\ngot:  %x\nwant: %x", len(dag), 2)
 	}
 }

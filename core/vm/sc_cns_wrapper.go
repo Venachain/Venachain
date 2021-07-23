@@ -61,7 +61,7 @@ func (cns *CnsWrapper) Run(input []byte) ([]byte, error) {
 		}
 	}
 
-	return ret, nil
+	return ret, err
 }
 
 // for access control

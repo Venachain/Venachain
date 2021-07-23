@@ -91,9 +91,9 @@ type headerFilterTask struct {
 // bodyFilterTask represents a batch of block bodies (transactions)
 // needing fetcher filtering.
 type bodyFilterTask struct {
-	peer         string                 // The source peer of block bodies
-	transactions [][]*types.Transaction // Collection of transactions per block bodies
-	time         time.Time              // Arrival time of the blocks' contents
+	peer   string        // The source peer of block bodies
+	bodies []*types.Body // Collection of transactions per block bodies
+	time   time.Time     // Arrival time of the blocks' contents
 }
 
 // inject represents a schedules import operation.
@@ -252,8 +252,8 @@ func (f *Fetcher) FilterHeaders(peer string, headers []*types.Header, time time.
 
 // FilterBodies extracts all the block bodies that were explicitly requested by
 // the fetcher, returning those that should be handled differently.
-func (f *Fetcher) FilterBodies(peer string, transactions [][]*types.Transaction, time time.Time) ([][]*types.Transaction) {
-	log.Trace("Filtering bodies", "peer", peer, "txs", len(transactions))
+func (f *Fetcher) FilterBodies(peer string, bodies []*types.Body, time time.Time) []*types.Body {
+	log.Trace("Filtering bodies", "peer", peer, "bodies", len(bodies))
 
 	// Send the filter channel to the fetcher
 	filter := make(chan *bodyFilterTask)
@@ -265,14 +265,14 @@ func (f *Fetcher) FilterBodies(peer string, transactions [][]*types.Transaction,
 	}
 	// Request the filtering of the body list
 	select {
-	case filter <- &bodyFilterTask{peer: peer, transactions: transactions, time: time}:
+	case filter <- &bodyFilterTask{peer: peer, bodies: bodies, time: time}:
 	case <-f.quit:
 		return nil
 	}
 	// Retrieve the bodies remaining after filtering
 	select {
 	case task := <-filter:
-		return task.transactions
+		return task.bodies
 	case <-f.quit:
 		return nil
 	}
@@ -519,23 +519,23 @@ func (f *Fetcher) loop() {
 			case <-f.quit:
 				return
 			}
-			bodyFilterInMeter.Mark(int64(len(task.transactions)))
+			bodyFilterInMeter.Mark(int64(len(task.bodies)))
 
 			blocks := []*types.Block{}
-			for i := 0; i < len(task.transactions); i++ {
+			for i := 0; i < len(task.bodies); i++ {
 				// Match up a body to any possible completion request
 				matched := false
 
 				for hash, announce := range f.completing {
 					if f.queued[hash] == nil {
-						txnHash := types.DeriveSha(types.Transactions(task.transactions[i]))
+						txnHash := types.DeriveSha(types.Transactions(task.bodies[i].Transactions))
 
 						if txnHash == announce.header.TxHash && announce.origin == task.peer {
 							// Mark the body matched, reassemble if still unknown
 							matched = true
 
 							if f.getBlock(hash) == nil {
-								block := types.NewBlockWithHeader(announce.header).WithBody(task.transactions[i])
+								block := types.NewBlockWithHeader(announce.header).WithBody(task.bodies[i].Transactions, task.bodies[i].Dag)
 								block.ReceivedAt = task.time
 
 								blocks = append(blocks, block)
@@ -546,13 +546,13 @@ func (f *Fetcher) loop() {
 					}
 				}
 				if matched {
-					task.transactions = append(task.transactions[:i], task.transactions[i+1:]...)
+					task.bodies = append(task.bodies[:i], task.bodies[i+1:]...)
 					i--
 					continue
 				}
 			}
 
-			bodyFilterOutMeter.Mark(int64(len(task.transactions)))
+			bodyFilterOutMeter.Mark(int64(len(task.bodies)))
 			select {
 			case filter <- task:
 			case <-f.quit:

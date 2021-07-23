@@ -1,9 +1,10 @@
 package common
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/common/bcwasmutil"
 	"math/big"
 	"sync"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/common/bcwasmutil"
 )
 
 var (

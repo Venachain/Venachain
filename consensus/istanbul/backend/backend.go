@@ -380,35 +380,14 @@ func (sb *backend) excuteBlock(block *types.Block) error {
 		return err
 	} else {
 		// Iterate over and process the individual transactios
-		txsMap := make(map[common.Hash]struct{})
-		for _, tx := range block.Transactions() {
-			sb.current.state.Prepare(tx.Hash(), common.Hash{}, sb.current.tcount)
-			snap := sb.current.state.Snapshot()
-			if r := chain.GetReceiptsByHash(tx.Hash()); r != nil {
-				return errors.New("Already executed tx")
-			}
-			if _, ok := txsMap[tx.Hash()]; ok {
-				return errors.New("Repeated tx in one block")
-			} else {
-				txsMap[tx.Hash()] = struct{}{}
-			}
 
-			receipt, _, err := core.ApplyTransaction(chain.Config(), chain, &sb.address, sb.current.gasPool, sb.current.state, sb.current.header, tx, &sb.current.header.GasUsed, vm.Config{})
-			if err != nil {
-				sb.current.state.RevertToSnapshot(snap)
-				return err
-			}
-			sb.current.txs = append(sb.current.txs, tx)
-			sb.current.receipts = append(sb.current.receipts, receipt)
-			sb.current.tcount++
-
-			sb.current.state.Finalise(true)
-		}
-
-		cblock, err := sb.Finalize(chain, header, sb.current.state, block.Transactions(), sb.current.receipts)
+		cblock, receipts, err := chain.Processor().CheckAndProcess(block, sb.current.state, vm.Config{})
 		if err != nil {
 			return err
 		}
+		sb.current.txs = block.Transactions()
+		sb.current.receipts = receipts
+		sb.current.tcount = block.Transactions().Len()
 
 		if cblock.Root() != block.Root() {
 			sb.current = nil

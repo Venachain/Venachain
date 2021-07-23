@@ -35,7 +35,7 @@ func (u *FwWrapper) Run(input []byte) ([]byte, error) {
 		u.base.emitEvent(fnName, operateFail, err.Error())
 	}
 
-	return ret, nil
+	return ret, err
 }
 
 // for access control

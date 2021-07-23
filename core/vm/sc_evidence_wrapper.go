@@ -1,9 +1,10 @@
 package vm
 
 import (
+	"strings"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
-	"strings"
 )
 
 const (
@@ -35,7 +36,7 @@ func (e *SCEvidenceWrapper) Run(input []byte) ([]byte, error) {
 			return MakeReturnBytes([]byte(newInternalErrorResult(err).String())), err
 		}
 	}
-	return ret, nil
+	return ret, err
 }
 func NewEvidenceWrapper(db StateDB) *SCEvidenceWrapper {
 	return &SCEvidenceWrapper{NewSCEvidence(db)}

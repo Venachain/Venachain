@@ -123,14 +123,14 @@ func (p *FakePeer) RequestHeadersByNumber(number uint64, amount int, skip int, r
 // corresponding to the specified block hashes.
 func (p *FakePeer) RequestBodies(hashes []common.Hash) error {
 	var (
-		txs    [][]*types.Transaction
+		bodies []*types.Body
 	)
 	for _, hash := range hashes {
 		block := rawdb.ReadBlock(p.db, hash, *p.hc.GetBlockNumber(hash))
 
-		txs = append(txs, block.Transactions())
+		bodies = append(bodies, block.Body())
 	}
-	p.dl.DeliverBodies(p.id, txs)
+	p.dl.DeliverBodies(p.id, bodies)
 	return nil
 }
 

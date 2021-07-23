@@ -65,6 +65,7 @@ type StateDB struct {
 	trie Trie
 
 	// This map holds 'live' objects, which will get modified while processing a state transition.
+	objLock           sync.RWMutex
 	stateObjects      map[common.Address]*stateObject
 	stateObjectsDirty map[common.Address]struct{}
 
@@ -92,6 +93,29 @@ type StateDB struct {
 	nextRevisionId int
 
 	lock sync.Mutex
+
+	// 用于判断是否正在执行交易
+	process bool
+	// 执行的过程锁
+	rwLock sync.RWMutex
+	// 缓存读操作 键 addr+key
+	readMap map[string]*ReadOp
+	// 缓存写操作 键 addr+key
+	writeMap map[string]*WriteOp
+	// 缓存余额变动 键 addr
+	balanceMap map[common.Address]*BalanceOp
+	// 缓存nonce的增加数
+	nonce map[common.Address]int
+	// 缓存state_object的变动
+	oc map[common.Address]ObjectChange
+	// 缓存已经处理的交易
+	txs []*types.Transaction
+	// 缓存已经处理的交易的receipt
+	receipts []*types.Receipt
+	// 缓存交易的依赖关系
+	dag types.DAG
+	// gas使用
+	gasUsed uint64
 }
 
 // Create a new state from a given trie.
@@ -107,6 +131,11 @@ func New(root common.Hash, db Database) (*StateDB, error) {
 		stateObjectsDirty: make(map[common.Address]struct{}),
 		logs:              make(map[common.Hash][]*types.Log),
 		preimages:         make(map[common.Hash][]byte),
+		readMap:           make(map[string]*ReadOp),
+		writeMap:          make(map[string]*WriteOp),
+		balanceMap:        make(map[common.Address]*BalanceOp),
+		nonce:             make(map[common.Address]int),
+		oc:                make(map[common.Address]ObjectChange),
 		journal:           newJournal(),
 	}, nil
 }
@@ -167,6 +196,7 @@ func (self *StateDB) Logs() []*types.Log {
 
 // AddPreimage records a SHA3 preimage seen by the VM.
 func (self *StateDB) AddPreimage(hash common.Hash, preimage []byte) {
+	log.Info("addPreimage", "hash", hash.String())
 	if _, ok := self.preimages[hash]; !ok {
 		self.journal.append(addPreimageChange{hash: hash})
 		pi := make([]byte, len(preimage))
@@ -260,10 +290,19 @@ func (self *StateDB) GetCodeHash(addr common.Address) common.Hash {
 
 // GetState retrieves a value from the given account's storage trie.
 func (self *StateDB) GetState(addr common.Address, key []byte) []byte {
+	keyTrie := GetKeyTrie(addr, key)
 	stateObject := self.getStateObject(addr)
-	keyTrie, _, _ := getKeyValue(addr, key, nil)
 	if stateObject != nil {
 		return stateObject.GetState(self.db, keyTrie)
+	}
+	return []byte{}
+}
+
+// GetStateByKeyTrie retrieves a value from the given account's storage trie.
+func (self *StateDB) GetStateByKeyTrie(addr common.Address, keyTrie string) []byte {
+	stateObject := self.getStateObject(addr)
+	if stateObject != nil {
+		return stateObject.GetCommittedStateNoCache(self.db, keyTrie)
 	}
 	return []byte{}
 }
@@ -340,6 +379,13 @@ func (self *StateDB) SetNonce(addr common.Address, nonce uint64) {
 	}
 }
 
+func (self *StateDB) AddNonce(addr common.Address) {
+	stateObject := self.GetOrNewStateObject(addr)
+	if stateObject != nil {
+		stateObject.AddNonce()
+	}
+}
+
 func (self *StateDB) SetCode(addr common.Address, code []byte) {
 	stateObject := self.GetOrNewStateObject(addr)
 	if stateObject != nil {
@@ -374,6 +420,31 @@ func getKeyValue(address common.Address, key []byte, value []byte) (string, comm
 	return keyTrie, valueKey, value
 	//}
 	//return keyTrie, common.Hash{}, value
+}
+
+func GetKeyTrie(address common.Address, key []byte) string {
+	var buffer bytes.Buffer
+	buffer.WriteString(address.String())
+	buffer.WriteString(string(key))
+	keyTrie := buffer.String()
+	return keyTrie
+}
+
+func GetKeyTrieValueKey(address common.Address, key []byte, value []byte) (string, common.Hash) {
+	var buffer bytes.Buffer
+	buffer.WriteString(address.String())
+	buffer.WriteString(string(key))
+	keyTrie := buffer.String()
+	buffer.Reset()
+	buffer.WriteString(storagePrefix)
+	buffer.WriteString(string(value))
+
+	valueKey := common.Hash{}
+	keccak := sha3.NewKeccak256()
+	keccak.Write(buffer.Bytes())
+	keccak.Sum(valueKey[:0])
+
+	return keyTrie, valueKey
 }
 
 // Suicide marks the given account as suicided.
@@ -419,7 +490,7 @@ func (self *StateDB) deleteStateObject(stateObject *stateObject) {
 }
 
 // Retrieve a state object given by the address. Returns nil if not found.
-func (self *StateDB) getStateObject(addr common.Address) (stateObject *stateObject) {
+func (self *StateDB) getStateObjectold(addr common.Address) (stateObject *stateObject) {
 	// Prefer 'live' objects.
 	if obj := self.stateObjects[addr]; obj != nil {
 		if obj.deleted {
@@ -445,8 +516,46 @@ func (self *StateDB) getStateObject(addr common.Address) (stateObject *stateObje
 	return obj
 }
 
+func (self *StateDB) getStateObject(addr common.Address) (stateObject *stateObject) {
+	// Prefer 'live' objects.
+	if obj := self.getCacheObject(addr); obj != nil {
+		if obj.deleted {
+			return nil
+		}
+		return obj
+	}
+
+	self.objLock.Lock()
+	defer self.objLock.Unlock()
+
+	if obj, ok := self.stateObjects[addr]; ok {
+		return obj
+	}
+	// Load the object from the database.
+	enc, err := self.trie.TryGet(addr[:])
+	if len(enc) == 0 {
+		self.setError(err)
+		return nil
+	}
+	var data Account
+	if err := rlp.DecodeBytes(enc, &data); err != nil {
+		log.Error("Failed to decode state object", "addr", addr, "err", err)
+		return nil
+	}
+	// Insert into the live set.
+	obj := newObject(self, addr, data)
+	self.setStateObject(obj)
+	return obj
+}
+
 func (self *StateDB) setStateObject(object *stateObject) {
 	self.stateObjects[object.Address()] = object
+}
+
+func (self *StateDB) getCacheObject(addr common.Address) *stateObject {
+	self.objLock.RLock()
+	defer self.objLock.RUnlock()
+	return self.stateObjects[addr]
 }
 
 // Retrieve a state object or create a new state object if nil.
@@ -454,6 +563,14 @@ func (self *StateDB) GetOrNewStateObject(addr common.Address) *stateObject {
 	stateObject := self.getStateObject(addr)
 	if stateObject == nil || stateObject.deleted {
 		stateObject, _ = self.createObject(addr)
+	}
+	return stateObject
+}
+
+func (self *StateDB) GetOrNewStateObjectSafe(addr common.Address) *stateObject {
+	stateObject := self.getStateObject(addr)
+	if stateObject == nil || stateObject.deleted {
+		stateObject, _ = self.createObjectSafe(addr)
 	}
 	return stateObject
 }
@@ -469,6 +586,20 @@ func (self *StateDB) createObject(addr common.Address) (newobj, prev *stateObjec
 	} else {
 		self.journal.append(resetObjectChange{prev: prev})
 	}
+	self.setStateObject(newobj)
+	return newobj, prev
+}
+
+func (self *StateDB) createObjectSafe(addr common.Address) (newobj, prev *stateObject) {
+	prev = self.getStateObject(addr)
+	self.objLock.Lock()
+	defer self.objLock.Unlock()
+
+	if obj, ok := self.stateObjects[addr]; ok {
+		return obj, prev
+	}
+	newobj = newObject(self, addr, Account{})
+	newobj.setNonce(0) // sets the object to dirty
 	self.setStateObject(newobj)
 	return newobj, prev
 }
@@ -519,14 +650,14 @@ func (self *StateDB) CloneAccount(src common.Address, dest common.Address) error
 	return nil
 }
 
-func (db *StateDB) ForEachStorage(addr common.Address, cb func(key, value common.Hash) bool) {
-	so := db.getStateObject(addr)
+func (self *StateDB) ForEachStorage(addr common.Address, cb func(key, value common.Hash) bool) {
+	so := self.getStateObject(addr)
 	if so == nil {
 		return
 	}
-	it := trie.NewIterator(so.getTrie(db.db).NodeIterator(nil))
+	it := trie.NewIterator(so.getTrie(self.db).NodeIterator(nil))
 	for it.Next() {
-		key := common.BytesToHash(db.trie.GetKey(it.Key))
+		key := common.BytesToHash(self.trie.GetKey(it.Key))
 		if value, dirty := so.dirtyValueStorage[key]; dirty {
 			cb(key, common.BytesToHash(value))
 			continue
@@ -618,9 +749,9 @@ func (self *StateDB) GetRefund() uint64 {
 
 // Finalise finalises the state by removing the self destructed objects
 // and clears the journal as well as the refunds.
-func (s *StateDB) Finalise(deleteEmptyObjects bool) {
-	for addr := range s.journal.dirties {
-		stateObject, exist := s.stateObjects[addr]
+func (self *StateDB) Finalise(deleteEmptyObjects bool) {
+	for addr := range self.journal.dirties {
+		stateObject, exist := self.stateObjects[addr]
 		if !exist {
 			// ripeMD is 'touched' at block 1714175, in tx 0x1237f737031e40bcde4a8b7e717b2d15e3ecadfe49bb1bbc71ee9deb09c6fcf2
 			// That tx goes out of gas, and although the notion of 'touched' does not exist there, the
@@ -632,23 +763,23 @@ func (s *StateDB) Finalise(deleteEmptyObjects bool) {
 		}
 
 		if stateObject.suicided || (deleteEmptyObjects && stateObject.empty()) {
-			s.deleteStateObject(stateObject)
+			self.deleteStateObject(stateObject)
 		} else {
-			stateObject.updateRoot(s.db)
-			s.updateStateObject(stateObject)
+			stateObject.updateRoot(self.db)
+			self.updateStateObject(stateObject)
 		}
-		s.stateObjectsDirty[addr] = struct{}{}
+		self.stateObjectsDirty[addr] = struct{}{}
 	}
 	// Invalidate journal because reverting across transactions is not allowed.
-	s.clearJournalAndRefund()
+	self.clearJournalAndRefund()
 }
 
 // IntermediateRoot computes the current root hash of the state trie.
 // It is called in between transactions to get the root hash that
 // goes into transaction receipts.
-func (s *StateDB) IntermediateRoot(deleteEmptyObjects bool) common.Hash {
-	s.Finalise(deleteEmptyObjects)
-	return s.trie.Hash()
+func (self *StateDB) IntermediateRoot(deleteEmptyObjects bool) common.Hash {
+	self.Finalise(deleteEmptyObjects)
+	return self.trie.Hash()
 }
 
 // Prepare sets the current transaction hash and index and block hash which is
@@ -659,57 +790,57 @@ func (self *StateDB) Prepare(thash, bhash common.Hash, ti int) {
 	self.txIndex = ti
 }
 
-func (s *StateDB) clearJournalAndRefund() {
-	s.journal = newJournal()
-	s.validRevisions = s.validRevisions[:0]
-	s.refund = 0
+func (self *StateDB) clearJournalAndRefund() {
+	self.journal = newJournal()
+	self.validRevisions = self.validRevisions[:0]
+	self.refund = 0
 }
 
 // Commit writes the state to the underlying in-memory trie database.
-func (s *StateDB) Commit(deleteEmptyObjects bool) (root common.Hash, err error) {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+func (self *StateDB) Commit(deleteEmptyObjects bool) (root common.Hash, err error) {
+	self.lock.Lock()
+	defer self.lock.Unlock()
 
-	defer s.clearJournalAndRefund()
+	defer self.clearJournalAndRefund()
 
-	for addr := range s.journal.dirties {
-		s.stateObjectsDirty[addr] = struct{}{}
+	for addr := range self.journal.dirties {
+		self.stateObjectsDirty[addr] = struct{}{}
 	}
 	// Commit objects to the trie.
-	for addr, stateObject := range s.stateObjects {
-		_, isDirty := s.stateObjectsDirty[addr]
+	for addr, stateObject := range self.stateObjects {
+		_, isDirty := self.stateObjectsDirty[addr]
 		switch {
 		case stateObject.suicided || (isDirty && deleteEmptyObjects && stateObject.empty()):
 			// If the object has been removed, don't bother syncing it
 			// and just mark it for deletion in the trie.
-			s.deleteStateObject(stateObject)
+			self.deleteStateObject(stateObject)
 		case isDirty:
 			// Write any contract code associated with the state object
 			if stateObject.code != nil && stateObject.dirtyCode {
-				s.db.TrieDB().InsertBlob(common.BytesToHash(stateObject.CodeHash()), stateObject.code)
+				self.db.TrieDB().InsertBlob(common.BytesToHash(stateObject.CodeHash()), stateObject.code)
 				stateObject.dirtyCode = false
 			}
 			// Write any storage changes in the state object to its storage trie.
-			if err := stateObject.CommitTrie(s.db); err != nil {
+			if err := stateObject.CommitTrie(self.db); err != nil {
 				return common.Hash{}, err
 			}
 			// Update the object in the main account trie.
-			s.updateStateObject(stateObject)
+			self.updateStateObject(stateObject)
 		}
-		delete(s.stateObjectsDirty, addr)
+		delete(self.stateObjectsDirty, addr)
 	}
 	// Write trie changes.
-	root, err = s.trie.Commit(func(leaf []byte, parent common.Hash) error {
+	root, err = self.trie.Commit(func(leaf []byte, parent common.Hash) error {
 		var account Account
 		if err := rlp.DecodeBytes(leaf, &account); err != nil {
 			return nil
 		}
 		if account.Root != emptyState {
-			s.db.TrieDB().Reference(account.Root, parent)
+			self.db.TrieDB().Reference(account.Root, parent)
 		}
 		code := common.BytesToHash(account.CodeHash)
 		if code != emptyCode {
-			s.db.TrieDB().Reference(code, parent)
+			self.db.TrieDB().Reference(code, parent)
 		}
 		return nil
 	})
@@ -761,8 +892,8 @@ func (self *StateDB) GetByte(addr common.Address, key []byte) byte {
 }
 
 // todo: new method -> GetAbiHash
-func (s *StateDB) GetAbiHash(addr common.Address) common.Hash {
-	stateObject := s.getStateObject(addr)
+func (self *StateDB) GetAbiHash(addr common.Address) common.Hash {
+	stateObject := self.getStateObject(addr)
 	if stateObject == nil {
 		return common.Hash{}
 	}
@@ -770,24 +901,24 @@ func (s *StateDB) GetAbiHash(addr common.Address) common.Hash {
 }
 
 // todo: new method -> GetAbi
-func (s *StateDB) GetAbi(addr common.Address) []byte {
-	stateObject := s.getStateObject(addr)
+func (self *StateDB) GetAbi(addr common.Address) []byte {
+	stateObject := self.getStateObject(addr)
 	if stateObject != nil {
-		return stateObject.Abi(s.db)
+		return stateObject.Abi(self.db)
 	}
 	return nil
 }
 
 // todo: new method -> SetAbi
-func (s *StateDB) SetAbi(addr common.Address, abi []byte) {
-	stateObject := s.GetOrNewStateObject(addr)
+func (self *StateDB) SetAbi(addr common.Address, abi []byte) {
+	stateObject := self.GetOrNewStateObject(addr)
 	if stateObject != nil {
 		stateObject.SetAbi(crypto.Keccak256Hash(abi), abi)
 	}
 }
 
-func (s *StateDB) FwAdd(addr common.Address, action Action, list []FwElem) {
-	stateObject := s.GetOrNewStateObject(addr)
+func (self *StateDB) FwAdd(addr common.Address, action Action, list []FwElem) {
+	stateObject := self.GetOrNewStateObject(addr)
 	fwData := stateObject.FwData()
 	switch action {
 	case reject:
@@ -801,8 +932,8 @@ func (s *StateDB) FwAdd(addr common.Address, action Action, list []FwElem) {
 	}
 	stateObject.SetFwData(fwData)
 }
-func (s *StateDB) FwClear(addr common.Address, action Action) {
-	stateObject := s.GetOrNewStateObject(addr)
+func (self *StateDB) FwClear(addr common.Address, action Action) {
+	stateObject := self.GetOrNewStateObject(addr)
 
 	fwData := stateObject.FwData()
 	switch action {
@@ -813,8 +944,8 @@ func (s *StateDB) FwClear(addr common.Address, action Action) {
 	}
 	stateObject.SetFwData(fwData)
 }
-func (s *StateDB) FwDel(addr common.Address, action Action, list []FwElem) {
-	stateObject := s.GetOrNewStateObject(addr)
+func (self *StateDB) FwDel(addr common.Address, action Action, list []FwElem) {
+	stateObject := self.GetOrNewStateObject(addr)
 
 	fwData := stateObject.FwData()
 	switch action {
@@ -831,8 +962,8 @@ func (s *StateDB) FwDel(addr common.Address, action Action, list []FwElem) {
 	}
 	stateObject.SetFwData(fwData)
 }
-func (s *StateDB) FwSet(addr common.Address, action Action, list []FwElem) {
-	stateObject := s.GetOrNewStateObject(addr)
+func (self *StateDB) FwSet(addr common.Address, action Action, list []FwElem) {
+	stateObject := self.GetOrNewStateObject(addr)
 
 	fwData := NewFwData()
 	switch action {
@@ -849,20 +980,20 @@ func (s *StateDB) FwSet(addr common.Address, action Action, list []FwElem) {
 	}
 	stateObject.SetFwData(fwData)
 }
-func (s *StateDB) SetFwStatus(addr common.Address, status FwStatus) {
-	stateObject := s.GetOrNewStateObject(addr)
+func (self *StateDB) SetFwStatus(addr common.Address, status FwStatus) {
+	stateObject := self.GetOrNewStateObject(addr)
 	fwActive := status.Active
 	stateObject.SetFwActive(fwActive)
 
 	acc := status.AcceptedList
-	s.FwSet(addr, accept, acc)
+	self.FwSet(addr, accept, acc)
 
 	denied := status.RejectedList
-	s.FwSet(addr, reject, denied)
+	self.FwSet(addr, reject, denied)
 }
 
-func (s *StateDB) GetFwStatus(addr common.Address) FwStatus {
-	stateObject := s.getStateObject(addr)
+func (self *StateDB) GetFwStatus(addr common.Address) FwStatus {
+	stateObject := self.getStateObject(addr)
 	if stateObject == nil {
 		return FwStatus{
 			ContractAddr: addr,
@@ -920,24 +1051,24 @@ func (s *StateDB) GetFwStatus(addr common.Address) FwStatus {
 	}
 }
 
-func (s *StateDB) FwImport(addr common.Address, data []byte) error {
+func (self *StateDB) FwImport(addr common.Address, data []byte) error {
 	status := FwStatus{}
 	err := json.Unmarshal(data, &status)
 	if err != nil {
 		return errors.New("Firewall import failed")
 	}
-	s.FwAdd(addr, reject, status.RejectedList)
-	s.FwAdd(addr, accept, status.AcceptedList)
+	self.FwAdd(addr, reject, status.RejectedList)
+	self.FwAdd(addr, accept, status.AcceptedList)
 	//s.SetFwStatus(addr, status)
 	return nil
 }
 
-func (s *StateDB) SetContractCreator(addr, creator common.Address) {
-	stateObject := s.GetOrNewStateObject(addr)
+func (self *StateDB) SetContractCreator(addr, creator common.Address) {
+	stateObject := self.GetOrNewStateObject(addr)
 	stateObject.SetContractCreator(creator)
 }
-func (s *StateDB) GetContractCreator(addr common.Address) common.Address {
-	stateObject := s.getStateObject(addr)
+func (self *StateDB) GetContractCreator(addr common.Address) common.Address {
+	stateObject := self.getStateObject(addr)
 	if stateObject == nil {
 		return common.Address{}
 	}
@@ -945,15 +1076,15 @@ func (s *StateDB) GetContractCreator(addr common.Address) common.Address {
 	return creator
 }
 
-func (s *StateDB) OpenFirewall(addr common.Address) {
-	stateObject := s.GetOrNewStateObject(addr)
+func (self *StateDB) OpenFirewall(addr common.Address) {
+	stateObject := self.GetOrNewStateObject(addr)
 	stateObject.SetFwActive(true)
 }
-func (s *StateDB) CloseFirewall(addr common.Address) {
-	stateObject := s.GetOrNewStateObject(addr)
+func (self *StateDB) CloseFirewall(addr common.Address) {
+	stateObject := self.GetOrNewStateObject(addr)
 	stateObject.SetFwActive(false)
 }
-func (s *StateDB) IsFwOpened(addr common.Address) bool {
-	stateObject := s.GetOrNewStateObject(addr)
+func (self *StateDB) IsFwOpened(addr common.Address) bool {
+	stateObject := self.GetOrNewStateObject(addr)
 	return stateObject.FwActive()
 }

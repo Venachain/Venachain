@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/PlatONEnetwork/PlatONE-Go"
+	ethereum "github.com/PlatONEnetwork/PlatONE-Go"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
@@ -115,7 +115,7 @@ func (ec *Client) getBlock(ctx context.Context, method string, args ...interface
 		}
 		txs[i] = tx.tx
 	}
-	return types.NewBlockWithHeader(head).WithBody(txs), nil
+	return types.NewBlockWithHeader(head).WithBody(txs, nil), nil
 }
 
 // HeaderByHash returns the block header with the given hash.
