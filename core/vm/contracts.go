@@ -322,7 +322,8 @@ type bn256Pairing struct{}
 
 // RequiredGas returns the gas required to execute the pre-compiled contract.
 func (c *bn256Pairing) RequiredGas(input []byte) uint64 {
-	return params.Bn256PairingBaseGas + uint64(len(input)/192)*params.Bn256PairingPerPointGas
+	//return params.Bn256PairingBaseGas + uint64(len(input)/192)*params.Bn256PairingPerPointGas
+	return (uint64(len(input)+31)/32*params.Sha256PerWordGas + params.Sha256BaseGas) * 47
 }
 
 func (c *bn256Pairing) Run(input []byte) ([]byte, error) {
