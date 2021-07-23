@@ -50,6 +50,9 @@ const (
 	DoingRst     = 1
 	DonePending  = 0
 	DoingPending = 1
+
+	// Define the size of the transaction.
+	TxSize = 1024
 )
 
 var (
@@ -93,6 +96,8 @@ var (
 	// than some meaningful limit a user might use. This is not a consensus error
 	// making the transaction invalid, rather a DOS protection.
 	ErrOversizedData = errors.New("oversized data")
+
+	ErrTxpoolIsFull = errors.New("txpool is full")
 )
 
 var (
@@ -585,6 +590,7 @@ func (pool *TxPool) Stop() {
 // SubscribeNewTxsEvent registers a subscription of NewTxsEvent and
 // starts sending event to the given channel.
 func (pool *TxPool) SubscribeNewTxsEvent(ch chan<- NewTxsEvent) event.Subscription {
+	log.Trace("registers a subscription of NewTxsEvent")
 	return pool.scope.Track(pool.txFeed.Subscribe(ch))
 }
 
@@ -620,7 +626,8 @@ func (pool *TxPool) State() *state.ManagedState {
 func (pool *TxPool) Stats() (int, int) {
 	pool.mu.RLock()
 	defer pool.mu.RUnlock()
-
+	pending,_ := pool.stats()
+	log.Info("Transaction pool got pending transactions","status",pending)
 	return pool.stats()
 }
 
@@ -656,6 +663,7 @@ func (pool *TxPool) Content() (map[common.Address]types.Transactions, map[common
 	//		queued[addr] = list.Get()
 	//	}
 	//}
+	log.Trace("current pending transactions:",pending)
 	return pending, queued
 }
 
@@ -672,6 +680,7 @@ func (pool *TxPool) Pending() (map[common.Address]types.Transactions, error) {
 			pending[addr] = list.Get()
 		}
 	}
+	log.Trace("current pending transactions:",pending)
 	return pending, nil
 }
 
@@ -732,7 +741,7 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 
 	// Heuristic limit, reject transactions over 32KB to prevent DOS attacks
 	// 32kb -> 1m
-	if tx.Size() > 1024*1024 {
+	if tx.Size() > TxSize *1024 {
 		return ErrOversizedData
 	}
 	// Transactions can't be negative. This may never happen using RLP decoded
@@ -756,7 +765,8 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 	if !isCallParamManager(tx.To()) && common.SysCfg.GetIsTxUseGas() && common.SysCfg.GetGasContractName() != "" {
 		contractCreation := tx.To() == nil
 		gas, err := IntrinsicGas(tx.Data(), contractCreation)
-		log.Debug("IntrinsicGas amount", "IntrinsicGas:", gas)
+		//log.Debug("IntrinsicGas amount", "IntrinsicGas:", gas)
+
 		if err != nil {
 			return err
 		}
@@ -1013,6 +1023,7 @@ func (pool *TxPool) addTxExt(txExt *txExt) interface{} {
 	errs := make([]error, len(txExt.txs))
 	for i, tx := range txExt.txs {
 		_, errs[i] = pool.add(tx, txExt.local)
+		log.Trace("add transactions into extDb","tx",tx)
 	}
 	return errs
 }
@@ -1028,12 +1039,14 @@ func (pool *TxPool) addTxs(txs []*types.Transaction, local bool) []error {
 	//atomic.AddInt32(&pool.processCnt,1)
 	for i, tx := range txs {
 		if uint64(pool.all.Count()) >= pool.config.GlobalSlots {
-			errs[i] = errors.New("txpool is full")
+			errs[i] = ErrTxpoolIsFull
+			log.Error("txpool is full, add transaction failed")
 			continue
 		}
 		// If the transaction is known, pre-set the error slot
 		if pool.all.Get(tx.Hash()) != nil {
 			errs[i] = fmt.Errorf("known transaction: %x", tx.Hash())
+			log.Error("known transaction","tx",tx.Hash())
 			continue
 		}
 		// Exclude transactions with invalid signatures as soon as
@@ -1054,6 +1067,7 @@ func (pool *TxPool) addTxs(txs []*types.Transaction, local bool) []error {
 	txExt := &txExt{news, !pool.config.NoLocals, errCh}
 	pool.txExtBuffer <- txExt
 	var newErrs []error
+
 	select {
 	case tmp := <-errCh:
 		newErrs = tmp.([]error)
