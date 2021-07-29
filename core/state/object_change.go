@@ -12,6 +12,10 @@ type ObjectChange interface {
 	getAddr() common.Address //获取变更的地址
 
 	getObject() *stateObject //获取变更的stateobject
+
+	setVersion(version int)
+
+	getVersion() int
 }
 
 //CreateAccount 创建账户的变更操作
@@ -19,6 +23,7 @@ type CreateAccount struct {
 	account common.Address
 	prev    *stateObject
 	newObj  *stateObject
+	version int
 }
 
 func NewCreateAccount(po *stateObject, no *stateObject) *CreateAccount {
@@ -44,11 +49,20 @@ func (ca CreateAccount) getObject() *stateObject {
 	return ca.newObj
 }
 
+func (ca CreateAccount) getVersion() int {
+	return ca.version
+}
+
+func (ca CreateAccount) setVersion(version int) {
+	ca.version = version
+}
+
 type SetCode struct {
 	address common.Address
 	obj     *stateObject
 	code    []byte
 	hash    common.Hash
+	version int
 }
 
 func NewSetCode(stateObject *stateObject, addr common.Address, code []byte) *SetCode {
@@ -74,11 +88,20 @@ func (ca SetCode) getObject() *stateObject {
 	return ca.obj
 }
 
+func (ca SetCode) getVersion() int {
+	return ca.version
+}
+
+func (ca SetCode) setVersion(version int) {
+	ca.version = version
+}
+
 type SetAbi struct {
 	address common.Address
 	obj     *stateObject
 	code    []byte
 	hash    common.Hash
+	version int
 }
 
 func NewSetAbi(stateObject *stateObject, addr common.Address, code []byte) *SetAbi {
@@ -103,9 +126,18 @@ func (ca SetAbi) getObject() *stateObject {
 	return ca.obj
 }
 
+func (ca SetAbi) getVersion() int {
+	return ca.version
+}
+
+func (ca SetAbi) setVersion(version int) {
+	ca.version = version
+}
+
 type Suicide struct {
 	address common.Address
 	obj     *stateObject
+	version int
 }
 
 func NewSuicide(stateObject *stateObject, addr common.Address) *Suicide {
@@ -128,10 +160,19 @@ func (ca Suicide) getObject() *stateObject {
 	return ca.obj
 }
 
+func (ca Suicide) getVersion() int {
+	return ca.version
+}
+
+func (ca Suicide) setVersion(version int) {
+	ca.version = version
+}
+
 type SetFwData struct {
 	address common.Address
 	obj     *stateObject
 	data    FwData
+	version int
 }
 
 func NewSetFwData(object *stateObject, addr common.Address, data FwData) *SetFwData {
@@ -154,10 +195,19 @@ func (ca SetFwData) getObject() *stateObject {
 	return ca.obj
 }
 
+func (ca SetFwData) getVersion() int {
+	return ca.version
+}
+
+func (ca SetFwData) setVersion(version int) {
+	ca.version = version
+}
+
 type SetFwActive struct {
 	address common.Address
 	obj     *stateObject
 	active  uint64
+	version int
 }
 
 func NewSetFwActive(object *stateObject, addr common.Address, active uint64) *SetFwActive {
@@ -184,10 +234,19 @@ func (ca SetFwActive) getObject() *stateObject {
 	return ca.obj
 }
 
+func (ca SetFwActive) getVersion() int {
+	return ca.version
+}
+
+func (ca SetFwActive) setVersion(version int) {
+	ca.version = version
+}
+
 type SetCreator struct {
 	address common.Address
 	obj     *stateObject
 	creator common.Address
+	version int
 }
 
 func NewSetCreator(object *stateObject, addr common.Address, creator common.Address) *SetCreator {
@@ -208,4 +267,12 @@ func (ca SetCreator) getAddr() common.Address {
 
 func (ca SetCreator) getObject() *stateObject {
 	return ca.obj
+}
+
+func (ca SetCreator) getVersion() int {
+	return ca.version
+}
+
+func (ca SetCreator) setVersion(version int) {
+	ca.version = version
 }
