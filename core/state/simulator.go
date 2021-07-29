@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"math/big"
-	"time"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 
@@ -624,11 +623,6 @@ func (self *StateDB) GetTxsLen() int {
 
 //AddTxSim 将模拟交易加入到db中
 func (self *StateDB) AddTxSim(txSim *TxSimulator, applyCh chan *TxSimulator, withDag bool) (bool, int) { //
-	if txSim.ReTry() {
-		//需要retry的交易等待一段时间，保证前序交易已经处理完成，再重新执行
-		time.Sleep(5 * time.Millisecond)
-		return false, self.GetTxsLen()
-	}
 	//优先判断并行过程是否已经结束
 	if !self.IsProcess() {
 		return false, self.GetTxsLen()
@@ -681,6 +675,15 @@ func (self *StateDB) checkConflict(txSim *TxSimulator) bool {
 		}
 	}
 
+	//判断模拟模拟交易的object变更在state的余额变更集合中是否存在相同的key，且变更操作的version大于等于模拟交易的version
+	for _, v := range txSim.oc {
+		if c, ok := self.oc[v.getAddr()]; ok {
+			if c.getVersion() >= txSim.version {
+				return true
+			}
+		}
+	}
+
 	return false
 }
 
@@ -726,6 +729,17 @@ func (self *StateDB) addTxSim(txSim *TxSimulator) {
 			}
 			op.Version = version
 			self.balanceMap[op.ContractAddress] = op
+		}
+	}
+
+	if len(txSim.oc) != 0 {
+		for _, op := range txSim.oc {
+			//模拟交易中的写集中的值，在stateDB中读写集cache中的写集内是否已经存在相同的key，获取该笔写操作的version，将该version的值加入该笔交易的Dependency中
+			if c, ok := self.oc[op.getAddr()]; ok {
+				depend = depend.Add(c.getVersion())
+			}
+			op.setVersion(version)
+			self.oc[op.getAddr()] = op
 		}
 	}
 
@@ -788,14 +802,6 @@ func (self *StateDB) ApplyTxSim(txSim *TxSimulator) {
 			op.change(self)
 		}
 	}
-
-	//for _, addr := range txSim.nonce {
-	//	if count, ok := self.nonce[addr]; ok {
-	//		self.nonce[addr] = count + 1
-	//	} else {
-	//		self.nonce[addr] = 1
-	//	}
-	//}
 
 	// 每笔交易都更新nonce
 	for _, addr := range txSim.nonce {

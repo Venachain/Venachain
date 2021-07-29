@@ -78,8 +78,7 @@ func (cns *CnsWrapper) AllExportFns() SCExportFns {
 		"getRegisteredContractsByAddress": cns.getRegisteredContractsByAddress,
 		"getRegisteredContractsByOrigin":  cns.getRegisteredContractsByOrigin, // getContractInfoByAddress -> getRegisteredContractsByOrigin
 		"importOldCnsManagerData":         cns.importOldCnsManagerData,
-
-		"getContractInfoByAddress": cns.getRegisteredContractsByAddress,
+		"getContractInfoByAddress":        cns.getRegisteredContractsByAddress,
 	}
 }
 

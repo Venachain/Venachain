@@ -205,6 +205,12 @@ func (p *StateProcessor) ParallelProcessTxs(stateDb *state.StateDB, header *type
 						atomic.AddInt32(&errCnt, 1)
 						return
 					}
+					if txSim.ReTry() {
+						//需要retry的交易等待一段时间，保证前序交易已经处理完成，再重新执行
+						time.Sleep(5 * time.Millisecond)
+						txCh <- tx
+						return
+					}
 					result, count := stateDb.AddTxSim(txSim, applyCh, false)
 					// 严重冲突的交易需要重新执行
 					if !result {
@@ -343,6 +349,14 @@ func (p *StateProcessor) ParallelProcessTxsWithDag(block *types.Block, statedb *
 						errCh <- err
 						return
 					}
+
+					if txSim.ReTry() {
+						//需要retry的交易等待一段时间，保证前序交易已经处理完成，再重新执行
+						time.Sleep(5 * time.Millisecond)
+						runCh <- txIndex
+						return
+					}
+
 					result, addCount := statedb.AddTxSim(txSim, applyCh, true)
 					if !result {
 						errCh <- fmt.Errorf("DAG is not correctly")
