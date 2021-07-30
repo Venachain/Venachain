@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/packet"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/packet"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
 )
 
@@ -64,12 +64,12 @@ func (client *pClient) MessageCallV2(dataGen packet.MsgDataGen, tx *packet.TxPar
 
 			recpt := dataGen.ReceiptParsing(polRes)
 			// recpt := polRes.Parsing()
-			if recpt.Status != packet.TxReceiptSuccessMsg {
-				result, _ := client.GetRevertMsg(tx, recpt.BlockNumber)
-				if len(result) >= 4 {
-					recpt.Err, _ = packet.UnpackError(result)
-				}
-			}
+			//if recpt.Status != packet.TxReceiptSuccessMsg {
+			//	result, _ := client.GetRevertMsg(tx, recpt.BlockNumber)
+			//	if len(result) >= 4 {
+			//		recpt.Err, _ = packet.UnpackError(result)
+			//	}
+			//}
 
 			result[0] = recpt.String()
 		}
