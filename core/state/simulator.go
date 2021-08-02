@@ -286,6 +286,7 @@ func (txSim *TxSimulator) CreateAccount(address common.Address) {
 	no := newObject(txSim.statedb, address, Account{})
 	no.setNonce(0)
 	txSim.dirty[address] = no
+	log.Info("TxSimulator CreateAccount add oc ")
 	txSim.oc = append(txSim.oc, NewCreateAccount(po, no))
 }
 
@@ -311,6 +312,7 @@ func (txSim *TxSimulator) GetCodeHash(address common.Address) common.Hash {
 
 //SetCode 记录设置代码的操作
 func (txSim *TxSimulator) SetCode(address common.Address, bytes []byte) {
+	log.Info("TxSimulator set code add oc ")
 	stateObject := txSim.getStateObject(address)
 	txSim.oc = append(txSim.oc, NewSetCode(stateObject, address, bytes))
 }
@@ -511,6 +513,7 @@ func (txSim *TxSimulator) SetContractCreator(contractAddr common.Address, creato
 	}
 	stateObject.CreateTrie(txSim.statedb.db)
 	txSim.dirty[contractAddr] = stateObject
+	log.Info("TxSimulator SetContractCreator add oc ")
 	txSim.oc = append(txSim.oc, NewSetCreator(stateObject, contractAddr, creator))
 }
 
@@ -725,7 +728,9 @@ func (self *StateDB) addTxSim(txSim *TxSimulator) {
 		for _, op := range txSim.balanceMap {
 			//模拟交易中的写集中的值，在stateDB中读写集cache中的写集内是否已经存在相同的key，获取该笔写操作的version，将该version的值加入该笔交易的Dependency中
 			if wp, ok := self.balanceMap[op.ContractAddress]; ok {
-				depend = depend.Add(wp.Version)
+				if wp.Version != version {
+					depend = depend.Add(wp.Version)
+				}
 			}
 			op.Version = version
 			self.balanceMap[op.ContractAddress] = op
@@ -736,7 +741,9 @@ func (self *StateDB) addTxSim(txSim *TxSimulator) {
 		for _, op := range txSim.oc {
 			//模拟交易中的写集中的值，在stateDB中读写集cache中的写集内是否已经存在相同的key，获取该笔写操作的version，将该version的值加入该笔交易的Dependency中
 			if c, ok := self.oc[op.getAddr()]; ok {
-				depend = depend.Add(c.getVersion())
+				if c.getVersion() != version {
+					depend = depend.Add(c.getVersion())
+				}
 			}
 			op.setVersion(version)
 			self.oc[op.getAddr()] = op
