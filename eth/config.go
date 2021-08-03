@@ -30,7 +30,7 @@ import (
 
 // DefaultConfig contains default settings for use on the Ethereum main net.
 var DefaultConfig = Config{
-	SyncMode: downloader.FullSync,
+	SyncMode:      downloader.FullSync,
 	NetworkId:     1,
 	LightPeers:    100,
 	DatabaseCache: 768,
@@ -97,7 +97,8 @@ type Config struct {
 	EWASMInterpreter string
 	// Type of the EVM interpreter ("" for default)
 	EVMInterpreter string
-
+	// Type of parallel process transactions
+	ParallelSize int
 }
 
 type configMarshaling struct {

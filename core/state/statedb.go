@@ -552,6 +552,12 @@ func (self *StateDB) setStateObject(object *stateObject) {
 	self.stateObjects[object.Address()] = object
 }
 
+func (self *StateDB) setStateObjectSafe(object *stateObject) {
+	self.objLock.Lock()
+	defer self.objLock.Unlock()
+	self.stateObjects[object.Address()] = object
+}
+
 func (self *StateDB) getCacheObject(addr common.Address) *stateObject {
 	self.objLock.RLock()
 	defer self.objLock.RUnlock()

@@ -285,6 +285,7 @@ func (txSim *TxSimulator) CreateAccount(address common.Address) {
 	po := txSim.statedb.getStateObject(address)
 	no := newObject(txSim.statedb, address, Account{})
 	no.setNonce(0)
+	txSim.statedb.setStateObjectSafe(no)
 	txSim.dirty[address] = no
 	log.Info("TxSimulator CreateAccount add oc ")
 	txSim.oc = append(txSim.oc, NewCreateAccount(po, no))
@@ -508,9 +509,6 @@ func (txSim *TxSimulator) GetFwStatus(contractAddr common.Address) FwStatus {
 //SetContractCreator 优先判断地址是否是合约，如果是则为合约设置创建人，并记录该操作
 func (txSim *TxSimulator) SetContractCreator(contractAddr common.Address, creator common.Address) {
 	stateObject := txSim.statedb.GetOrNewStateObjectSafe(contractAddr)
-	if bytes.Equal(stateObject.CodeHash(), emptyCodeHash) {
-		return
-	}
 	stateObject.CreateTrie(txSim.statedb.db)
 	txSim.dirty[contractAddr] = stateObject
 	log.Info("TxSimulator SetContractCreator add oc ")

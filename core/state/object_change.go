@@ -1,6 +1,8 @@
 package state
 
 import (
+	"bytes"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 )
@@ -258,6 +260,9 @@ func NewSetCreator(object *stateObject, addr common.Address, creator common.Addr
 }
 
 func (ca SetCreator) change(s *StateDB) {
+	if bytes.Equal(ca.obj.CodeHash(), emptyCodeHash) {
+		return
+	}
 	ca.obj.setContractCreator(ca.creator)
 }
 

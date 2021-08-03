@@ -3,11 +3,14 @@ package common
 import (
 	"bytes"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"reflect"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
 var currentInterpreterType string
+
+var parallelPoolSize int
 
 func SetCurrentInterpreterType(cit string) {
 	currentInterpreterType = cit
@@ -15,6 +18,14 @@ func SetCurrentInterpreterType(cit string) {
 
 func GetCurrentInterpreterType() string {
 	return currentInterpreterType
+}
+
+func SetParallelPoolSize(size int) {
+	parallelPoolSize = size
+}
+
+func GetParallelPoolSize() int {
+	return parallelPoolSize
 }
 
 func IsWasmContractCode(code []byte) (ok bool, tx_type int64, abi, bytecode []byte) {
