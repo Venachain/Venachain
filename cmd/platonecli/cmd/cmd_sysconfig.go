@@ -102,6 +102,7 @@ func setSysConfig(c *cli.Context) {
 
 func setConfig(c *cli.Context, param string, name string) {
 	// todo: optimize the code, param check, param convert
+	var funcName string
 	if !checkConfigParam(param, name) {
 		return
 	}
@@ -110,8 +111,12 @@ func setConfig(c *cli.Context, param string, name string) {
 	if err != nil {
 		utils.Fatalf(err.Error())
 	}
-
-	funcName := "set" + name
+	if name == "IsCheckContractDeployPermission"{
+		funcName = "setCheckContractDeployPermission"
+	} else {
+		funcName = "set" + name
+	}
+	//funcName = "set" + name
 	funcParams := cmd_common.CombineFuncParams(newParam)
 
 	result := contractCall(c, funcParams, funcName, precompile.ParameterManagementAddress)
@@ -182,9 +187,14 @@ func getSysConfig(c *cli.Context) {
 }
 
 func getConfig(c *cli.Context, isGet bool, name string) {
-
+	var funcName string
 	if isGet {
-		funcName := "get" + name
+		if name == "IsCheckContractDeployPermission"{
+			funcName = "getCheckContractDeployPermission"
+		}else {
+			funcName = "get" + name
+		}
+
 		result := contractCall(c, nil, funcName, precompile.ParameterManagementAddress)
 
 		result = sysconfigToString(result)
@@ -224,7 +234,7 @@ func sysConfigParsing(param interface{}, paramName string) string {
 
 func sysConfigConvert(param, paramName string) (string, error) {
 
-	if paramName == vm.TxGasLimitKey || paramName == vm.BlockGasLimitKey || paramName == vm.VrfParamsKey{
+	if paramName == vm.TxGasLimitKey || paramName == vm.BlockGasLimitKey || paramName == vm.VrfParamsKey || paramName == vm.GasContractNameKey {
 		return param, nil
 	}
 

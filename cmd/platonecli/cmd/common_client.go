@@ -18,7 +18,7 @@ import (
 )
 
 func clientCommonV2(c *cli.Context, dataGen packet.MsgDataGen, to *common.Address) []interface{} {
-	var result = make([]interface{}, 1)
+
 	// get the client global parameters
 	keyfile, isSync, isDefault, url := getClientConfig(c)
 
@@ -33,15 +33,8 @@ func clientCommonV2(c *cli.Context, dataGen packet.MsgDataGen, to *common.Addres
 		tx.From = common.HexToAddress(keyfile.Address)
 	}
 	tx.To = to
-	if dataGen == nil {
-		res, err := pc.Send(tx, keyfile)
-		if err != nil {
-			utl.Fatalf("to do: %s\n", err.Error())
-		}
-		result[0] = res
-		return  result
-	}
-	result[0], err = pc.MessageCallV2(dataGen, tx, keyfile, isSync)
+
+	result, err := pc.MessageCallV2(dataGen, tx, keyfile, isSync)
 	if err != nil {
 		utl.Fatalf("to do: %s\n", err.Error())
 	}
@@ -80,6 +73,7 @@ func getClientConfig(c *cli.Context) (*utils.Keyfile, bool, bool, string) {
 		}
 
 		account.Passphrase = utils.PromptPassphrase(false)
+
 		err = account.ParsePrivateKey()
 		if err != nil {
 			utl.Fatalf(err.Error())
