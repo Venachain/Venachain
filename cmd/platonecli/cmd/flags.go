@@ -18,10 +18,6 @@ var (
 		Name:  "account",
 		Usage: "Specify the local or remote account address used to send the message calls",
 	}
-	ValueFlags = cli.StringFlag{
-		Name:  "value",
-		Usage: "Specify the transfer count",
-	}
 	GasFlags = cli.StringFlag{
 		Name:  "gas",
 		Usage: "Specify the gas allowance for the code execution",
@@ -317,7 +313,6 @@ var (
 		KeyfileFlags,
 		SyncFlags,
 		DefaultFlags,
-		TransferValueFlag,
 	}
 
 	// system config

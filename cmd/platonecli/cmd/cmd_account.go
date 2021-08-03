@@ -89,9 +89,11 @@ The unit conversion table are as follows:
 
 func transfer(c *cli.Context) {
 	to := c.Args().First()
-	//value := c.Args().Get(1)
-	//value = cmd_common.ChainParamConvert(value, "value").(string)
+	value := c.Args().Get(1)
+
+	value = cmd_common.ChainParamConvert(value, "value").(string)
 	toNew := cmd_common.ChainParamConvert(to, "to").(common.Address)
+
 	result := clientCommonV2(c, nil, &toNew)
 	fmt.Printf("result: %v\n", result[0])
 }
