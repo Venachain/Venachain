@@ -565,6 +565,12 @@ var (
 		Usage: "External EVM configuration (default = built-in interpreter)",
 		Value: "",
 	}
+
+	ParallelProcessSize = cli.IntFlag{
+		Name:  "process.size",
+		Usage: "parallel process transactions go routine pool size",
+		Value: 0,
+	}
 )
 
 // MakeDataDir retrieves the currently requested data directory, terminating
@@ -1087,6 +1093,10 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *eth.Config) {
 
 	if ctx.GlobalIsSet(EVMInterpreterFlag.Name) {
 		cfg.EVMInterpreter = ctx.GlobalString(EVMInterpreterFlag.Name)
+	}
+
+	if ctx.GlobalIsSet(ParallelProcessSize.Name) {
+		cfg.ParallelSize = ctx.GlobalInt(ParallelProcessSize.Name)
 	}
 
 	// TODO(fjl): move trie cache generations into config

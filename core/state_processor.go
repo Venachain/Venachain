@@ -42,21 +42,27 @@ import (
 //
 // StateProcessor implements Processor.
 type StateProcessor struct {
-	signer  types.Signer
-	config  *params.ChainConfig // Chain configuration options
-	bc      *BlockChain         // Canonical block chain
-	engine  consensus.Engine    // Consensus engine used for block rewards
-	timeout time.Duration
+	signer   types.Signer
+	config   *params.ChainConfig // Chain configuration options
+	bc       *BlockChain         // Canonical block chain
+	engine   consensus.Engine    // Consensus engine used for block rewards
+	timeout  time.Duration
+	poolSize int
 }
 
 // NewStateProcessor initialises a new StateProcessor.
 func NewStateProcessor(config *params.ChainConfig, bc *BlockChain, engine consensus.Engine) *StateProcessor {
+	size := common.GetParallelPoolSize()
+	if size == 0 {
+		size = runtime.NumCPU() * 4
+	}
 	return &StateProcessor{
-		signer:  types.NewEIP155Signer(config.ChainID),
-		config:  config,
-		bc:      bc,
-		engine:  engine,
-		timeout: 5 * time.Second,
+		signer:   types.NewEIP155Signer(config.ChainID),
+		config:   config,
+		bc:       bc,
+		engine:   engine,
+		timeout:  5 * time.Second,
+		poolSize: size,
 	}
 }
 
@@ -176,7 +182,7 @@ func (p *StateProcessor) ParallelProcessTxs(stateDb *state.StateDB, header *type
 	stateDb.StartProcess()
 	var errCnt int32 = 0
 
-	goRoutinePool, err := ants.NewPool(runtime.NumCPU()*4, ants.WithOptions(ants.Options{
+	goRoutinePool, err := ants.NewPool(p.poolSize, ants.WithOptions(ants.Options{
 		PreAlloc: true,
 		PanicHandler: func(i interface{}) {
 			log.Error(fmt.Sprintf("worker exits from a panic: %v\n", i))
@@ -312,7 +318,7 @@ func (p *StateProcessor) ParallelProcessTxsWithDag(block *types.Block, statedb *
 	var allLogs []*types.Log
 	txsMap := make(map[common.Hash]struct{})
 
-	goRoutinePool, err := ants.NewPool(runtime.NumCPU()*4, ants.WithOptions(ants.Options{
+	goRoutinePool, err := ants.NewPool(p.poolSize, ants.WithOptions(ants.Options{
 		PreAlloc: true,
 		PanicHandler: func(i interface{}) {
 			log.Error(fmt.Sprintf("worker exits from a panic: %v\n", i))

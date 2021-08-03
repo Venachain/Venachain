@@ -168,6 +168,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	}
 	cacheConfig := &core.CacheConfig{Disabled: config.NoPruning, TrieNodeLimit: config.TrieCache, TrieTimeLimit: config.TrieTimeout}
 	common.SetCurrentInterpreterType(chainConfig.VMInterpreter)
+	common.SetParallelPoolSize(config.ParallelSize)
 
 	eth.blockchain, missingStateBlocks, err = core.NewBlockChain(chainDb, extDb, cacheConfig, eth.chainConfig, eth.engine, vmConfig, eth.shouldPreserve)
 	if err != nil {
