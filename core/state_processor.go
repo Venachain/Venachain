@@ -75,11 +75,15 @@ func NewStateProcessor(config *params.ChainConfig, bc *BlockChain, engine consen
 // transactions failed to execute due to insufficient gas it will return an error.
 func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg vm.Config) (*types.Block, types.Receipts, []*types.Log, uint64, error) {
 	header := block.Header()
+	header.TxHash = common.Hash{}
+	header.ReceiptHash = common.Hash{}
 	if len(block.Dag()) != 0 && len(block.Transactions()) != 0 {
 		receipts, logs, err := p.ParallelProcessTxsWithDag(block, statedb, false)
 		if err != nil {
 			return nil, nil, nil, 0, err
 		}
+		header.TxHash = statedb.GetTxHash()
+		header.ReceiptHash = statedb.GetReceiptHash()
 		// Finalize the block, applying any consensus engine specific extras (e.g. block rewards)
 		cblock, err := p.engine.Finalize(p.bc, header, statedb, block.Transactions(), receipts, block.Dag())
 		if err != nil {
@@ -121,11 +125,15 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 
 func (p *StateProcessor) CheckAndProcess(block *types.Block, statedb *state.StateDB, cfg vm.Config) (*types.Block, types.Receipts, error) {
 	header := block.Header()
+	header.TxHash = common.Hash{}
+	header.ReceiptHash = common.Hash{}
 	if len(block.Dag()) != 0 && len(block.Transactions()) != 0 {
 		receipts, _, err := p.ParallelProcessTxsWithDag(block, statedb, true)
 		if err != nil {
 			return nil, nil, err
 		}
+		header.TxHash = statedb.GetTxHash()
+		header.ReceiptHash = statedb.GetReceiptHash()
 		// Finalize the block, applying any consensus engine specific extras (e.g. block rewards)
 		cblock, err := p.engine.Finalize(p.bc, header, statedb, block.Transactions(), receipts, block.Dag())
 		if err != nil {
@@ -169,7 +177,7 @@ func (p *StateProcessor) CheckAndProcess(block *types.Block, statedb *state.Stat
 }
 
 func (p *StateProcessor) ParallelProcessTxs(stateDb *state.StateDB, header *types.Header, txs types.Transactions) error {
-	log.Info("Parallel Process Txs start")
+	log.Debug("Parallel Process Txs start")
 
 	txsCount := txs.Len()
 	txCh := make(chan *types.Transaction, txsCount)
@@ -198,7 +206,6 @@ func (p *StateProcessor) ParallelProcessTxs(stateDb *state.StateDB, header *type
 		for {
 			select {
 			case tx := <-txCh:
-				//log.Info("deal transaction :", "hash", tx.Hash())
 				err := goRoutinePool.Submit(func() {
 					if !stateDb.IsProcess() {
 						return
@@ -237,7 +244,7 @@ func (p *StateProcessor) ParallelProcessTxs(stateDb *state.StateDB, header *type
 				log.Debug("Parallel Process Txs reached time limit")
 				return
 			case <-finishCh:
-				log.Info("AddTxSim complete", "time", time.Now().Format("2006-01-02 15:04:05.000"))
+				log.Debug("AddTxSim complete", "time", time.Now().Format("2006-01-02 15:04:05.000"))
 				stopApplyCh <- true
 				return
 			}
@@ -250,10 +257,10 @@ func (p *StateProcessor) ParallelProcessTxs(stateDb *state.StateDB, header *type
 		for {
 			select {
 			case txSim := <-applyCh:
-				stateDb.ApplyTxSim(txSim)
+				stateDb.ApplyTxSim(txSim, true)
 				applyCnt++
 				if applyCnt >= (txsCount-int(atomic.LoadInt32(&errCnt))) || addCnt == applyCnt {
-					log.Info("applyTxSim complete", "time", time.Now().Format("2006-01-02 15:04:05.000"))
+					log.Debug("applyTxSim complete", "time", time.Now().Format("2006-01-02 15:04:05.000"))
 					stopCh <- true
 					return
 				}
@@ -262,7 +269,7 @@ func (p *StateProcessor) ParallelProcessTxs(stateDb *state.StateDB, header *type
 				stateDb.StopProcess()
 				addCnt = stateDb.GetTxsLen()
 				if addCnt == applyCnt {
-					log.Info("stopApplyCh", "time", time.Now().Format("2006-01-02 15:04:05.000"))
+					log.Debug("stopApplyCh", "time", time.Now().Format("2006-01-02 15:04:05.000"))
 					stopCh <- true
 					return
 				}
@@ -279,6 +286,7 @@ func (p *StateProcessor) ParallelProcessTxs(stateDb *state.StateDB, header *type
 	// 等待交易的执行完成 或者执行超时
 	<-stopCh
 	stateDb.StopProcess()
+	stateDb.UpdateDirtyObject()
 	header.GasUsed = stateDb.GetGasUsed()
 	log.Info("Parallel Process Txs stop", "txCount", stateDb.GetTxsLen(), "gasUsed", header.GasUsed)
 	return nil
@@ -296,11 +304,16 @@ func (p *StateProcessor) SimulateTx(stateDb *state.StateDB, tx *types.Transactio
 
 //ParallelProcessTxsWithDag 根据区块中的dag信息并行执行交易
 func (p *StateProcessor) ParallelProcessTxsWithDag(block *types.Block, statedb *state.StateDB, check bool) (types.Receipts, []*types.Log, error) {
+	log.Debug("Parallel Process Txs with dag start")
 	count := len(block.Dag())
 	if count != block.Transactions().Len() {
 		return nil, nil, fmt.Errorf("the length of dag does not equal the length of txs")
 	}
 	runIndexs, txLeft, txDependency := initDag(block.Dag())
+
+	if len(runIndexs) == 0 {
+		return nil, nil, fmt.Errorf("cycle dag error")
+	}
 
 	header := block.Header()
 	gp := new(GasPool).AddGas(header.GasLimit)
@@ -368,7 +381,6 @@ func (p *StateProcessor) ParallelProcessTxsWithDag(block *types.Block, statedb *
 						errCh <- fmt.Errorf("DAG is not correctly")
 						return
 					}
-					//log.Info("set receipt", "index", txIndex)
 					completeCh <- txIndex
 					if addCount >= count {
 						finishCh <- true
@@ -418,7 +430,7 @@ func (p *StateProcessor) ParallelProcessTxsWithDag(block *types.Block, statedb *
 						txsMap[txSim.GetHash()] = struct{}{}
 					}
 				}
-				statedb.ApplyTxSim(txSim)
+				statedb.ApplyTxSim(txSim, false)
 				receipts[txSim.GetIndex()] = txSim.GetReceipt()
 				allLogs = append(allLogs, txSim.GetReceipt().Logs...)
 				applyCnt++
@@ -443,9 +455,14 @@ func (p *StateProcessor) ParallelProcessTxsWithDag(block *types.Block, statedb *
 
 	<-stopCh
 	statedb.StopProcess()
+	statedb.UpdateDirtyObject()
 	if ProcessErr == nil {
 		ProcessErr = CalculateCumulativeGasUsed(receipts)
+		if ProcessErr == nil {
+			statedb.UpdateReceiptTrie(receipts)
+		}
 	}
+	log.Info("Parallel Process Txs with dag stop", "err", ProcessErr, "count", len(receipts))
 	return receipts, allLogs, ProcessErr
 }
 

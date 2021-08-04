@@ -14,8 +14,13 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 )
 
+var (
+	keyMap = make(map[int][]byte, 40960)
+	keyBuf = new(bytes.Buffer)
+)
+
 type TxSimulator struct {
-	statedb    *StateDB
+	stateDb    *StateDB
 	tx         *types.Transaction
 	hash       common.Hash
 	readMap    map[string]*ReadOp
@@ -30,11 +35,13 @@ type TxSimulator struct {
 	dirty      map[common.Address]*stateObject
 	reTry      bool
 	index      int
+	txRlp      []byte
 }
 
 func NewTxSimulator(sdb *StateDB, transaction *types.Transaction) *TxSimulator {
+	enc, _ := rlp.EncodeToBytes(transaction)
 	return &TxSimulator{
-		statedb:    sdb,
+		stateDb:    sdb,
 		tx:         transaction,
 		hash:       transaction.Hash(),
 		version:    sdb.GetTxsLen(),
@@ -42,6 +49,7 @@ func NewTxSimulator(sdb *StateDB, transaction *types.Transaction) *TxSimulator {
 		writeMap:   make(map[string]*WriteOp),
 		balanceMap: make(map[common.Address]*BalanceOp),
 		dirty:      make(map[common.Address]*stateObject),
+		txRlp:      enc,
 	}
 }
 
@@ -85,8 +93,8 @@ func (txSim *TxSimulator) GetIndex() int {
 }
 
 func (txSim *TxSimulator) getStateObject(addr common.Address) *stateObject {
-	obj := txSim.statedb.GetOrNewStateObject(addr)
-	obj.CreateTrie(txSim.statedb.db)
+	obj := txSim.stateDb.GetOrNewStateObject(addr)
+	obj.CreateTrie(txSim.stateDb.db)
 	txSim.dirty[addr] = obj
 	return obj
 }
@@ -132,12 +140,12 @@ func (txSim *TxSimulator) GetState(addr common.Address, key []byte) []byte {
 	} else if readop, ok := txSim.readMap[keyTrie]; ok {
 		//type = 2
 		op.Value = readop.Value
-	} else if state, ok := txSim.statedb.GetStateByCache(keyTrie); ok {
+	} else if state, ok := txSim.stateDb.GetStateByCache(keyTrie); ok {
 		//type = 3
 		op.Value = state
 	} else {
 		//type = 4
-		op.Value = txSim.statedb.GetStateByKeyTrie(addr, keyTrie)
+		op.Value = txSim.stateDb.GetStateByKeyTrie(addr, keyTrie)
 	}
 	//log.Info("get state", "key", keyTrie, "value", string(op.Value), "from", type)
 	txSim.readMap[keyTrie] = op
@@ -164,7 +172,7 @@ func (txSim *TxSimulator) AddBalance(addr common.Address, amount *big.Int) {
 	}
 	obj, ok := txSim.dirty[addr]
 	if !ok {
-		obj = txSim.statedb.GetOrNewStateObjectSafe(addr)
+		obj = txSim.stateDb.GetOrNewStateObjectSafe(addr)
 		txSim.dirty[addr] = obj
 	}
 	op := &BalanceOp{
@@ -177,7 +185,7 @@ func (txSim *TxSimulator) AddBalance(addr common.Address, amount *big.Int) {
 	if balanceOp, ok := txSim.balanceMap[addr]; ok {
 		//优先从txSim的balanceMap中获取之前已经做过得更变
 		value = balanceOp.Amount
-	} else if balance, ok := txSim.statedb.GetBalanceByCache(addr); ok {
+	} else if balance, ok := txSim.stateDb.GetBalanceByCache(addr); ok {
 		//从stateDB的balanceMap中获取之前已经做过得更变
 		value = balance
 	} else {
@@ -190,7 +198,7 @@ func (txSim *TxSimulator) AddBalance(addr common.Address, amount *big.Int) {
 	}
 
 	//优先从stateDB的balanceMap中获取之前已经做过得更变
-	balance, ok := txSim.statedb.GetBalanceByCache(addr)
+	balance, ok := txSim.stateDb.GetBalanceByCache(addr)
 	if ok {
 		value = balance
 	} else {
@@ -212,7 +220,7 @@ func (txSim *TxSimulator) SubBalance(addr common.Address, amount *big.Int) {
 	}
 	obj, ok := txSim.dirty[addr]
 	if !ok {
-		obj = txSim.statedb.GetOrNewStateObjectSafe(addr)
+		obj = txSim.stateDb.GetOrNewStateObjectSafe(addr)
 		txSim.dirty[addr] = obj
 	}
 	op := &BalanceOp{
@@ -225,7 +233,7 @@ func (txSim *TxSimulator) SubBalance(addr common.Address, amount *big.Int) {
 	if balanceOp, ok := txSim.balanceMap[addr]; ok {
 		//优先从txSim的balanceMap中获取之前已经做过得更变
 		value = balanceOp.Amount
-	} else if balance, ok := txSim.statedb.GetBalanceByCache(addr); ok {
+	} else if balance, ok := txSim.stateDb.GetBalanceByCache(addr); ok {
 		//从stateDB的balanceMap中获取之前已经做过得更变
 		value = balance
 	} else {
@@ -244,7 +252,7 @@ func (txSim *TxSimulator) SubBalance(addr common.Address, amount *big.Int) {
 func (txSim *TxSimulator) SetBalance(addr common.Address, amount *big.Int) {
 	obj, ok := txSim.dirty[addr]
 	if !ok {
-		obj = txSim.statedb.GetOrNewStateObjectSafe(addr)
+		obj = txSim.stateDb.GetOrNewStateObjectSafe(addr)
 		if obj.Balance().Cmp(amount) == 0 {
 			return
 		}
@@ -267,32 +275,32 @@ func (txSim *TxSimulator) SetBalance(addr common.Address, amount *big.Int) {
 //SetBalance 模拟交易的balance设置
 func (txSim *TxSimulator) GetBalance(addr common.Address) *big.Int {
 	//优先从stateDB的balanceMap中获取之前已经做过得更变
-	balance, ok := txSim.statedb.GetBalanceByCache(addr)
+	balance, ok := txSim.stateDb.GetBalanceByCache(addr)
 	if ok {
 		return balance
 	} else {
 		//从stateDB的DB中过去balance的值
-		return txSim.statedb.GetBalance(addr)
+		return txSim.stateDb.GetBalance(addr)
 	}
 }
 
 func (txSim *TxSimulator) GetCode(addr common.Address) []byte {
-	return txSim.statedb.GetCode(addr)
+	return txSim.stateDb.GetCode(addr)
 }
 
 //CreateAccount 记录创建账户的操作
 func (txSim *TxSimulator) CreateAccount(address common.Address) {
-	po := txSim.statedb.getStateObject(address)
-	no := newObject(txSim.statedb, address, Account{})
+	po := txSim.stateDb.getStateObject(address)
+	no := newObject(txSim.stateDb, address, Account{})
 	no.setNonce(0)
-	txSim.statedb.setStateObjectSafe(no)
+	txSim.stateDb.setStateObjectSafe(no)
 	txSim.dirty[address] = no
-	log.Info("TxSimulator CreateAccount add oc ")
+	log.Debug("TxSimulator CreateAccount add oc ")
 	txSim.oc = append(txSim.oc, NewCreateAccount(po, no))
 }
 
 func (txSim *TxSimulator) GetNonce(address common.Address) uint64 {
-	return txSim.statedb.GetNonce(address)
+	return txSim.stateDb.GetNonce(address)
 }
 
 //SetNonce 记录nonce有变更的地址,鉴于nonce的变更都是对原有的nonce+1,这里只记录需要变更的地址
@@ -308,26 +316,26 @@ func (txSim *TxSimulator) AddNonce(address common.Address) {
 }
 
 func (txSim *TxSimulator) GetCodeHash(address common.Address) common.Hash {
-	return txSim.statedb.GetCodeHash(address)
+	return txSim.stateDb.GetCodeHash(address)
 }
 
 //SetCode 记录设置代码的操作
 func (txSim *TxSimulator) SetCode(address common.Address, bytes []byte) {
-	log.Info("TxSimulator set code add oc ")
+	log.Debug("TxSimulator set code add oc ")
 	stateObject := txSim.getStateObject(address)
 	txSim.oc = append(txSim.oc, NewSetCode(stateObject, address, bytes))
 }
 
 func (txSim *TxSimulator) GetCodeSize(address common.Address) int {
-	return txSim.statedb.GetCodeSize(address)
+	return txSim.stateDb.GetCodeSize(address)
 }
 
 func (txSim *TxSimulator) GetAbiHash(address common.Address) common.Hash {
-	return txSim.statedb.GetAbiHash(address)
+	return txSim.stateDb.GetAbiHash(address)
 }
 
 func (txSim *TxSimulator) GetAbi(address common.Address) []byte {
-	return txSim.statedb.GetAbi(address)
+	return txSim.stateDb.GetAbi(address)
 }
 
 //SetAbi 记录设置abi的操作
@@ -343,17 +351,17 @@ func (txSim *TxSimulator) SubRefund(u uint64) {
 }
 
 func (txSim *TxSimulator) GetRefund() uint64 {
-	return txSim.statedb.GetRefund()
+	return txSim.stateDb.GetRefund()
 }
 
 func (txSim *TxSimulator) GetCommittedState(address common.Address, key []byte) []byte {
-	stateObject := txSim.statedb.getStateObject(address)
+	stateObject := txSim.stateDb.getStateObject(address)
 	if stateObject != nil {
 		var buffer bytes.Buffer
 		buffer.WriteString(address.String())
 		buffer.WriteString(string(key))
 		key := buffer.String()
-		value := stateObject.GetCommittedStateNoCache(txSim.statedb.db, key)
+		value := stateObject.GetCommittedStateNoCache(txSim.stateDb.db, key)
 		return value
 	}
 	return []byte{}
@@ -361,7 +369,7 @@ func (txSim *TxSimulator) GetCommittedState(address common.Address, key []byte) 
 
 //Suicide 查看是否需要进行自杀操作，如果需要则记录自杀操作，并记录balance变更的操作
 func (txSim *TxSimulator) Suicide(address common.Address) bool {
-	stateObject := txSim.statedb.getStateObject(address)
+	stateObject := txSim.stateDb.getStateObject(address)
 	if stateObject == nil {
 		return false
 	}
@@ -378,24 +386,24 @@ func (txSim *TxSimulator) Suicide(address common.Address) bool {
 }
 
 func (txSim *TxSimulator) HasSuicided(address common.Address) bool {
-	return txSim.statedb.HasSuicided(address)
+	return txSim.stateDb.HasSuicided(address)
 }
 
 func (txSim *TxSimulator) Exist(address common.Address) bool {
-	return txSim.statedb.Exist(address)
+	return txSim.stateDb.Exist(address)
 }
 
 func (txSim *TxSimulator) Empty(address common.Address) bool {
-	return txSim.statedb.Empty(address)
+	return txSim.stateDb.Empty(address)
 }
 
 //RevertToSnapshot 用于回退模拟交易
 func (txSim *TxSimulator) RevertToSnapshot(i int) {
 	if txSim.tx.Try() {
-		log.Info("tx call vm err ,retry", "hash", txSim.tx.Hash())
+		log.Debug("tx call vm err ,retry", "hash", txSim.tx.Hash())
 		txSim.reTry = true
 	} else {
-		log.Info("tx call vm err ,but still add ", "hash", txSim.tx.Hash())
+		log.Debug("tx call vm err ,but still add ", "hash", txSim.tx.Hash())
 		txSim.balanceMap = make(map[common.Address]*BalanceOp)
 		txSim.writeMap = make(map[string]*WriteOp)
 		txSim.readMap = make(map[string]*ReadOp)
@@ -405,7 +413,7 @@ func (txSim *TxSimulator) RevertToSnapshot(i int) {
 }
 
 func (txSim *TxSimulator) Snapshot() int {
-	return txSim.statedb.Snapshot()
+	return txSim.stateDb.Snapshot()
 }
 
 //AddPreimage debug情况下用来记录sha3操作的中间值，不做处理
@@ -503,20 +511,21 @@ func (txSim *TxSimulator) SetFwStatus(contractAddr common.Address, status FwStat
 }
 
 func (txSim *TxSimulator) GetFwStatus(contractAddr common.Address) FwStatus {
-	return txSim.statedb.GetFwStatus(contractAddr)
+	return txSim.stateDb.GetFwStatus(contractAddr)
 }
 
 //SetContractCreator 优先判断地址是否是合约，如果是则为合约设置创建人，并记录该操作
 func (txSim *TxSimulator) SetContractCreator(contractAddr common.Address, creator common.Address) {
-	stateObject := txSim.statedb.GetOrNewStateObjectSafe(contractAddr)
-	stateObject.CreateTrie(txSim.statedb.db)
+	stateObject := txSim.stateDb.GetOrNewStateObjectSafe(contractAddr)
+	stateObject.CreateTrie(txSim.stateDb.db)
 	txSim.dirty[contractAddr] = stateObject
-	log.Info("TxSimulator SetContractCreator add oc ")
+	log.Debug("TxSimulator SetContractCreator add oc ")
 	txSim.oc = append(txSim.oc, NewSetCreator(stateObject, contractAddr, creator))
 }
 
 func (txSim *TxSimulator) GetContractCreator(contractAddr common.Address) common.Address {
-	return txSim.statedb.GetContractCreator(contractAddr)
+	log.Debug("GetContractCreator", "addr", contractAddr.Hex())
+	return txSim.stateDb.GetContractCreator(contractAddr)
 }
 
 //OpenFirewall 记录开启防火墙的操作
@@ -532,7 +541,7 @@ func (txSim *TxSimulator) CloseFirewall(contractAddr common.Address) {
 }
 
 func (txSim *TxSimulator) IsFwOpened(contractAddr common.Address) bool {
-	stateObject := txSim.statedb.GetOrNewStateObjectSafe(contractAddr)
+	stateObject := txSim.stateDb.GetOrNewStateObjectSafe(contractAddr)
 	return stateObject.FwActive()
 }
 
@@ -557,7 +566,7 @@ func (txSim *TxSimulator) FwImport(contractAddr common.Address, data []byte) err
 
 //CloneAccount 用于合约的迁移，暂时不做处理
 func (txSim *TxSimulator) CloneAccount(src common.Address, dest common.Address) error {
-	return txSim.statedb.CloneAccount(src, dest)
+	return txSim.stateDb.CloneAccount(src, dest)
 }
 
 //StartProcess 开始并行计算
@@ -691,6 +700,7 @@ func (self *StateDB) checkConflict(txSim *TxSimulator) bool {
 //addTxSim 将模拟交易加入db缓存，并判断交易依赖
 func (self *StateDB) addTxSim(txSim *TxSimulator) {
 	version := len(self.txs)
+	txSim.version = version
 	var depend types.Dependency
 
 	if len(txSim.readMap) != 0 {
@@ -759,7 +769,7 @@ func (self *StateDB) addTxSim(txSim *TxSimulator) {
 //addTxSim 将模拟交易加入db缓存
 func (self *StateDB) addTxSimWithoutDependency(txSim *TxSimulator) {
 	version := len(self.txs)
-
+	txSim.version = version
 	if len(txSim.readMap) != 0 {
 		for _, op := range txSim.readMap {
 			op.Version = version
@@ -779,10 +789,11 @@ func (self *StateDB) addTxSimWithoutDependency(txSim *TxSimulator) {
 			self.balanceMap[op.ContractAddress] = op
 		}
 	}
+	self.txs = append(self.txs, txSim.tx)
 }
 
 //ApplyTxSim 将模拟交易的变更应用到stateObject的MPT树中，可异步进行
-func (self *StateDB) ApplyTxSim(txSim *TxSimulator) {
+func (self *StateDB) ApplyTxSim(txSim *TxSimulator, isProposer bool) {
 	if len(txSim.writeMap) != 0 {
 		//将写集中的变更应用到stateObject的MPT树中
 		for _, op := range txSim.writeMap {
@@ -820,12 +831,27 @@ func (self *StateDB) ApplyTxSim(txSim *TxSimulator) {
 	for _, obj := range txSim.dirty {
 		//更新stateObject
 		obj.data.Root = obj.trie.Hash()
-		self.updateStateObject(obj)
+		//self.updateStateObject(obj)
 		self.SetDirty(obj.address)
 	}
 	self.gasUsed += txSim.receipt.GasUsed
 	//log.Info("add gasUsed", "gas", txSim.receipt.GasUsed, "all", self.gasUsed)
 	txSim.receipt.CumulativeGasUsed = self.gasUsed
+
+	indexByte, ok := keyMap[txSim.version]
+	if !ok {
+		keyBuf.Reset()
+		rlp.Encode(keyBuf, uint(txSim.version))
+		tmp := keyBuf.Bytes()
+		indexByte = make([]byte, len(tmp))
+		copy(indexByte, tmp)
+		keyMap[txSim.version] = indexByte
+	}
+	self.txTrie.Update(indexByte, txSim.txRlp)
+	if isProposer {
+		receiptRlp, _ := rlp.EncodeToBytes(txSim.receipt)
+		self.receiptTrie.Update(indexByte, receiptRlp)
+	}
 }
 
 func (self *StateDB) GetDag() types.DAG {
@@ -846,4 +872,30 @@ func (self *StateDB) GetGasUsed() uint64 {
 
 func (self *StateDB) SetDirty(address common.Address) {
 	self.stateObjectsDirty[address] = struct{}{}
+}
+
+func (self *StateDB) UpdateDirtyObject() {
+	self.objLock.RLock()
+	defer self.objLock.RUnlock()
+	for addr := range self.stateObjectsDirty {
+		if object, exist := self.stateObjects[addr]; exist {
+			self.updateStateObject(object)
+		}
+	}
+}
+
+func (self *StateDB) UpdateReceiptTrie(receipts []*types.Receipt) {
+	for index, v := range receipts {
+		indexByte := keyMap[index]
+		receiptRlp, _ := rlp.EncodeToBytes(v)
+		self.receiptTrie.Update(indexByte, receiptRlp)
+	}
+}
+
+func (self *StateDB) GetTxHash() common.Hash {
+	return self.txTrie.Hash()
+}
+
+func (self *StateDB) GetReceiptHash() common.Hash {
+	return self.receiptTrie.Hash()
 }

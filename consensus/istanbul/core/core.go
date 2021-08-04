@@ -19,7 +19,6 @@ package core
 import (
 	"bytes"
 	"errors"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"math"
 	"math/big"
 	"sync"
@@ -31,6 +30,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/metrics"
+	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"gopkg.in/karalabe/cookiejar.v2/collections/prque"
 )
 

@@ -307,7 +307,8 @@ func (s Transactions) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 
 // GetRlp implements Rlpable and returns the i'th element of s in rlp.
 func (s Transactions) GetRlp(i int) []byte {
-	return s[i].Hash().Bytes()
+	enc, _ := rlp.EncodeToBytes(s[i])
+	return enc
 }
 
 func (s Transactions) GetHash() common.Hash {

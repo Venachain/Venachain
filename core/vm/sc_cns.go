@@ -6,10 +6,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
 const (
