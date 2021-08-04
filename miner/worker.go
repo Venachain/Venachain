@@ -668,6 +668,8 @@ func (w *worker) processTxs(stateDb *state.StateDB, header *types.Header, txs ty
 	w.current.txs = stateDb.GetTxs()
 	w.current.dag = stateDb.GetDag()
 	w.current.receipts = stateDb.GetReceipts()
+	w.current.header.TxHash = stateDb.GetTxHash()
+	w.current.header.ReceiptHash = stateDb.GetReceiptHash()
 	return true
 }
 
