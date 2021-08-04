@@ -1,0 +1,19 @@
+{
+    "config": {
+    "chainId": 300,
+    "interpreter": "__INTERPRETER__",
+    "istanbul": {
+    	"timeout": 10000,
+      	"period": 1,
+      	"policy": 0,
+        "firstValidatorNode": __VALIDATOR__
+    }
+  },
+  "timestamp": "TIMESTAMP",
+  "extraData": "0x00",
+  "alloc": {
+    "0xDEFAULT-ACCOUNT": {
+      "balance": "100000000000000000000"
+    }
+  }
+}

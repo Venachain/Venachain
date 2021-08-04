@@ -18,7 +18,7 @@ life/resolver/sig/openssl/*
 life/resolver/sig/*.a
 life/resolver/sig/sig/*.o
 life/resolver/sm2
-release/
+release/linux/bin/*
 #*
 .#*
 *#

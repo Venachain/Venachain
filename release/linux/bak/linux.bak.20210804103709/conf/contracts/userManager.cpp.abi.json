@@ -1,0 +1,725 @@
+[
+    {
+        "name": "setSuperAdmin",
+        "inputs": [],
+        "outputs": [],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "transferSuperAdminByAddress",
+        "inputs": [
+            {
+                "name": "addr",
+                "type": "string"         
+            }   
+        ],
+        "outputs": [],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "getAddrListOfRole",
+        "inputs": [
+            {
+                "name": "targetRole",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "getRolesByAddress",
+        "inputs": [
+            {
+                "name": "addr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },  
+    {
+        "name": "getRolesByName",
+        "inputs": [
+            {
+                "name": "name",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    }, 
+    {
+        "name": "addChainAdminByAddress",
+        "inputs": [
+            {
+                "name": "addr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    }, 
+    {
+        "name": "addChainAdminByName",
+        "inputs": [
+            {
+                "name": "addr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    }, 
+    {
+        "name": "delChainAdminByAddress",
+        "inputs": [
+            {
+                "name": "addr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },  
+    {
+        "name": "delChainAdminByName",
+        "inputs": [
+            {
+                "name": "name",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    }, 
+    {
+        "name": "addGroupAdminByName",
+        "inputs": [
+            {
+                "name": "name",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    }, 
+    {
+        "name": "addGroupAdminByAddress",
+        "inputs": [
+            {
+                "name": "addr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },  
+    {
+        "name": "delGroupAdminByAddress",
+        "inputs": [
+            {
+                "name": "addr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "delGroupAdminByName",
+        "inputs": [
+            {
+                "name": "name",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "addNodeAdminByName",
+        "inputs": [
+            {
+                "name": "name",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    }, 
+    {
+        "name": "addNodeAdminByAddress",
+        "inputs": [
+            {
+                "name": "addr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },  
+    {
+        "name": "delNodeAdminByAddress",
+        "inputs": [
+            {
+                "name": "addr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "delNodeAdminByName",
+        "inputs": [
+            {
+                "name": "name",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "addContractAdminByAddress",
+        "inputs": [
+            {
+                "name": "addr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },  
+    {
+        "name": "addContractAdminByName",
+        "inputs": [
+            {
+                "name": "name",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },  
+    
+    {
+        "name": "delContractAdminByName",
+        "inputs": [
+            {
+                "name": "name",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },    
+    {
+        "name": "delContractAdminByAddress",
+        "inputs": [
+            {
+                "name": "addr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },    
+    {
+        "name": "addContractDeployerByAddress",
+        "inputs": [
+            {
+                "name": "addr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    }, 
+    {
+        "name": "addContractDeployerByName",
+        "inputs": [
+            {
+                "name": "addr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },  
+    {
+        "name": "delContractDeployerByName",
+        "inputs": [
+            {
+                "name": "addr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    }, 
+    {
+        "name": "delContractDeployerByAddress",
+        "inputs": [
+            {
+                "name": "addr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "addUser",
+        "inputs": [
+            {
+                "name": "userInfo",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "updateUserDescInfo",
+        "inputs": [
+            {
+                "name": "address",
+                "type": "string"
+            },
+            {
+                "name": "descInfo",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "getAllUsers",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "getUserByAddress",
+        "inputs": [            {
+            "name": "address",
+            "type": "string"
+        }],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "getUserByName",
+        "inputs": [            {
+            "name": "address",
+            "type": "string"
+        }],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "hasRole",
+        "inputs": [            {
+            "name": "address",
+            "type": "string"
+            },
+            {
+                "name":"roleName",
+                "type":"string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "int32"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name":"setSuperAdmin",               
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"transferSuperAdminByAddress"  , 
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"transferSuperAdminByName"    ,  
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"addChainAdminByAddress" ,       
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"addChainAdminByName"  ,         
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"addGroupAdminByAddress"  ,      
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"addGroupAdminByName"   ,        
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"addNodeAdminByAddress" ,        
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"addNodeAdminByName"     ,       
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"addContractAdminByAddress"  ,   
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"addContractAdminByName" ,       
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"addContractDeployerByAddress" , 
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"addContractDeployerByName" ,    
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"delChainAdminByAddress"   ,     
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"delChainAdminByName"    ,       
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"delGroupAdminByAddress"   ,     
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"delGroupAdminByName"    ,       
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"delNodeAdminByAddress" ,        
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"delNodeAdminByName"     ,       
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"delContractAdminByAddress"   ,  
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"delContractAdminByName"    ,    
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"delContractDeployerByAddress" , 
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"delContractDeployerByName"   ,  
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"addUser"    ,        
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {   
+        "name":"updateUserDescInfo", 
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name": "Notify",
+        "inputs": [
+            {
+                "type": "uint64"
+            },
+            {
+                "type": "string"
+            }
+        ],
+        "type": "event"
+    }
+]
