@@ -6,17 +6,14 @@ import (
 	"errors"
 	"math/big"
 
+	"github.com/PlatONEnetwork/PlatONE-Go/trie"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-)
-
-var (
-	keyMap = make(map[int][]byte, 40960)
-	keyBuf = new(bytes.Buffer)
 )
 
 type TxSimulator struct {
@@ -574,6 +571,7 @@ func (self *StateDB) StartProcess() {
 	self.rwLock.Lock()
 	defer self.rwLock.Unlock()
 	self.process = true
+	self.SetHashGenerator()
 }
 
 //IsProcess 判断是否正进行并行计算
@@ -838,19 +836,10 @@ func (self *StateDB) ApplyTxSim(txSim *TxSimulator, isProposer bool) {
 	//log.Info("add gasUsed", "gas", txSim.receipt.GasUsed, "all", self.gasUsed)
 	txSim.receipt.CumulativeGasUsed = self.gasUsed
 
-	indexByte, ok := keyMap[txSim.version]
-	if !ok {
-		keyBuf.Reset()
-		rlp.Encode(keyBuf, uint(txSim.version))
-		tmp := keyBuf.Bytes()
-		indexByte = make([]byte, len(tmp))
-		copy(indexByte, tmp)
-		keyMap[txSim.version] = indexByte
-	}
-	self.txTrie.Update(indexByte, txSim.txRlp)
+	self.txTrie.AddItem(txSim.version, txSim.txRlp)
 	if isProposer {
 		receiptRlp, _ := rlp.EncodeToBytes(txSim.receipt)
-		self.receiptTrie.Update(indexByte, receiptRlp)
+		self.receiptTrie.AddItem(txSim.version, receiptRlp)
 	}
 }
 
@@ -886,9 +875,8 @@ func (self *StateDB) UpdateDirtyObject() {
 
 func (self *StateDB) UpdateReceiptTrie(receipts []*types.Receipt) {
 	for index, v := range receipts {
-		indexByte := keyMap[index]
 		receiptRlp, _ := rlp.EncodeToBytes(v)
-		self.receiptTrie.Update(indexByte, receiptRlp)
+		self.receiptTrie.AddItem(index, receiptRlp)
 	}
 }
 
@@ -898,4 +886,14 @@ func (self *StateDB) GetTxHash() common.Hash {
 
 func (self *StateDB) GetReceiptHash() common.Hash {
 	return self.receiptTrie.Hash()
+}
+
+func (self *StateDB) SetHashGenerator() {
+	if common.SysCfg.IsBlockUseTrieHash() {
+		self.txTrie = trie.NewHashTrie()
+		self.receiptTrie = trie.NewHashTrie()
+	} else {
+		self.txTrie = trie.NewHashValue()
+		self.receiptTrie = trie.NewHashValue()
+	}
 }

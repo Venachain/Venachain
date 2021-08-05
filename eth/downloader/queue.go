@@ -767,6 +767,7 @@ func (q *queue) DeliverBodies(id string, txLists []*types.Body) (int, error) {
 
 	reconstruct := func(header *types.Header, index int, result *fetchResult) error {
 		if types.DeriveSha(types.Transactions(txLists[index].Transactions)) != header.TxHash {
+			log.Debug(errInvalidBody.Error(), "number", header.Number, "txHash", header.TxHash.Hex())
 			return errInvalidBody
 		}
 		result.Transactions = txLists[index].Transactions

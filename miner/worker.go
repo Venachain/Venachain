@@ -400,7 +400,7 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 					commit(commitInterruptResubmit, nil)
 					timer.Reset(500 * time.Millisecond)
 				} else {
-					timer.Reset(50 * time.Millisecond)
+					timer.Reset(10 * time.Millisecond)
 				}
 			}
 

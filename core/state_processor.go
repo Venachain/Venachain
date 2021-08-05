@@ -54,7 +54,7 @@ type StateProcessor struct {
 func NewStateProcessor(config *params.ChainConfig, bc *BlockChain, engine consensus.Engine) *StateProcessor {
 	size := common.GetParallelPoolSize()
 	if size == 0 {
-		size = runtime.NumCPU() * 4
+		size = runtime.NumCPU() * 2
 	}
 	return &StateProcessor{
 		signer:   types.NewEIP155Signer(config.ChainID),
@@ -244,7 +244,7 @@ func (p *StateProcessor) ParallelProcessTxs(stateDb *state.StateDB, header *type
 				log.Debug("Parallel Process Txs reached time limit")
 				return
 			case <-finishCh:
-				log.Debug("AddTxSim complete", "time", time.Now().Format("2006-01-02 15:04:05.000"))
+				log.Info("AddTxSim complete")
 				stopApplyCh <- true
 				return
 			}
@@ -260,7 +260,7 @@ func (p *StateProcessor) ParallelProcessTxs(stateDb *state.StateDB, header *type
 				stateDb.ApplyTxSim(txSim, true)
 				applyCnt++
 				if applyCnt >= (txsCount-int(atomic.LoadInt32(&errCnt))) || addCnt == applyCnt {
-					log.Debug("applyTxSim complete", "time", time.Now().Format("2006-01-02 15:04:05.000"))
+					log.Info("applyTxSim complete")
 					stopCh <- true
 					return
 				}
@@ -312,7 +312,7 @@ func (p *StateProcessor) ParallelProcessTxsWithDag(block *types.Block, statedb *
 	runIndexs, txLeft, txDependency := initDag(block.Dag())
 
 	if len(runIndexs) == 0 {
-		return nil, nil, fmt.Errorf("cycle dag error")
+		return nil, nil, fmt.Errorf("cycle dependency error")
 	}
 
 	header := block.Header()

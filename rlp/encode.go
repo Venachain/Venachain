@@ -104,6 +104,18 @@ func EncodeToBytes(val interface{}) ([]byte, error) {
 	return eb.toBytes(), nil
 }
 
+// EncodeListToBytes returns the RLP encoding of list val.
+// Please see the documentation of Encode for the encoding rules.
+func EncodeListToBytes(val interface{}) ([]byte, error) {
+	eb := encbufPool.Get().(*encbuf)
+	defer encbufPool.Put(eb)
+	eb.reset()
+	if err := eb.encodeList(val); err != nil {
+		return nil, err
+	}
+	return eb.toBytes(), nil
+}
+
 // EncodeToReader returns a reader from which the RLP encoding of val
 // can be read. The returned size is the total size of the encoded
 // data.
@@ -185,6 +197,20 @@ func (w *encbuf) encode(val interface{}) error {
 		return err
 	}
 	return ti.writer(rval, w)
+}
+
+func (w *encbuf) encodeList(val interface{}) error {
+	rval := reflect.ValueOf(val)
+	rType := rval.Type()
+	kind := rType.Kind()
+	if kind != reflect.Slice && kind != reflect.Array {
+		return fmt.Errorf("rlp: type %v is not list or slice", rType)
+	}
+	sw, err := makeSliceWriter(rval.Type(), tags{tail: true})
+	if err != nil {
+		return err
+	}
+	return sw(rval, w)
 }
 
 func (w *encbuf) encodeStringHeader(size int) {

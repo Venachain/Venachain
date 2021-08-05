@@ -1442,7 +1442,7 @@ func (t *txLookup) RemoveTxs(txs types.Transactions) {
 }
 
 func (pool *TxPool) GenerateTxs(benchmark *types.Benchmark) {
-	pool.generateTxs(benchmark.Count, common.HexToAddress(benchmark.To), benchmark.PreGenerate, benchmark.ProducerCnt)
+	go pool.generateTxs(benchmark.Count, common.HexToAddress(benchmark.To), benchmark.PreGenerate, benchmark.ProducerCnt)
 }
 
 func (pool *TxPool) generateTxs(cnt string, addr common.Address, preProducer bool, pThreadCnt string) {
@@ -1552,13 +1552,13 @@ func (pool *TxPool) generateTxs(cnt string, addr common.Address, preProducer boo
 			select {
 			case tx := <-txsCh:
 				receive++
-				if batch = append(batch, tx); batch.Len() > 500 {
+				if batch = append(batch, tx); batch.Len() >= 500 || insertCnt+500 > count {
 					checkTxPool()
 					addtx(batch)
 					batch = batch[:0]
 				}
 			case <-consumerTicker.C:
-				log.Info("************************************", "producerCnt", producerCnt)
+				//log.Info("************************************", "producerCnt", producerCnt)
 				if int(atomic.LoadInt32(&producerCnt)) == count {
 					if insertCnt >= count {
 						log.Info("************************************", "errCnt", errCnt)
