@@ -117,9 +117,9 @@ type StateDB struct {
 	// gas使用
 	gasUsed uint64
 	//用于生成header的txHash
-	txTrie *trie.Trie
+	txTrie trie.Generator
 	//用于生成header的receiptHash
-	receiptTrie *trie.Trie
+	receiptTrie trie.Generator
 }
 
 // Create a new state from a given trie.
@@ -140,8 +140,6 @@ func New(root common.Hash, db Database) (*StateDB, error) {
 		balanceMap:        make(map[common.Address]*BalanceOp),
 		nonce:             make(map[common.Address]int),
 		oc:                make(map[common.Address]ObjectChange),
-		txTrie:            new(trie.Trie),
-		receiptTrie:       new(trie.Trie),
 		journal:           newJournal(),
 	}, nil
 }

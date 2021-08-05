@@ -314,12 +314,9 @@ func (s Transactions) GetRlp(i int) []byte {
 func (s Transactions) GetHash() common.Hash {
 	var h common.Hash
 	d := sha3.NewKeccak256()
-	body := &Body{s, nil}
-	bytes, _ := rlp.EncodeToBytes(body)
+	bytes, _ := rlp.EncodeListToBytes(s)
 	d.Write(bytes)
 	d.Sum(h[:0])
-	//cache the rlp bytes
-	//TransactionsRlpCache.Add(h, bytes)
 	return h
 }
 

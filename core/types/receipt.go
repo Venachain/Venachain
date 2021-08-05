@@ -212,7 +212,7 @@ func (r Receipts) GetHash() common.Hash {
 	var h common.Hash
 	d := sha3.NewKeccak256()
 	//log.Info("rlp start ","time",time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"))
-	bytes, _ := rlp.EncodeToBytes(r)
+	bytes, _ := rlp.EncodeListToBytes(r)
 	d.Write(bytes)
 	//log.Info("rlp end ","time",time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"))
 	d.Sum(h[:0])
