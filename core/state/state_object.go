@@ -440,7 +440,7 @@ func (self *stateObject) updateTrie(db Database) Trie {
 		if value, ok := self.dirtyValueStorage[valueKey]; ok {
 			delete(self.originValueStorage, valueKey)
 			self.originValueStorage[valueKey] = value
-			self.setError(self.trie.TryUpdateValue(valueKey.Bytes(), v))
+			self.setError(self.trie.TryUpdateValue(valueKey.Bytes(), value))
 		}
 	}
 

@@ -915,11 +915,27 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 		rawdb.WriteBlock(bc.db, block)
 		bc.cacheData(block, receipts)
 	}
+	// Write other block data using a batch.
+	batch := bc.db.NewBatch()
+
+	if block.ConfirmSigns != nil {
+		rawdb.WriteBlockConfirmSigns(batch, block.Hash(), block.NumberU64(), block.ConfirmSigns)
+	}
+	rawdb.WritePreimages(batch, block.NumberU64(), state.Preimages())
+
+	for i := 0; i < count; i++ {
+		items := <-itemch
+		for _, item := range items {
+			batch.Put(item.Key, item.Value)
+		}
+	}
+	if err := batch.Write(); err != nil {
+		return NonStatTy, err
+	}
 
 	root, err := state.Commit(true)
 	if err != nil {
 		log.Error("check block is EIP158 error", "hash", block.Hash(), "number", block.NumberU64())
-		close(closeCh)
 		return NonStatTy, err
 	}
 	triedb := bc.stateCache.TrieDB()
@@ -928,7 +944,6 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 	if bc.cacheConfig.Disabled {
 		if err := triedb.Commit(root, false); err != nil {
 			log.Error("Commit to triedb error", "root", root)
-			close(closeCh)
 			return NonStatTy, err
 		}
 	} else {
@@ -973,39 +988,14 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 		}
 	}
 
-	// Write other block data using a batch.
-	batch := bc.db.NewBatch()
-
-	//rawdb.WriteReceipts(batch, block.Hash(), block.NumberU64(), receipts)
-	if block.ConfirmSigns != nil {
-		rawdb.WriteBlockConfirmSigns(batch, block.Hash(), block.NumberU64(), block.ConfirmSigns)
-	}
-	//// Write the positional metadata for transaction/receipt lookups and preimages
-	//rawdb.WriteTxLookupEntries(batch, block)
-	rawdb.WritePreimages(batch, block.NumberU64(), state.Preimages())
-
-	for i := 0; i < count; i++ {
-		items := <-itemch
-		for _, item := range items {
-			batch.Put(item.Key, item.Value)
-		}
-	}
-
 	status = CanonStatTy
-	if err := batch.Write(); err != nil {
-		return NonStatTy, err
-	}
 	log.Debug("insert into chain", "WriteStatus", status, "hash", block.Hash(), "number", block.NumberU64(), "signs", rawdb.ReadBlockConfirmSigns(bc.db, block.Hash(), block.NumberU64()))
 
 	// Set new head.
 	if status == CanonStatTy {
 		bc.insert(block)
-
-		// parse block and retrieves txs
-
 	}
-
-	bc.futureBlocks.Remove(block.Hash())
+	//bc.futureBlocks.Remove(block.Hash())
 	return status, nil
 }
 
