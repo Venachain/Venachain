@@ -767,7 +767,7 @@ func (self *StateDB) addTxSim(txSim *TxSimulator) {
 //addTxSim 将模拟交易加入db缓存
 func (self *StateDB) addTxSimWithoutDependency(txSim *TxSimulator) {
 	version := len(self.txs)
-	txSim.version = version
+	txSim.version = txSim.index
 	if len(txSim.readMap) != 0 {
 		for _, op := range txSim.readMap {
 			op.Version = version
