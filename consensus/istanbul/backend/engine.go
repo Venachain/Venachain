@@ -764,5 +764,9 @@ func writeCommittedSeals(h *types.Header, committedSeals [][]byte) error {
 	}
 
 	h.Extra = append(h.Extra[:types.IstanbulExtraVanity], payload...)
+
+	// log the node signature to block
+	log.Info("Signing to block", "number", h.Number, "signer", fmt.Sprintf("%x", istanbulExtra.Validators), "signature", fmt.Sprintf("%x", committedSeals))
+
 	return nil
 }
