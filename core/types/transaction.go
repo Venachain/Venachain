@@ -30,15 +30,13 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto/sha3"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
-	lru "github.com/hashicorp/golang-lru"
 )
 
 //go:generate gencodec -type txdata -field-override txdataMarshaling -out gen_tx_json.go
 
 var (
-	ErrInvalidSig           = errors.New("invalid transaction v, r, s values")
-	ErrInvalidOldTrx        = errors.New("invalid old transaction payload")
-	TransactionsRlpCache, _ = lru.NewARC(4)
+	ErrInvalidSig    = errors.New("invalid transaction v, r, s values")
+	ErrInvalidOldTrx = errors.New("invalid old transaction payload")
 )
 
 type Transaction struct {
@@ -47,6 +45,7 @@ type Transaction struct {
 	hash       atomic.Value
 	size       atomic.Value
 	from       atomic.Value
+	rlp        atomic.Value
 	router     int32
 	processCnt int32
 }
@@ -135,7 +134,18 @@ func isProtectedV(V *big.Int) bool {
 
 // EncodeRLP implements rlp.Encoder
 func (tx *Transaction) EncodeRLP(w io.Writer) error {
-	return rlp.Encode(w, &tx.data)
+	if rlp := tx.rlp.Load(); rlp != nil {
+		_, err := w.Write(rlp.([]byte))
+		return err
+	}
+	value, err := rlp.EncodeToBytes(&tx.data)
+	if err != nil {
+		return err
+	}
+	// cache the transaction rlp data
+	tx.rlp.Store(value)
+	_, err = w.Write(value)
+	return err
 }
 
 // DecodeRLP implements rlp.Decoder
@@ -318,13 +328,6 @@ func (s Transactions) GetHash() common.Hash {
 	d.Write(bytes)
 	d.Sum(h[:0])
 	return h
-}
-
-func GetbodyRlpByCache(h common.Hash) []byte {
-	if data, ok := TransactionsRlpCache.Get(h); ok {
-		return data.([]byte)
-	}
-	return nil
 }
 
 // TxDifference returns a new set which is the difference between a and b.
