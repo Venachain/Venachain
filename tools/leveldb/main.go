@@ -53,10 +53,10 @@ func main() {
 	//	return
 	//}
 	if action == "query" {
-		fmt.Printf("the value of is %s\n",string(beforeValue))
+		fmt.Printf("the value of is %v\n",beforeValue)
 		return
 	}
-	fmt.Printf("Before modified, the value of  is %s\n", string(beforeValue))
+	fmt.Printf("Before modified, the value of  is %v\n", beforeValue)
 	err = db.Put(key, []byte(value), nil)
 	if err != nil {
 		panic(fmt.Sprintf("Error writting key %s: %s", key, err))
@@ -65,7 +65,7 @@ func main() {
 	if err != nil {
 		panic(fmt.Sprintf("Error getting key %s: %s", key, err))
 	}
-	fmt.Printf("After modified, the value is %s\n",  string(afterValue))
+	fmt.Printf("After modified, the value is %v\n",  afterValue)
 }
 
 //func GetKeyTrie(address common.Address, key []byte) string {
