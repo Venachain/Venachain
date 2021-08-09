@@ -56,7 +56,7 @@ func main() {
 		fmt.Printf("the value of is %v\n",beforeValue)
 		return
 	}
-	fmt.Printf("Before modified, the value of  is %s\n", string(beforeValue))
+	fmt.Printf("Before modified, the value of  is %v\n", beforeValue)
 	err = db.Put(key, []byte(value), nil)
 	if err != nil {
 		panic(fmt.Sprintf("Error writting key %s: %s", key, err))
