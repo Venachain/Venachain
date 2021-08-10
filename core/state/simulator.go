@@ -169,8 +169,7 @@ func (txSim *TxSimulator) AddBalance(addr common.Address, amount *big.Int) {
 	}
 	obj, ok := txSim.dirty[addr]
 	if !ok {
-		obj = txSim.stateDb.GetOrNewStateObjectSafe(addr)
-		txSim.dirty[addr] = obj
+		obj = txSim.getStateObject(addr)
 	}
 	op := &BalanceOp{
 		ContractAddress: addr,
@@ -217,8 +216,7 @@ func (txSim *TxSimulator) SubBalance(addr common.Address, amount *big.Int) {
 	}
 	obj, ok := txSim.dirty[addr]
 	if !ok {
-		obj = txSim.stateDb.GetOrNewStateObjectSafe(addr)
-		txSim.dirty[addr] = obj
+		obj = txSim.getStateObject(addr)
 	}
 	op := &BalanceOp{
 		ContractAddress: addr,
@@ -249,11 +247,7 @@ func (txSim *TxSimulator) SubBalance(addr common.Address, amount *big.Int) {
 func (txSim *TxSimulator) SetBalance(addr common.Address, amount *big.Int) {
 	obj, ok := txSim.dirty[addr]
 	if !ok {
-		obj = txSim.stateDb.GetOrNewStateObjectSafe(addr)
-		if obj.Balance().Cmp(amount) == 0 {
-			return
-		}
-		txSim.dirty[addr] = obj
+		obj = txSim.getStateObject(addr)
 	} else {
 		if obj.Balance().Cmp(amount) == 0 {
 			return
