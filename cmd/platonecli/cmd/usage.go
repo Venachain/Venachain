@@ -96,7 +96,7 @@ var AppHelpFlagGroups = []flagGroup{
 			ContractIDFlag,
 			ContractAbiFilePathFlag,
 			ContractVmFlags,
-			TransferValueFlag,
+			//TransferValueFlag,
 			ShowContractMethodsFlag,
 		},
 	},
