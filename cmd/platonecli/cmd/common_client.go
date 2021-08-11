@@ -41,7 +41,7 @@ func clientCommonV2(c *cli.Context, dataGen packet.MsgDataGen, to *common.Addres
 		result[0] = res
 		return  result
 	}
-	result[0], err = pc.MessageCallV2(dataGen, tx, keyfile, isSync)
+	result, err = pc.MessageCallV2(dataGen, tx, keyfile, isSync)
 	if err != nil {
 		utl.Fatalf("to do: %s\n", err.Error())
 	}

@@ -375,7 +375,7 @@ var (
 		ContractAbiFilePathFlag,
 		ContractParamFlag,
 		ContractVmFlags,
-		TransferValueFlag,
+		//TransferValueFlag,
 		ShowContractMethodsFlag)
 	contractMethodsCmd = append([]cli.Flag{}, ContractAbiFilePathFlag)
 
