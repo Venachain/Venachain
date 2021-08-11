@@ -3,13 +3,14 @@
 ###########################################################################################################
 ################################################# VRIABLES #################################################
 ###########################################################################################################
+SCRIPT_NAME="$(basename ${0})"
 LOCAL_IP=$(ifconfig | grep inet | grep -v 127.0.0.1 | grep -v inet6 | awk '{print $2}')
 if [[ "$(echo ${LOCAL_IP} | grep addr:)" != "" ]]; then
     LOCAL_IP=$(echo ${LOCAL_IP} | tr -s ':' ' ' | awk '{print $2}')
 fi
 DEPLOYMENT_PATH=$(
     cd $(dirname $0)
-    cd ../../../
+    cd ../../
     pwd
 )
 
@@ -40,7 +41,7 @@ function showTitle() {
 function help() {
     echo
     echo "
-USAGE: init.sh  [options] [value]
+USAGE: ${SCRIPT_NAME}  [options] [value]
 
         OPTIONS:
 
@@ -133,7 +134,7 @@ function init() {
 
     ## generate key
     if [ ! -f "${PROJECT_CONF_PATH}/logs/deploy_log.txt" ] || [[ $(grep $(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g') "${PROJECT_CONF_PATH}/logs/deploy_log.txt" | grep "node-${NODE_ID}" | grep "Generate key") == "" ]]; then
-        xcmd "${USER_NAME}@${IP_ADDR}" "${script_path}/local-keygen.sh -n ${NODE_ID}"
+        xcmd "${USER_NAME}@${IP_ADDR}" "${script_path}/local-keygen.sh -n ${NODE_ID} --auto"
         xcmd "${USER_NAME}@${IP_ADDR}" "[ -f ${DEPLOY_PATH}/data/node-${NODE_ID}/node.address -a -f ${DEPLOY_PATH}/data/node-${NODE_ID}/node.prikey -a -f ${DEPLOY_PATH}/data/node-${NODE_ID}/node.pubkey ]"
         if [[ $? -ne 0 ]]; then
             echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* GENERATE KEY FOR NODE-${NODE_ID} FAILED **********"
@@ -144,10 +145,10 @@ function init() {
     fi
 
     ## sync genesis file
-    if [ ! -f "${PROJECT_CONF_PATH}/global/genesis.json" ]; then
+    if [ ! -f "${PROJECT_CONF_PATH}/global/genesis.json" ] || [ ! -f "${PROJECT_CONF_PATH}/global/firstnode.info" ] ; then
         ## setup genesis file
         if [ ! -f "${PROJECT_CONF_PATH}/logs/deploy_log.txt" ] || [[ $(grep $(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g') "${PROJECT_CONF_PATH}/logs/deploy_log.txt" | grep "Setup genesis") == "" ]]; then
-            xcmd "${USER_NAME}@${IP_ADDR}" "${script_path}/local-setup-genesis.sh -n ${NODE_ID}"
+            xcmd "${USER_NAME}@${IP_ADDR}" "${script_path}/local-setup-genesis.sh -n ${NODE_ID} --auto"
             xcmd "${USER_NAME}@${IP_ADDR}" "[ -f ${DEPLOY_PATH}/conf/genesis.json ]"
             if [[ $? -ne 0 ]]; then
                 echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* SETUP GENESIS FILE FAILED **********"
@@ -165,7 +166,20 @@ function init() {
                 return 1
             fi
             echo "[$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] [node-${NODE_ID}] : Get genesis file completed" >>"${PROJECT_CONF_PATH}/logs/deploy_log.txt"
+            echo "[$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] [node-${NODE_ID}] : Send genesis file completed" >>"${PROJECT_CONF_PATH}/logs/deploy_log.txt"
             echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Get genesis file completed"
+        fi
+
+        ## setup firstnode info
+        if [ ! -f "${PROJECT_CONF_PATH}/logs/deploy_log.txt" ] || [[ $(grep $(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g') "${PROJECT_CONF_PATH}/logs/deploy_log.txt" | grep "Get firstnode info") == "" ]]; then
+            xcmd "${USER_NAME}@${IP_ADDR}" "cp -r ${conf_path}/firstnode.info ${PROJECT_CONF_PATH}/global/firstnode.info" "source"
+            if [ ! -f "${PROJECT_CONF_PATH}/global/firstnode.info" ]; then
+                echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* GET FIRSTNODE INFO FAILED **********"
+                return 1
+            fi
+            echo "[$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] [node-${NODE_ID}] : Get firstnode info completed" >>"${PROJECT_CONF_PATH}/logs/deploy_log.txt"
+            echo "[$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] [node-${NODE_ID}] : Send firstnode info completed" >>"${PROJECT_CONF_PATH}/logs/deploy_log.txt"
+            echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Get firstnode info completed"
         fi
     else
         ## send genesis file
@@ -179,33 +193,17 @@ function init() {
             echo "[$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] [node-${NODE_ID}] : Send genesis file to node-${NODE_ID} completed" >>"${PROJECT_CONF_PATH}/logs/deploy_log.txt"
             echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Send genesis file to node-${NODE_ID} completed"
         fi
-    fi
-
-    ## setup firstnode info
-    if [ ! -f "${PROJECT_CONF_PATH}/global/firstnode.info" ]; then
-        {
-            echo "user_name=${USER_NAME}"
-            echo "node_id=${NODE_ID}"
-            echo "ip_addr=${IP_ADDR}"
-            echo "rpc_port=${RPC_PORT}"
-        } >>"${PROJECT_CONF_PATH}/global/firstnode.info"
-        if [[ ! -f "${PROJECT_CONF_PATH}/global/firstnode.info" ]] || [[ "$(cat ${PROJECT_CONF_PATH}/global/firstnode.info)" == "" ]]; then
-            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* SETUP FIRSTNODE INFO FAILED **********"
-            return 1
+        ## send firstnode info
+        if [ ! -f "${PROJECT_CONF_PATH}/logs/deploy_log.txt" ] || [[ $(grep $(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g') "${PROJECT_CONF_PATH}/logs/deploy_log.txt" | grep "node-${NODE_ID}" | grep "Send firstnode info") == "" ]]; then
+            xcmd "${USER_NAME}@${IP_ADDR}" "cp -r ${PROJECT_CONF_PATH}/global/firstnode.info ${conf_path}" "target"
+            xcmd "${USER_NAME}@${IP_ADDR}" "[ -f ${conf_path}/firstnode.info ]"
+            if [[ $? -ne 0 ]]; then
+                echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* SEND FIRSTNODE INFO TO NODE_${NODE_ID} FAILED **********"
+                return 1
+            fi
+            echo "[$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] [node-${NODE_ID}] : Send firstnode info to node-${NODE_ID} completed" >>"${PROJECT_CONF_PATH}/logs/deploy_log.txt"
+            echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Send firstnode info to node-${NODE_ID} completed"
         fi
-        echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Setup firstnode info completed"
-    fi
-
-    ## sync firstnode info
-    if [ ! -f "${PROJECT_CONF_PATH}/logs/deploy_log.txt" ] || [[ $(grep $(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g') "${PROJECT_CONF_PATH}/logs/deploy_log.txt" | grep "node-${NODE_ID}" | grep "Sync firstnode info") == "" ]]; then
-        xcmd "${USER_NAME}@${IP_ADDR}" "cp -r ${PROJECT_CONF_PATH}/global/firstnode.info ${conf_path}" "target"
-        xcmd "${USER_NAME}@${IP_ADDR}" "[ -f ${conf_path}/firstnode.info ]"
-        if [[ $? -ne 0 ]]; then
-            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* SYNC FIRSTNODE INFO TO NODE_${NODE_ID} FAILED **********"
-            return 1
-        fi
-        echo "[$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] [node-${NODE_ID}] : Sync firstnode info to node-${NODE_ID} completed" >>"${PROJECT_CONF_PATH}/logs/deploy_log.txt"
-        echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Sync firstnode info to node-${NODE_ID} completed"
     fi
 
     ## init genesis
@@ -246,10 +244,6 @@ function main() {
             cd "${PROJECT_CONF_PATH}"
         done
     else
-        if [ ! -f "${PROJECT_CONF_PATH}/global/genesis.json" ] || [[ ! -f ${PROJECT_CONF_PATH}/global/firstnode.info ]] || [[ "$(cat ${PROJECT_CONF_PATH}/global/firstnode.info)" == "" ]]; then
-            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* FIRSTNODE MUST INIT **********"
-            exit
-        fi
         cd "${PROJECT_CONF_PATH}"
         for param in $(echo "${NODE}" | sed 's/,/\n/g'); do
             if [ ! -f "deploy_node-${param}.conf" ]; then

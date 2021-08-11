@@ -3,13 +3,14 @@
 ###########################################################################################################
 ################################################# VRIABLES #################################################
 ###########################################################################################################
+SCRIPT_NAME="$(basename ${0})"
 LOCAL_IP=$(ifconfig | grep inet | grep -v 127.0.0.1 | grep -v inet6 | awk '{print $2}')
 if [[ "$(echo ${LOCAL_IP} | grep addr:)" != "" ]]; then
     LOCAL_IP=$(echo ${LOCAL_IP} | tr -s ':' ' ' | awk '{print $2}')
 fi
 DEPLOYMENT_PATH=$(
     cd $(dirname $0)
-    cd ../../../
+    cd ../../
     pwd
 )
 DEPLOYMENT_CONF_PATH="$(cd ${DEPLOYMENT_PATH}/deployment_conf && pwd)"
@@ -42,7 +43,7 @@ function showTitle() {
 function help() {
     echo
     echo "
-USAGE: start.sh  [options] [value]
+USAGE: ${SCRIPT_NAME}  [options] [value]
 
         OPTIONS:
 
@@ -124,7 +125,7 @@ function clearData() {
 function runNode() {
     xcmd "${USER_NAME}@${IP_ADDR}" "lsof -i:${P2P_PORT}" 1>/dev/null
     if [[ $? -ne 0 ]]; then
-        xcmd "${USER_NAME}@${IP_ADDR}" "${SCRIPT_PATH}/local-start-node.sh -n ${NODE_ID}"
+        xcmd "${USER_NAME}@${IP_ADDR}" "${SCRIPT_PATH}/local-run-node.sh -n ${NODE_ID}"
         xcmd "${USER_NAME}@${IP_ADDR}" "lsof -i:${P2P_PORT}" 1>/dev/null
         if [[ $? -ne 0 ]]; then
             echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* RUN NODE NODE-${NODE_ID} FAILED **********"
@@ -135,10 +136,10 @@ function runNode() {
 }
 
 ################################################# Add Role #################################################
-function addRole() {
+function deploySystemContract() {
     ## create account
     if [ ! -f "${PROJECT_CONF_PATH}/logs/deploy_log.txt" ] || [[ $(grep $(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g') "${PROJECT_CONF_PATH}/logs/deploy_log.txt" | grep "Create account") == "" ]]; then
-        xcmd "${USER_NAME}@${IP_ADDR}" "${SCRIPT_PATH}/local-create-account.sh -n ${NODE_ID}"
+        xcmd "${USER_NAME}@${IP_ADDR}" "${SCRIPT_PATH}/local-create-account.sh -n ${NODE_ID} --auto --admin"
         xcmd "${USER_NAME}@${IP_ADDR}" "[ -f ${CONF_PATH}/keyfile.account -a -f ${CONF_PATH}/keyfile.json -a -f ${CONF_PATH}/keyfile.phrase ]"
         if [[ $? -ne 0 ]]; then
             echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* CREATE ACCOUNT FAILED **********"
@@ -162,11 +163,11 @@ function addRole() {
         echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Get keyfile completed"
     fi
 
-    ## deploy system contract
+    ## add admin role
     if [ ! -f "${PROJECT_CONF_PATH}/logs/deploy_log.txt" ] || [[ $(grep $(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g') "${PROJECT_CONF_PATH}/logs/deploy_log.txt" | grep "Deploy system contract") == "" ]]; then
-        xcmd "${USER_NAME}@${IP_ADDR}" "${SCRIPT_PATH}/local-deploy-system-contract.sh -n ${NODE_ID}"
+        xcmd "${USER_NAME}@${IP_ADDR}" "${SCRIPT_PATH}/local-add-admin-role.sh -n ${NODE_ID}"
         if [[ $? -ne 0 ]]; then
-            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* DESTROY SYSTEM CONTRACT FAILED **********"
+            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* DEPLOY SYSTEM CONTRACT FAILED **********"
             return 1
         fi
         echo "[$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] [node-${NODE_ID}] : Deploy system contract completed" >>"${PROJECT_CONF_PATH}/logs/deploy_log.txt"
@@ -192,7 +193,7 @@ function updateNodeToConsensus() {
     if [ ! -f "${PROJECT_CONF_PATH}/logs/deploy_log.txt" ] || [[ $(grep $(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g') "${PROJECT_CONF_PATH}/logs/deploy_log.txt" | grep "node-${NODE_ID}" | grep "Update node") == "" ]]; then
         xcmd "${USER_NAME}@${IP_ADDR}" "${SCRIPT_PATH}/local-update-to-consensus-node.sh -n ${NODE_ID}"
         if [[ $? -ne 0 ]]; then
-            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* UPDATE NODE NODE-${NODE_ID} TO CONSENSUS NODEFAILED **********"
+            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* UPDATE NODE NODE-${NODE_ID} TO CONSENSUS NODE FAILED **********"
             return 1
         fi
         echo "[$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] [node-${NODE_ID}] : Update node to consensus node completed" >>"${PROJECT_CONF_PATH}/logs/deploy_log.txt"
@@ -202,20 +203,11 @@ function updateNodeToConsensus() {
 
 ################################################# Start First Node #################################################
 function startFirstNode() {
-    ## read file
-    clearData
-    file=$1
-    NODE_ID="${FIRSTNODE_ID}"
-    echo
-    echo "################ Start first node Node-${NODE_ID} ################"
-    readFile "$file"
-
-    ## start node
     runNode
     if [[ $? -ne 0 ]]; then
         return 1
     fi
-    addRole
+    deploySystemContract
     if [[ $? -ne 0 ]]; then
         return 1
     fi
@@ -227,18 +219,12 @@ function startFirstNode() {
     if [[ $? -ne 0 ]]; then
         return 1
     fi
+    echo "[$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] [node-${NODE_ID}] : Start node completed" >>"${PROJECT_CONF_PATH}/logs/deploy_log.txt"
     echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Start firstnode Node-${NODE_ID} completed"
 }
 
 ################################################# Start Other Node #################################################
 function startOtherNode() {
-    ## read file
-    clearData
-    file=$1
-    NODE_ID=$(echo ${file} | sed -e 's/\(.*\)deploy_node-\(.*\).conf/\2/g ')
-    echo
-    echo "################ Start Node-${NODE_ID} ################"
-    readFile "$file"
 
     ## send keyfile
     if [ ! -f "${PROJECT_CONF_PATH}/logs/deploy_log.txt" ] || [[ $(grep $(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g') "${PROJECT_CONF_PATH}/logs/deploy_log.txt" | grep "node-${NODE_ID}" | grep "Send keyfile") == "" ]]; then
@@ -266,63 +252,61 @@ function startOtherNode() {
     if [[ $? -ne 0 ]]; then
         return 1
     fi
+    echo "[$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] [node-${NODE_ID}] : Start node completed" >>"${PROJECT_CONF_PATH}/logs/deploy_log.txt"
     echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Start node Node-${NODE_ID} completed"
 }
 
-################################################# Start All Nodes #################################################
-function startAllNodes() {
-    ## start first node
-    cd "${PROJECT_CONF_PATH}"
-    if [ ! -f "${PROJECT_CONF_PATH}/global/firstnode.info" ]; then
-        "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* FILE ${PROJECT_CONF_PATH}/global/firstnode.info NOT FOUND **********"
-        exit
-    fi
-    FIRSTNODE_ID=$(cat ${PROJECT_CONF_PATH}/global/firstnode.info | grep "node_id=" | sed -e 's/node_id=\(.*\)/\1/g')
-    startFirstNode "${PROJECT_CONF_PATH}/deploy_node-${FIRSTNODE_ID}.conf"
-    if [[ $? -ne 0 ]]; then
-        echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* START NODE NODE-${NODE_ID} FAILED **********"
-        exit
-    fi
+################################################# Start #################################################
+function start() {
+    file=$1
 
-    ## start other nodes
-    cd "${PROJECT_CONF_PATH}"
-    for file in $(ls ./); do
-        if [ -f "${file}" ] && [[ $(echo ${file}) != "deploy_node-${FIRSTNODE_ID}.conf" ]]; then
-            startOtherNode "${PROJECT_CONF_PATH}/${file}"
-            if [[ $? -ne 0 ]]; then
-                echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* START NODE NODE-${NODE_ID} FAILED **********"
-                exit
-            fi
+    ## read file
+    clearData
+    file=$1
+    NODE_ID=$(echo ${file} | sed -e 's/\(.*\)deploy_node-\(.*\).conf/\2/g ')
+    echo
+    echo "################ Start Node-${NODE_ID} ################"
+    readFile "$file"
+
+    if [ "${NODE_ID}" == "${FIRSTNODE_ID}" ]; then
+        startFirstNode "${file}"
+        if [[ $? -ne 0 ]]; then
+            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* START FIRSTNODE NODE_${NODE_ID} FAILED **********"
+            exit
         fi
-        cd "${PROJECT_CONF_PATH}"
-    done
+    else
+        startOtherNode "${file}"
+        if [[ $? -ne 0 ]]; then
+            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* START NODE NODE_${NODE_ID} FAILED **********"
+            exit
+        fi
+    fi
 }
 
 ################################################# Main #################################################
 function main() {
-    if [[ "${NODE}" == "all" ]]; then
-        startAllNodes
-    else
-        if [ ! -f "${PROJECT_CONF_PATH}/global/firstnode.info" ]; then
-            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* FIRSTNODE NOT INITED **********"
-            exit
-        fi
-        user_name=$(grep user_name ${PROJECT_CONF_PATH}/global/firstnode.info)
-        ip_addr=$(grep ip_addr ${PROJECT_CONF_PATH}/global/firstnode.info)
-        rpc_port=$(grep rpc_port ${PROJECT_CONF_PATH}/global/firstnode.info)
-        xcmd "${user_name}@${ip_addr}" "lsof -i:${rpc_port}" >/dev/null 2>&1
-        if [[ $? == "" ]] || [ ! -f "${PROJECT_CONF_PATH}/global/keyfile.json" ] || [ ! -f "${PROJECT_CONF_PATH}/global/keyfile.phrase" ] || [ ! -f "${PROJECT_CONF_PATH}/global/keyfile.account" ]; then
-            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* FIRSTNODE NOT STARTED **********"
-            exit
-        fi
+    if [ ! -f "${PROJECT_CONF_PATH}/global/firstnode.info" ] || [ ! -f "${PROJECT_CONF_PATH}/global/genesis.json" ]; then
+        echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* FIRSTNODE NOT INITED **********"
+        exit
+    fi
+    FIRSTNODE_ID=$(cat ${PROJECT_CONF_PATH}/global/firstnode.info | grep "node_id=" | sed -e 's/node_id=\(.*\)/\1/g')
 
+    if [[ "${NODE}" == "all" ]]; then
+        cd "${PROJECT_CONF_PATH}"
+        for file in $(ls ./); do
+            if [ -f "${file}" ]; then
+                start "${PROJECT_CONF_PATH}/${file}"
+                cd "${PROJECT_CONF_PATH}"
+            fi
+        done
+    else
         cd "${PROJECT_CONF_PATH}"
         for param in $(echo "${NODE}" | sed 's/,/\n/g'); do
             if [ ! -f "${PROJECT_CONF_PATH}/deploy_node-${param}.conf" ]; then
                 echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* FILE deploy_node-${param}.conf NOT EXISTS **********"
                 continue
             fi
-            startOtherNode "${PROJECT_CONF_PATH}/deploy_node-${param}.conf"
+            start "${PROJECT_CONF_PATH}/deploy_node-${param}.conf"
             cd "${PROJECT_CONF_PATH}"
         done
     fi

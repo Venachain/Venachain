@@ -3,6 +3,7 @@
 ###########################################################################################################
 ################################################# VRIABLES #################################################
 ###########################################################################################################
+SCRIPT_NAME="$(basename ${0})"
 OS=$(uname)
 LOCAL_IP=$(ifconfig | grep inet | grep -v 127.0.0.1 | grep -v inet6 | awk '{print $2}')
 if [[ "$(echo ${LOCAL_IP} | grep addr:)" != "" ]]; then
@@ -10,7 +11,7 @@ if [[ "$(echo ${LOCAL_IP} | grep addr:)" != "" ]]; then
 fi
 DEPLOYMENT_PATH=$(
     cd $(dirname $0)
-    cd ../../../
+    cd ../../
     pwd
 )
 DEPLOYMENT_CONF_PATH="${DEPLOYMENT_PATH}/deployment_conf"
@@ -41,7 +42,7 @@ FIRSTNODE_RPC_PORT=""
 function help() {
     echo
     echo "
-USAGE: clear.sh  [options] [value]
+USAGE: ${SCRIPT_NAME}  [options] [value]
 
         OPTIONS:
 
@@ -56,6 +57,7 @@ USAGE: clear.sh  [options] [value]
                                       'clean': will clean the files, configuration files will be backed up
                                       'stop' : will stop the node 
                                       'deep': will do delete clean and stop
+                                      default='deep'
 
            --help, -h                 show help
 "
@@ -238,17 +240,17 @@ function cleanNode() {
         echo "[WARN] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : !!! ${USER_NAME}@${IP_ADDR}:${DEPLOY_PATH}/data/node-${NODE_ID} NOT FOUND, MAYBE HAS ALREADY BEEN CLEANED !!!"
     else
         # backup deployment conf
-        xcmd "${USER_NAME}@${IP_ADDR}" "[ -f ${DEPLOY_PATH}/data/node-${NODE_ID}/deploy_conf/deploy_node-${NODE_ID}.conf ]"
+        xcmd "${USER_NAME}@${IP_ADDR}" "[ -f ${DEPLOY_PATH}/data/node-${NODE_ID}/deploy_node-${NODE_ID}.conf ]"
         if [ $? -eq 0 ]; then
             timestamp=$(date '+%Y%m%d%H%sM%S')
             xcmd "${USER_NAME}@${IP_ADDR}" "mkdir -p ${BACKUP_PATH}"
-            xcmd "${USER_NAME}@${IP_ADDR}" "mv ${DEPLOY_PATH}/data/node-${NODE_ID}/deploy_conf/deploy_node-${NODE_ID}.conf ${BACKUP_PATH}/deploy_node-${NODE_ID}.conf.bak.${timestamp}"
+            xcmd "${USER_NAME}@${IP_ADDR}" "mv ${DEPLOY_PATH}/data/node-${NODE_ID}/deploy_node-${NODE_ID}.conf ${BACKUP_PATH}/deploy_node-${NODE_ID}.conf.bak.${timestamp}"
             xcmd "${USER_NAME}@${IP_ADDR}" "[ -f ${BACKUP_PATH}/deploy_node-${NODE_ID}.conf.bak.${timestamp} ]"
             if [[ $? -ne 0 ]]; then
-                echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* BACKUP ${USER_NAME}@${IP_ADDR}:${DEPLOY_PATH}/data/node-${NODE_ID}/deploy_conf/deploy_node-${NODE_ID}.conf FAILED **********"
+                echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* BACKUP ${USER_NAME}@${IP_ADDR}:${DEPLOY_PATH}/data/node-${NODE_ID}/deploy_node-${NODE_ID}.conf FAILED **********"
                 return 1
             fi
-            echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Backup ${USER_NAME}@${IP_ADDR}:${DEPLOY_PATH}/data/node-${NODE_ID}/deploy_conf/deploy_node-${NODE_ID}.conf to ${USER_NAME}@${IP_ADDR}:${BACKUP_PATH}/deploy_node-${NODE_ID}.conf.bak.${timestamp} completed"
+            echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Backup ${USER_NAME}@${IP_ADDR}:${DEPLOY_PATH}/data/node-${NODE_ID}/deploy_node-${NODE_ID}.conf to ${USER_NAME}@${IP_ADDR}:${BACKUP_PATH}/deploy_node-${NODE_ID}.conf.bak.${timestamp} completed"
         fi
 
         # remove node dir

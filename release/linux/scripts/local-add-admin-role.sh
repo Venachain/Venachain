@@ -3,6 +3,7 @@
 ###########################################################################################################
 ################################################# VRIABLES #################################################
 ###########################################################################################################
+SCRIPT_NAME="$(basename ${0})"
 PROJECT_PATH=$(
     cd $(dirname $0)
     cd ../
@@ -13,8 +14,9 @@ DATA_PATH=${PROJECT_PATH}/data
 CONF_PATH=${PROJECT_PATH}/conf
 
 NODE_ID=""
+AUTO=""
 
-DEPLOY_NODE_CONF_PATH=""
+NODE_DIR=""
 IP_ADDR=""
 RPC_PORT=""
 PHRASE=""
@@ -28,11 +30,11 @@ ACCOUNT=""
 function help() {
     echo
     echo "
-USAGE: local-deploy-system-contract.sh  [options] [value]
+USAGE: ${SCRIPT_NAME}  [options] [value]
 
         OPTIONS:
 
-           --node, -n                   the specified node name. must be specified
+           --nodeid, -n                   the specified node name. must be specified
 
            --help, -h                   show help
 "
@@ -91,7 +93,7 @@ function setSuperAdmin() {
         echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ********* SET SUPER ADMIN FAILED **********"
         exit
     else
-        echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : Set Node-${NODE_ID} as super admin completed"
+        echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : Set super admin completed"
     fi
 
 }
@@ -113,14 +115,14 @@ function addChainAdmin() {
         echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ********* SET CHAIN ADMIN FAILED **********"
         exit
     else
-        echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : Set Node-${NODE_ID} as chain admin completed"
+        echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : Set chain admin completed"
     fi
 }
 
 ################################################# Main #################################################
 function main() {
     echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ## Deploy System Contract Start ##"
-    file="${DEPLOY_NODE_CONF_PATH}/deploy_node-${NODE_ID}.conf"
+    file="${NODE_DIR}/deploy_node-${NODE_ID}.conf"
     readFile $file
     setSuperAdmin
     addChainAdmin
@@ -136,14 +138,20 @@ if [ $# -eq 0 ]; then
 fi
 while [ ! $# -eq 0 ]; do
     case "$1" in
-    --node | -n)
+    --nodeid | -n)
+        shiftOption2 $#
         NODE_ID=$2
-        DEPLOY_NODE_CONF_PATH="${DATA_PATH}/node-$2/deploy_conf"
+        NODE_DIR="${DATA_PATH}/node-$2"
 
-        if [ ! -f "${DEPLOY_NODE_CONF_PATH}/deploy_node-$2.conf" ]; then
-            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ********* ${DEPLOY_NODE_CONF_PATH}/deploy_node-$2.conf NOT FOUND **********"
+        if [ ! -f "${NODE_DIR}/deploy_node-$2.conf" ]; then
+            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ********* ${NODE_DIR}/deploy_node-$2.conf NOT FOUND **********"
             exit
         fi
+        shift 2
+        ;;
+    --auto)
+        AUTO="true"
+        shift 1
         ;;
     *)
         echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ********* COMMAND \"$1\" NOT FOUND **********"
@@ -151,7 +159,6 @@ while [ ! $# -eq 0 ]; do
         exit
         ;;
     esac
-    shiftOption2 $#
-    shift 2
+
 done
 main

@@ -3,6 +3,7 @@
 ###########################################################################################################
 ################################################# VRIABLES #################################################
 ###########################################################################################################
+SCRIPT_NAME="$(basename ${0})"
 PROJECT_PATH=$(
     cd $(dirname $0)
     cd ../
@@ -14,9 +15,7 @@ CONF_PATH=${PROJECT_PATH}/conf
 
 NODE_ID=""
 
-DEPLOY_NODE_CONF_PATH=""
 NODE_DIR=""
-BOOTNODES=""
 IP_ADDR=""
 P2P_PORT=""
 RPC_ADDR=""
@@ -27,6 +26,7 @@ WS_PORT=""
 LOG_SIZE=""
 LOG_DIR=""
 GCMODE=""
+BOOTNODES=""
 EXTRA_OPTIONS=""
 PPROF_ADDR=""
 
@@ -38,7 +38,7 @@ PPROF_ADDR=""
 function help() {
     echo
     echo "
-USAGE: local-start-node.sh  [options] [value]
+USAGE: ${SCRIPT_NAME}  [options] [value]
 
         OPTIONS:
 
@@ -58,9 +58,8 @@ function shiftOption2() {
 
 ################################################# Read File #################################################
 function readFile() {
-    BOOTNODES=$(cat ${CONF_PATH}/genesis.json | sed -n '9p' | sed 's/^.*"\(firstValidatorNode\)": "\(.*\)"/\2/g')
 
-    file=${DEPLOY_NODE_CONF_PATH}/deploy_node-"${NODE_ID}".conf
+    file=${NODE_DIR}/deploy_node-"${NODE_ID}".conf
     IP_ADDR=$(cat $file | grep "ip_addr=" | sed -e 's/ip_addr=\(.*\)/\1/g')
     P2P_PORT=$(cat $file | grep "p2p_port=" | sed -e 's/p2p_port=\(.*\)/\1/g')
     RPC_ADDR=$(cat $file | grep "rpc_addr=" | sed -e 's/rpc_addr=\(.*\)/\1/g')
@@ -71,10 +70,19 @@ function readFile() {
     LOG_SIZE=$(cat $file | grep "log_size=" | sed -e 's/log_size=\(.*\)/\1/g')
     LOG_DIR=$(cat $file | grep "log_dir=" | sed -e 's/log_dir=\(.*\)/\1/g')
     GCMODE=$(cat $file | grep "gcmode=" | sed -e 's/gcmode=\(.*\)/\1/g')
+
+    BOOTNODES=$(cat $file | grep "bootnodes=" | sed -e 's/bootnodes=\(.*\)/\1/g')
+    if [[ "${BOOTNODES}" == "" ]]; then
+        if [[ -f ${CONF_PATH}/genesis.json ]]; then
+            BOOTNODES=$(cat ${CONF_PATH}/genesis.json | sed -n '9p' | sed 's/^.*"\(firstValidatorNode\)": "\(.*\)"/\2/g')
+        else
+            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ************** FILE ${CONF_PATH}/genesis.json NOT FOUND ***************"
+        fi
+    fi
     EXTRA_OPTIONS=$(cat $file | grep "extra_options=" | sed -e 's/extra_options=\(.*\)/\1/g')
     PPROF_ADDR=$(cat $file | grep "pprof_addr=" | sed -e 's/pprof_addr=\(.*\)/\1/g')
 
-    if [[ "${IP_ADDR}" == "" ]] || [[ "${P2P_PORT}" == "" ]] || [[ "${RPC_ADDR}" == "" ]] || [[ "${RPC_PORT}" == "" ]] || [[ "${RPC_API}" == "" ]] || [[ "${WS_ADDR}" == "" ]] || [[ "${WS_PORT}" == "" ]] || [[ "${LOG_SIZE}" == "" ]] || [[ "${LOG_DIR}" == "" ]] || [[ "${GCMODE}" == "" ]]; then
+    if [[ "${IP_ADDR}" == "" ]] || [[ "${P2P_PORT}" == "" ]] || [[ "${RPC_ADDR}" == "" ]] || [[ "${RPC_PORT}" == "" ]] || [[ "${RPC_API}" == "" ]] || [[ "${WS_ADDR}" == "" ]] || [[ "${WS_PORT}" == "" ]] || [[ "${LOG_SIZE}" == "" ]] || [[ "${LOG_DIR}" == "" ]] || [[ "${GCMODE}" == "" ]] || [ "${BOOTNODES}" == "" ]; then
         echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ********* FILE ${file} MISS VALUE **********"
         exit
     fi
@@ -90,7 +98,7 @@ function startCmd() {
     flag_logs="--wasmlog  ${LOG_DIR}/wasm_log --wasmlogsize ${LOG_SIZE} "
     flag_ipc="--ipcpath ${NODE_DIR}/node-${NODE_ID}.ipc "
     flag_gcmode="--gcmode  ${GCMODE} "
-    
+
     # include pprof if setted
     flag_pprof=""
     if [[ "${PPROF_ADDR}" != "" ]]; then
@@ -144,6 +152,10 @@ function startCmd() {
 function main() {
     echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ## Run node-${NODE_ID} ##"
     readFile
+    if [[ "$(lsof -i:${P2P_PORT})" != "" ]]; then
+        echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ********* PORT ${P2P_PORT} IS IN USAGE **********"
+        exit
+    fi
     startCmd
     echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : Node's url: ${IP_ADDR}:${RPC_PORT}"
     echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : Run node-${NODE_ID} succeeded"
@@ -161,10 +173,10 @@ while [ ! $# -eq 0 ]; do
     --node | -n)
         NODE_DIR=${DATA_PATH}/node-$2
         NODE_ID=$2
-        DEPLOY_NODE_CONF_PATH="${DATA_PATH}/node-$2/deploy_conf"
+        NODE_DIR="${DATA_PATH}/node-$2"
 
-        if [ ! -f "${DEPLOY_NODE_CONF_PATH}/deploy_node-$2.conf" ]; then
-            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ********* ${DEPLOY_NODE_CONF_PATH}/deploy_node-$2.conf NOT FOUND **********"
+        if [ ! -f "${NODE_DIR}/deploy_node-$2.conf" ]; then
+            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ********* ${NODE_DIR}/deploy_node-$2.conf NOT FOUND **********"
             exit
         fi
         ;;

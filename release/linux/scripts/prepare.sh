@@ -3,6 +3,7 @@
 ###########################################################################################################
 ################################################# VRIABLES #################################################
 ###########################################################################################################
+SCRIPT_NAME="$(basename ${0})"
 OS=$(uname)
 LOCAL_IP=$(ifconfig | grep inet | grep -v 127.0.0.1 | grep -v inet6 | awk '{print $2}')
 if [[ "$(echo ${LOCAL_IP} | grep addr:)" != "" ]]; then
@@ -10,10 +11,13 @@ if [[ "$(echo ${LOCAL_IP} | grep addr:)" != "" ]]; then
 fi
 DEPLOYMENT_PATH=$(
     cd $(dirname $0)
-    cd ../../../
+    cd ../../
     pwd
 )
 DEPLOYMENT_CONF_PATH="${DEPLOYMENT_PATH}/deployment_conf"
+if [ ! -d "${DEPLOYMENT_CONF_PATH}" ]; then
+    mkdir -p ${DEPLOYMENT_CONF_PATH}
+fi
 PROJECT_CONF_PATH=""
 
 PROJECT_NAME=""
@@ -38,7 +42,7 @@ function showTitle() {
 function help() {
     echo
     echo "
-USAGE: prepare.sh  [options] [value]
+USAGE: ${SCRIPT_NAME}  [options] [value]
 
         OPTIONS:
 
@@ -155,7 +159,7 @@ function checkProjectExistence() {
     fi
     echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Backup ${PROJECT_CONF_PATH} to ${DEPLOYMENT_CONF_PATH}/bak/${PROJECT_NAME}.bak.${timestamp} completed"
 
-    ${DEPLOYMENT_PATH}/release/linux/scripts/clear.sh -p ${PROJECT_NAME} --skip
+    ${DEPLOYMENT_PATH}/linux/scripts/clear.sh -p ${PROJECT_NAME} --skip
     if [ $? -ne 0 ]; then
         echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* CLEAR PROJECT ${PROJECT_NAME} FAILED **********"
         exit
@@ -322,6 +326,9 @@ function generateConfFile() {
             echo ""
             echo "## NODE START"
             echo "gcmode=archive"
+            echo "bootnodes="
+            echo "extra_options="
+            echo "pprof_addr="
         } >>"${PROJECT_CONF_PATH}/deploy_node-${node_id}.conf"
         if [[ ! -f "${PROJECT_CONF_PATH}/deploy_node-${node_id}.conf" ]]; then
             echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* GENERATE ${PROJECT_CONF_PATH}/deploy_node-${node_id}.conf for ${remote_addr} FAILED *********"

@@ -3,6 +3,7 @@
 ###########################################################################################################
 ################################################# VRIABLES #################################################
 ###########################################################################################################
+SCRIPT_NAME="$(basename ${0})"
 PROJECT_PATH=$(
     cd $(dirname $0)
     cd ../
@@ -12,8 +13,9 @@ BIN_PATH=${PROJECT_PATH}/bin
 DATA_PATH=${PROJECT_PATH}/data
 
 NODE_ID=""
+AUTO=""
 
-DEPLOYMENT_CONF_PATH=""
+NODE_DIR=""
 NODE_DIR=""
 
 #############################################################################################################
@@ -24,13 +26,17 @@ NODE_DIR=""
 function help() {
     echo
     echo "
-USAGE: local-keygen.sh  [options] [value]
+USAGE: ${SCRIPT_NAME}  [options] [value]
 
         OPTIONS:
 
-           --node, -n                   the specified node name. must be specified
+           --nodeid, -n                   the specified node name. must be specified
+
+           --auto                   auto=true: will no prompt to create the node key 
+            　　　　　　　　　　　　　　　　　default='false'
 
            --help, -h                   show help
+
 "
 }
 
@@ -41,6 +47,20 @@ function shiftOption2() {
         help
         exit
     fi
+}
+
+################################################# Yes Or No #################################################
+function yesOrNo() {
+    read -p "" anw
+    case $anw in
+    [Yy][Ee][Ss] | [yY])
+        return 0
+        ;;
+    [Nn][Oo] | [Nn])
+        return 1
+        ;;
+    esac
+    return 1
 }
 
 ################################################# Generate Key #################################################
@@ -98,7 +118,14 @@ function generateKey() {
         echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ********* STORE KEY INFO FAILED **********"
         exit
     fi
-    echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : Files: ${NODE_DIR}/node.address, ${NODE_DIR}/node.prikey, ${NODE_DIR}/node.pubkey"
+}
+
+################################################# Read Key #################################################
+function readKey() {
+    address=$(cat "${NODE_DIR}"/node.address)
+    pubkey=$(cat "${NODE_DIR}"/node.pubkey)
+    prikey=$(cat "${NODE_DIR}"/node.prikey)
+    echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : Key files: ${NODE_DIR}/node.address, ${NODE_DIR}/node.prikey, ${NODE_DIR}/node.pubkey"
     echo "        Node-${NODE_ID}'s address: ${address}"
     echo "        Node-${NODE_ID}'s private key: ${prikey}"
     echo "        Node-${NODE_ID}'s public key: ${pubkey}"
@@ -107,7 +134,32 @@ function generateKey() {
 ################################################# Main #################################################
 function main() {
     echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ## Node-${NODE_ID} Keygen Start ##"
-    generateKey
+    if [[ "${AUTO}" == "true" ]]; then
+        if [ ! -f "${NODE_DIR}"/node.pubkey ] || [ ! -f "${NODE_DIR}"/node.prikey ] || [ ! -f "${NODE_DIR}"/node.address ]; then
+            generateKey
+        fi
+    else
+        echo
+        echo "Do You What To Create a new node key ? (Please do not recreate the first node node.key) Yes or No(y/n):"
+        yesOrNo
+        if [ $? -eq 0 ]; then
+            if [ -f "${NODE_DIR}"/node.pubkey ] || [ -f "${NODE_DIR}"/node.prikey ] || [ -f "${NODE_DIR}"/node.address ]; then
+                echo "Node key already exists, re create? (Please do not recreate the first node node.key) Yes or No(y/n):"
+                yesOrNo
+                if [ $? -eq 0 ]; then
+                    generateKey
+                fi
+            else
+                generateKey
+            fi
+        else
+            if [ ! -f "${NODE_DIR}"/node.pubkey ] || [ ! -f "${NODE_DIR}"/node.prikey ] || [ ! -f "${NODE_DIR}"/node.address ]; then
+                echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ********* Please Put Your Node's key file \"node.pubkey\" to the directory ${NODE_DIR} *********"
+                exit
+            fi
+        fi
+    fi
+    readKey
     echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : Node-${NODE_ID} keygen succeeded"
 }
 
@@ -120,15 +172,21 @@ if [ $# -eq 0 ]; then
 fi
 while [ ! $# -eq 0 ]; do
     case "$1" in
-    --node | -n)
+    --nodeid | -n)
+        shiftOption2 $#
         NODE_ID=$2
         NODE_DIR="${DATA_PATH}/node-$2"
-        DEPLOYMENT_CONF_PATH="${DATA_PATH}/node-$2/deploy_conf"
 
-        if [ ! -f "${DEPLOYMENT_CONF_PATH}/deploy_node-$2.conf" ]; then
-            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ********* ${DEPLOYMENT_CONF_PATH}/deploy_node-$2.conf NOT FOUND **********"
+        if [ ! -f "${NODE_DIR}/deploy_node-$2.conf" ]; then
+            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ********* ${NODE_DIR}/deploy_node-$2.conf NOT FOUND **********"
             exit
         fi
+        shift 2
+
+        ;;
+    --auto)
+        AUTO="true"
+        shift 1
         ;;
     *)
         echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ********* COMMAND \"$1\" NOT FOUND **********"
@@ -136,7 +194,5 @@ while [ ! $# -eq 0 ]; do
         exit
         ;;
     esac
-    shiftOption2 $#
-    shift 2
 done
 main

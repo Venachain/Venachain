@@ -3,18 +3,22 @@
 ###########################################################################################################
 ################################################# VRIABLES #################################################
 ###########################################################################################################
+SCRIPT_NAME="$(basename ${0})"
 LOCAL_IP=$(ifconfig | grep inet | grep -v 127.0.0.1 | grep -v inet6 | awk '{print $2}')
 if [[ "$(echo ${LOCAL_IP} | grep addr:)" != "" ]]; then
     LOCAL_IP=$(echo ${LOCAL_IP} | tr -s ':' ' ' | awk '{print $2}')
 fi
 DEPLOYMENT_PATH=$(
     cd $(dirname $0)
-    cd ../../../
+    cd ../../
     pwd
 )
 USER_NAME=$USER
 
-DEPLOYMENT_CONF_PATH="$(cd ${DEPLOYMENT_PATH}/deployment_conf && pwd)"
+DEPLOYMENT_CONF_PATH="${DEPLOYMENT_PATH}/deployment_conf"
+if [ ! -d "${DEPLOYMENT_CONF_PATH}" ]; then
+    mkdir -p ${DEPLOYMENT_CONF_PATH}
+fi
 PROJECT_CONF_PATH=""
 
 PROJECT=""
@@ -30,7 +34,7 @@ ADDRESS=""
 function help() {
     echo
     echo "
-USAGE: deploy.sh  [options] [value]
+USAGE: ${SCRIPT_NAME}  [options] [value]
 
         OPTIONS:
 

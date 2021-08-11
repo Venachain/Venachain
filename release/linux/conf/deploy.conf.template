@@ -1,0 +1,26 @@
+## PlateONE Node Remote Deploy Configuration File ##
+
+## NODE
+deploy_path=
+user_name=
+ip_addr=127.0.0.1
+p2p_port=16791
+ 
+## RPC
+rpc_addr=0.0.0.0
+rpc_port=6791
+rpc_api=db,eth,net,web3,admin,personal,txpool,istanbul
+
+## WEBSOCKET
+ws_addr=0.0.0.0
+ws_port=26791
+
+## WASM_LOG
+log_dir=
+log_size=67108864
+
+## NODE START
+gcmode=archive
+bootnodes=
+extra_options=
+pprof_addr=
