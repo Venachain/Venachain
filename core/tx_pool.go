@@ -1462,6 +1462,7 @@ func (pool *TxPool) generateTxs(cnt string, addr common.Address, preProducer boo
 	var producerCnt int32 = 0
 	producer := func(threadNum, cnt int) {
 		var gasLimit = 1 + threadNum
+		tstr := strconv.Itoa(threadNum)
 		for i := 0; i < cnt; i++ {
 			nonce := time.Now().UnixNano()
 			var data []byte = nil
@@ -1469,7 +1470,7 @@ func (pool *TxPool) generateTxs(cnt string, addr common.Address, preProducer boo
 				common.Int64ToBytes(int64(2)),
 				[]byte("saveEvidence"),
 			}
-			paramArr = append(paramArr, []byte(fmt.Sprintf("%v", time.Now().String())))
+			paramArr = append(paramArr, []byte(fmt.Sprintf("%v%v", tstr, time.Now().UnixNano())))
 			paramArr = append(paramArr, []byte(fmt.Sprintf("%v", "1234")))
 			paramArr = append(paramArr, []byte(fmt.Sprintf("%v", "1234")))
 			data, _ = rlp.EncodeToBytes(paramArr)

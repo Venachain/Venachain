@@ -306,6 +306,7 @@ func (self *StateDB) GetState(addr common.Address, key []byte) []byte {
 func (self *StateDB) GetStateByKeyTrie(addr common.Address, keyTrie string) []byte {
 	stateObject := self.getStateObject(addr)
 	if stateObject != nil {
+		stateObject.CreateTrie(self.db)
 		return stateObject.GetCommittedStateNoCache(self.db, keyTrie)
 	}
 	return []byte{}
@@ -609,7 +610,7 @@ func (self *StateDB) createObjectSafe(addr common.Address) (newobj, prev *stateO
 		return obj, prev
 	}
 	newobj = newObject(self, addr, Account{})
-	newobj.setNonce(0) // sets the object to dirty
+	newobj.setNonce(0)
 	self.setStateObject(newobj)
 	return newobj, prev
 }

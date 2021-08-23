@@ -139,6 +139,15 @@ func (ec *Client) HeaderByNumber(ctx context.Context, number *big.Int) (*types.H
 	return head, err
 }
 
+func (ec *Client) HeaderJsonByNumber(ctx context.Context, number *big.Int) ([]byte, error) {
+	var head json.RawMessage
+	err := ec.c.CallContext(ctx, &head, "eth_getBlockByNumber", toBlockNumArg(number), false)
+	if err == nil && head == nil {
+		err = ethereum.NotFound
+	}
+	return head, err
+}
+
 type rpcTransaction struct {
 	tx *types.Transaction
 	txExtraInfo

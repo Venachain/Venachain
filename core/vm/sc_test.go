@@ -28,6 +28,10 @@ type mockStateDB struct {
 	eLogs  map[string]*types.Log
 }
 
+func (m *mockStateDB) AddNonce(address common.Address) {
+	panic("implement me")
+}
+
 func (m *mockStateDB) CloneAccount(src common.Address, dest common.Address) error {
 	panic("implement me")
 }
