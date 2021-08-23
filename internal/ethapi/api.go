@@ -26,6 +26,8 @@ import (
 	"strconv"
 	"time"
 
+	lru "github.com/hashicorp/golang-lru"
+
 	"strings"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
@@ -480,12 +482,14 @@ func (s *PrivateAccountAPI) SignAndSendTransaction(ctx context.Context, args Sen
 // PublicBlockChainAPI provides an API to access the Ethereum blockchain.
 // It offers only methods that operate on public data that is freely available to anyone.
 type PublicBlockChainAPI struct {
-	b Backend
+	b   Backend
+	lru *lru.Cache
 }
 
 // NewPublicBlockChainAPI creates a new Ethereum blockchain API.
 func NewPublicBlockChainAPI(b Backend) *PublicBlockChainAPI {
-	return &PublicBlockChainAPI{b}
+	lru, _ := lru.New(100)
+	return &PublicBlockChainAPI{b: b, lru: lru}
 }
 
 func (s *PublicBlockChainAPI) Monitor(ctx context.Context, hash common.Hash, monitorType string) map[string]interface{} {
@@ -587,6 +591,10 @@ func (s *PublicBlockChainAPI) GetAccountBaseInfo(ctx context.Context, address co
 func (s *PublicBlockChainAPI) GetBlockByNumber(ctx context.Context, blockNr rpc.BlockNumber, fullTx bool) (map[string]interface{}, error) {
 	block, err := s.b.BlockByNumber(ctx, blockNr)
 	if block != nil {
+		number := block.NumberU64()
+		if cached, ok := s.lru.Get(number); ok {
+			return cached.(map[string]interface{}), nil
+		}
 		response, err := s.rpcOutputBlock(block, true, fullTx)
 		if err == nil && blockNr == rpc.PendingBlockNumber {
 			// Pending blocks need to nil out a few fields
@@ -594,6 +602,7 @@ func (s *PublicBlockChainAPI) GetBlockByNumber(ctx context.Context, blockNr rpc.
 				response[field] = nil
 			}
 		}
+		s.lru.Add(number, response)
 		return response, err
 	}
 	return nil, err

@@ -866,14 +866,20 @@ func (w *worker) commitNewWork(interrupt *int32, timestamp int64, commitBlock *t
 		return
 	}
 
-	startTime = time.Now()
-	if result := w.processTxs(w.current.state, header, pending); !result {
-		return
-	}
+	containsCreate := isContainsCreateContract(pending)
+	// pending里面是否包含创建合约的交易，如果包含则串行执行
 
-	//if ok := w.commitTransactionsWithHeader(header, pending, w.coinbase, interrupt); ok {
-	//	return
-	//}
+	startTime = time.Now()
+
+	if containsCreate {
+		if ok := w.commitTransactionsWithHeader(header, pending, w.coinbase, interrupt); ok {
+			return
+		}
+	} else {
+		if result := w.processTxs(w.current.state, header, pending); !result {
+			return
+		}
+	}
 
 	log.Info("commit transaction -------------------", "duration", time.Since(startTime))
 	//return
@@ -986,6 +992,15 @@ func (w *worker) makePending() (*types.Block, *state.StateDB) {
 func (w *worker) resetDone() bool {
 	if w.chain.CurrentBlock().Number().Cmp(w.eth.TxPool().GetResetNumber()) == 0 {
 		return true
+	}
+	return false
+}
+
+func isContainsCreateContract(pending []*types.Transaction) bool {
+	for _, tx := range pending {
+		if tx.To() == nil {
+			return true
+		}
 	}
 	return false
 }

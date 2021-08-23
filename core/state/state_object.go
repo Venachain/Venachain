@@ -412,7 +412,9 @@ func (self *stateObject) GetCommittedStateNoCache(db Database, key string) []byt
 	var valueKey common.Hash
 
 	// Otherwise load the valueKey from trie
+	self.lock.Lock()
 	enc, err := self.getTrie(db).TryGet([]byte(key))
+	self.lock.Unlock()
 	if err != nil {
 		self.setError(err)
 		return []byte{}
@@ -490,6 +492,31 @@ func (self *stateObject) updateTrie(db Database) Trie {
 	}
 
 	return tr
+}
+
+func (self *stateObject) UpdateKey(key, value []byte) {
+	self.lock.Lock()
+	defer self.lock.Unlock()
+	err := self.trie.TryUpdate(key, value)
+	if err != nil {
+		self.setError(err)
+	}
+}
+
+func (self *stateObject) DeleteKey(key []byte) {
+	self.lock.Lock()
+	defer self.lock.Unlock()
+	err := self.trie.TryDelete(key)
+	if err != nil {
+		self.setError(err)
+	}
+}
+
+func (self *stateObject) UpdateValue(key, value []byte) {
+	err := self.trie.TryUpdateValue(key, value)
+	if err != nil {
+		self.setError(err)
+	}
 }
 
 // UpdateRoot sets the trie root to the current root hash of

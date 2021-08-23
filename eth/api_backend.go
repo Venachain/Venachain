@@ -39,8 +39,10 @@ import (
 
 // EthAPIBackend implements ethapi.Backend for full nodes
 type EthAPIBackend struct {
-	eth *Ethereum
-	gpo *gasprice.Oracle
+	eth           *Ethereum
+	gpo           *gasprice.Oracle
+	currentState  *state.StateDB
+	currentHeader *types.Header
 }
 
 // ChainConfig returns the active chain configuration.
@@ -93,6 +95,21 @@ func (b *EthAPIBackend) StateAndHeaderByNumber(ctx context.Context, blockNr rpc.
 		block, state := b.eth.miner.Pending()
 		return state, block.Header(), nil
 	}
+	if blockNr == rpc.LatestBlockNumber {
+		if b.currentHeader != nil && b.eth.blockchain.CurrentBlock().Root() == b.currentHeader.Root {
+			return b.currentState, b.currentHeader, nil
+		} else {
+			// Otherwise resolve the block number and return its state
+			header, err := b.HeaderByNumber(ctx, blockNr)
+			if header == nil || err != nil {
+				return nil, nil, err
+			}
+			stateDb, err := b.eth.BlockChain().StateAt(header.Root)
+			b.currentState = stateDb
+			b.currentHeader = header
+			return stateDb, header, err
+		}
+	}
 	// Otherwise resolve the block number and return its state
 	header, err := b.HeaderByNumber(ctx, blockNr)
 	if header == nil || err != nil {
@@ -129,12 +146,13 @@ func (b *EthAPIBackend) GetLogs(ctx context.Context, hash common.Hash) ([][]*typ
 	return logs, nil
 }
 
-func (b *EthAPIBackend) GetEVM(ctx context.Context, msg core.Message, state *state.StateDB, header *types.Header, vmCfg vm.Config) (*vm.EVM, func() error, error) {
-	state.SetBalance(msg.From(), math.MaxBig256)
+func (b *EthAPIBackend) GetEVM(ctx context.Context, msg core.Message, stateDB *state.StateDB, header *types.Header, vmCfg vm.Config) (*vm.EVM, func() error, error) {
 	vmError := func() error { return nil }
 
 	context := core.NewEVMContext(msg, header, b.eth.BlockChain(), nil)
-	return vm.NewEVM(context, state, b.eth.chainConfig, vmCfg), vmError, nil
+	simulator := state.NewCallSimulator(stateDB)
+	simulator.SetBalance(msg.From(), math.MaxBig256)
+	return vm.NewEVM(context, simulator, b.eth.chainConfig, vmCfg), vmError, nil
 }
 
 func (b *EthAPIBackend) SubscribeRemovedLogsEvent(ch chan<- core.RemovedLogsEvent) event.Subscription {

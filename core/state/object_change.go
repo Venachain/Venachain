@@ -36,26 +36,25 @@ func NewCreateAccount(po *stateObject, no *stateObject) *CreateAccount {
 	}
 }
 
-func (ca CreateAccount) change(s *StateDB) {
+func (ca *CreateAccount) change(s *StateDB) {
 	if ca.prev != nil {
 		ca.newObj.setBalance(ca.prev.Balance())
 	}
-	s.setStateObject(ca.newObj)
 }
 
-func (ca CreateAccount) getAddr() common.Address {
+func (ca *CreateAccount) getAddr() common.Address {
 	return ca.account
 }
 
-func (ca CreateAccount) getObject() *stateObject {
+func (ca *CreateAccount) getObject() *stateObject {
 	return ca.newObj
 }
 
-func (ca CreateAccount) getVersion() int {
+func (ca *CreateAccount) getVersion() int {
 	return ca.version
 }
 
-func (ca CreateAccount) setVersion(version int) {
+func (ca *CreateAccount) setVersion(version int) {
 	ca.version = version
 }
 
@@ -78,23 +77,23 @@ func NewSetCode(stateObject *stateObject, addr common.Address, code []byte) *Set
 	}
 }
 
-func (ca SetCode) change(s *StateDB) {
+func (ca *SetCode) change(s *StateDB) {
 	ca.obj.setCode(ca.hash, ca.code)
 }
 
-func (ca SetCode) getAddr() common.Address {
+func (ca *SetCode) getAddr() common.Address {
 	return ca.address
 }
 
-func (ca SetCode) getObject() *stateObject {
+func (ca *SetCode) getObject() *stateObject {
 	return ca.obj
 }
 
-func (ca SetCode) getVersion() int {
+func (ca *SetCode) getVersion() int {
 	return ca.version
 }
 
-func (ca SetCode) setVersion(version int) {
+func (ca *SetCode) setVersion(version int) {
 	ca.version = version
 }
 
@@ -116,23 +115,23 @@ func NewSetAbi(stateObject *stateObject, addr common.Address, code []byte) *SetA
 	}
 }
 
-func (ca SetAbi) change(s *StateDB) {
+func (ca *SetAbi) change(s *StateDB) {
 	ca.obj.setAbi(ca.hash, ca.code)
 }
 
-func (ca SetAbi) getAddr() common.Address {
+func (ca *SetAbi) getAddr() common.Address {
 	return ca.address
 }
 
-func (ca SetAbi) getObject() *stateObject {
+func (ca *SetAbi) getObject() *stateObject {
 	return ca.obj
 }
 
-func (ca SetAbi) getVersion() int {
+func (ca *SetAbi) getVersion() int {
 	return ca.version
 }
 
-func (ca SetAbi) setVersion(version int) {
+func (ca *SetAbi) setVersion(version int) {
 	ca.version = version
 }
 
@@ -149,24 +148,24 @@ func NewSuicide(stateObject *stateObject, addr common.Address) *Suicide {
 	}
 }
 
-func (ca Suicide) change(s *StateDB) {
+func (ca *Suicide) change(s *StateDB) {
 	ca.obj.markSuicided()
 	s.deleteStateObject(ca.obj)
 }
 
-func (ca Suicide) getAddr() common.Address {
+func (ca *Suicide) getAddr() common.Address {
 	return ca.address
 }
 
-func (ca Suicide) getObject() *stateObject {
+func (ca *Suicide) getObject() *stateObject {
 	return ca.obj
 }
 
-func (ca Suicide) getVersion() int {
+func (ca *Suicide) getVersion() int {
 	return ca.version
 }
 
-func (ca Suicide) setVersion(version int) {
+func (ca *Suicide) setVersion(version int) {
 	ca.version = version
 }
 
@@ -185,23 +184,23 @@ func NewSetFwData(object *stateObject, addr common.Address, data FwData) *SetFwD
 	}
 }
 
-func (ca SetFwData) change(s *StateDB) {
+func (ca *SetFwData) change(s *StateDB) {
 	ca.obj.setFwData(ca.data)
 }
 
-func (ca SetFwData) getAddr() common.Address {
+func (ca *SetFwData) getAddr() common.Address {
 	return ca.address
 }
 
-func (ca SetFwData) getObject() *stateObject {
+func (ca *SetFwData) getObject() *stateObject {
 	return ca.obj
 }
 
-func (ca SetFwData) getVersion() int {
+func (ca *SetFwData) getVersion() int {
 	return ca.version
 }
 
-func (ca SetFwData) setVersion(version int) {
+func (ca *SetFwData) setVersion(version int) {
 	ca.version = version
 }
 
@@ -220,7 +219,7 @@ func NewSetFwActive(object *stateObject, addr common.Address, active uint64) *Se
 	}
 }
 
-func (ca SetFwActive) change(s *StateDB) {
+func (ca *SetFwActive) change(s *StateDB) {
 	pre := ca.obj.data.FwActive
 	result := ca.active ^ pre
 	if result == 1 {
@@ -228,15 +227,15 @@ func (ca SetFwActive) change(s *StateDB) {
 	}
 }
 
-func (ca SetFwActive) getAddr() common.Address {
+func (ca *SetFwActive) getAddr() common.Address {
 	return ca.address
 }
 
-func (ca SetFwActive) getObject() *stateObject {
+func (ca *SetFwActive) getObject() *stateObject {
 	return ca.obj
 }
 
-func (ca SetFwActive) getVersion() int {
+func (ca *SetFwActive) getVersion() int {
 	return ca.version
 }
 
@@ -259,25 +258,25 @@ func NewSetCreator(object *stateObject, addr common.Address, creator common.Addr
 	}
 }
 
-func (ca SetCreator) change(s *StateDB) {
+func (ca *SetCreator) change(s *StateDB) {
 	if bytes.Equal(ca.obj.CodeHash(), emptyCodeHash) {
 		return
 	}
 	ca.obj.setContractCreator(ca.creator)
 }
 
-func (ca SetCreator) getAddr() common.Address {
+func (ca *SetCreator) getAddr() common.Address {
 	return ca.address
 }
 
-func (ca SetCreator) getObject() *stateObject {
+func (ca *SetCreator) getObject() *stateObject {
 	return ca.obj
 }
 
-func (ca SetCreator) getVersion() int {
+func (ca *SetCreator) getVersion() int {
 	return ca.version
 }
 
-func (ca SetCreator) setVersion(version int) {
+func (ca *SetCreator) setVersion(version int) {
 	ca.version = version
 }
