@@ -212,10 +212,17 @@ func (p *StateProcessor) ParallelProcessTxs(stateDb *state.StateDB, header *type
 					}
 					//执行模拟交易
 					txSim, err := p.SimulateTx(stateDb, tx, header, gp)
-					if err != nil || txSim.ReTry() {
+					if err != nil {
 						log.Warn("Transaction failed, skipped", "blockNumber", header.Number,
 							"blockParentHash", header.ParentHash, "hash", tx.Hash(), "err", err)
 						atomic.AddInt32(&errCnt, 1)
+						return
+					}
+
+					if txSim.ReTry() {
+						//需要retry的交易等待一段时间，保证前序交易已经处理完成，再重新执行
+						time.Sleep(5 * time.Millisecond)
+						txCh <- tx
 						return
 					}
 					result, count := stateDb.AddTxSim(txSim, applyCh, false)
