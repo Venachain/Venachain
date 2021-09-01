@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"math"
 	"math/big"
 	"sync"
@@ -31,6 +30,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/fetcher"
 	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
@@ -652,6 +652,10 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		for _, block := range announces {
 			if !pm.blockchain.HasBlock(block.Hash, block.Number) {
 				unknown = append(unknown, block)
+			}
+
+			if _, bn := p.Head(); bn.Uint64() < block.Number {
+				p.SetHead(block.Hash, big.NewInt(0).SetUint64(block.Number))
 			}
 		}
 		for _, block := range unknown {
