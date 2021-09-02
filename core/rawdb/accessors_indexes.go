@@ -17,11 +17,12 @@
 package rawdb
 
 import (
+	"sync"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
-	"sync"
 )
 
 var (
@@ -112,7 +113,7 @@ func EncodeTxLookupEntries(ch chan<- common.DBItems, close chan struct{}, block 
 		}
 		items[i] = &common.DBItem{Key: txLookupKey(tx.Hash()), Value: data}
 	}
-	log.Info("EncodeTxLookupEntries complete")
+	log.Debug("EncodeTxLookupEntries complete")
 	select {
 	case <-close:
 		return

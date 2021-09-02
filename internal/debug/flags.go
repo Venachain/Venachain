@@ -96,12 +96,16 @@ var (
 	wasmLogSizeFlag = cli.UintFlag{
 		Name:  "wasmlogsize",
 		Usage: "output wasm contract log file partition size",
-		Value: 1024*1024*64,
+		Value: 1024 * 1024 * 64,
 	}
 	moduleLogParamsFlag = cli.StringFlag{
 		Name:  "moduleLogParams",
 		Usage: "start and set multi-module log parameters",
 		Value: "",
+	}
+	useColorLogFlag = cli.BoolFlag{
+		Name:  "useColor",
+		Usage: "set log use color",
 	}
 )
 
@@ -189,6 +193,7 @@ func SetupModuleLog(ctx *cli.Context) {
 	log.SetBacktraceAt(ctx.GlobalString(backtraceAtFlag.Name))
 	log.SetVModule(ctx.GlobalString(vmoduleFlag.Name))
 	log.SetModuleParamsStr(ctx.GlobalString(moduleLogParamsFlag.Name))
+	log.SetUseColor(ctx.GlobalBool(useColorLogFlag.Name))
 	log.InitModulesHandlersState()
 }
 

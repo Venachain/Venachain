@@ -245,7 +245,7 @@ func (p *StateProcessor) ParallelProcessTxs(stateDb *state.StateDB, header *type
 				log.Debug("Parallel Process Txs reached time limit")
 				return
 			case <-finishCh:
-				log.Info("AddTxSim complete")
+				log.Debug("AddTxSim complete")
 				stopApplyCh <- true
 				return
 			}
@@ -261,7 +261,7 @@ func (p *StateProcessor) ParallelProcessTxs(stateDb *state.StateDB, header *type
 				stateDb.ApplyTxSim(txSim, true)
 				applyCnt++
 				if applyCnt >= (txsCount-int(atomic.LoadInt32(&errCnt))) || addCnt == applyCnt {
-					log.Info("applyTxSim complete")
+					log.Debug("applyTxSim complete")
 					stopCh <- true
 					return
 				}
