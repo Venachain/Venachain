@@ -324,7 +324,7 @@ func EncodeReceipts(ch chan<- common.DBItems, close chan struct{}, hash common.H
 	if err != nil {
 		log.Crit("Failed to encode block receipts", "err", err)
 	}
-	log.Info("EncodeReceipts complete")
+	log.Debug("EncodeReceipts complete")
 	select {
 	case <-close:
 		return

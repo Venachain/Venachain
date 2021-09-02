@@ -607,7 +607,7 @@ func (w *worker) resultLoop() {
 			// Insert the block into the set of pending ones to resultLoop for confirmations
 			//w.unconfirmed.Insert(block.NumberU64(), block.Hash())
 
-			log.Info("result block ---------------------------", "duration", time.Since(now))
+			log.Debug("result block ---------------------------", "duration", time.Since(now))
 		case <-w.exitCh:
 			return
 		}
@@ -881,7 +881,7 @@ func (w *worker) commitNewWork(interrupt *int32, timestamp int64, commitBlock *t
 		}
 	}
 
-	log.Info("commit transaction -------------------", "duration", time.Since(startTime))
+	log.Debug("commit transaction -------------------", "duration", time.Since(startTime))
 	//return
 
 	w.commit(w.fullTaskHook, true, tstart)
@@ -899,7 +899,7 @@ func (w *worker) commit(interval func(), update bool, start time.Time) error {
 	s := w.current.state
 	now := time.Now()
 	block, err := w.engine.Finalize(w.chain, w.current.header, s, w.current.txs, w.current.receipts, w.current.dag)
-	log.Info("engine Finalize block ---------------", "duration", time.Since(now))
+	log.Debug("engine Finalize block ---------------", "duration", time.Since(now))
 	if err != nil {
 		return err
 	}
@@ -910,16 +910,15 @@ func (w *worker) commit(interval func(), update bool, start time.Time) error {
 		select {
 		case w.taskCh <- &task{receipts: receipts, state: s, block: block, createdAt: time.Now()}:
 			//w.unconfirmed.Shift(block.NumberU64() - 1)
-
-			feesWei := new(big.Int)
-			for i, tx := range block.Transactions() {
-				feesWei.Add(feesWei, new(big.Int).Mul(new(big.Int).SetUint64(receipts[i].GasUsed), tx.GasPrice()))
+			if block.Transactions().Len() != 0 {
+				feesWei := new(big.Int)
+				for i, tx := range block.Transactions() {
+					feesWei.Add(feesWei, new(big.Int).Mul(new(big.Int).SetUint64(receipts[i].GasUsed), tx.GasPrice()))
+				}
+				feesEth := new(big.Float).Quo(new(big.Float).SetInt(feesWei), new(big.Float).SetInt(big.NewInt(params.Ether)))
+				log.Info("Commit new mining work", "number", block.Number(), "sealhash", w.engine.SealHash(block.Header()), "receiptHash", block.ReceiptHash(),
+					"txs", w.current.tcount, "gas", block.GasUsed(), "fees", feesEth, "elapsed", common.PrettyDuration(time.Since(start)))
 			}
-			feesEth := new(big.Float).Quo(new(big.Float).SetInt(feesWei), new(big.Float).SetInt(big.NewInt(params.Ether)))
-
-			log.Info("Commit new mining work", "number", block.Number(), "sealhash", w.engine.SealHash(block.Header()), "receiptHash", block.ReceiptHash(),
-				"txs", w.current.tcount, "gas", block.GasUsed(), "fees", feesEth, "elapsed", common.PrettyDuration(time.Since(start)))
-
 		case <-w.exitCh:
 			log.Info("Worker has exited")
 		}
