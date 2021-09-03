@@ -14,7 +14,6 @@ DEPLOYMENT_CONF_PATH="${DEPLOYMENT_PATH}/deployment_conf"
 if [ ! -d "${DEPLOYMENT_CONF_PATH}" ]; then
     mkdir -p ${DEPLOYMENT_CONF_PATH}
 fi
-PROJECT_NAME="test"
 PROJECT_CONF_PATH=""
 
 REMOTE_ADDRS=""
@@ -136,6 +135,11 @@ function checkProjectExistence() {
         echo -e "${PROJECT_CONF_PATH} already exists, do you want to cover it? Yes or No(y/n): \c"
         yesOrNo
         if [ $? -ne 0 ]; then
+            echo -e "Do you mean you want to create new conf file in exist path? Yes or No(y/n): \c"
+            yesOrNo
+            if [ $? -ne 0]; then
+              exit
+            fi
             echo "[WARN] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : !!! New Conf Files Will Be Generated In Exist Path !!!"
             return 0
         fi
@@ -362,10 +366,11 @@ while [ ! $# -eq 0 ]; do
     case "$1" in
     --project | -p)
         shiftOption2 $#
-        if [[ "$2" != "" ]]; then
-            PROJECT_NAME=$2
+        if [ ! -d "${DEPLOYMENT_CONF_PATH}/$2" ]; then
+            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* ${DEPLOYMENT_CONF_PATH}/$2 HAS NOT BEEN CREATED **********"
+            exit
         fi
-        PROJECT_CONF_PATH="${DEPLOYMENT_CONF_PATH}/${PROJECT_NAME}"
+        PROJECT_CONF_PATH="${DEPLOYMENT_CONF_PATH}/$2"
         shift 2
         ;;
     --address | -a)
