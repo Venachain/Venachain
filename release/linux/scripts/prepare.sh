@@ -23,6 +23,7 @@ PROJECT_CONF_PATH=""
 PROJECT_NAME=""
 REMOTE_ADDRS=""
 COVER=""
+IS_LOCAL=""
 
 IP_ADDR=""
 
@@ -71,7 +72,7 @@ function xcmd() {
     cmd=$2
     scp_param=$3
 
-    if [[ $(echo "${address}" | grep "${LOCAL_IP}") != "" ]] || [[ $(echo "${address}" | grep "127.0.0.1") != "" ]]; then
+    if [[ "${IS_LOCAL}" == "true" ]]; then
         eval ${cmd}
         return $?
     elif [[ $(echo "${cmd}" | grep "cp") == "" ]]; then
@@ -187,9 +188,11 @@ function setupDirectoryStructure() {
 
 ################################################# Check Remote Access #################################################
 function checkRemoteAccess() {
-    if [[ "${IP_ADDR}" == "${LOCAL_IP}" ]] || [[ "${IP_ADDR}" == "127.0.0.1" ]]; then
+    if [[ $(ifconfig | grep ${IP_ADDR}) != "" ]]; then
+      IS_LOCAL="true"
         return 0
     fi
+    IS_LOCAL="false"
 
     ## check ip connection
     ping -c 3 -w 3 "$2" 1>/dev/null

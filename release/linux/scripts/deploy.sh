@@ -4,10 +4,7 @@
 ################################################# VRIABLES #################################################
 ###########################################################################################################
 SCRIPT_NAME="$(basename ${0})"
-LOCAL_IP=$(ifconfig | grep inet | grep -v 127.0.0.1 | grep -v inet6 | awk '{print $2}')
-if [[ "$(echo ${LOCAL_IP} | grep addr:)" != "" ]]; then
-    LOCAL_IP=$(echo ${LOCAL_IP} | tr -s ':' ' ' | awk '{print $2}')
-fi
+LOCAL_IP="127.0.0.1"
 DEPLOYMENT_PATH=$(
     cd $(dirname $0)
     cd ../../
@@ -38,7 +35,7 @@ USAGE: ${SCRIPT_NAME}  [options] [value]
 
         OPTIONS:
 
-           --project, -p              the specified project name. must be specified
+           --project, -p              the specified project name. must be specified.
 
            --node, -n                 the specified node name. only used in conf mode. 
                                       default='all': deploy all nodes by conf in deployment_conf

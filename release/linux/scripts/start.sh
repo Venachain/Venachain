@@ -4,10 +4,6 @@
 ################################################# VRIABLES #################################################
 ###########################################################################################################
 SCRIPT_NAME="$(basename ${0})"
-LOCAL_IP=$(ifconfig | grep inet | grep -v 127.0.0.1 | grep -v inet6 | awk '{print $2}')
-if [[ "$(echo ${LOCAL_IP} | grep addr:)" != "" ]]; then
-    LOCAL_IP=$(echo ${LOCAL_IP} | tr -s ':' ' ' | awk '{print $2}')
-fi
 DEPLOYMENT_PATH=$(
     cd $(dirname $0)
     cd ../../
@@ -18,12 +14,14 @@ PROJECT_CONF_PATH=""
 
 NODE="all"
 FIRSTNODE_ID=""
+IS_LOCAL=""
 
 DEPLOY_PATH=""
 USER_NAME=""
 IP_ADDR=""
 P2P_PORT=""
 DEPLOY_PATH=""
+CONF_PATH=""
 CONF_PATH=""
 SCRIPT_PATH=""
 
@@ -72,7 +70,7 @@ function xcmd() {
     cmd=$2
     scp_param=$3
 
-    if [[ $(echo "${address}" | grep "${LOCAL_IP}") != "" ]] || [[ $(echo "${address}" | grep "127.0.0.1") != "" ]]; then
+    if [[ "${IS_LOCAL}" == "true" ]]; then
         eval ${cmd}
         return $?
     elif [[ $(echo "${cmd}" | grep "cp") == "" ]]; then
@@ -104,6 +102,11 @@ function readFile() {
         echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* FILE ${file} MISS VALUE **********"
         return 1
     fi
+
+    if [[ "$(ifconfig | grep ${IP_ADDR})" != "" ]]; then
+        IS_LOCAL="true"
+    else
+        IS_LOCAL="false"
 
     CONF_PATH="${DEPLOY_PATH}/conf"
     SCRIPT_PATH="${DEPLOY_PATH}/scripts"

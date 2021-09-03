@@ -141,7 +141,7 @@ function usage() {
 #c15           --help, -h                   show help
 #c0        remote                           remote deploy 
 #c16       remote OPTIONS
-#c16           --deploy                 create account for specified node
+#c16           --deploy                 deploy nodes
 #c16           --prepare                generate directory structure and deployment conf file
 #c16           --transfer               transfer necessary file to target node
 #c16           --init                   initialize the target node

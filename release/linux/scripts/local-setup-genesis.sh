@@ -111,9 +111,9 @@ function createGenesis() {
 ################################################# Create Genesis (MAC OS) #################################################
 function createGenesisDarwin() {
     if [[ $VALIDATOR_NODES != "" ]]; then
-        sed -i '' "s#__VALIDATOR__#\"${VALIDATOR_NODES}\"#g" ${CONF_PATH}/genesis.json
+        sed -i '' "s#__VALIDATOR__#\"${VALIDATOR_NODES}\"#g" ${CONF_PATH}/genesis.temp.json
     else
-        sed -i '' "s#__VALIDATOR__#\"${1}\"#g" ${CONF_PATH}/genesis.json
+        sed -i '' "s#__VALIDATOR__#\"${1}\"#g" ${CONF_PATH}/genesis.temp.json
     fi
     sed -i '' "s/DEFAULT-ACCOUNT/$2/g" "${CONF_PATH}/genesis.temp.json"
     sed -i '' "s/__INTERPRETER__/$3/g" "${CONF_PATH}/genesis.temp.json"

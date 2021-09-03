@@ -5,10 +5,10 @@
 ###########################################################################################################
 SCRIPT_NAME="$(basename ${0})"
 OS=$(uname)
-LOCAL_IP=$(ifconfig | grep inet | grep -v 127.0.0.1 | grep -v inet6 | awk '{print $2}')
-if [[ "$(echo ${LOCAL_IP} | grep addr:)" != "" ]]; then
-    LOCAL_IP=$(echo ${LOCAL_IP} | tr -s ':' ' ' | awk '{print $2}')
-fi
+#LOCAL_IP=$(ifconfig | grep inet | grep -v 127.0.0.1 | grep -v inet6 | awk '{print $2}')
+#if [[ "$(echo ${LOCAL_IP} | grep addr:)" != "" ]]; then
+#    LOCAL_IP=$(echo ${LOCAL_IP} | tr -s ':' ' ' | awk '{print $2}')
+#fi
 DEPLOYMENT_PATH=$(
     cd $(dirname $0)
     cd ../../
@@ -21,6 +21,7 @@ PROJECT_NAME=""
 NODE="all"
 MODE="deep"
 SKIP=""
+IS_LOCAL=""
 
 NODE_ID=""
 USER_NAME=""
@@ -92,7 +93,7 @@ function xcmd() {
     cmd=$2
     scp_param=$3
 
-    if [[ $(echo "${address}" | grep "${LOCAL_IP}") != "" ]] || [[ $(echo "${address}" | grep "127.0.0.1") != "" ]]; then
+    if [[ "${IS_LOCAL}" == "true" ]]; then
         eval ${cmd}
         return $?
     elif [[ $(echo "${cmd}" | grep "cp") == "" ]]; then
@@ -124,6 +125,12 @@ function readFile() {
         echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* DEPLOY CONF MISS VALUE **********"
         return 1
     fi
+
+    if [[ "$(ifconfig | grep ${IP_ADDR})" != "" ]]; then
+        IS_LOCAL="true"
+    else
+        IS_LOCAL="false"
+
     xcmd "${USER_NAME}@${IP_ADDR}" "[ -d ${DEPLOY_PATH} ]"
     if [ $? -eq 0 ]; then
         BACKUP_PATH=${DEPLOY_PATH}/../bak/${PROJECT_NAME}
@@ -143,7 +150,7 @@ function readFile() {
 ################################################# Check Remote Access #################################################
 function checkRemoteAccess() {
 
-    if [[ "${IP_ADDR}" == "${LOCAL_IP}" ]] || [[ "${IP_ADDR}" == "127.0.0.1" ]]; then
+    if [[ "$(ifconfig | grep ${IP_ADDR})" != "" ]]; then
         return 0
     fi
 
