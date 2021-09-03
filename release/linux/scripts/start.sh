@@ -158,8 +158,7 @@ function deploySystemContract() {
         xcmd "${USER_NAME}@${IP_ADDR}" "cp -r ${CONF_PATH}/keyfile.json ${PROJECT_CONF_PATH}/global/keyfile.json" "source"
         xcmd "${USER_NAME}@${IP_ADDR}" "cp -r ${CONF_PATH}/keyfile.phrase ${PROJECT_CONF_PATH}/global/keyfile.phrase" "source"
         xcmd "${USER_NAME}@${IP_ADDR}" "cp -r ${CONF_PATH}/keyfile.account ${PROJECT_CONF_PATH}/global/keyfile.account" "source"
-        xcmd "${USER_NAME}@${IP_ADDR}" "[ -f ${PROJECT_CONF_PATH}/global/keyfile.json -a -f ${PROJECT_CONF_PATH}/global/keyfile.phrase -a -f ${PROJECT_CONF_PATH}/global/keyfile.account ]"
-        if [[ $? -ne 0 ]]; then
+        if [[ ! -f ${PROJECT_CONF_PATH}/global/keyfile.json ]] || [[ ! -f ${PROJECT_CONF_PATH}/global/keyfile.phrase ]] || [[ ! -f ${PROJECT_CONF_PATH}/global/keyfile.account ]]; then
             echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* GET KEYFILE FAILED **********"
             return 1
         fi

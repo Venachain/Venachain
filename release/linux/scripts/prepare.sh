@@ -14,6 +14,7 @@ DEPLOYMENT_CONF_PATH="${DEPLOYMENT_PATH}/deployment_conf"
 if [ ! -d "${DEPLOYMENT_CONF_PATH}" ]; then
     mkdir -p ${DEPLOYMENT_CONF_PATH}
 fi
+PROJECT_NAME=""
 PROJECT_CONF_PATH=""
 
 REMOTE_ADDRS=""
@@ -366,11 +367,8 @@ while [ ! $# -eq 0 ]; do
     case "$1" in
     --project | -p)
         shiftOption2 $#
-        if [ ! -d "${DEPLOYMENT_CONF_PATH}/$2" ]; then
-            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* ${DEPLOYMENT_CONF_PATH}/$2 HAS NOT BEEN CREATED **********"
-            exit
-        fi
-        PROJECT_CONF_PATH="${DEPLOYMENT_CONF_PATH}/$2"
+        PROJECT_CONF_PATH=${DEPLOYMENT_CONF_PATH}/$2
+        PROJECT_NAME=$2
         shift 2
         ;;
     --address | -a)

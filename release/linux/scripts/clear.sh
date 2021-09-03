@@ -53,12 +53,11 @@ USAGE: ${SCRIPT_NAME}  [options] [value]
                                       default='all': deploy all nodes by conf in deployment_conf
                                       use ',' to seperate the name of node
 
-           --mode, -m                 the specified execute mode. 
+           --mode, -m                 the specified execute mode.
+                                      default='deep': will do delete clean and stop
                                       'delete': will delete the node from chain
                                       'clean': will clean the files, configuration files will be backed up
-                                      'stop' : will stop the node 
-                                      'deep': will do delete clean and stop
-                                      default='deep'
+                                      'stop' : will stop the node
 
            --help, -h                 show help
 "
