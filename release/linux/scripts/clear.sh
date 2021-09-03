@@ -15,8 +15,8 @@ DEPLOYMENT_PATH=$(
     pwd
 )
 DEPLOYMENT_CONF_PATH="${DEPLOYMENT_PATH}/deployment_conf"
+PROJECT_NAME="test"
 PROJECT_CONF_PATH=""
-PROJECT_NAME=""
 
 NODE="all"
 MODE="deep"
@@ -530,8 +530,10 @@ while [ ! $# -eq 0 ]; do
     case $1 in
     --project | -p)
         shiftOption2 $#
-        PROJECT_NAME=$2
-        PROJECT_CONF_PATH="${DEPLOYMENT_CONF_PATH}/$2"
+        if [[ "$2" != "" ]]; then
+            PROJECT_NAME=$2
+        fi
+        PROJECT_CONF_PATH="${DEPLOYMENT_CONF_PATH}/${PROJECT_NAME}"
         shift 2
         ;;
     --node | -n)

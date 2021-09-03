@@ -18,9 +18,9 @@ DEPLOYMENT_CONF_PATH="${DEPLOYMENT_PATH}/deployment_conf"
 if [ ! -d "${DEPLOYMENT_CONF_PATH}" ]; then
     mkdir -p ${DEPLOYMENT_CONF_PATH}
 fi
+PROJECT_NAME="test"
 PROJECT_CONF_PATH=""
 
-PROJECT_NAME=""
 REMOTE_ADDRS=""
 COVER=""
 IS_LOCAL=""
@@ -366,8 +366,10 @@ while [ ! $# -eq 0 ]; do
     case "$1" in
     --project | -p)
         shiftOption2 $#
-        PROJECT_CONF_PATH=${DEPLOYMENT_CONF_PATH}/$2
-        PROJECT_NAME=$2
+        if [[ "$2" != "" ]]; then
+            PROJECT_NAME=$2
+        fi
+        PROJECT_CONF_PATH="${DEPLOYMENT_CONF_PATH}/${PROJECT_NAME}"
         shift 2
         ;;
     --address | -a)
