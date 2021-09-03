@@ -5,10 +5,6 @@
 ###########################################################################################################
 SCRIPT_NAME="$(basename ${0})"
 OS=$(uname)
-LOCAL_IP=$(ifconfig | grep inet | grep -v 127.0.0.1 | grep -v inet6 | awk '{print $2}')
-if [[ "$(echo ${LOCAL_IP} | grep addr:)" != "" ]]; then
-    LOCAL_IP=$(echo ${LOCAL_IP} | tr -s ':' ' ' | awk '{print $2}')
-fi
 DEPLOYMENT_PATH=$(
     cd $(dirname $0)
     cd ../../

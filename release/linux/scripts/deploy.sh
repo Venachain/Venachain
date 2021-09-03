@@ -111,7 +111,7 @@ function one() {
             exit
         fi
     fi
-    ./prepare.sh -p "${PROJECT}" -a "${USER_NAME}@${LOCAL_IP}" --cover
+    ./prepare.sh -p "${PROJECT}" -a "${USER_NAME}@${LOCAL_IP}"
     ./transfer.sh -p "${PROJECT}"
     ./init.sh -p "${PROJECT}"
     ./start.sh -p "${PROJECT}"
@@ -126,7 +126,7 @@ function four() {
             exit
         fi
     fi
-    ./prepare.sh -p "${PROJECT}" -a "${USER_NAME}@${LOCAL_IP},${USER_NAME}@${LOCAL_IP},${USER_NAME}@${LOCAL_IP},${USER_NAME}@${LOCAL_IP}" --cover
+    ./prepare.sh -p "${PROJECT}" -a "${USER_NAME}@${LOCAL_IP},${USER_NAME}@${LOCAL_IP},${USER_NAME}@${LOCAL_IP},${USER_NAME}@${LOCAL_IP}"
     ./transfer.sh -p "${PROJECT}"
     ./init.sh -p "${PROJECT}"
     ./start.sh -p "${PROJECT}"
