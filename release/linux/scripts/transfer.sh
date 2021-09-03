@@ -116,6 +116,7 @@ function readFile() {
         IS_LOCAL="true"
     else
         IS_LOCAL="false"
+    fi
 
 }
 

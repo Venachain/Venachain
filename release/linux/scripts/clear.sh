@@ -130,6 +130,7 @@ function readFile() {
         IS_LOCAL="true"
     else
         IS_LOCAL="false"
+    fi
 
     xcmd "${USER_NAME}@${IP_ADDR}" "[ -d ${DEPLOY_PATH} ]"
     if [ $? -eq 0 ]; then

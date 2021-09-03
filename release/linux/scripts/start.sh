@@ -107,6 +107,7 @@ function readFile() {
         IS_LOCAL="true"
     else
         IS_LOCAL="false"
+    fi
 
     CONF_PATH="${DEPLOY_PATH}/conf"
     SCRIPT_PATH="${DEPLOY_PATH}/scripts"
