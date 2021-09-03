@@ -137,7 +137,7 @@ function checkProjectExistence() {
         if [ $? -ne 0 ]; then
             echo -e "Do you mean you want to create new conf file in exist path? Yes or No(y/n): \c"
             yesOrNo
-            if [ $? -ne 0]; then
+            if [ $? -ne 0 ]; then
               exit
             fi
             echo "[WARN] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : !!! New Conf Files Will Be Generated In Exist Path !!!"
