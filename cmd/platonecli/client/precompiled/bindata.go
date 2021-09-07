@@ -262,7 +262,7 @@ func ReleaseLinuxConfContractsParammanagerCppAbiJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "../../release/linux/conf/contracts/paramManager.cpp.abi.json", size: 8549, mode: os.FileMode(420), modTime: time.Unix(1631005468, 0)}
+	info := bindataFileInfo{name: "../../release/linux/conf/contracts/paramManager.cpp.abi.json", size: 8549, mode: os.FileMode(420), modTime: time.Unix(1631005830, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

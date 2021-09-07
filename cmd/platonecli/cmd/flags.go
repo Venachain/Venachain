@@ -307,6 +307,11 @@ var (
 		Usage: "Specify the rest server listening port number, e.g. :8000",
 	}
 
+	PassPhraseFlags = cli.StringFlag{
+		Name:  "passphrase",
+		Usage: "passphrase",
+	}
+
 	//=============================================================================
 	globalCmdFlags = []cli.Flag{
 		UrlFlags,
@@ -318,6 +323,8 @@ var (
 		SyncFlags,
 		DefaultFlags,
 		TransferValueFlag,
+		PassPhraseFlags,
+
 	}
 
 	// system config

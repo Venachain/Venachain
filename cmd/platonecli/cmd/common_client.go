@@ -65,6 +65,7 @@ func getClientConfig(c *cli.Context) (*utils.Keyfile, bool, bool, string) {
 	keyfile := c.String(KeyfileFlags.Name)
 	isDefault := c.Bool(DefaultFlags.Name)
 	isSync := !c.Bool(SyncFlags.Name)
+	passphrase := c.String(PassPhraseFlags.Name)
 	url := getUrl(c)
 
 	optionParamValid(address, "address")
@@ -78,8 +79,12 @@ func getClientConfig(c *cli.Context) (*utils.Keyfile, bool, bool, string) {
 		if err != nil {
 			utl.Fatalf(err.Error())
 		}
+		if passphrase != "" {
+			account.Passphrase = passphrase
+		}else {
+			account.Passphrase = utils.PromptPassphrase(false)
+		}
 
-		account.Passphrase = utils.PromptPassphrase(false)
 		err = account.ParsePrivateKey()
 		if err != nil {
 			utl.Fatalf(err.Error())
