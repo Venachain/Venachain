@@ -111,12 +111,12 @@ func setConfig(c *cli.Context, param string, name string) {
 	if err != nil {
 		utils.Fatalf(err.Error())
 	}
-	//if name == "IsCheckContractDeployPermission"{
-	//	funcName = "setCheckContractDeployPermission"
-	//} else {
-	//	funcName = "set" + name
-	//}
-	funcName = "set" + name
+	if name == "IsCheckContractDeployPermission"{
+		funcName = "setCheckContractDeployPermission"
+	} else {
+		funcName = "set" + name
+	}
+	//funcName = "set" + name
 	funcParams := cmd_common.CombineFuncParams(newParam)
 
 	result := contractCall(c, funcParams, funcName, precompile.ParameterManagementAddress)

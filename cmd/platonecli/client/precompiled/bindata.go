@@ -4,6 +4,7 @@
 // ../../release/linux/conf/contracts/cnsInvokeEvent.json
 // ../../release/linux/conf/contracts/cnsManager.cpp.abi.json
 // ../../release/linux/conf/contracts/contractdata.cpp.abi.json
+// ../../release/linux/conf/contracts/evidenceManager.cpp.abi.json
 // ../../release/linux/conf/contracts/fireWall.abi.json
 // ../../release/linux/conf/contracts/groupManager.cpp.abi.json
 // ../../release/linux/conf/contracts/nodeManager.cpp.abi.json
@@ -101,7 +102,7 @@ func ReleaseLinuxConfContractsCnsinitregeventJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "../../release/linux/conf/contracts/cnsInitRegEvent.json", size: 226, mode: os.FileMode(420), modTime: time.Unix(1622513420, 0)}
+	info := bindataFileInfo{name: "../../release/linux/conf/contracts/cnsInitRegEvent.json", size: 226, mode: os.FileMode(420), modTime: time.Unix(1623724708, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -121,7 +122,7 @@ func ReleaseLinuxConfContractsCnsinvokeeventJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "../../release/linux/conf/contracts/cnsInvokeEvent.json", size: 223, mode: os.FileMode(420), modTime: time.Unix(1622513420, 0)}
+	info := bindataFileInfo{name: "../../release/linux/conf/contracts/cnsInvokeEvent.json", size: 223, mode: os.FileMode(420), modTime: time.Unix(1623724708, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -141,7 +142,7 @@ func ReleaseLinuxConfContractsCnsmanagerCppAbiJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "../../release/linux/conf/contracts/cnsManager.cpp.abi.json", size: 4587, mode: os.FileMode(420), modTime: time.Unix(1622513420, 0)}
+	info := bindataFileInfo{name: "../../release/linux/conf/contracts/cnsManager.cpp.abi.json", size: 4587, mode: os.FileMode(420), modTime: time.Unix(1623724708, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -161,7 +162,27 @@ func ReleaseLinuxConfContractsContractdataCppAbiJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "../../release/linux/conf/contracts/contractdata.cpp.abi.json", size: 435, mode: os.FileMode(420), modTime: time.Unix(1622513420, 0)}
+	info := bindataFileInfo{name: "../../release/linux/conf/contracts/contractdata.cpp.abi.json", size: 435, mode: os.FileMode(420), modTime: time.Unix(1623724708, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _ReleaseLinuxConfContractsEvidencemanagerCppAbiJson = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\xc4\x92\xcf\x0a\x82\x40\x10\x87\xef\x3e\xc5\xb2\x67\x4f\x15\x1d\xbc\x07\x9d\xba\x74\x14\x0f\x8b\x8e\x36\x50\xb3\xe2\xce\x0a\x12\xbd\x7b\x98\x7f\x52\x8a\xd8\x2d\x2a\x0f\x82\x8e\xf3\xfb\x9c\x6f\x27\x0e\x84\x10\xe2\x7c\xbb\xb7\x97\x24\x75\x02\x19\x09\x69\x54\x0d\x9b\x1a\x33\xa0\x14\x64\x78\xaf\x23\x95\x96\x8d\x8c\x44\x3c\xbe\x9b\x27\x3c\x24\x61\x36\xe9\x1f\xab\xdc\x94\x1d\x87\x2b\xa4\x42\xce\x3e\xb8\x84\xae\xd9\xd0\xff\xe1\x56\x99\xc3\xf7\x29\x7b\x2c\xbc\x21\xe3\x53\x32\x91\xa8\x2d\xfb\x5a\x7c\x05\x46\xe2\xe5\xc2\x85\x9b\x6a\x32\xac\x88\xdb\xa6\x5c\x1d\xcd\xec\x64\x87\xb4\xdc\x52\xca\xa8\xa9\x0b\xec\x2d\x3d\xd9\x90\x02\xf8\x6f\x0b\xf2\x0b\xab\xee\xe0\xa9\x56\xae\xec\x47\x56\x77\x9a\x31\x6f\xde\x13\x3a\xb0\x2c\x12\xaf\x57\xbe\xdb\xee\x3f\xf7\xd0\x01\x35\x10\xf7\x83\x05\x49\x70\x0d\x00\x00\xff\xff\xa5\x1e\x33\x27\x54\x04\x00\x00")
+
+func ReleaseLinuxConfContractsEvidencemanagerCppAbiJsonBytes() ([]byte, error) {
+	return bindataRead(
+		_ReleaseLinuxConfContractsEvidencemanagerCppAbiJson,
+		"../../release/linux/conf/contracts/evidenceManager.cpp.abi.json",
+	)
+}
+
+func ReleaseLinuxConfContractsEvidencemanagerCppAbiJson() (*asset, error) {
+	bytes, err := ReleaseLinuxConfContractsEvidencemanagerCppAbiJsonBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "../../release/linux/conf/contracts/evidenceManager.cpp.abi.json", size: 1108, mode: os.FileMode(420), modTime: time.Unix(1630914858, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -181,7 +202,7 @@ func ReleaseLinuxConfContractsFirewallAbiJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "../../release/linux/conf/contracts/fireWall.abi.json", size: 5453, mode: os.FileMode(420), modTime: time.Unix(1622513420, 0)}
+	info := bindataFileInfo{name: "../../release/linux/conf/contracts/fireWall.abi.json", size: 5453, mode: os.FileMode(420), modTime: time.Unix(1623724708, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -201,7 +222,7 @@ func ReleaseLinuxConfContractsGroupmanagerCppAbiJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "../../release/linux/conf/contracts/groupManager.cpp.abi.json", size: 3997, mode: os.FileMode(420), modTime: time.Unix(1622513420, 0)}
+	info := bindataFileInfo{name: "../../release/linux/conf/contracts/groupManager.cpp.abi.json", size: 3997, mode: os.FileMode(420), modTime: time.Unix(1623724708, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -221,12 +242,12 @@ func ReleaseLinuxConfContractsNodemanagerCppAbiJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "../../release/linux/conf/contracts/nodeManager.cpp.abi.json", size: 4052, mode: os.FileMode(420), modTime: time.Unix(1622513420, 0)}
+	info := bindataFileInfo{name: "../../release/linux/conf/contracts/nodeManager.cpp.abi.json", size: 4052, mode: os.FileMode(420), modTime: time.Unix(1623724708, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
 
-var _ReleaseLinuxConfContractsParammanagerCppAbiJson = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\xdc\x58\x41\x6f\x9b\x30\x14\xbe\xf3\x2b\x10\x67\x4e\xdb\xb4\x43\x6f\xac\xdb\xb2\x49\x53\x15\x6d\xe9\x2e\x55\x0f\x9e\xeb\xa4\x56\xc1\x46\xf6\xa3\x2b\x9a\xf2\xdf\x27\x20\x64\xc9\x6a\xc0\x60\xc7\x46\xe4\x10\x29\xc4\x7e\xfe\xbe\xef\x7d\xf8\x3d\xfb\x2e\x08\xc3\x30\xfc\x53\x7f\x57\x9f\x88\xa1\x8c\x44\x57\x61\x24\x09\xac\x90\xbc\xe6\x0c\x04\xc2\x70\x53\x3d\x8d\xff\x8d\xa2\x2c\x2f\x40\x46\x57\xe1\xdd\xf1\xd9\x79\x9c\x57\xf1\xb0\x3a\xd2\x71\x1c\x94\x79\xb3\x2e\x08\xca\x76\xd1\xd9\x80\xfd\xf1\xd7\xfd\x09\x06\x5e\x40\x0b\xe2\xf4\x31\xe6\x4c\x02\x62\x50\x05\xdb\xa2\x54\x9e\xe1\x6e\x57\xd9\x16\x0c\x03\xe5\xac\x59\x67\x1f\x77\xa9\xb0\xd3\x54\xa1\x03\x97\xae\x38\x76\x04\x39\x65\x0e\xa2\x30\x22\x2e\x09\x7c\x95\x6b\xc1\x1f\x0a\x4c\x3e\x65\x39\x94\x1f\x52\x8e\x9f\xcc\x2c\x40\x7b\x03\xbe\x82\x5a\x50\x06\x6f\xdf\xcc\xc8\x09\xda\x82\x5c\xd0\x0d\xfa\xa2\x58\x76\xc3\xe6\x65\x85\xe4\x37\x9a\x51\x30\x33\x01\xa8\xe2\x28\x69\xbe\x7f\x37\xa3\xdc\x0f\xd1\xbf\x70\xca\xf5\xb4\xb0\x9c\xf2\xda\xe1\x76\xb2\xfe\xab\x23\x94\x01\x59\x47\x89\xd7\x10\x61\x89\xb9\x4f\xd2\x94\xff\x4e\x58\x99\x60\xcc\x0b\x06\x1f\x49\x9e\xf2\xb2\xad\x83\xa6\x65\x40\x37\xb8\x52\x8e\xb9\x78\x43\x12\xb8\x7e\x24\xf8\xa9\xc5\xdd\xb0\x58\x13\x91\x51\x29\xab\xf9\x66\xed\x52\x15\x5a\x19\x4c\x29\xca\xac\xea\xe4\x04\x59\x16\x57\x31\x77\x93\x5e\xa1\xc5\xc9\x50\xb7\x91\x49\x9e\x0b\xfe\x4c\x1a\x01\xc8\x83\xb5\x5d\x64\x30\xac\x81\x08\xce\x5a\xca\x51\xe2\x2c\xd3\x1f\x9b\x97\x5b\x49\x56\x48\x9a\x1a\x42\x11\xc7\x80\xa6\x33\x07\xf4\xd3\x5f\x66\xca\xeb\xae\xea\x56\x92\x8d\xa0\xe4\x0b\x92\x8f\xa6\xa9\xef\x89\x67\x40\xdb\x99\x05\xf4\xe4\x58\x98\x15\x22\x8d\x9b\x95\xff\xc8\x1d\x56\x68\xe1\xee\x63\xf5\xdf\x87\x2b\x13\x35\x81\xc3\x18\xf2\x4c\xda\x5e\xb2\x13\xa0\xe6\x81\xdf\x2f\xc8\xfe\x93\xa9\x5f\x6c\x83\x87\x27\xdf\xf9\x1d\xdd\xaa\xfa\x06\x3c\xa2\x5d\xf0\x0d\xb5\xaf\xae\xb9\xc1\x16\x76\xee\xba\x37\x1c\xe8\xb6\x9c\x56\x75\x7a\xf7\xcc\x58\x77\xb6\xfe\xb5\x6e\x3b\x43\x43\xf5\xba\x9c\xfc\xfc\xfe\x79\x8d\x04\xca\xdc\x37\x14\xde\xae\xaa\x07\x28\xbb\xe5\x76\xf9\xae\x21\xea\xe5\xeb\xfb\xbd\xd7\x69\x66\xbc\x62\x6c\x9a\x2e\x06\xb5\x84\xa3\x1d\xd3\xe5\x16\x33\xa7\xd8\x6a\xe2\xbc\x5c\x16\x4e\xd6\x52\x9b\x9a\x52\xd3\xc1\xbd\xd6\xae\x68\x8e\x4e\x03\x3f\x40\xf8\x10\xd3\x85\x41\xbd\xd5\x07\x4f\x9a\x5a\x31\xa8\x97\xc2\x13\xdc\x07\xc1\xdf\x00\x00\x00\xff\xff\x11\xd4\xfa\x25\x1b\x20\x00\x00")
+var _ReleaseLinuxConfContractsParammanagerCppAbiJson = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\xdc\x58\xc1\x8e\x9b\x30\x10\xbd\xef\x57\x20\xce\x9c\xda\xaa\x87\xbd\xd1\x6d\x9b\x56\xaa\x56\x51\x9b\xed\x65\xb5\x07\xd7\xeb\x64\xad\x80\x8d\xec\x21\x0d\xaa\xf2\xef\x15\x10\xd2\xa4\x31\xe0\x60\xc7\x66\xc9\x21\x52\x1c\x7b\xfc\xde\x9b\x07\x33\xf6\xe3\x4d\x10\x04\xc1\x9f\xea\xbb\xfc\x84\x0c\xa5\x24\xbc\x0d\x42\x49\x60\x86\xe4\x1d\x67\x20\x10\x86\xfb\x72\x34\xfa\x37\x8b\xb2\x2c\x07\x19\xde\x06\x8f\x87\xb1\xd3\x38\x67\xf1\xb0\x3a\xd2\x61\x1e\x14\x59\xbd\x2f\x08\xca\x56\xe1\xc9\x84\xdd\xe1\xd7\xd3\x11\x06\x9e\x43\x03\xe2\x78\x18\x73\x26\x01\x31\x28\x83\x2d\x51\x22\x4f\x70\x37\xbb\x2c\x73\x86\x81\x72\x56\xef\xb3\x8b\xda\x54\x58\x69\xaa\xd0\x82\x4b\x57\x1c\x3b\x82\x1c\x33\x07\x91\x1b\x11\x97\x04\xbe\xca\xb9\xe0\xcf\x39\x26\x9f\xd2\x0c\x8a\x0f\x09\xc7\x6b\x33\x0b\xd0\xce\x80\x67\x50\x73\xca\xe0\xed\x9b\x11\x39\x41\x5b\x90\x2b\xba\x41\x5f\x14\xcb\x6e\x58\x6c\x67\x48\x7e\xa3\x29\x05\x33\x13\x80\x2a\x8e\x92\xe6\xfb\x77\x23\xca\x7d\x1f\xfd\x2b\xa7\x5c\x4f\x0b\xcb\x29\xaf\x1c\x6e\x27\xeb\xbf\x5a\x42\x19\x90\x75\x94\x78\x0d\x11\xa6\x98\xfb\x38\x49\xf8\xef\x98\x15\x31\xc6\x3c\x67\xf0\x91\x64\x09\x2f\x9a\x3a\x68\x5a\x06\x74\x83\x2b\xe5\x18\x8b\x37\x24\x81\xbb\x17\x82\xd7\x0d\xee\x9a\xc5\x9c\x88\x94\x4a\x59\xae\x37\x6b\x97\xca\xd0\xca\x60\x4a\x51\x46\x55\x27\x07\xc8\x32\xb9\x8a\xb9\x1a\xf4\x08\x4d\x4e\x86\xaa\x8d\x8c\xb3\x4c\xf0\x0d\xa9\x05\x20\xcf\xd6\xde\x22\xbd\x61\x0d\x44\x70\xd6\x52\x5e\x24\xce\x34\xfd\xb1\xd8\x3e\x48\x32\x43\xd2\xd4\x10\x8a\x38\x06\x34\x9d\x39\xa0\x9b\xfe\x34\x53\x5e\x75\x55\x0f\x92\x2c\x04\x25\x5f\x90\x7c\x31\x4d\x7d\x47\x3c\x03\xda\xce\x2c\xa0\x27\xc7\xc4\xac\x10\x6a\xdc\xac\xfc\x47\x6e\xbf\x43\x03\x77\x17\xa9\xff\xde\x5f\x99\xa8\x09\xec\xe7\x90\x0d\x69\x7a\xc9\x56\x80\x9a\x07\x7e\xbf\x20\xbb\x4f\xa6\x7e\xb1\xf5\x1e\x9e\xfc\xc2\x1b\xd2\xc2\xfb\x76\xe4\x05\xfd\x82\x6f\xa8\xaf\x4c\xdb\xf1\x21\xea\xee\x0d\xdc\x60\x0b\x5a\x2b\xd7\x3d\x07\xba\x2c\x86\x55\xee\xce\xba\x13\xe9\xae\xd6\xbf\x1a\x6f\x56\x68\xa8\x5e\x95\xe4\x9f\xdf\x3f\xcf\x91\x40\xa9\xfb\xa6\xcc\xdb\x75\x7f\x0f\x65\xb7\xdc\xae\xdf\x79\x85\x9d\x7c\x7d\x3f\xf7\x3a\x0d\xa1\x57\x8c\x75\xe3\xca\xa0\x92\x70\x64\x8e\xb1\xb1\xb1\xb7\x8b\x57\x4f\x9a\xf6\xbe\x73\xed\x8a\xe6\xe8\x64\xf5\x03\xc4\x54\x0d\xea\xad\x4e\x78\xd2\xd4\x8a\x41\xbd\x14\xa0\x9b\xa7\xbf\x01\x00\x00\xff\xff\xbf\xac\x58\xb1\x65\x21\x00\x00")
 
 func ReleaseLinuxConfContractsParammanagerCppAbiJsonBytes() ([]byte, error) {
 	return bindataRead(
@@ -241,7 +262,7 @@ func ReleaseLinuxConfContractsParammanagerCppAbiJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "../../release/linux/conf/contracts/paramManager.cpp.abi.json", size: 8219, mode: os.FileMode(420), modTime: time.Unix(1622513420, 0)}
+	info := bindataFileInfo{name: "../../release/linux/conf/contracts/paramManager.cpp.abi.json", size: 8549, mode: os.FileMode(420), modTime: time.Unix(1631005468, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -261,7 +282,7 @@ func ReleaseLinuxConfContractsPermissiondeniedeventJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "../../release/linux/conf/contracts/permissionDeniedEvent.json", size: 171, mode: os.FileMode(420), modTime: time.Unix(1622513420, 0)}
+	info := bindataFileInfo{name: "../../release/linux/conf/contracts/permissionDeniedEvent.json", size: 171, mode: os.FileMode(420), modTime: time.Unix(1623724708, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -281,7 +302,7 @@ func ReleaseLinuxConfContractsUsermanagerCppAbiJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "../../release/linux/conf/contracts/userManager.cpp.abi.json", size: 15356, mode: os.FileMode(420), modTime: time.Unix(1622513420, 0)}
+	info := bindataFileInfo{name: "../../release/linux/conf/contracts/userManager.cpp.abi.json", size: 15356, mode: os.FileMode(420), modTime: time.Unix(1623724708, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -338,16 +359,17 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"../../release/linux/conf/contracts/cnsInitRegEvent.json":       ReleaseLinuxConfContractsCnsinitregeventJson,
-	"../../release/linux/conf/contracts/cnsInvokeEvent.json":        ReleaseLinuxConfContractsCnsinvokeeventJson,
-	"../../release/linux/conf/contracts/cnsManager.cpp.abi.json":    ReleaseLinuxConfContractsCnsmanagerCppAbiJson,
-	"../../release/linux/conf/contracts/contractdata.cpp.abi.json":  ReleaseLinuxConfContractsContractdataCppAbiJson,
-	"../../release/linux/conf/contracts/fireWall.abi.json":          ReleaseLinuxConfContractsFirewallAbiJson,
-	"../../release/linux/conf/contracts/groupManager.cpp.abi.json":  ReleaseLinuxConfContractsGroupmanagerCppAbiJson,
-	"../../release/linux/conf/contracts/nodeManager.cpp.abi.json":   ReleaseLinuxConfContractsNodemanagerCppAbiJson,
-	"../../release/linux/conf/contracts/paramManager.cpp.abi.json":  ReleaseLinuxConfContractsParammanagerCppAbiJson,
-	"../../release/linux/conf/contracts/permissionDeniedEvent.json": ReleaseLinuxConfContractsPermissiondeniedeventJson,
-	"../../release/linux/conf/contracts/userManager.cpp.abi.json":   ReleaseLinuxConfContractsUsermanagerCppAbiJson,
+	"../../release/linux/conf/contracts/cnsInitRegEvent.json":         ReleaseLinuxConfContractsCnsinitregeventJson,
+	"../../release/linux/conf/contracts/cnsInvokeEvent.json":          ReleaseLinuxConfContractsCnsinvokeeventJson,
+	"../../release/linux/conf/contracts/cnsManager.cpp.abi.json":      ReleaseLinuxConfContractsCnsmanagerCppAbiJson,
+	"../../release/linux/conf/contracts/contractdata.cpp.abi.json":    ReleaseLinuxConfContractsContractdataCppAbiJson,
+	"../../release/linux/conf/contracts/evidenceManager.cpp.abi.json": ReleaseLinuxConfContractsEvidencemanagerCppAbiJson,
+	"../../release/linux/conf/contracts/fireWall.abi.json":            ReleaseLinuxConfContractsFirewallAbiJson,
+	"../../release/linux/conf/contracts/groupManager.cpp.abi.json":    ReleaseLinuxConfContractsGroupmanagerCppAbiJson,
+	"../../release/linux/conf/contracts/nodeManager.cpp.abi.json":     ReleaseLinuxConfContractsNodemanagerCppAbiJson,
+	"../../release/linux/conf/contracts/paramManager.cpp.abi.json":    ReleaseLinuxConfContractsParammanagerCppAbiJson,
+	"../../release/linux/conf/contracts/permissionDeniedEvent.json":   ReleaseLinuxConfContractsPermissiondeniedeventJson,
+	"../../release/linux/conf/contracts/userManager.cpp.abi.json":     ReleaseLinuxConfContractsUsermanagerCppAbiJson,
 }
 
 // AssetDir returns the file names below a certain
@@ -397,16 +419,17 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"linux": &bintree{nil, map[string]*bintree{
 					"conf": &bintree{nil, map[string]*bintree{
 						"contracts": &bintree{nil, map[string]*bintree{
-							"cnsInitRegEvent.json":       &bintree{ReleaseLinuxConfContractsCnsinitregeventJson, map[string]*bintree{}},
-							"cnsInvokeEvent.json":        &bintree{ReleaseLinuxConfContractsCnsinvokeeventJson, map[string]*bintree{}},
-							"cnsManager.cpp.abi.json":    &bintree{ReleaseLinuxConfContractsCnsmanagerCppAbiJson, map[string]*bintree{}},
-							"contractdata.cpp.abi.json":  &bintree{ReleaseLinuxConfContractsContractdataCppAbiJson, map[string]*bintree{}},
-							"fireWall.abi.json":          &bintree{ReleaseLinuxConfContractsFirewallAbiJson, map[string]*bintree{}},
-							"groupManager.cpp.abi.json":  &bintree{ReleaseLinuxConfContractsGroupmanagerCppAbiJson, map[string]*bintree{}},
-							"nodeManager.cpp.abi.json":   &bintree{ReleaseLinuxConfContractsNodemanagerCppAbiJson, map[string]*bintree{}},
-							"paramManager.cpp.abi.json":  &bintree{ReleaseLinuxConfContractsParammanagerCppAbiJson, map[string]*bintree{}},
-							"permissionDeniedEvent.json": &bintree{ReleaseLinuxConfContractsPermissiondeniedeventJson, map[string]*bintree{}},
-							"userManager.cpp.abi.json":   &bintree{ReleaseLinuxConfContractsUsermanagerCppAbiJson, map[string]*bintree{}},
+							"cnsInitRegEvent.json":         &bintree{ReleaseLinuxConfContractsCnsinitregeventJson, map[string]*bintree{}},
+							"cnsInvokeEvent.json":          &bintree{ReleaseLinuxConfContractsCnsinvokeeventJson, map[string]*bintree{}},
+							"cnsManager.cpp.abi.json":      &bintree{ReleaseLinuxConfContractsCnsmanagerCppAbiJson, map[string]*bintree{}},
+							"contractdata.cpp.abi.json":    &bintree{ReleaseLinuxConfContractsContractdataCppAbiJson, map[string]*bintree{}},
+							"evidenceManager.cpp.abi.json": &bintree{ReleaseLinuxConfContractsEvidencemanagerCppAbiJson, map[string]*bintree{}},
+							"fireWall.abi.json":            &bintree{ReleaseLinuxConfContractsFirewallAbiJson, map[string]*bintree{}},
+							"groupManager.cpp.abi.json":    &bintree{ReleaseLinuxConfContractsGroupmanagerCppAbiJson, map[string]*bintree{}},
+							"nodeManager.cpp.abi.json":     &bintree{ReleaseLinuxConfContractsNodemanagerCppAbiJson, map[string]*bintree{}},
+							"paramManager.cpp.abi.json":    &bintree{ReleaseLinuxConfContractsParammanagerCppAbiJson, map[string]*bintree{}},
+							"permissionDeniedEvent.json":   &bintree{ReleaseLinuxConfContractsPermissiondeniedeventJson, map[string]*bintree{}},
+							"userManager.cpp.abi.json":     &bintree{ReleaseLinuxConfContractsUsermanagerCppAbiJson, map[string]*bintree{}},
 						}},
 					}},
 				}},
