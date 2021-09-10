@@ -383,7 +383,7 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 			// clear consensus cache
 			log.Info("received a event of ChainHeadEvent", "hash", head.Block.Hash(), "number", head.Block.NumberU64(), "parentHash", head.Block.ParentHash())
 			w.blockChainCache.ClearCache(head.Block)
-
+			<-core.WorkerEvent
 			if h, ok := w.engine.(consensus.Handler); ok {
 				h.NewChainHead()
 			}
