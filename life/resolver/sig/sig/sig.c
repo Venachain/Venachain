@@ -520,3 +520,11 @@ int p256k1_verify_with_base64(const char* msg, const char* pub_data, const char*
     
     return ret;
 }
+
+int sm3_compute(const char *msg, char *output){
+    int md_len = 0;
+    EVP_Digest(msg, strlen(msg), output, &md_len, EVP_sm3(), NULL);
+    //dump_memory(output, md_len);
+    return md_len;
+
+}
