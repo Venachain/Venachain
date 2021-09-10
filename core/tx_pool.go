@@ -55,6 +55,9 @@ const (
 	// Define the size of the transaction.
 	TxSize = 1024
 )
+var (
+	WorkerEvent = make(chan struct{})
+)
 
 var (
 	// ErrInvalidSender is returned if the transaction contains an invalid signature.
@@ -358,6 +361,7 @@ func (pool *TxPool) loop() {
 				pool.resetHead = block
 
 				pool.mu.Unlock()
+				WorkerEvent <- struct{}{}
 			}
 		// Handle ChainHeadEvent
 		case ev := <-pool.chainHeadEventCh:
@@ -369,6 +373,7 @@ func (pool *TxPool) loop() {
 
 				pool.mu.Unlock()
 				log.Info("reset pool ----------------------------", "duration", time.Since(now))
+				WorkerEvent <- struct{}{}
 			}
 
 		case <-pool.exitCh:
