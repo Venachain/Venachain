@@ -20,11 +20,14 @@ package les
 import (
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
 	"net"
 	"sync"
 	"time"
+
+	trie2 "github.com/PlatONEnetwork/PlatONE-Go/trie"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/mclock"
@@ -96,7 +99,7 @@ type ProtocolManager struct {
 	iConfig     *light.IndexerConfig
 	blockchain  BlockChain
 	chainDb     ethdb.Database
-	extDb		ethdb.Database
+	extDb       ethdb.Database
 	odr         *LesOdr
 	server      *LesServer
 	serverPool  *serverPool
@@ -335,7 +338,11 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 	if err != nil {
 		return err
 	}
-	p.Log().Trace("Light Ethereum message arrived", "code", msg.Code, "bytes", msg.Size)
+	p.Log().Trace("Light Ethereum handle message", "code", msg.Code, "bytes", msg.Size)
+	defer func(start time.Time) {
+		p.Log().Trace("Light Ethereum handle message finish", "code", msg.Code, "bytes", msg.Size,
+			"duration", time.Since(start))
+	}(time.Now())
 
 	costs := p.fcCosts[msg.Code]
 	reject := func(reqCnt, maxCnt uint64) bool {
@@ -652,7 +659,7 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		// Gather state data until the fetch or network limits is reached
 		var (
 			bytes    int
-			receipts []rlp.RawValue
+			receipts [][]byte
 		)
 		reqCnt := len(req.Hashes)
 		if reject(uint64(reqCnt), MaxReceiptFetch) {
@@ -663,22 +670,18 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 				break
 			}
 			// Retrieve the requested block's receipts, skipping if unknown to us
-			var results types.Receipts
+			var results []byte
 			if number := rawdb.ReadHeaderNumber(pm.chainDb, hash); number != nil {
-				results = rawdb.ReadReceipts(pm.chainDb, hash, *number)
+				results = rawdb.ReadReceiptForStorageRlp(pm.chainDb, hash, *number)
 			}
 			if results == nil {
 				if header := pm.blockchain.GetHeaderByHash(hash); header == nil || header.ReceiptHash != types.EmptyRootHash {
 					continue
 				}
 			}
-			// If known, encode and queue for response packet
-			if encoded, err := rlp.EncodeToBytes(results); err != nil {
-				log.Error("Failed to encode receipt", "err", err)
-			} else {
-				receipts = append(receipts, encoded)
-				bytes += len(encoded)
-			}
+
+			receipts = append(receipts, results)
+			bytes += len(results)
 		}
 		bv, rcost := p.fcClient.RequestProcessed(costs.baseCost + uint64(reqCnt)*costs.reqCost)
 		pm.server.fcCostStats.update(msg.Code, uint64(reqCnt), rcost)
@@ -693,16 +696,24 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		// A batch of receipts arrived to one of our previous requests
 		var resp struct {
 			ReqID, BV uint64
-			Receipts  []types.Receipts
+			Receipts  [][]byte
 		}
 		if err := msg.Decode(&resp); err != nil {
 			return errResp(ErrDecode, "msg %v: %v", msg, err)
+		}
+		storageReceipts := []*types.ReceiptForStorage{}
+		if err := rlp.DecodeBytes(resp.Receipts[0], &storageReceipts); err != nil {
+			return errors.New("rlp decode failed")
+		}
+		receipts := make(types.Receipts, len(storageReceipts))
+		for i, receipt := range storageReceipts {
+			receipts[i] = (*types.Receipt)(receipt)
 		}
 		p.fcServer.GotReply(resp.ReqID, resp.BV)
 		deliverMsg = &Msg{
 			MsgType: MsgReceipts,
 			ReqID:   resp.ReqID,
-			Obj:     resp.Receipts,
+			Obj:     append([]types.Receipts{}, receipts),
 		}
 
 	case GetProofsV1Msg:
@@ -781,6 +792,7 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 
 		nodes := light.NewNodeSet()
 
+		var values [][]byte
 		for _, req := range req.Reqs {
 			// Look up the state belonging to the request
 			if statedb == nil || req.BHash != lastBHash {
@@ -804,6 +816,21 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 					continue
 				}
 				trie, _ = statedb.Database().OpenStorageTrie(common.BytesToHash(req.AccKey), account.Root)
+
+				if secureTrie, ok := trie.(*trie2.SecureTrie); ok {
+					// Platone's contract storage only store value key. The value store in disk DB directly.
+					enc, _ := secureTrie.TryGet2(req.Key)
+					_, content, _, err := rlp.Split(enc)
+					if err != nil {
+						log.Error("handle proofs request", "err", err)
+					}
+					var valueKey common.Hash
+					valueKey.SetBytes(content)
+					value := trie.GetKey(valueKey.Bytes())
+					values = append(values, value)
+					log.Debug("handle proofs request get storage value", "valueSize", len(value), "value", value, "valueKey", valueKey,
+						"reqKey", common.BytesToHash(req.Key))
+				}
 			} else {
 				trie, _ = statedb.Database().OpenTrie(root)
 			}
@@ -816,9 +843,10 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 				break
 			}
 		}
+
 		bv, rcost := p.fcClient.RequestProcessed(costs.baseCost + uint64(reqCnt)*costs.reqCost)
 		pm.server.fcCostStats.update(msg.Code, uint64(reqCnt), rcost)
-		return p.SendProofsV2(req.ReqID, bv, nodes.NodeList())
+		return p.SendProofsV2(req.ReqID, bv, ProofsResponseData{StorageValues: values, Nodes: nodes.NodeList()})
 
 	case ProofsV1Msg:
 		if pm.odr == nil {
@@ -850,7 +878,7 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		// A batch of merkle proofs arrived to one of our previous requests
 		var resp struct {
 			ReqID, BV uint64
-			Data      light.NodeList
+			Data      ProofsResponseData
 		}
 		if err := msg.Decode(&resp); err != nil {
 			return errResp(ErrDecode, "msg %v: %v", msg, err)
@@ -1093,14 +1121,18 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		p.Log().Trace("Received tx status response")
 		var resp struct {
 			ReqID, BV uint64
-			Status    []txStatus
+			Status    []light.TxStatus
 		}
 		if err := msg.Decode(&resp); err != nil {
 			return errResp(ErrDecode, "msg %v: %v", msg, err)
 		}
 
 		p.fcServer.GotReply(resp.ReqID, resp.BV)
-
+		deliverMsg = &Msg{
+			MsgType: MsgTxStatus,
+			ReqID:   resp.ReqID,
+			Obj:     resp.Status,
+		}
 	default:
 		p.Log().Trace("Received unknown message", "code", msg.Code)
 		return errResp(ErrInvalidMsgCode, "%v", msg.Code)
@@ -1159,8 +1191,8 @@ func (pm *ProtocolManager) getHelperTrieAuxData(req HelperTrieReq) []byte {
 	return nil
 }
 
-func (pm *ProtocolManager) txStatus(hashes []common.Hash) []txStatus {
-	stats := make([]txStatus, len(hashes))
+func (pm *ProtocolManager) txStatus(hashes []common.Hash) []light.TxStatus {
+	stats := make([]light.TxStatus, len(hashes))
 	for i, stat := range pm.txpool.Status(hashes) {
 		// Save the status we've got from the transaction pool
 		stats[i].Status = stat

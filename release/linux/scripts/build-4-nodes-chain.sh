@@ -14,7 +14,7 @@ echo '
 ./init-node.sh --nodeid 2 --ip 127.0.0.1 --rpc_port 6793 --p2p_port 16793 --ws_port 26793 --auto "true"
 ./init-node.sh --nodeid 3 --ip 127.0.0.1 --rpc_port 6794 --p2p_port 16794 --ws_port 26794 --auto "true"
 
-./start-node.sh --nodeid 0 
+./start-node.sh --nodeid 0
 
 ./deploy-system-contract.sh --auto "true"
 

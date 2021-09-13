@@ -43,14 +43,14 @@ type revision struct {
 }
 
 var (
-	storagePrefix = "storage-value-"
+	StoragePrefix = "storage-value-"
 	// emptyState is the known hash of an empty state trie entry.
 	emptyState = crypto.Keccak256Hash(nil)
 
 	// emptyCode is the known hash of the empty EVM bytecode.
 	emptyCode = crypto.Keccak256Hash(nil)
 
-	emptyStorage = crypto.Keccak256Hash([]byte(storagePrefix))
+	emptyStorage = crypto.Keccak256Hash([]byte(StoragePrefix))
 
 	cloneErr = errors.New("clone account error!")
 )
@@ -414,7 +414,7 @@ func getKeyValue(address common.Address, key []byte, value []byte) (string, comm
 
 	//if value != nil && !bytes.Equal(value,[]byte{}){
 	buffer.Reset()
-	buffer.WriteString(storagePrefix)
+	buffer.WriteString(StoragePrefix)
 	buffer.WriteString(string(value))
 
 	valueKey := common.Hash{}
@@ -441,7 +441,7 @@ func GetKeyTrieValueKey(address common.Address, key []byte, value []byte) (strin
 	buffer.WriteString(string(key))
 	keyTrie := buffer.String()
 	buffer.Reset()
-	buffer.WriteString(storagePrefix)
+	buffer.WriteString(StoragePrefix)
 	buffer.WriteString(string(value))
 
 	valueKey := common.Hash{}

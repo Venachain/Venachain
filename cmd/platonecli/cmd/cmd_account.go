@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
 	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/precompiled"
+	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"

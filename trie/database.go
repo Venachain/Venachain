@@ -43,8 +43,8 @@ var (
 	memcacheCommitSizeMeter  = metrics.NewRegisteredMeter("trie/memcache/commit/size", nil)
 )
 
-// secureKeyPrefix is the database key prefix used to store trie node preimages.
-var secureKeyPrefix = []byte("secure-key-")
+// SecureKeyPrefix is the database key prefix used to store trie node preimages.
+var SecureKeyPrefix = []byte("secure-key-")
 
 // secureKeyLength is the length of the above prefix + 32byte hash.
 const secureKeyLength = 11 + 32
@@ -124,9 +124,11 @@ type rawShortNode struct {
 	Val node
 }
 
-func (n rawShortNode) canUnload(uint16, uint16) bool { panic("this should never end up in a live trie") }
-func (n rawShortNode) cache() (hashNode, bool)       { panic("this should never end up in a live trie") }
-func (n rawShortNode) fstring(ind string) string     { panic("this should never end up in a live trie") }
+func (n rawShortNode) canUnload(uint16, uint16) bool {
+	panic("this should never end up in a live trie")
+}
+func (n rawShortNode) cache() (hashNode, bool)   { panic("this should never end up in a live trie") }
+func (n rawShortNode) fstring(ind string) string { panic("this should never end up in a live trie") }
 
 // cachedNode is all the information we know about a single cached node in the
 // memory database write layer.
@@ -383,7 +385,7 @@ func (db *Database) preimage(hash common.Hash) ([]byte, error) {
 // buffer. The caller must not hold onto the return value because it will become
 // invalid on the next call.
 func (db *Database) secureKey(key []byte) []byte {
-	buf := append(db.seckeybuf[:0], secureKeyPrefix...)
+	buf := append(db.seckeybuf[:0], SecureKeyPrefix...)
 	buf = append(buf, key...)
 	return buf
 }

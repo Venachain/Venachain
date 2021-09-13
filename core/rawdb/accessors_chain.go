@@ -296,6 +296,14 @@ func ReadReceipts(db DatabaseReader, hash common.Hash, number uint64) types.Rece
 	return receipts
 }
 
+func ReadReceiptForStorageRlp(db DatabaseReader, hash common.Hash, number uint64) []byte {
+	data, _ := db.Get(blockReceiptsKey(number, hash))
+	if len(data) == 0 {
+		return nil
+	}
+	return data
+}
+
 // WriteReceipts stores all the transaction receipts belonging to a block.
 func WriteReceipts(db DatabaseWriter, hash common.Hash, number uint64, receipts types.Receipts) {
 	// Convert the receipts into their storage form and serialize them

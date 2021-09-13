@@ -26,9 +26,12 @@ import (
 	"sync/atomic"
 	"time"
 
+	"golang.org/x/net/context"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
@@ -62,6 +65,26 @@ type HeaderChain struct {
 
 	rand   *mrand.Rand
 	engine consensus.Engine
+
+	lightStateAt func(ctx context.Context, header *types.Header) *state.StateDB
+}
+
+// SetLightStateAt Light Ethereum inject a StateAt.
+func (hc *HeaderChain) SetLightStateAt(stateAt func(ctx context.Context, header *types.Header) *state.StateDB) {
+	hc.lightStateAt = stateAt
+}
+
+func (hc *HeaderChain) IsLightNode() bool {
+	return hc.lightStateAt != nil
+}
+
+func (hc *HeaderChain) NewLightState(ctx context.Context, number uint64) *state.StateDB {
+	header := hc.GetHeaderByNumber(number)
+	if header == nil {
+		log.Warn("NewLightState failed", "number", number)
+		return nil
+	}
+	return hc.lightStateAt(ctx, header)
 }
 
 // NewHeaderChain creates a new HeaderChain structure.

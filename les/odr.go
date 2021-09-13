@@ -88,6 +88,7 @@ const (
 	MsgProofsV2
 	MsgHeaderProofs
 	MsgHelperTrieProofs
+	MsgTxStatus
 )
 
 // Msg encodes a LES message that delivers reply data for a request
@@ -125,5 +126,34 @@ func (odr *LesOdr) Retrieve(ctx context.Context, req light.OdrRequest) (err erro
 	} else {
 		log.Debug("Failed to retrieve data from network", "err", err)
 	}
+	return
+}
+
+func (odr *LesOdr) RetrieveTxStatus(ctx context.Context, req *light.TxStatusRequest) (err error) {
+	lreq := &TxStatusRequest{Hashes: req.Hashes}
+	reqID := genReqID()
+	rq := &distReq{
+		getCost: func(dp distPeer) uint64 {
+			return lreq.GetCost(dp.(*peer))
+		},
+		canSend: func(dp distPeer) bool {
+			p := dp.(*peer)
+			return lreq.CanSend(p)
+		},
+		request: func(dp distPeer) func() {
+			p := dp.(*peer)
+			cost := lreq.GetCost(p)
+			p.fcServer.QueueRequest(reqID, cost)
+			return func() { lreq.Request(reqID, p) }
+		},
+	}
+
+	if err = odr.retriever.retrieve(ctx, reqID, rq, func(p distPeer, msg *Msg) error { return lreq.Validate(odr.db, msg) }, odr.stop); err == nil {
+		// Not need to store in DB
+		req.Status = lreq.Status
+	} else {
+		log.Debug("Failed to retrieve data from network", "err", err)
+	}
+
 	return
 }

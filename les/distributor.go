@@ -221,6 +221,7 @@ func (d *requestDistributor) nextRequest() (distPeer, *distReq, time.Duration) {
 		c := sel.choose().(selectPeerItem)
 		return c.peer, c.req, 0
 	}
+
 	return bestPeer, bestReq, bestWait
 }
 

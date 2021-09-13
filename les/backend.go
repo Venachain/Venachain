@@ -22,6 +22,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
@@ -233,6 +235,12 @@ func (s *LightEthereum) Start(srvr *p2p.Server) error {
 	protocolVersion := AdvertiseProtocolVersions[0]
 	s.serverPool.start(srvr, lesTopic(s.blockchain.Genesis().Hash(), protocolVersion))
 	s.protocolManager.Start(s.config.LightPeers)
+
+	if _, ok := s.engine.(consensus.Istanbul); ok {
+		for _, n := range p2p.GetBootNodes() {
+			srvr.AddPeer(discover.NewNode(n.ID, n.IP, n.UDP, n.TCP))
+		}
+	}
 	return nil
 }
 

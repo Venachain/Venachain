@@ -25,6 +25,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
@@ -231,4 +232,24 @@ func GetBloomBits(ctx context.Context, odr OdrBackend, bitIdx uint, sectionIdxLi
 		}
 		return result, nil
 	}
+}
+
+func GetTransaction(ctx context.Context, odr OdrBackend, txHash common.Hash) (*types.Transaction, common.Hash, uint64, uint64, error) {
+	log.Trace("light get transaction", "txHash", txHash)
+
+	r := &TxStatusRequest{Hashes: []common.Hash{txHash}}
+	if err := odr.RetrieveTxStatus(ctx, r); err != nil || r.Status[0].Status != core.TxStatusIncluded {
+		return nil, common.Hash{}, 0, 0, err
+	}
+	pos := r.Status[0].Lookup
+	// first ensure that we have the header, otherwise block body retrieval will fail
+	// also verify if this is a canonical block by getting the header by number and checking its hash
+	if header, err := GetHeaderByNumber(ctx, odr, pos.BlockIndex); err != nil || header.Hash() != pos.BlockHash {
+		return nil, common.Hash{}, 0, 0, err
+	}
+	body, err := GetBody(ctx, odr, pos.BlockHash, pos.BlockIndex)
+	if err != nil || uint64(len(body.Transactions)) <= pos.Index || body.Transactions[pos.Index].Hash() != txHash {
+		return nil, common.Hash{}, 0, 0, err
+	}
+	return body.Transactions[pos.Index], pos.BlockHash, pos.BlockIndex, pos.Index, nil
 }

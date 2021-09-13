@@ -19,14 +19,17 @@ package light
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"sync"
 	"time"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
@@ -238,6 +241,11 @@ func (pool *TxPool) setNewHead(head *types.Header) {
 	pool.mu.Lock()
 	defer pool.mu.Unlock()
 
+	ctx, cancel := context.WithTimeout(context.Background(), blockCheckTimeout)
+	defer cancel()
+	pool.checkMinedTxs(ctx, head.Hash(), head.Number.Uint64(), txStateChanges{})
+	pool.head = head.Hash()
+
 	pool.signer = types.MakeSigner(pool.config)
 }
 
@@ -268,23 +276,10 @@ func (pool *TxPool) Stats() (pending int) {
 
 // validateTx checks whether a transaction is valid according to the consensus rules.
 func (pool *TxPool) validateTx(ctx context.Context, tx *types.Transaction) error {
-	// Validate sender
-	var (
-		from common.Address
-		err  error
-	)
-
 	// Validate the transaction sender and it's sig. Throw
 	// if the from fields is invalid.
-	if from, err = types.Sender(pool.signer, tx); err != nil {
+	if _, err := types.Sender(pool.signer, tx); err != nil {
 		return core.ErrInvalidSender
-	}
-	// Last but not least check for nonce errors
-	currentState := pool.currentState(ctx)
-	n := currentState.GetNonce(from)
-	log.Debug("check tx nonce", "account", from, "stateNonce", n, "txNonce", tx.Nonce())
-	if n > tx.Nonce() {
-		return core.ErrNonceTooLow
 	}
 
 	// Check the transaction doesn't exceed the current
@@ -301,21 +296,18 @@ func (pool *TxPool) validateTx(ctx context.Context, tx *types.Transaction) error
 		return core.ErrNegativeValue
 	}
 
-	// Transactor should have enough funds to cover the costs
-	// cost == V + GP * GL
-	if b := currentState.GetBalance(from); b.Cmp(tx.Value()) < 0 {
-		return core.ErrInsufficientFunds
+	if !isCallParamManager(tx.To()) && pool.GetIsTxUseGas(ctx) && pool.GetGasContractName(ctx) != "" {
+		// Should supply enough intrinsic gas
+		gas, err := core.IntrinsicGas(tx.Data(), tx.To() == nil)
+		if err != nil {
+			return err
+		}
+		if tx.Gas() < gas {
+			return core.ErrIntrinsicGas
+		}
 	}
 
-	// Should supply enough intrinsic gas
-	gas, err := core.IntrinsicGas(tx.Data(), tx.To() == nil)
-	if err != nil {
-		return err
-	}
-	if tx.Gas() < gas {
-		return core.ErrIntrinsicGas
-	}
-	return currentState.Error()
+	return nil
 }
 
 // add validates a new transaction and sets its state pending if processable.
@@ -457,4 +449,60 @@ func (pool *TxPool) RemoveTx(hash common.Hash) {
 	delete(pool.pending, hash)
 	pool.chainDb.Delete(hash[:])
 	pool.relay.Discard([]common.Hash{hash})
+}
+
+//================system contract relevant================
+func isCallParamManager(to *common.Address) bool {
+	if to == nil {
+		return false
+	}
+
+	return *to == syscontracts.ParameterManagementAddress
+}
+
+func (pool *TxPool) GetIsTxUseGas(ctx context.Context) bool {
+	funcName := "getIsTxUseGas"
+	paramAddr := syscontracts.ParameterManagementAddress
+	res, err := pool.CallSystemContractAtNumberAtCurrentHead(ctx, paramAddr, funcName, nil)
+	if res != nil && err == nil {
+		ret := common.CallResAsInt64(res)
+		log.Trace("call system contract in light txpool", "IsTxUseGas", ret)
+		return ret == 1
+	}
+
+	return false
+}
+
+func (pool *TxPool) GetGasContractName(ctx context.Context) string {
+	funcName := "getGasContractName"
+	paramAddr := syscontracts.ParameterManagementAddress
+	res, err := pool.CallSystemContractAtNumberAtCurrentHead(ctx, paramAddr, funcName, nil)
+	if res != nil && nil == err {
+		ret := common.CallResAsString(res)
+		log.Trace("call system contract in light txpool", "GasContractName", ret)
+		return ret
+	}
+
+	return ""
+}
+
+func (pool *TxPool) CallSystemContractAtNumberAtCurrentHead(
+	ctx context.Context,
+	sysContractAddr common.Address,
+	sysFuncName string,
+	sysFuncParams []interface{},
+) ([]byte, error) {
+	curentState := pool.currentState(ctx)
+	header := pool.chain.CurrentHeader()
+	msg := types.NewMessage(common.Address{}, nil, 1, big.NewInt(1), 0x1, big.NewInt(1), nil, false)
+	evmContext := core.NewEVMContext(msg, header, pool.chain, nil)
+	evm := vm.NewEVM(evmContext, curentState, pool.chain.Config(), vm.Config{})
+	callData := common.GenCallData(sysFuncName, sysFuncParams)
+	res, _, err := evm.Call(vm.AccountRef(common.Address{}), sysContractAddr, callData, uint64(0xffffffffff), big.NewInt(0))
+	if err != nil {
+		log.Warn("call system contract in light txpool", "err", err, "sysFuncName", sysFuncName)
+		return res, err
+	}
+
+	return res, nil
 }

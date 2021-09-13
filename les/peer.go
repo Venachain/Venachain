@@ -104,9 +104,9 @@ func (p *peer) queueSend(f func()) {
 // Info gathers and returns a collection of metadata known about a peer.
 func (p *peer) Info() *eth.PeerInfo {
 	return &eth.PeerInfo{
-		Version:    p.version,
-		BN:         new(big.Int).SetUint64(p.headInfo.Number),
-		Head:       fmt.Sprintf("%x", p.Head()),
+		Version: p.version,
+		BN:      new(big.Int).SetUint64(p.headInfo.Number),
+		Head:    fmt.Sprintf("%x", p.Head()),
 	}
 }
 
@@ -185,6 +185,7 @@ func (p *peer) HasBlock(hash common.Hash, number uint64) bool {
 // SendAnnounce announces the availability of a number of blocks through
 // a hash notification.
 func (p *peer) SendAnnounce(request announceData) error {
+	p.Log().Trace("send announcement", "peerId", p.id, "number", request.Number)
 	return p2p.Send(p.rw, AnnounceMsg, request)
 }
 
@@ -207,7 +208,7 @@ func (p *peer) SendCode(reqID, bv uint64, data [][]byte) error {
 
 // SendReceiptsRLP sends a batch of transaction receipts, corresponding to the
 // ones requested from an already RLP encoded format.
-func (p *peer) SendReceiptsRLP(reqID, bv uint64, receipts []rlp.RawValue) error {
+func (p *peer) SendReceiptsRLP(reqID, bv uint64, receipts [][]byte) error {
 	return sendResponse(p.rw, ReceiptsMsg, reqID, bv, receipts)
 }
 
@@ -217,7 +218,7 @@ func (p *peer) SendProofs(reqID, bv uint64, proofs proofsData) error {
 }
 
 // SendProofsV2 sends a batch of merkle proofs, corresponding to the ones requested.
-func (p *peer) SendProofsV2(reqID, bv uint64, proofs light.NodeList) error {
+func (p *peer) SendProofsV2(reqID, bv uint64, proofs ProofsResponseData) error {
 	return sendResponse(p.rw, ProofsV2Msg, reqID, bv, proofs)
 }
 
@@ -232,14 +233,14 @@ func (p *peer) SendHelperTrieProofs(reqID, bv uint64, resp HelperTrieResps) erro
 }
 
 // SendTxStatus sends a batch of transaction status records, corresponding to the ones requested.
-func (p *peer) SendTxStatus(reqID, bv uint64, stats []txStatus) error {
+func (p *peer) SendTxStatus(reqID, bv uint64, stats []light.TxStatus) error {
 	return sendResponse(p.rw, TxStatusMsg, reqID, bv, stats)
 }
 
 // RequestHeadersByHash fetches a batch of blocks' headers corresponding to the
 // specified header query, based on the hash of an origin block.
 func (p *peer) RequestHeadersByHash(reqID, cost uint64, origin common.Hash, amount int, skip int, reverse bool) error {
-	p.Log().Debug("Fetching batch of headers", "count", amount, "fromhash", origin, "skip", skip, "reverse", reverse)
+	p.Log().Debug("Fetching batch of headers", "count", amount, "fromhash", origin, "skip", skip, "reverse", reverse, "reqID", reqID)
 	return sendRequest(p.rw, GetBlockHeadersMsg, reqID, cost, &getBlockHeadersData{Origin: hashOrNumber{Hash: origin}, Amount: uint64(amount), Skip: uint64(skip), Reverse: reverse})
 }
 
@@ -400,7 +401,6 @@ func (p *peer) Handshake(head common.Hash, headNum uint64, genesis common.Hash, 
 	var send keyValueList
 	send = send.add("protocolVersion", uint64(p.version))
 	send = send.add("networkId", p.network)
-	//send = send.add("headTd", td)
 	send = send.add("headHash", head)
 	send = send.add("headNum", headNum)
 	send = send.add("genesisHash", genesis)
@@ -426,15 +426,11 @@ func (p *peer) Handshake(head common.Hash, headNum uint64, genesis common.Hash, 
 
 	var rGenesis, rHash common.Hash
 	var rVersion, rNetwork, rNum uint64
-	var rTd *big.Int
 
 	if err := recv.get("protocolVersion", &rVersion); err != nil {
 		return err
 	}
 	if err := recv.get("networkId", &rNetwork); err != nil {
-		return err
-	}
-	if err := recv.get("headTd", &rTd); err != nil {
 		return err
 	}
 	if err := recv.get("headHash", &rHash); err != nil {

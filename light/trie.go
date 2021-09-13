@@ -157,7 +157,8 @@ func (t *odrTrie) NodeIterator(startkey []byte) trie.NodeIterator {
 }
 
 func (t *odrTrie) GetKey(sha []byte) []byte {
-	return nil
+	key, _ := t.trie.DBPreimage(common.BytesToHash(sha))
+	return key
 }
 
 func (t *odrTrie) Prove(key []byte, fromLevel uint, proofDb ethdb.Putter) error {

@@ -111,6 +111,10 @@ func (b *LesApiBackend) SendTx(ctx context.Context, signedTx *types.Transaction)
 	return b.eth.txPool.Add(ctx, signedTx)
 }
 
+func (b *LesApiBackend) GetTransaction(ctx context.Context, txHash common.Hash) (*types.Transaction, common.Hash, uint64, uint64, error) {
+	return light.GetTransaction(ctx, b.eth.odr, txHash)
+}
+
 func (b *LesApiBackend) RemoveTx(txHash common.Hash) {
 	b.eth.txPool.RemoveTx(txHash)
 }

@@ -21,11 +21,16 @@ package light
 import (
 	"context"
 	"errors"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/trie"
 )
 
 // NoOdr is the default context passed to an ODR capable function when the ODR
@@ -42,6 +47,7 @@ type OdrBackend interface {
 	BloomTrieIndexer() *core.ChainIndexer
 	BloomIndexer() *core.ChainIndexer
 	Retrieve(ctx context.Context, req OdrRequest) error
+	RetrieveTxStatus(ctx context.Context, req *TxStatusRequest) (err error)
 	IndexerConfig() *IndexerConfig
 }
 
@@ -83,14 +89,24 @@ func StorageTrieID(state *TrieID, addrHash, root common.Hash) *TrieID {
 // TrieRequest is the ODR request type for state/storage trie entries
 type TrieRequest struct {
 	OdrRequest
-	Id    *TrieID
-	Key   []byte
-	Proof *NodeSet
+	Id            *TrieID
+	Key           []byte
+	Proof         *NodeSet
+	StorageValues [][]byte
 }
 
 // StoreResult stores the retrieved data in local database
 func (req *TrieRequest) StoreResult(db ethdb.Database) {
 	req.Proof.Store(db)
+	for _, storageValue := range req.StorageValues {
+		valueKey := crypto.Keccak256Hash(append([]byte(state.StoragePrefix), storageValue...))
+		db.Put(secureKey(valueKey[:]), storageValue)
+		log.Debug("store result", "valueKey", valueKey, "value", req.StorageValues)
+	}
+}
+
+func secureKey(key []byte) []byte {
+	return append(trie.SecureKeyPrefix, key...)
 }
 
 // CodeRequest is the ODR request type for retrieving contract code
@@ -173,3 +189,17 @@ func (req *BloomRequest) StoreResult(db ethdb.Database) {
 		rawdb.WriteBloomBits(db, req.BitIdx, sectionIdx, sectionHead, req.BloomBits[i])
 	}
 }
+
+type TxStatus struct {
+	Status core.TxStatus
+	Lookup *rawdb.TxLookupEntry `rlp:"nil"`
+	Error  string
+}
+
+type TxStatusRequest struct {
+	Hashes []common.Hash
+	Status []TxStatus
+}
+
+// StoreResult stores the retrieved data in local database
+func (req *TxStatusRequest) StoreResult(db ethdb.Database) {}

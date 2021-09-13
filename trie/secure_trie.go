@@ -37,7 +37,7 @@ type SecureTrie struct {
 	trie             Trie
 	hashKeyBuf       [common.HashLength]byte
 	secKeyCache      map[string][]byte
-	newSecKeyCache      map[string][]byte
+	newSecKeyCache   map[string][]byte
 	secKeyCacheOwner *SecureTrie // Pointer to self, replace the key cache on mismatch
 }
 
@@ -81,6 +81,11 @@ func (t *SecureTrie) TryGet(key []byte) ([]byte, error) {
 	return t.trie.TryGet(t.hashKey(key))
 }
 
+// TryGet2 like TryGet. Pass the key directly.
+func (t *SecureTrie) TryGet2(key []byte) ([]byte, error) {
+	return t.trie.TryGet(key)
+}
+
 // Update associates key with value in the trie. Subsequent calls to
 // Get will return value. If value has length zero, any existing value
 // is deleted from the trie and calls to Get will return nil.
@@ -107,7 +112,7 @@ func (t *SecureTrie) TryUpdate(key, value []byte) error {
 	if err != nil {
 		return err
 	}
-  	t.getSecKeyCache()[string(hk)] = common.CopyBytes(key)
+	t.getSecKeyCache()[string(hk)] = common.CopyBytes(key)
 	return nil
 }
 

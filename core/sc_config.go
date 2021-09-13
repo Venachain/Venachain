@@ -2,13 +2,13 @@ package core
 
 import (
 	"encoding/json"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
 func UpdateParamSysContractConfig(bc *BlockChain, sysContractConf *common.SystemConfig) {

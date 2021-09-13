@@ -89,7 +89,11 @@ var SysCfg = &SystemConfig{
 		IsBlockUseTrieHash: true,
 	},
 	ContractAddress: make(map[string]Address),
-	ReplayParam:     nil,
+	ReplayParam: &ReplayParam{
+		Pivot:           0,
+		OldSysContracts: make(map[Address]string),
+		OldSuperAdmin:   NullAddress,
+	},
 }
 
 func (sc *SystemConfig) IsProduceEmptyBlock() bool {
@@ -173,15 +177,8 @@ func (sc *SystemConfig) GetConsensusNodes() []*NodeInfo {
 	return sc.ConsensusNodes
 }
 
-func (sc *SystemConfig) GetConsensusNodesFilterDelay(number uint64, nodes []NodeInfo, isOldBlock bool) []NodeInfo {
-	sc.SystemConfigMu.RLock()
-	defer sc.SystemConfigMu.RUnlock()
-	var nodesInfos []NodeInfo
-	if isOldBlock {
-		nodesInfos = nodes
-	} else {
-		nodesInfos = sc.Nodes
-	}
+func (sc *SystemConfig) GetConsensusNodesFilterDelay(number uint64, nodes []NodeInfo) []NodeInfo {
+	nodesInfos := nodes
 
 	consensusNodes := make([]NodeInfo, 0)
 	for _, node := range nodesInfos {

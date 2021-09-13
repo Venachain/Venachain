@@ -1578,5 +1578,11 @@ func (bc *BlockChain) CheckBodyOld() bool {
 			return true
 		}
 	}
+
+	return false
+}
+
+func (bc *BlockChain) IsLightNode() bool {
+
 	return false
 }

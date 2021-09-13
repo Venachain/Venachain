@@ -1,6 +1,6 @@
 #!/bin/bash
 function help() {
-    echo 
+    echo
     echo "
 USAGE: platonectl.sh start [options]
     OPTIONS:
@@ -199,6 +199,7 @@ nohup ${BIN_PATH}/platone --identity platone ${flag_datadir}  --nodiscover \
         --wsorigins "*" ${flag_logs} ${flag_ipc} \
         --bootnodes ${BOOTNODES} \
         --verbosity 3 \
+        --lightserv 70 \
         --moduleLogParams '{"platone_log": ["/"], "__dir__": ["'${LOG_DIR}'"], "__size__": ["'${LOG_SIZE}'"]}'  ${flag_gcmode}  ${EXTRA_OPTIONS} \
         1>/dev/null 2>${LOG_DIR}/platone_error.log &
 sleep 3

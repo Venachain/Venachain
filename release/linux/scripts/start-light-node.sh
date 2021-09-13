@@ -171,7 +171,7 @@ echo '
 
 flag_datadir="--datadir ${NODE_DIR}"
 flag_nodekey="--nodekey ${NODE_DIR}/node.prikey"
-flag_rpc="--rpc --rpcaddr 0.0.0.0 --rpcport ${RPC_PORT}  --rpcapi db,eth,net,web3,admin,personal,txpool,istanbul "
+flag_rpc="--rpc --rpcaddr 0.0.0.0 --rpcport ${RPC_PORT}  --rpcapi db,eth,net,web3,admin,personal,txpool"
 flag_ws="--ws --wsaddr 0.0.0.0 --wsport ${WS_PORT} "
 flag_logs=" --wasmlog  ${LOG_DIR}/wasm_log --wasmlogsize ${LOG_SIZE} "
 flag_ipc="--ipcpath ${NODE_DIR}/node-${NODE_ID}.ipc "
@@ -199,6 +199,7 @@ nohup ${BIN_PATH}/platone --identity platone ${flag_datadir}  --nodiscover \
         --wsorigins "*" ${flag_logs} ${flag_ipc} \
         --bootnodes ${BOOTNODES} \
         --verbosity 3 \
+        --syncmode light \
         --moduleLogParams '{"platone_log": ["/"], "__dir__": ["'${LOG_DIR}'"], "__size__": ["'${LOG_SIZE}'"]}'  ${flag_gcmode}  ${EXTRA_OPTIONS} \
         1>/dev/null 2>${LOG_DIR}/platone_error.log &
 sleep 3

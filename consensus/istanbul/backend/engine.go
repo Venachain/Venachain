@@ -168,6 +168,7 @@ func (sb *backend) verifyCascadingFields(chain consensus.ChainReader, header *ty
 	if err != nil {
 		return err
 	}
+
 	validators := make([]byte, len(snap.validators())*common.AddressLength)
 	for i, validator := range snap.validators() {
 		copy(validators[i*common.AddressLength:], validator[:])
@@ -177,7 +178,7 @@ func (sb *backend) verifyCascadingFields(chain consensus.ChainReader, header *ty
 	}
 
 	//// Verify VRF Nonce
-	if common.SysCfg.SysParam.VRF.ElectionEpoch != 0 {
+	if getVRFParamsAtNumber(chain, sb, number-1).ElectionEpoch != 0 {
 		if err := sb.verifyVRF(chain, header); err != nil {
 			return err
 		}
