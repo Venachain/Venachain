@@ -173,7 +173,7 @@ func (self Storage) Copy() Storage {
 func (self ValueStorage) Copy() ValueStorage {
 	cpy := make(ValueStorage)
 	for key, value := range self {
-		cpy[key] = value
+		cpy[key] = common.CopyBytes(value)
 	}
 
 	return cpy
@@ -533,11 +533,6 @@ func (self *stateObject) CommitTrie(db Database) error {
 		return self.dbErr
 	}
 
-	for h, v := range self.originValueStorage {
-		if h != emptyStorage && !bytes.Equal(v, []byte{}) {
-			self.trie.TryUpdateValue(h.Bytes(), v)
-		}
-	}
 	root, err := self.trie.Commit(nil)
 	if err == nil {
 		self.data.Root = root
