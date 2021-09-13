@@ -27,7 +27,7 @@ type Evidence struct {
 func NewSCEvidence(db StateDB) *SCEvidence {
 	return &SCEvidence{
 		stateDB:      db,
-		contractAddr: syscontracts.NodeManagementAddress, //todo add evidence address
+		contractAddr: syscontracts.EvidenceManagementAddress,
 		blockNumber:  big.NewInt(0),
 	}
 }
