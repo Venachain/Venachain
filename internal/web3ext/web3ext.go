@@ -31,6 +31,7 @@ var Modules = map[string]string{
 	"swarmfs":    SWARMFS_JS,
 	"txpool":     TxPool_JS,
 	"istanbul":   Istanbul_JS,
+	"platone":    Platone_JS,
 }
 
 const Chequebook_JS = `
@@ -458,6 +459,76 @@ web3._extend({
 		new web3._extend.Property({
 			name: 'pendingTransactions',
 			getter: 'eth_pendingTransactions',
+			outputFormatter: function(txs) {
+				var formatted = [];
+				for (var i = 0; i < txs.length; i++) {
+					formatted.push(web3._extend.formatters.outputTransactionFormatter(txs[i]));
+					formatted[i].blockHash = null;
+				}
+				return formatted;
+			}
+		}),
+	]
+});
+`
+
+const Platone_JS = `
+web3._extend({
+	property: 'platone',
+	methods: [
+		new web3._extend.Method({
+			name: 'setActor',
+			call: 'platone_setActor',
+			params: 1,
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter]
+		}),
+		new web3._extend.Method({
+			name: 'monitor',
+			call: 'platone_monitor',
+			params: 2
+		}),
+		new web3._extend.Method({
+			name: 'sign',
+			call: 'platone_sign',
+			params: 2,
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null]
+		}),
+		new web3._extend.Method({
+			name: 'resend',
+			call: 'platone_resend',
+			params: 3,
+			inputFormatter: [web3._extend.formatters.inputTransactionFormatter, web3._extend.utils.fromDecimal, web3._extend.utils.fromDecimal]
+		}),
+		new web3._extend.Method({
+			name: 'signTransaction',
+			call: 'platone_signTransaction',
+			params: 1,
+			inputFormatter: [web3._extend.formatters.inputTransactionFormatter]
+		}),
+		new web3._extend.Method({
+			name: 'submitTransaction',
+			call: 'platone_submitTransaction',
+			params: 1,
+			inputFormatter: [web3._extend.formatters.inputTransactionFormatter]
+		}),
+		new web3._extend.Method({
+			name: 'getRawTransaction',
+			call: 'platone_getRawTransactionByHash',
+			params: 1
+		}),
+		new web3._extend.Method({
+			name: 'getRawTransactionFromBlock',
+			call: function(args) {
+				return (web3._extend.utils.isString(args[0]) && args[0].indexOf('0x') === 0) ? 'platone_getRawTransactionByBlockHashAndIndex' : 'platone_getRawTransactionByBlockNumberAndIndex';
+			},
+			params: 2,
+			inputFormatter: [web3._extend.formatters.inputBlockNumberFormatter, web3._extend.utils.toHex]
+		}),
+	],
+	properties: [
+		new web3._extend.Property({
+			name: 'pendingTransactions',
+			getter: 'platone_pendingTransactions',
 			outputFormatter: function(txs) {
 				var formatted = [];
 				for (var i = 0; i < txs.length; i++) {
