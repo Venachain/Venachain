@@ -1,17 +1,24 @@
 # Changelog
 
+## [1.1.1.0.0]
+### Features
+* [other] 轻节点功能完善 --陈明晶
+
+### Improvements
+* [download] 区块同步优化重复同步。 --陈明晶
+* [evm] 合约支持SM3              --李京京
+* [rpc] namespace增加platone   --张玉坚
+
+### Bug Fixes
+* [chain] badBlock问题修复。 -- 张玉坚
+
 ## [1.1.0.0.0]
 ### Features
 * [contract] 增加存证预编译合约。  --李京京
 * [chain] 增加DAG信息，可以并行执行交易 --张玉坚
-* [other] 轻节点功能完善 --陈明晶
-
 
 ### Improvements
 * [other] 节点间同步的交易可并行进行验证。 --陈炫慧
-* [download] 区块同步优化重复同步。 --陈明晶
-* [evm] 合约支持SM3              --李京京
-* [rpc] namespace增加platone   --张玉坚
 
 ### Bug Fixes
 * [evm]   合约运行中的错误信息可以正常返回。 --张玉坚
