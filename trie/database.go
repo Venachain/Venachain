@@ -378,7 +378,7 @@ func (db *Database) preimage(hash common.Hash) ([]byte, error) {
 		return preimage, nil
 	}
 	// Content unavailable in memory, attempt to retrieve from disk
-	return db.diskdb.Get(db.secureKey(hash[:]))
+	return db.diskdb.Get(preimageKey(hash))
 }
 
 // secureKey returns the database key for the preimage of key, as an ephemeral
@@ -388,6 +388,11 @@ func (db *Database) secureKey(key []byte) []byte {
 	buf := append(db.seckeybuf[:0], SecureKeyPrefix...)
 	buf = append(buf, key...)
 	return buf
+}
+
+// preimageKey = secureKeyPrefix + hash
+func preimageKey(hash common.Hash) []byte {
+	return append(SecureKeyPrefix, hash[:]...)
 }
 
 // Nodes retrieves the hashes of all the nodes cached within the memory database.
