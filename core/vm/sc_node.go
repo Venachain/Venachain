@@ -25,6 +25,7 @@ const (
 )
 
 const (
+	NodeTypeLight     = uint32(3)
 	NodeTypeObserver  = uint32(2)
 	NodeTypeValidator = uint32(1)
 )
@@ -110,12 +111,14 @@ func checkNodeStatus(status uint32) error {
 }
 
 func checkNodeType(typ uint32) error {
-	if typ != NodeTypeObserver &&
+	if typ != NodeTypeLight &&
+		typ != NodeTypeObserver &&
 		typ != NodeTypeValidator {
 		return errors.New(
-			fmt.Sprintf("The type of node must be OBSERVER(%d) or VALIDATOR(%d)",
+			fmt.Sprintf("The type of node must be OBSERVER(%d) or VALIDATOR(%d) or LightNode(%d)",
 				NodeTypeObserver,
 				NodeTypeValidator,
+				NodeTypeLight,
 			))
 	}
 
