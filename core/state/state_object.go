@@ -173,7 +173,7 @@ func (self Storage) Copy() Storage {
 func (self ValueStorage) Copy() ValueStorage {
 	cpy := make(ValueStorage)
 	for key, value := range self {
-		cpy[key] = common.CopyBytes(value)
+		cpy[key] = value
 	}
 
 	return cpy
