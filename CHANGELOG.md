@@ -1,4 +1,12 @@
 # Changelog
+
+## [1.0.1.0.4]
+### Improvements
+* [scripts] 启动脚本添加设置区块最大交易数 --张玉坚
+
+### Bug Fixes
+* [chain] 修复bad block问题 --张玉坚
+
 ## [1.0.1.0.1]
 ### Features
 * [chain] 链bp参数修改，与之前版本兼容 --王琪
