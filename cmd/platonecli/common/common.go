@@ -89,7 +89,7 @@ func ConvertSelect(param, paramName string) (interface{}, error) {
 	case "status": // node status
 		conv = NewConvert("valid", "invalid", 1, 2, paramName)
 	case "type": // node type
-		conv = NewConvert("consensus", "observer", 1, 0, paramName)
+		conv = NewConvert("consensus", "observer", 1, 2, paramName)
 	default:
 		utl.Fatalf("")
 	}

@@ -25,7 +25,7 @@ const (
 )
 
 const (
-	NodeTypeObserver  = uint32(0)
+	NodeTypeObserver  = uint32(2)
 	NodeTypeValidator = uint32(1)
 )
 
