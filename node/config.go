@@ -67,6 +67,10 @@ type Config struct {
 	// in memory.
 	DataDir string
 
+	// DBType is the db type chosen to store the data in disk
+	// alternative db type is defined in "ethdb.types" package
+	DBType string
+
 	// Configuration of peer-to-peer networking.
 	P2P p2p.Config
 

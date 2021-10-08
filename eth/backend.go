@@ -20,6 +20,8 @@ package eth
 import (
 	"errors"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
 	"math/big"
 	"runtime"
 	"sync"
@@ -39,7 +41,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/filters"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/gasprice"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/internal/ethapi"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
@@ -74,10 +75,10 @@ type Ethereum struct {
 	lesServer       LesServer
 
 	// DB interfaces
-	chainDb ethdb.Database // Block chain database
+	chainDb dbhandle.Database // Block chain database
 
 	// ext db interfaces
-	extDb ethdb.Database
+	extDb dbhandle.Database
 
 	eventMux       *event.TypeMux
 	engine         consensus.Engine
@@ -233,31 +234,31 @@ func makeExtraData(extra []byte) []byte {
 }
 
 // CreateDB creates the chain database.
-func CreateDB(ctx *node.ServiceContext, config *Config, name string) (ethdb.Database, error) {
+func CreateDB(ctx *node.ServiceContext, config *Config, name string) (dbhandle.Database, error) {
 	db, err := ctx.OpenDatabase(name, config.DatabaseCache, config.DatabaseHandles)
 	if err != nil {
 		return nil, err
 	}
-	if db, ok := db.(*ethdb.LDBDatabase); ok {
+	if db, ok := db.(*leveldb.LDBDatabase); ok {
 		db.Meter("eth/db/chaindata/")
 	}
 	return db, nil
 }
 
 // create extended database
-func CreateExtDB(ctx *node.ServiceContext, config *Config, name string) (ethdb.Database, error) {
+func CreateExtDB(ctx *node.ServiceContext, config *Config, name string) (dbhandle.Database, error) {
 	db, err := ctx.OpenDatabase(name, config.DatabaseCache, config.DatabaseHandles)
 	if err != nil {
 		return nil, err
 	}
-	if db, ok := db.(*ethdb.LDBDatabase); ok {
+	if db, ok := db.(*leveldb.LDBDatabase); ok {
 		db.Meter("eth/db/extdb/")
 	}
 	return db, nil
 }
 
 // CreateConsensusEngine creates the required type of consensus engine instance for an Ethereum service
-func CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *params.ChainConfig, db ethdb.Database) consensus.Engine {
+func CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *params.ChainConfig, db dbhandle.Database) consensus.Engine {
 	if ctx == nil || chainConfig == nil {
 		return nil
 	}
@@ -485,15 +486,15 @@ func (s *Ethereum) StopMining() {
 }
 
 func (s *Ethereum) IsMining() bool                     { return s.miner.Mining() }
-func (s *Ethereum) Miner() *miner.Miner                { return s.miner }
-func (s *Ethereum) ExtendedDb() ethdb.Database         { return s.extDb }
-func (s *Ethereum) AccountManager() *accounts.Manager  { return s.accountManager }
+func (s *Ethereum) Miner() *miner.Miner               { return s.miner }
+func (s *Ethereum) ExtendedDb() dbhandle.Database     { return s.extDb }
+func (s *Ethereum) AccountManager() *accounts.Manager { return s.accountManager }
 func (s *Ethereum) BlockChain() *core.BlockChain       { return s.blockchain }
 func (s *Ethereum) TxPool() *core.TxPool               { return s.txPool }
 func (s *Ethereum) EventMux() *event.TypeMux           { return s.eventMux }
-func (s *Ethereum) Engine() consensus.Engine           { return s.engine }
-func (s *Ethereum) ChainDb() ethdb.Database            { return s.chainDb }
-func (s *Ethereum) IsListening() bool                  { return true } // Always listening
+func (s *Ethereum) Engine() consensus.Engine          { return s.engine }
+func (s *Ethereum) ChainDb() dbhandle.Database        { return s.chainDb }
+func (s *Ethereum) IsListening() bool                 { return true } // Always listening
 func (s *Ethereum) EthVersion() int                    { return int(s.protocolManager.SubProtocols[0].Version) }
 func (s *Ethereum) NetVersion() uint64                 { return s.networkID }
 func (s *Ethereum) Downloader() *downloader.Downloader { return s.protocolManager.downloader }

@@ -20,10 +20,9 @@ package ethereum
 import (
 	"context"
 	"errors"
-	"math/big"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"math/big"
 )
 
 // NotFound is returned by API methods if the requested item does not exist.

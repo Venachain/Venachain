@@ -19,6 +19,7 @@ package les
 
 import (
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"io"
 	"math"
 	"math/rand"
@@ -28,7 +29,6 @@ import (
 	"time"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common/mclock"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
@@ -112,7 +112,7 @@ type registerReq struct {
 // known light server nodes. It received discovered nodes, stores statistics about
 // known nodes and takes care of always having enough good quality servers connected.
 type serverPool struct {
-	db     ethdb.Database
+	db     dbhandle.Database
 	dbKey  []byte
 	server *p2p.Server
 	quit   chan struct{}
@@ -140,7 +140,7 @@ type serverPool struct {
 }
 
 // newServerPool creates a new serverPool instance
-func newServerPool(db ethdb.Database, quit chan struct{}, wg *sync.WaitGroup) *serverPool {
+func newServerPool(db dbhandle.Database, quit chan struct{}, wg *sync.WaitGroup) *serverPool {
 	pool := &serverPool{
 		db:           db,
 		quit:         quit,

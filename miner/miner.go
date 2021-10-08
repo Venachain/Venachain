@@ -19,6 +19,7 @@ package miner
 
 import (
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"sync/atomic"
 	"time"
 
@@ -28,7 +29,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
@@ -38,7 +38,7 @@ import (
 type Backend interface {
 	BlockChain() *core.BlockChain
 	TxPool() *core.TxPool
-	ExtendedDb() ethdb.Database
+	ExtendedDb() dbhandle.Database
 }
 
 // Miner creates blocks and searches for proof-of-work values.

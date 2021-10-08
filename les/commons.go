@@ -18,11 +18,11 @@ package les
 
 import (
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/light"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
@@ -33,8 +33,8 @@ import (
 type lesCommons struct {
 	config                       *eth.Config
 	iConfig                      *light.IndexerConfig
-	chainDb                      ethdb.Database
-	extDb                        ethdb.Database
+	chainDb                      dbhandle.Database
+	extDb                        dbhandle.Database
 	protocolManager              *ProtocolManager
 	chtIndexer, bloomTrieIndexer *core.ChainIndexer
 }

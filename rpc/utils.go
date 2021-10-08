@@ -22,6 +22,7 @@ import (
 	crand "crypto/rand"
 	"encoding/binary"
 	"encoding/hex"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"math/rand"
 	"reflect"
 	"strconv"
@@ -30,7 +31,6 @@ import (
 	"time"
 	"unicode"
 	"unicode/utf8"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 )
 
 var (
@@ -53,7 +53,7 @@ const (
 )
 
 
-func MonitorWriteData(monitorType int, key string, value string, db ethdb.Database) error {
+func MonitorWriteData(monitorType int, key string, value string, db dbhandle.Database) error {
 
 	key = key + strconv.FormatInt(int64(monitorType),10)
 	if len(value) == 0 {
@@ -76,7 +76,7 @@ func MonitorWriteData(monitorType int, key string, value string, db ethdb.Databa
 	return nil
 }
 
-func MonitorReadData(monitorType int, key string, db ethdb.Database) string {
+func MonitorReadData(monitorType int, key string, db dbhandle.Database) string {
 	key = key + strconv.FormatInt(int64(monitorType),10)
 
 	data, err := db.Get([]byte(key))

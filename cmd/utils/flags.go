@@ -20,6 +20,8 @@ package utils
 import (
 	"crypto/ecdsa"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	types2 "github.com/PlatONEnetwork/PlatONE-Go/ethdb/types"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -41,7 +43,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/eth"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/gasprice"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/ethstats"
 	"github.com/PlatONEnetwork/PlatONE-Go/les"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
@@ -115,6 +116,11 @@ var (
 		Name:  "datadir",
 		Usage: "Data directory for the databases and keystore",
 		Value: DirectoryString{node.DefaultDataDir()},
+	}
+	DbTypeFlag = DirectoryFlag{
+		Name:"dbtype",
+		Usage:"DB type for the data",
+		Value:DirectoryString{types2.LevelDbStr},
 	}
 	KeyStoreDirFlag = DirectoryFlag{
 		Name:  "keystore",
@@ -909,6 +915,10 @@ func SetNodeConfig(ctx *cli.Context, cfg *node.Config) {
 		cfg.DataDir = ctx.GlobalString(DataDirFlag.Name)
 	}
 
+	if ctx.GlobalIsSet(DbTypeFlag.Name){
+		cfg.DBType = ctx.GlobalString(DbTypeFlag.Name)
+	}
+
 	if ctx.GlobalIsSet(KeyStoreDirFlag.Name) {
 		cfg.KeyStoreDir = ctx.GlobalString(KeyStoreDirFlag.Name)
 	}
@@ -1182,7 +1192,7 @@ func SetupMetrics(ctx *cli.Context) {
 }
 
 // MakeChainDatabase open an LevelDB using the flags passed to the client and will hard crash if it fails.
-func MakeChainDatabase(ctx *cli.Context, stack *node.Node) ethdb.Database {
+func MakeChainDatabase(ctx *cli.Context, stack *node.Node) dbhandle.Database {
 	var (
 		cache   = ctx.GlobalInt(CacheFlag.Name) * ctx.GlobalInt(CacheDatabaseFlag.Name) / 100
 		handles = makeDatabaseHandles()
@@ -1203,7 +1213,7 @@ func MakeGenesis(ctx *cli.Context) *core.Genesis {
 }
 
 // MakeChain creates a chain manager from set command line flags.
-func MakeChain(ctx *cli.Context, stack *node.Node) (chain *core.BlockChain, chainDb ethdb.Database) {
+func MakeChain(ctx *cli.Context, stack *node.Node) (chain *core.BlockChain, chainDb dbhandle.Database) {
 	var err error
 	chainDb = MakeChainDatabase(ctx, stack)
 

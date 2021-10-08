@@ -19,6 +19,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"os"
 	"runtime"
@@ -33,7 +35,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/trie"
@@ -49,6 +50,7 @@ var (
 		ArgsUsage: "<genesisPath>",
 		Flags: []cli.Flag{
 			utils.DataDirFlag,
+			utils.DbTypeFlag,
 		},
 		Category: "BLOCKCHAIN COMMANDS",
 		Description: `
@@ -65,6 +67,7 @@ It expects the genesis file as argument.`,
 		ArgsUsage: "<filename> (<filename 2> ... <filename N>) ",
 		Flags: []cli.Flag{
 			utils.DataDirFlag,
+			utils.DbTypeFlag,
 			utils.CacheFlag,
 			utils.SyncModeFlag,
 			utils.GCModeFlag,
@@ -86,6 +89,7 @@ processing will proceed even if an individual RLP-file import failure occurs.`,
 		ArgsUsage: "<filename> [<blockNumFirst> <blockNumLast>]",
 		Flags: []cli.Flag{
 			utils.DataDirFlag,
+			utils.DbTypeFlag,
 			utils.ReleaseFlag,
 			utils.CacheFlag,
 			utils.SyncModeFlag,
@@ -105,6 +109,7 @@ be gzipped.`,
 		ArgsUsage: "<datafile>",
 		Flags: []cli.Flag{
 			utils.DataDirFlag,
+			utils.DbTypeFlag,
 			utils.CacheFlag,
 			utils.SyncModeFlag,
 		},
@@ -119,6 +124,7 @@ be gzipped.`,
 		ArgsUsage: "<dumpfile>",
 		Flags: []cli.Flag{
 			utils.DataDirFlag,
+			utils.DbTypeFlag,
 			utils.CacheFlag,
 			utils.SyncModeFlag,
 		},
@@ -133,6 +139,7 @@ The export-preimages command export hash preimages to an RLP encoded stream`,
 		ArgsUsage: "<sourceChaindataDir>",
 		Flags: []cli.Flag{
 			utils.DataDirFlag,
+			utils.DbTypeFlag,
 			utils.CacheFlag,
 			utils.SyncModeFlag,
 			utils.FakePoWFlag,
@@ -160,6 +167,7 @@ Remove blockchain and state databases`,
 		ArgsUsage: "[<blockHash> | <blockNum>]...",
 		Flags: []cli.Flag{
 			utils.DataDirFlag,
+			utils.DbTypeFlag,
 			utils.CacheFlag,
 			utils.SyncModeFlag,
 		},
@@ -247,20 +255,20 @@ func importChain(ctx *cli.Context) error {
 	fmt.Printf("Import done in %v.\n\n", time.Since(start))
 
 	// Output pre-compaction stats mostly to see the import trashing
-	db := chainDb.(*ethdb.LDBDatabase)
+	db, ok := chainDb.(*leveldb.LDBDatabase)
+	if ok {
+		stats, err := db.LDB().GetProperty("leveldb.stats")
+		if err != nil {
+			utils.Fatalf("Failed to read database stats: %v", err)
+		}
+		fmt.Println(stats)
 
-	stats, err := db.LDB().GetProperty("leveldb.stats")
-	if err != nil {
-		utils.Fatalf("Failed to read database stats: %v", err)
+		ioStats, err := db.LDB().GetProperty("leveldb.iostats")
+		if err != nil {
+			utils.Fatalf("Failed to read database iostats: %v", err)
+		}
+		fmt.Println(ioStats)
 	}
-	fmt.Println(stats)
-
-	ioStats, err := db.LDB().GetProperty("leveldb.iostats")
-	if err != nil {
-		utils.Fatalf("Failed to read database iostats: %v", err)
-	}
-	fmt.Println(ioStats)
-
 	fmt.Printf("Trie cache misses:  %d\n", trie.CacheMisses())
 	fmt.Printf("Trie cache unloads: %d\n\n", trie.CacheUnloads())
 
@@ -280,23 +288,24 @@ func importChain(ctx *cli.Context) error {
 	// Compact the entire database to more accurately measure disk io and print the stats
 	start = time.Now()
 	fmt.Println("Compacting entire database...")
-	if err = db.LDB().CompactRange(util.Range{}); err != nil {
-		utils.Fatalf("Compaction failed: %v", err)
-	}
-	fmt.Printf("Compaction done in %v.\n\n", time.Since(start))
+	if ok {
+		if err := db.LDB().CompactRange(util.Range{}); err != nil {
+			utils.Fatalf("Compaction failed: %v", err)
+		}
+		fmt.Printf("Compaction done in %v.\n\n", time.Since(start))
 
-	stats, err = db.LDB().GetProperty("leveldb.stats")
-	if err != nil {
-		utils.Fatalf("Failed to read database stats: %v", err)
-	}
-	fmt.Println(stats)
+		stats, err := db.LDB().GetProperty("leveldb.stats")
+		if err != nil {
+			utils.Fatalf("Failed to read database stats: %v", err)
+		}
+		fmt.Println(stats)
 
-	ioStats, err = db.LDB().GetProperty("leveldb.iostats")
-	if err != nil {
-		utils.Fatalf("Failed to read database iostats: %v", err)
+		ioStats, err := db.LDB().GetProperty("leveldb.iostats")
+		if err != nil {
+			utils.Fatalf("Failed to read database iostats: %v", err)
+		}
+		fmt.Println(ioStats)
 	}
-	fmt.Println(ioStats)
-
 	return nil
 }
 
@@ -344,7 +353,7 @@ func importPreimages(ctx *cli.Context) error {
 		utils.Fatalf("This command requires an argument.")
 	}
 	stack := makeFullNode(ctx)
-	diskdb := utils.MakeChainDatabase(ctx, stack).(*ethdb.LDBDatabase)
+	diskdb := utils.MakeChainDatabase(ctx, stack)
 
 	start := time.Now()
 	if err := utils.ImportPreimages(diskdb, ctx.Args().First()); err != nil {
@@ -360,7 +369,7 @@ func exportPreimages(ctx *cli.Context) error {
 		utils.Fatalf("This command requires an argument.")
 	}
 	stack := makeFullNode(ctx)
-	diskdb := utils.MakeChainDatabase(ctx, stack).(*ethdb.LDBDatabase)
+	diskdb := utils.MakeChainDatabase(ctx, stack)
 
 	start := time.Now()
 	if err := utils.ExportPreimages(diskdb, ctx.Args().First()); err != nil {
@@ -383,7 +392,7 @@ func copyDb(ctx *cli.Context) error {
 	dl := downloader.New(syncmode, chainDb, new(event.TypeMux), chain, nil, nil)
 
 	// Create a source peer to satisfy downloader requests from
-	db, err := ethdb.NewLDBDatabase(ctx.Args().First(), ctx.GlobalInt(utils.CacheFlag.Name), 256)
+	db, err := ethdb.New(ctx.String(utils.DbTypeFlag.Name), ctx.Args().First(), ctx.GlobalInt(utils.CacheFlag.Name), 256)
 	if err != nil {
 		return err
 	}
@@ -410,11 +419,12 @@ func copyDb(ctx *cli.Context) error {
 	// Compact the entire database to remove any sync overhead
 	start = time.Now()
 	fmt.Println("Compacting entire database...")
-	if err = chainDb.(*ethdb.LDBDatabase).LDB().CompactRange(util.Range{}); err != nil {
-		utils.Fatalf("Compaction failed: %v", err)
+	if db,ok:=chainDb.(*leveldb.LDBDatabase);ok{
+		if err = db.LDB().CompactRange(util.Range{}); err != nil {
+			utils.Fatalf("Compaction failed: %v", err)
+		}
+		fmt.Printf("Compaction done in %v.\n\n", time.Since(start))
 	}
-	fmt.Printf("Compaction done in %v.\n\n", time.Since(start))
-
 	return nil
 }
 

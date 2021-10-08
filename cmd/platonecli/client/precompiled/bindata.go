@@ -102,7 +102,7 @@ func ReleaseLinuxConfContractsCnsinitregeventJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "../../release/linux/conf/contracts/cnsInitRegEvent.json", size: 226, mode: os.FileMode(420), modTime: time.Unix(1623724708, 0)}
+	info := bindataFileInfo{name: "../../release/linux/conf/contracts/cnsInitRegEvent.json", size: 226, mode: os.FileMode(420), modTime: time.Unix(1622513420, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -122,7 +122,7 @@ func ReleaseLinuxConfContractsCnsinvokeeventJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "../../release/linux/conf/contracts/cnsInvokeEvent.json", size: 223, mode: os.FileMode(420), modTime: time.Unix(1623724708, 0)}
+	info := bindataFileInfo{name: "../../release/linux/conf/contracts/cnsInvokeEvent.json", size: 223, mode: os.FileMode(420), modTime: time.Unix(1622513420, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -142,7 +142,7 @@ func ReleaseLinuxConfContractsCnsmanagerCppAbiJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "../../release/linux/conf/contracts/cnsManager.cpp.abi.json", size: 4587, mode: os.FileMode(420), modTime: time.Unix(1623724708, 0)}
+	info := bindataFileInfo{name: "../../release/linux/conf/contracts/cnsManager.cpp.abi.json", size: 4587, mode: os.FileMode(420), modTime: time.Unix(1622513420, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -162,7 +162,7 @@ func ReleaseLinuxConfContractsContractdataCppAbiJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "../../release/linux/conf/contracts/contractdata.cpp.abi.json", size: 435, mode: os.FileMode(420), modTime: time.Unix(1623724708, 0)}
+	info := bindataFileInfo{name: "../../release/linux/conf/contracts/contractdata.cpp.abi.json", size: 435, mode: os.FileMode(420), modTime: time.Unix(1622513420, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -182,7 +182,7 @@ func ReleaseLinuxConfContractsEvidencemanagerCppAbiJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "../../release/linux/conf/contracts/evidenceManager.cpp.abi.json", size: 1108, mode: os.FileMode(420), modTime: time.Unix(1630914858, 0)}
+	info := bindataFileInfo{name: "../../release/linux/conf/contracts/evidenceManager.cpp.abi.json", size: 1108, mode: os.FileMode(420), modTime: time.Unix(1633680624, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -202,7 +202,7 @@ func ReleaseLinuxConfContractsFirewallAbiJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "../../release/linux/conf/contracts/fireWall.abi.json", size: 5453, mode: os.FileMode(420), modTime: time.Unix(1623724708, 0)}
+	info := bindataFileInfo{name: "../../release/linux/conf/contracts/fireWall.abi.json", size: 5453, mode: os.FileMode(420), modTime: time.Unix(1622513420, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -222,7 +222,7 @@ func ReleaseLinuxConfContractsGroupmanagerCppAbiJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "../../release/linux/conf/contracts/groupManager.cpp.abi.json", size: 3997, mode: os.FileMode(420), modTime: time.Unix(1623724708, 0)}
+	info := bindataFileInfo{name: "../../release/linux/conf/contracts/groupManager.cpp.abi.json", size: 3997, mode: os.FileMode(420), modTime: time.Unix(1622513420, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -242,7 +242,7 @@ func ReleaseLinuxConfContractsNodemanagerCppAbiJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "../../release/linux/conf/contracts/nodeManager.cpp.abi.json", size: 4052, mode: os.FileMode(420), modTime: time.Unix(1623724708, 0)}
+	info := bindataFileInfo{name: "../../release/linux/conf/contracts/nodeManager.cpp.abi.json", size: 4052, mode: os.FileMode(420), modTime: time.Unix(1622513420, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -262,7 +262,7 @@ func ReleaseLinuxConfContractsParammanagerCppAbiJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "../../release/linux/conf/contracts/paramManager.cpp.abi.json", size: 8549, mode: os.FileMode(420), modTime: time.Unix(1631005830, 0)}
+	info := bindataFileInfo{name: "../../release/linux/conf/contracts/paramManager.cpp.abi.json", size: 8549, mode: os.FileMode(420), modTime: time.Unix(1633680624, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -282,7 +282,7 @@ func ReleaseLinuxConfContractsPermissiondeniedeventJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "../../release/linux/conf/contracts/permissionDeniedEvent.json", size: 171, mode: os.FileMode(420), modTime: time.Unix(1623724708, 0)}
+	info := bindataFileInfo{name: "../../release/linux/conf/contracts/permissionDeniedEvent.json", size: 171, mode: os.FileMode(420), modTime: time.Unix(1622513420, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -302,7 +302,7 @@ func ReleaseLinuxConfContractsUsermanagerCppAbiJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "../../release/linux/conf/contracts/userManager.cpp.abi.json", size: 15356, mode: os.FileMode(420), modTime: time.Unix(1623724708, 0)}
+	info := bindataFileInfo{name: "../../release/linux/conf/contracts/userManager.cpp.abi.json", size: 15356, mode: os.FileMode(420), modTime: time.Unix(1622513420, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

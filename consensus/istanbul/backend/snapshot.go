@@ -19,6 +19,7 @@ package backend
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 
@@ -28,7 +29,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/validator"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 )
 
 const (
@@ -77,7 +77,7 @@ func newSnapshot(number uint64, hash common.Hash, valSet istanbul.ValidatorSet) 
 }
 
 // loadSnapshot loads an existing snapshot from the database.
-func loadSnapshot(db ethdb.Database, hash common.Hash) (*Snapshot, error) {
+func loadSnapshot(db dbhandle.Database, hash common.Hash) (*Snapshot, error) {
 	blob, err := db.Get(append([]byte(dbKeySnapshotPrefix), hash[:]...))
 	if err != nil {
 		return nil, err
@@ -92,7 +92,7 @@ func loadSnapshot(db ethdb.Database, hash common.Hash) (*Snapshot, error) {
 }
 
 // store inserts the snapshot into the database.
-func (s *Snapshot) store(db ethdb.Database) error {
+func (s *Snapshot) store(db dbhandle.Database) error {
 	blob, err := json.Marshal(s)
 	if err != nil {
 		return err

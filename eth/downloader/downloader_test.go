@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	istanbulBackend "github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/backend"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"io/ioutil"
 	"math/big"
 	"sync"
@@ -32,7 +34,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/trie"
@@ -54,9 +55,9 @@ func init() {
 type downloadTester struct {
 	downloader *Downloader
 
-	genesis *types.Block   // Genesis blocks used by the tester and peers
-	stateDb ethdb.Database // Database used by the tester for syncing from peers
-	peerDb  ethdb.Database // Database of the peers containing all data
+	genesis *types.Block      // Genesis blocks used by the tester and peers
+	stateDb dbhandle.Database // Database used by the tester for syncing from peers
+	peerDb  dbhandle.Database // Database of the peers containing all data
 
 	ownHashes   []common.Hash                  // Hash chain belonging to the tester
 	ownHeaders  map[common.Hash]*types.Header  // Headers belonging to the tester
@@ -75,7 +76,7 @@ type downloadTester struct {
 	lock sync.RWMutex
 }
 
-func GenesisBlockForTesting(db ethdb.Database, addr common.Address, balance *big.Int) *types.Block {
+func GenesisBlockForTesting(db dbhandle.Database, addr common.Address, balance *big.Int) *types.Block {
 	buf, err := ioutil.ReadFile("./testdata/platone.json")
 	if err != nil {
 		return nil
@@ -99,7 +100,7 @@ func GenesisBlockForTesting(db ethdb.Database, addr common.Address, balance *big
 
 // newTester creates a new downloader test mocker.
 func newTester() *downloadTester {
-	testdb := ethdb.NewMemDatabase()
+	testdb := memorydb.NewMemDatabase()
 	balanceBytes, _ := hexutil.Decode("0x2000000000000000000000000000000000000000000000000000000000000")
 	balance := big.NewInt(0)
 	genesis := GenesisBlockForTesting(testdb, testAddress, balance.SetBytes(balanceBytes))
@@ -123,7 +124,7 @@ func newTester() *downloadTester {
 		peerChainTds:      make(map[string]map[common.Hash]*big.Int),
 		peerMissingStates: make(map[string]map[common.Hash]bool),
 	}
-	tester.stateDb = ethdb.NewMemDatabase()
+	tester.stateDb = memorydb.NewMemDatabase()
 	tester.stateDb.Put(genesis.Root().Bytes(), []byte{0x00})
 
 	tester.downloader = New(FullSync, tester.stateDb, new(event.TypeMux), tester, nil, tester.dropPeer)

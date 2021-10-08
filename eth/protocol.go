@@ -18,13 +18,13 @@ package eth
 
 import (
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"io"
 	"math/big"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
@@ -125,7 +125,7 @@ type txPool interface {
 	// NewTxsEvent and send events to the given channel.
 	SubscribeNewTxsEvent(chan<- core.NewTxsEvent) event.Subscription
 	// get ext db
-	ExtendedDb() ethdb.Database
+	ExtendedDb() dbhandle.Database
 }
 
 // statusData is the network packet for the status message.

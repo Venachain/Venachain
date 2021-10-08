@@ -17,6 +17,7 @@
 package node
 
 import (
+	types2 "github.com/PlatONEnetwork/PlatONE-Go/ethdb/types"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -37,6 +38,7 @@ const (
 // DefaultConfig contains reasonable default settings.
 var DefaultConfig = Config{
 	DataDir:          DefaultDataDir(),
+	DBType:           types2.LevelDbStr,
 	HTTPPort:         DefaultHTTPPort,
 	HTTPModules:      []string{"net", "web3"},
 	HTTPVirtualHosts: []string{"localhost"},

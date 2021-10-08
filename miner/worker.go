@@ -17,6 +17,7 @@
 package miner
 
 import (
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"math/big"
 	"sync"
 
@@ -31,7 +32,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
@@ -135,7 +135,7 @@ func (e *commitWorkEnv) getHighestLogicalBlock() *types.Block {
 // worker is the main object which takes care of submitting new work to consensus engine
 // and gathering the sealing result.
 type worker struct {
-	extdb  ethdb.Database
+	extdb  dbhandle.Database
 	config *params.ChainConfig
 	engine consensus.Engine
 	eth    Backend

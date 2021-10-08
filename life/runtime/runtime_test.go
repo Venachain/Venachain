@@ -1,11 +1,12 @@
 package runtime
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"bytes"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
+	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"io/ioutil"
 	"reflect"
 	"strings"
@@ -13,7 +14,6 @@ import (
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 )
 
 func TestDefaults(t *testing.T) {
@@ -74,7 +74,7 @@ func TestExecute(t *testing.T) {
 }
 
 func TestCall(t *testing.T) {
-	state, _ := state.New(common.Hash{}, state.NewDatabase(ethdb.NewMemDatabase()))
+	state, _ := state.New(common.Hash{}, state.NewDatabase(memorydb.NewMemDatabase()))
 	address := common.HexToAddress("0x0a")
 	code := genCodeInput()
 	state.SetCode(address, code)

@@ -20,6 +20,8 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"math"
 	"math/big"
 	"strconv"
@@ -32,12 +34,10 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/metrics"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
 const (
@@ -213,7 +213,7 @@ func (config *TxPoolConfig) sanitize() TxPoolConfig {
 type TxPool struct {
 	config      TxPoolConfig
 	chainconfig *params.ChainConfig
-	extDb       ethdb.Database
+	extDb       dbhandle.Database
 	chain       txPoolBlockChain
 	gasPrice    *big.Int
 	txFeed      event.Feed
@@ -228,7 +228,7 @@ type TxPool struct {
 
 	currentState  *state.StateDB      // Current state in the blockchain head
 	pendingState  *state.ManagedState // Pending state tracking virtual nonces
-	db            ethdb.Database
+	db            dbhandle.Database
 	currentMaxGas uint64 // Current gas limit for transaction caps
 
 	locals  *accountSet // Set of local transaction to exempt from eviction rules
@@ -259,7 +259,7 @@ type txExt struct {
 // NewTxPool creates a new transaction pool to gather, sort and filter inbound
 // transactions from the network.
 //func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain blockChain) *TxPool {
-func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoolBlockChain, db ethdb.Database, extDb ethdb.Database, key *ecdsa.PrivateKey) *TxPool {
+func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoolBlockChain, db dbhandle.Database, extDb dbhandle.Database, key *ecdsa.PrivateKey) *TxPool {
 	// Sanitize the input to ensure no vulnerable gas prices are set
 	config = (&config).sanitize()
 
@@ -933,7 +933,7 @@ func (pool *TxPool) AddLocals(txs []*types.Transaction) []error {
 }
 
 // get ext db
-func (pool *TxPool) ExtendedDb() ethdb.Database {
+func (pool *TxPool) ExtendedDb() dbhandle.Database {
 	return pool.extDb
 }
 
@@ -1481,6 +1481,7 @@ func (pool *TxPool) generateTxs(cnt string, addr common.Address, preProducer boo
 			data, _ = rlp.EncodeToBytes(paramArr)
 			tx := types.NewTransaction(uint64(nonce), addr, big.NewInt(0), uint64(gasLimit), big.NewInt(1), data)
 			//tx := types.NewTransaction(uint64(nonce), addr, big.NewInt(0), uint64(gasLimit), big.NewInt(1), nil)
+
 			signedTx, _ := types.SignTx(tx, types.HomesteadSigner{}, pool.pk)
 			types.Sender(pool.signer, signedTx) // already validated
 			tx.Hash()

@@ -19,21 +19,22 @@ package ethdb_test
 import (
 	"bytes"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"sync"
 	"testing"
-
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 )
 
-func newTestLDB() (*ethdb.LDBDatabase, func()) {
+func newTestLDB() (*leveldb.LDBDatabase, func()) {
 	dirname, err := ioutil.TempDir(os.TempDir(), "ethdb_test_")
 	if err != nil {
 		panic("failed to create test file: " + err.Error())
 	}
-	db, err := ethdb.NewLDBDatabase(dirname, 0, 0)
+	db, err := leveldb.NewLDBDatabase(dirname, 0, 0)
 	if err != nil {
 		panic("failed to create test database: " + err.Error())
 	}
@@ -47,12 +48,12 @@ func newTestLDB() (*ethdb.LDBDatabase, func()) {
 var test_values = []string{"", "a", "1251", "\x00123\x00"}
 
 
-func OpenTestLDB() (*ethdb.LDBDatabase, func()) {
+func OpenTestLDB() (*leveldb.LDBDatabase, func()) {
 
 //	dirname := "D:/data/platone/chaindata"
 //	dirname := "D:/platone-node/data/platone/extdb"
 	dirname := "D:/platone-node/data/platone/extdb"
-	db, err := ethdb.NewLDBDatabase(dirname, 0, 0)
+	db, err := leveldb.NewLDBDatabase(dirname, 0, 0)
 	if err != nil {
 		panic("failed to create test database: " + err.Error())
 	}
@@ -62,7 +63,7 @@ func OpenTestLDB() (*ethdb.LDBDatabase, func()) {
 	}
 }
 
-func testGetValue(db ethdb.Database, t *testing.T) {
+func testGetValue(db dbhandle.Database, t *testing.T) {
 	t.Parallel()
 	fmt.Println("get ldb begin")
 	data, err := db.Get([]byte("hello"))
@@ -84,10 +85,10 @@ func TestLDB_PutGet(t *testing.T) {
 }
 
 func TestMemoryDB_PutGet(t *testing.T) {
-	testPutGet(ethdb.NewMemDatabase(), t)
+	testPutGet(memorydb.NewMemDatabase(), t)
 }
 
-func testPutGet(db ethdb.Database, t *testing.T) {
+func testPutGet(db dbhandle.Database, t *testing.T) {
 	t.Parallel()
 
 	for _, k := range test_values {
@@ -183,10 +184,10 @@ func TestLDB_ParallelPutGet(t *testing.T) {
 }
 
 func TestMemoryDB_ParallelPutGet(t *testing.T) {
-	testParallelPutGet(ethdb.NewMemDatabase(), t)
+	testParallelPutGet(memorydb.NewMemDatabase(), t)
 }
 
-func testParallelPutGet(db ethdb.Database, t *testing.T) {
+func testParallelPutGet(db dbhandle.Database, t *testing.T) {
 	const n = 8
 	var pending sync.WaitGroup
 

@@ -990,9 +990,11 @@ func (s *PublicTransactionPoolAPI) GetBlockTransactionCountByNumber(ctx context.
 
 // GetBlockTransactionCountByHash returns the number of transactions in the block with the given hash.
 func (s *PublicTransactionPoolAPI) GetBlockTransactionCountByHash(ctx context.Context, blockHash common.Hash) *hexutil.Uint {
-	if block, _ := s.b.GetBlock(ctx, blockHash); block != nil {
+	if block, err := s.b.GetBlock(ctx, blockHash); err==nil && block != nil {
 		n := hexutil.Uint(len(block.Transactions()))
 		return &n
+	}else{
+		log.Error("GetBlockTransactionCountByHash","hash",blockHash,"err",err)
 	}
 	return nil
 }

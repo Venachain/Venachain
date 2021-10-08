@@ -19,6 +19,7 @@ package backend
 import (
 	"bytes"
 	"crypto/ecdsa"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"math/big"
 	"reflect"
 	"testing"
@@ -30,7 +31,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 )
 
 type testerVote struct {
@@ -338,7 +338,7 @@ func TestVoting(t *testing.T) {
 		extra, _ := prepareExtra(b.Header(), validators)
 		genesis.ExtraData = extra
 		// Create a pristine blockchain with the genesis injected
-		db := ethdb.NewMemDatabase()
+		db := memorydb.NewMemDatabase()
 		genesis.Commit(db)
 
 		config := istanbul.DefaultConfig
@@ -425,7 +425,7 @@ func TestSaveAndLoad(t *testing.T) {
 			common.StringToAddress("1234567895"),
 		}, istanbul.RoundRobin),
 	}
-	db := ethdb.NewMemDatabase()
+	db := memorydb.NewMemDatabase()
 	err := snap.store(db)
 	if err != nil {
 		t.Errorf("store snapshot failed: %v", err)
