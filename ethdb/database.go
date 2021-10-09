@@ -11,11 +11,16 @@ import (
 
 // New news database via the giving db type.
 func New(dbType, file string, cache, handles int) (dbhandle.Database, error) {
-	log.Info("new database","dbtype", dbType)
+	log.Info("new database", "dbtype", dbType)
 
 	dbtype, err := types.ParseDbType(dbType)
 	if err != nil {
 		return nil, err
+	}
+
+	if t := types.GetExistDBType(file); t != types.UnknownDb && t != dbtype {
+		dbtype = t
+		log.Warn("db already exist", "type",types.GetDbName(t))
 	}
 
 	switch dbtype {
