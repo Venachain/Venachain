@@ -3,8 +3,9 @@ package pebbledb
 import (
 	"bytes"
 	"fmt"
-	"github.com/cockroachdb/pebble"
 	"testing"
+
+	"github.com/cockroachdb/pebble"
 )
 
 func TestNewPebbleDBDatabase(t *testing.T) {

@@ -18,10 +18,11 @@ package trie
 
 import (
 	"bytes"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"runtime"
 	"sync"
 	"testing"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"

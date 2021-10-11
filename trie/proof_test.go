@@ -19,10 +19,11 @@ package trie
 import (
 	"bytes"
 	crand "crypto/rand"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	mrand "math/rand"
 	"testing"
 	"time"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"

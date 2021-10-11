@@ -18,7 +18,6 @@
 package les
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"io"
 	"math"
 	"sync"
@@ -26,6 +25,7 @@ import (
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common/mclock"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/prque"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )

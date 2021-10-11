@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"math"
 	"math/big"
 	"math/rand"
@@ -29,10 +28,10 @@ import (
 	"testing"
 	"testing/quick"
 
-	"gopkg.in/check.v1"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
+	"gopkg.in/check.v1"
 )
 
 // Tests that updating a state trie does not leak any database writes prior to

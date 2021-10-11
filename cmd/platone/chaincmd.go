@@ -19,9 +19,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"os"
 	"runtime"
 	"strconv"
@@ -35,8 +32,11 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/trie"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"gopkg.in/urfave/cli.v1"
@@ -419,7 +419,7 @@ func copyDb(ctx *cli.Context) error {
 	// Compact the entire database to remove any sync overhead
 	start = time.Now()
 	fmt.Println("Compacting entire database...")
-	if db,ok:=chainDb.(*leveldb.LDBDatabase);ok{
+	if db, ok := chainDb.(*leveldb.LDBDatabase); ok {
 		if err = db.LDB().CompactRange(util.Range{}); err != nil {
 			utils.Fatalf("Compaction failed: %v", err)
 		}

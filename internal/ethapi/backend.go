@@ -19,7 +19,6 @@ package ethapi
 
 import (
 	"context"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"math/big"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
@@ -29,6 +28,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"

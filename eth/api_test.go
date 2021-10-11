@@ -17,12 +17,12 @@
 package eth
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"reflect"
 	"testing"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"github.com/davecgh/go-spew/spew"
 )
 

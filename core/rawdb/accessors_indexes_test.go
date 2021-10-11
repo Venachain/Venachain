@@ -17,12 +17,12 @@
 package rawdb
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"math/big"
 	"testing"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 )
 
 // Tests that positional lookup metadata can be stored and retrieved.

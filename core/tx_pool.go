@@ -20,8 +20,6 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"math"
 	"math/big"
 	"strconv"
@@ -34,10 +32,12 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/metrics"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
 const (
@@ -55,6 +55,7 @@ const (
 	// Define the size of the transaction.
 	TxSize = 1024
 )
+
 var (
 	WorkerEvent = make(chan struct{})
 )

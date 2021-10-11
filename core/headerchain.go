@@ -20,23 +20,22 @@ import (
 	crand "crypto/rand"
 	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"math"
 	"math/big"
 	mrand "math/rand"
 	"sync/atomic"
 	"time"
 
-	"golang.org/x/net/context"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	lru "github.com/hashicorp/golang-lru"
+	"golang.org/x/net/context"
 )
 
 const (

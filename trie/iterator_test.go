@@ -19,9 +19,10 @@ package trie
 import (
 	"bytes"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"math/rand"
 	"testing"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 )

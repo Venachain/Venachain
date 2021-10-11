@@ -19,14 +19,15 @@ package ethdb_test
 import (
 	"bytes"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"sync"
 	"testing"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 )
 
 func newTestLDB() (*leveldb.LDBDatabase, func()) {
@@ -47,11 +48,10 @@ func newTestLDB() (*leveldb.LDBDatabase, func()) {
 
 var test_values = []string{"", "a", "1251", "\x00123\x00"}
 
-
 func OpenTestLDB() (*leveldb.LDBDatabase, func()) {
 
-//	dirname := "D:/data/platone/chaindata"
-//	dirname := "D:/platone-node/data/platone/extdb"
+	//	dirname := "D:/data/platone/chaindata"
+	//	dirname := "D:/platone-node/data/platone/extdb"
 	dirname := "D:/platone-node/data/platone/extdb"
 	db, err := leveldb.NewLDBDatabase(dirname, 0, 0)
 	if err != nil {
@@ -75,9 +75,9 @@ func testGetValue(db dbhandle.Database, t *testing.T) {
 
 func TestLDB_PutGet(t *testing.T) {
 	/*
-	db, remove := newTestLDB()
-	defer remove()
-	testPutGet(db, t)*/
+		db, remove := newTestLDB()
+		defer remove()
+		testPutGet(db, t)*/
 
 	db, remove := OpenTestLDB()
 	defer remove()

@@ -19,7 +19,6 @@ package les
 
 import (
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"io"
 	"math"
 	"math/rand"
@@ -29,6 +28,7 @@ import (
 	"time"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common/mclock"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"

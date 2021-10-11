@@ -22,14 +22,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
 	"math/big"
 	"net"
 	"sync"
 	"time"
-
-	trie2 "github.com/PlatONEnetwork/PlatONE-Go/trie"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/mclock"
@@ -39,6 +35,8 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/light"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
@@ -47,6 +45,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"github.com/PlatONEnetwork/PlatONE-Go/trie"
+	trie2 "github.com/PlatONEnetwork/PlatONE-Go/trie"
 )
 
 const (

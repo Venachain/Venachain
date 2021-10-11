@@ -17,12 +17,12 @@
 package node
 
 import (
-	types2 "github.com/PlatONEnetwork/PlatONE-Go/ethdb/types"
 	"os"
 	"os/user"
 	"path/filepath"
 	"runtime"
 
+	types2 "github.com/PlatONEnetwork/PlatONE-Go/ethdb/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p/nat"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"

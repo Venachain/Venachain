@@ -18,7 +18,6 @@ package les
 
 import (
 	"encoding/binary"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
 	"math/rand"
 	"testing"
 	"time"
@@ -29,6 +28,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
 	"github.com/PlatONEnetwork/PlatONE-Go/light"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
@@ -488,4 +488,3 @@ func TestGetBloombitsProofs(t *testing.T) {
 		}
 	}
 }
-

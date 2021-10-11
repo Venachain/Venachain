@@ -18,10 +18,10 @@ package core
 
 import (
 	"container/list"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 )
 

@@ -18,12 +18,12 @@ package node
 
 import (
 	"crypto/ecdsa"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"reflect"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
@@ -46,7 +46,7 @@ func (ctx *ServiceContext) OpenDatabase(name string, cache int, handles int) (db
 	if ctx.config.DataDir == "" {
 		return memorydb.NewMemDatabase(), nil
 	}
-	db, err := ethdb.New(ctx.config.DBType,ctx.config.ResolvePath(name), cache, handles)
+	db, err := ethdb.New(ctx.config.DBType, ctx.config.ResolvePath(name), cache, handles)
 	if err != nil {
 		return nil, err
 	}

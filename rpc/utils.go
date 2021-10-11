@@ -22,7 +22,6 @@ import (
 	crand "crypto/rand"
 	"encoding/binary"
 	"encoding/hex"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"math/rand"
 	"reflect"
 	"strconv"
@@ -31,6 +30,8 @@ import (
 	"time"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 )
 
 var (
@@ -39,23 +40,22 @@ var (
 )
 
 const (
-	TransactionReceiveTime = 0
+	TransactionReceiveTime      = 0
 	TransactionExecuteStartTime = 1
-	TransactionExecuteEndTime = 2
-	TransactionExecuteStatus = 3
-	TransactionReceiveNode = 4
-	TransactionInChain = 5
-	BlockConsensusStartTime = 100
-	BlockConsensusEndTime = 101
-	BlockCommitTime = 102
-	BlockSize = 103
-	BlockPrimay = 104
+	TransactionExecuteEndTime   = 2
+	TransactionExecuteStatus    = 3
+	TransactionReceiveNode      = 4
+	TransactionInChain          = 5
+	BlockConsensusStartTime     = 100
+	BlockConsensusEndTime       = 101
+	BlockCommitTime             = 102
+	BlockSize                   = 103
+	BlockPrimay                 = 104
 )
-
 
 func MonitorWriteData(monitorType int, key string, value string, db dbhandle.Database) error {
 
-	key = key + strconv.FormatInt(int64(monitorType),10)
+	key = key + strconv.FormatInt(int64(monitorType), 10)
 	if len(value) == 0 {
 		if monitorType == TransactionReceiveTime || monitorType == TransactionExecuteStartTime ||
 			monitorType == TransactionExecuteEndTime || monitorType == BlockConsensusStartTime ||
@@ -63,7 +63,7 @@ func MonitorWriteData(monitorType int, key string, value string, db dbhandle.Dat
 
 			timeTmp := time.Now().UnixNano()
 			timeTmp = timeTmp / 1e6
-			value = strconv.FormatInt(timeTmp,10)
+			value = strconv.FormatInt(timeTmp, 10)
 		}
 	}
 	if db != nil {
@@ -77,7 +77,7 @@ func MonitorWriteData(monitorType int, key string, value string, db dbhandle.Dat
 }
 
 func MonitorReadData(monitorType int, key string, db dbhandle.Database) string {
-	key = key + strconv.FormatInt(int64(monitorType),10)
+	key = key + strconv.FormatInt(int64(monitorType), 10)
 
 	data, err := db.Get([]byte(key))
 	if err != nil {

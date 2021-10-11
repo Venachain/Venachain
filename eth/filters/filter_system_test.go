@@ -19,8 +19,6 @@ package filters
 import (
 	"context"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"math/big"
 	"math/rand"
 	"reflect"
@@ -33,9 +31,12 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/bloombits"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
+	"github.com/jpmorganchase/quorum/consensus/ethash"
 )
 
 type testBackend struct {

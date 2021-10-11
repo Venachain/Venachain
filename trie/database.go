@@ -18,12 +18,12 @@ package trie
 
 import (
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"io"
 	"sync"
 	"time"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/metrics"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"

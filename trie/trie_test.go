@@ -21,11 +21,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
-	types2 "github.com/PlatONEnetwork/PlatONE-Go/ethdb/types"
 	"io/ioutil"
 	"math/big"
 	"math/rand"
@@ -36,6 +31,11 @@ import (
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
+	types2 "github.com/PlatONEnetwork/PlatONE-Go/ethdb/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"github.com/davecgh/go-spew/spew"
 )
@@ -599,7 +599,7 @@ func tempDB() (string, *Database) {
 	if err != nil {
 		panic(fmt.Sprintf("can't create temporary directory: %v", err))
 	}
-	diskdb, err := ethdb.New(types2.LevelDbStr,dir, 256, 0)
+	diskdb, err := ethdb.New(types2.LevelDbStr, dir, 256, 0)
 	if err != nil {
 		panic(fmt.Sprintf("can't create temporary database: %v", err))
 	}

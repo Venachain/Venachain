@@ -18,10 +18,10 @@ package state
 
 import (
 	"bytes"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"testing"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 )
 
 // Tests that the node iterator indeed walks over the entire database contents.

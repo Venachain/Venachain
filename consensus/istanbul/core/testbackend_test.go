@@ -18,8 +18,6 @@ package core
 
 import (
 	"crypto/ecdsa"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"math/big"
 	"time"
 
@@ -27,6 +25,8 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/validator"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	elog "github.com/PlatONEnetwork/PlatONE-Go/log"
 )

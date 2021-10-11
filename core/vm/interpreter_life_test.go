@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 	"io/ioutil"
 	"math"
 	"math/big"
@@ -16,6 +15,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 	types2 "github.com/PlatONEnetwork/PlatONE-Go/ethdb/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
@@ -85,7 +85,7 @@ func Int64ToBytes(n int64) []byte {
 }
 
 func BenchmarkWasmInterpreter_SetState(bench *testing.B) {
-	db, _ := ethdb.New(types2.LevelDbStr,"./data.getsettest", 0, 0)
+	db, _ := ethdb.New(types2.LevelDbStr, "./data.getsettest", 0, 0)
 
 	statedb, err := state.New(common.Hash{}, state.NewDatabase(db))
 	if nil != err {
@@ -96,7 +96,7 @@ func BenchmarkWasmInterpreter_SetState(bench *testing.B) {
 }
 
 func BenchmarkWasmInterpreter_GetState(bench *testing.B) {
-	db, _ := ethdb.New(types2.LevelDbStr,"./data.getsettest", 0, 0)
+	db, _ := ethdb.New(types2.LevelDbStr, "./data.getsettest", 0, 0)
 
 	statedb, err := state.New(common.Hash{}, state.NewDatabase(db))
 	if nil != err {
@@ -115,7 +115,7 @@ func BenchmarkWasmInterpreter_SetState_MockStateDB(bench *testing.B) {
 }
 
 func BenchmarkWasmInterpreter_GetState_FixedInput(bench *testing.B) {
-	db, _ := ethdb.New(types2.LevelDbStr,"./data.getsettest", 0, 0)
+	db, _ := ethdb.New(types2.LevelDbStr, "./data.getsettest", 0, 0)
 
 	statedb, err := state.New(common.Hash{}, state.NewDatabase(db))
 	if nil != err {
@@ -126,7 +126,7 @@ func BenchmarkWasmInterpreter_GetState_FixedInput(bench *testing.B) {
 }
 
 func BenchmarkWasmInterpreter_SetState_FixedInput(bench *testing.B) {
-	db, _ := ethdb.New(types2.LevelDbStr,"./data.getsettest", 0, 0)
+	db, _ := ethdb.New(types2.LevelDbStr, "./data.getsettest", 0, 0)
 
 	statedb, err := state.New(common.Hash{}, state.NewDatabase(db))
 	if nil != err {
@@ -137,7 +137,7 @@ func BenchmarkWasmInterpreter_SetState_FixedInput(bench *testing.B) {
 }
 
 func BenchmarkWasmInterpreter_Deploy(bench *testing.B) {
-	db, _ := ethdb.New(types2.LevelDbStr,"./data.getsettest", 0, 0)
+	db, _ := ethdb.New(types2.LevelDbStr, "./data.getsettest", 0, 0)
 
 	statedb, err := state.New(common.Hash{}, state.NewDatabase(db))
 	if nil != err {

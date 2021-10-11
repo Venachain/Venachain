@@ -19,9 +19,6 @@ package backend
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
@@ -29,6 +26,8 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/validator"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/params"
 )
 
 const (

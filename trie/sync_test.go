@@ -18,8 +18,9 @@ package trie
 
 import (
 	"bytes"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"testing"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 )

@@ -21,6 +21,9 @@ package les
 
 import (
 	"crypto/rand"
+	"math/big"
+	"testing"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
@@ -32,8 +35,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
-	"math/big"
-	"testing"
 )
 
 var (

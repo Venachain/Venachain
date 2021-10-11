@@ -17,7 +17,6 @@
 package runtime
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"math"
 	"math/big"
 	"time"
@@ -26,6 +25,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 )
 
@@ -51,7 +51,7 @@ type Config struct {
 func setDefaults(cfg *Config) {
 	if cfg.ChainConfig == nil {
 		cfg.ChainConfig = &params.ChainConfig{
-			ChainID:        big.NewInt(1),
+			ChainID: big.NewInt(1),
 		}
 	}
 

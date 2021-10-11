@@ -20,8 +20,6 @@ package utils
 import (
 	"crypto/ecdsa"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-	types2 "github.com/PlatONEnetwork/PlatONE-Go/ethdb/types"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -34,7 +32,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/fdlimit"
 	istanbulBackend "github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/backend"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
@@ -43,6 +40,8 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/eth"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/gasprice"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	types2 "github.com/PlatONEnetwork/PlatONE-Go/ethdb/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/ethstats"
 	"github.com/PlatONEnetwork/PlatONE-Go/les"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
@@ -118,9 +117,9 @@ var (
 		Value: DirectoryString{node.DefaultDataDir()},
 	}
 	DbTypeFlag = DirectoryFlag{
-		Name:"dbtype",
-		Usage:"DB type for the data",
-		Value:DirectoryString{types2.LevelDbStr},
+		Name:  "dbtype",
+		Usage: "DB type for the data",
+		Value: DirectoryString{types2.LevelDbStr},
 	}
 	KeyStoreDirFlag = DirectoryFlag{
 		Name:  "keystore",
@@ -915,7 +914,7 @@ func SetNodeConfig(ctx *cli.Context, cfg *node.Config) {
 		cfg.DataDir = ctx.GlobalString(DataDirFlag.Name)
 	}
 
-	if ctx.GlobalIsSet(DbTypeFlag.Name){
+	if ctx.GlobalIsSet(DbTypeFlag.Name) {
 		cfg.DBType = ctx.GlobalString(DbTypeFlag.Name)
 	}
 

@@ -18,9 +18,9 @@ package les
 
 import (
 	"context"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/light"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 )

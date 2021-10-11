@@ -19,7 +19,6 @@ package les
 import (
 	"bytes"
 	"context"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"math/big"
 	"testing"
 	"time"
@@ -31,6 +30,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/light"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
@@ -150,7 +150,7 @@ func odrContractCall(ctx context.Context, db dbhandle.Database, config *params.C
 			context := core.NewEVMContext(&msg, header, lc, nil)
 			vmenv := vm.NewEVM(context, state, config, vm.Config{})
 			gp := new(core.GasPool).AddGas(math.MaxUint64)
-			ret, _, _,  _, _ := core.ApplyMessage(vmenv, &msg, gp)
+			ret, _, _, _, _ := core.ApplyMessage(vmenv, &msg, gp)
 			if state.Error() == nil {
 				res = append(res, ret...)
 			}

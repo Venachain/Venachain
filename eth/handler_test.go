@@ -17,8 +17,6 @@
 package eth
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
-	"github.com/jpmorganchase/quorum/consensus/ethash"
 	"math"
 	"math/big"
 	"math/rand"
@@ -32,9 +30,11 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"github.com/jpmorganchase/quorum/consensus/ethash"
 )
 
 // Tests that protocol versions and modes of operations are matched up properly.

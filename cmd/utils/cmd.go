@@ -21,9 +21,6 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/pebbledb"
 	"io"
 	"os"
 	"os/signal"
@@ -36,6 +33,9 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/pebbledb"
 	"github.com/PlatONEnetwork/PlatONE-Go/internal/debug"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/node"
@@ -62,6 +62,7 @@ func Fatalf(format string, args ...interface{}) {
 			w = os.Stderr
 		}
 	}
+
 	fmt.Fprintf(w, "Fatal: "+format+"\n", args...)
 	os.Exit(1)
 }
@@ -335,7 +336,7 @@ func ExportPreimages(db dbhandle.Database, fn string) error {
 		defer writer.(*gzip.Writer).Close()
 	}
 	// Iterate over the preimages and export them
-	switch dbItem:=db.(type){
+	switch dbItem := db.(type) {
 	case *leveldb.LDBDatabase:
 		it := dbItem.NewIteratorWithPrefix([]byte("secure-key-"))
 		for it.Next() {

@@ -19,8 +19,6 @@ package core
 import (
 	"context"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"math/big"
 	"math/rand"
 	"testing"
@@ -29,6 +27,8 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 )
 
 // Runs multiple tests with randomized parameters.

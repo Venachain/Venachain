@@ -1,11 +1,12 @@
 package pebbledb
 
 import (
+	"time"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/cockroachdb/pebble"
 	"github.com/cockroachdb/pebble/bloom"
-	"time"
 )
 
 const (
@@ -25,19 +26,19 @@ type PebbleDatabase struct {
 func NewPebbleDB(file string, cache int, handles int) (*PebbleDatabase, error) {
 
 	logger := log.New("database", file)
-	logger.Error("Allocated cache and file handles", "file",file, "cache", cache, "handles", handles)
+	logger.Error("Allocated cache and file handles", "file", file, "cache", cache, "handles", handles)
 
 	// options
 	minHandles := 16384
-	var minCache int64= 1 << 30
+	var minCache int64 = 1 << 30
 
 	if handles < minHandles { // handles配置默认值75
 		handles = minHandles
 	}
 
-	var cacheSize int64;
+	var cacheSize int64
 	cacheSize = int64(cache)
-	if cacheSize <minCache{
+	if cacheSize < minCache {
 		cacheSize = minCache
 	}
 	pebblecache := pebble.NewCache(cacheSize)
@@ -51,7 +52,7 @@ func NewPebbleDB(file string, cache int, handles int) (*PebbleDatabase, error) {
 		LBaseMaxBytes:               64 << 20, // 64 MB
 		Levels:                      make([]pebble.LevelOptions, 7),
 		MaxConcurrentCompactions:    3,
-		MaxOpenFiles:                handles,    // 16384, pebble默认值1000，platone默认75
+		MaxOpenFiles:                handles,  // 16384, pebble默认值1000，platone默认75
 		MemTableSize:                64 << 20, // 64MB, platone 默认 256MB
 		MemTableStopWritesThreshold: 4,
 	}

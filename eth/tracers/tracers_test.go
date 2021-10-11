@@ -18,7 +18,6 @@ package tracers
 
 import (
 	"encoding/json"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"io/ioutil"
 	"math/big"
 	"path/filepath"
@@ -32,6 +31,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"github.com/PlatONEnetwork/PlatONE-Go/tests"
 )

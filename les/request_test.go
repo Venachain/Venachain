@@ -18,13 +18,13 @@ package les
 
 import (
 	"context"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"testing"
 	"time"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/light"
 )
 

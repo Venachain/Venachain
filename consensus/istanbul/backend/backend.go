@@ -19,15 +19,9 @@ package backend
 import (
 	"crypto/ecdsa"
 	"errors"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"math/big"
 	"sync"
 	"time"
-
-	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
@@ -35,10 +29,15 @@ import (
 	istanbulCore "github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/validator"
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
+	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	lru "github.com/hashicorp/golang-lru"
 )
 

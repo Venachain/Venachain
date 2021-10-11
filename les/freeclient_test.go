@@ -20,12 +20,12 @@ package les
 
 import (
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"math/rand"
 	"testing"
 	"time"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common/mclock"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 )
 
 func TestFreeClientPoolL10C100(t *testing.T) {

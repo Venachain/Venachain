@@ -27,8 +27,6 @@ import (
 	"strings"
 	"time"
 
-	lru "github.com/hashicorp/golang-lru"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts/keystore"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
@@ -45,6 +43,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
 	"github.com/davecgh/go-spew/spew"
+	lru "github.com/hashicorp/golang-lru"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
 )
@@ -990,11 +989,11 @@ func (s *PublicTransactionPoolAPI) GetBlockTransactionCountByNumber(ctx context.
 
 // GetBlockTransactionCountByHash returns the number of transactions in the block with the given hash.
 func (s *PublicTransactionPoolAPI) GetBlockTransactionCountByHash(ctx context.Context, blockHash common.Hash) *hexutil.Uint {
-	if block, err := s.b.GetBlock(ctx, blockHash); err==nil && block != nil {
+	if block, err := s.b.GetBlock(ctx, blockHash); err == nil && block != nil {
 		n := hexutil.Uint(len(block.Transactions()))
 		return &n
-	}else{
-		log.Error("GetBlockTransactionCountByHash","hash",blockHash,"err",err)
+	} else {
+		log.Error("GetBlockTransactionCountByHash", "hash", blockHash, "err", err)
 	}
 	return nil
 }

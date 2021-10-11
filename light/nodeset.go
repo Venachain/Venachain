@@ -18,11 +18,11 @@ package light
 
 import (
 	"errors"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"sync"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 

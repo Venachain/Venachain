@@ -20,8 +20,6 @@ package eth
 import (
 	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
 	"math/big"
 	"runtime"
 	"sync"
@@ -41,6 +39,8 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/filters"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/gasprice"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/internal/ethapi"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
@@ -486,15 +486,15 @@ func (s *Ethereum) StopMining() {
 }
 
 func (s *Ethereum) IsMining() bool                     { return s.miner.Mining() }
-func (s *Ethereum) Miner() *miner.Miner               { return s.miner }
-func (s *Ethereum) ExtendedDb() dbhandle.Database     { return s.extDb }
-func (s *Ethereum) AccountManager() *accounts.Manager { return s.accountManager }
+func (s *Ethereum) Miner() *miner.Miner                { return s.miner }
+func (s *Ethereum) ExtendedDb() dbhandle.Database      { return s.extDb }
+func (s *Ethereum) AccountManager() *accounts.Manager  { return s.accountManager }
 func (s *Ethereum) BlockChain() *core.BlockChain       { return s.blockchain }
 func (s *Ethereum) TxPool() *core.TxPool               { return s.txPool }
 func (s *Ethereum) EventMux() *event.TypeMux           { return s.eventMux }
-func (s *Ethereum) Engine() consensus.Engine          { return s.engine }
-func (s *Ethereum) ChainDb() dbhandle.Database        { return s.chainDb }
-func (s *Ethereum) IsListening() bool                 { return true } // Always listening
+func (s *Ethereum) Engine() consensus.Engine           { return s.engine }
+func (s *Ethereum) ChainDb() dbhandle.Database         { return s.chainDb }
+func (s *Ethereum) IsListening() bool                  { return true } // Always listening
 func (s *Ethereum) EthVersion() int                    { return int(s.protocolManager.SubProtocols[0].Version) }
 func (s *Ethereum) NetVersion() uint64                 { return s.networkID }
 func (s *Ethereum) Downloader() *downloader.Downloader { return s.protocolManager.downloader }

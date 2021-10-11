@@ -17,10 +17,10 @@
 package state
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"testing"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 )
 
 var addr = common.BytesToAddress([]byte("test"))

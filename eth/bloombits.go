@@ -18,8 +18,6 @@ package eth
 
 import (
 	"context"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
 	"time"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
@@ -28,6 +26,8 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/bloombits"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
 )
 
 const (
