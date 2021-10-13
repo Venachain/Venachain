@@ -31,6 +31,10 @@ BOOTNODES=""
 EXTRA_OPTIONS=" --debug "
 LOG_SIZE=67108864
 
+# todo
+DBTYPE="leveldb"
+#DBTYPE="pebbledb"
+
 CURRENT_PATH=`pwd`
 cd ${SCRIPT_DIR}/..
 WORKSPACE_PATH=`pwd`
@@ -183,6 +187,7 @@ nohup ${BIN_PATH}/platone --identity platone ${flag_datadir}  --nodiscover \
         --port ${P2P_PORT}  ${flag_nodekey} ${flag_rpc} --rpccorsdomain \""*"\" ${flag_ws} \
         --wsorigins \""*"\" ${flag_logs} ${flag_ipc} \
         --bootnodes ${BOOTNODES} \
+        --dbtype ${DBTYPE} \
         --moduleLogParams '{\"platone_log\": [\"/\"], \"__dir__\": [\"${LOG_DIR}\"], \"__size__\": [\"${LOG_SIZE}\"]}' ${flag_gcmode} ${EXTRA_OPTIONS} \
         1>/dev/null 2>${LOG_DIR}/platone_error.log &
 "
@@ -199,6 +204,8 @@ nohup ${BIN_PATH}/platone --identity platone ${flag_datadir}  --nodiscover \
         --wsorigins "*" ${flag_logs} ${flag_ipc} \
         --bootnodes ${BOOTNODES} \
         --verbosity 3 \
+        --dbtype ${DBTYPE} \
         --moduleLogParams '{"platone_log": ["/"], "__dir__": ["'${LOG_DIR}'"], "__size__": ["'${LOG_SIZE}'"]}'  ${flag_gcmode}  ${EXTRA_OPTIONS} \
         1>/dev/null 2>${LOG_DIR}/platone_error.log &
 sleep 3
+

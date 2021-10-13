@@ -19,20 +19,23 @@ package node
 import (
 	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/event"
-	"github.com/PlatONEnetwork/PlatONE-Go/internal/debug"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
-	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
-	"github.com/prometheus/prometheus/util/flock"
 	"net"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"sync"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
+	"github.com/PlatONEnetwork/PlatONE-Go/event"
+	"github.com/PlatONEnetwork/PlatONE-Go/internal/debug"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
+	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
+	"github.com/prometheus/prometheus/util/flock"
 )
 
 // Node is a container on which services can be registered.
@@ -180,10 +183,10 @@ func (n *Node) Start() error {
 
 		// Construct and save the service
 		service, err := constructor(ctx)
-		if err != nil{
+		if err != nil {
 			return err
 		}
-		if  reflect.ValueOf(service).IsNil(){
+		if reflect.ValueOf(service).IsNil() {
 			return fmt.Errorf("service is nil")
 		}
 		kind := reflect.TypeOf(service)
@@ -572,11 +575,11 @@ func (n *Node) EventMux() *event.TypeMux {
 // OpenDatabase opens an existing database with the given name (or creates one if no
 // previous can be found) from within the node's instance directory. If the node is
 // ephemeral, a memory database is returned.
-func (n *Node) OpenDatabase(name string, cache, handles int) (ethdb.Database, error) {
+func (n *Node) OpenDatabase(name string, cache, handles int) (dbhandle.Database, error) {
 	if n.config.DataDir == "" {
-		return ethdb.NewMemDatabase(), nil
+		return memorydb.NewMemDatabase(), nil
 	}
-	return ethdb.NewLDBDatabase(n.config.ResolvePath(name), cache, handles)
+	return ethdb.New(n.config.DBType, n.config.ResolvePath(name), cache, handles)
 }
 
 // ResolvePath returns the absolute path of a resource in the instance directory.

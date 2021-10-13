@@ -25,7 +25,8 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/validator"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	elog "github.com/PlatONEnetwork/PlatONE-Go/log"
 )
@@ -44,7 +45,7 @@ type testSystemBackend struct {
 	sentMsgs      [][]byte // store the message when Send is called by core
 
 	address common.Address
-	db      ethdb.Database
+	db      dbhandle.Database
 }
 
 type testCommittedMsgs struct {
@@ -265,7 +266,7 @@ func (t *testSystem) stop(core bool) {
 
 func (t *testSystem) NewBackend(id uint64) *testSystemBackend {
 	// assume always success
-	ethDB := ethdb.NewMemDatabase()
+	ethDB := memorydb.NewMemDatabase()
 	backend := &testSystemBackend{
 		id:     id,
 		sys:    t,

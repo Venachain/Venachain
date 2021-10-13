@@ -9,7 +9,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 )
 
@@ -35,7 +35,7 @@ type Config struct {
 func setDefaults(cfg *Config) {
 	if cfg.ChainConfig == nil {
 		cfg.ChainConfig = &params.ChainConfig{
-			ChainID:        big.NewInt(1),
+			ChainID: big.NewInt(1),
 		}
 	}
 
@@ -74,7 +74,7 @@ func Execute(code, input []byte, cfg *Config) ([]byte, *state.StateDB, error) {
 	setDefaults(cfg)
 
 	if cfg.State == nil {
-		cfg.State, _ = state.New(common.Hash{}, state.NewDatabase(ethdb.NewMemDatabase()))
+		cfg.State, _ = state.New(common.Hash{}, state.NewDatabase(memorydb.NewMemDatabase()))
 	}
 	var (
 		address = common.BytesToAddress([]byte("wasmcontract"))
@@ -106,7 +106,7 @@ func Create(input []byte, cfg *Config) ([]byte, common.Address, uint64, error) {
 	setDefaults(cfg)
 
 	if cfg.State == nil {
-		cfg.State, _ = state.New(common.Hash{}, state.NewDatabase(ethdb.NewMemDatabase()))
+		cfg.State, _ = state.New(common.Hash{}, state.NewDatabase(memorydb.NewMemDatabase()))
 	}
 	var (
 		vmenv  = NewEnv(cfg)

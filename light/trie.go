@@ -25,7 +25,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/trie"
 )
 
@@ -161,7 +161,7 @@ func (t *odrTrie) GetKey(sha []byte) []byte {
 	return key
 }
 
-func (t *odrTrie) Prove(key []byte, fromLevel uint, proofDb ethdb.Putter) error {
+func (t *odrTrie) Prove(key []byte, fromLevel uint, proofDb dbhandle.Putter) error {
 	return errors.New("not implemented, needs client/server interface split")
 }
 

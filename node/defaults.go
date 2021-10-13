@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"runtime"
 
+	types2 "github.com/PlatONEnetwork/PlatONE-Go/ethdb/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p/nat"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
@@ -37,6 +38,7 @@ const (
 // DefaultConfig contains reasonable default settings.
 var DefaultConfig = Config{
 	DataDir:          DefaultDataDir(),
+	DBType:           types2.LevelDbStr,
 	HTTPPort:         DefaultHTTPPort,
 	HTTPModules:      []string{"net", "web3"},
 	HTTPVirtualHosts: []string{"localhost"},

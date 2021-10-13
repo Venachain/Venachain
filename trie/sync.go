@@ -19,11 +19,12 @@ package trie
 import (
 	"errors"
 	"fmt"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/prque"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 )
 
 // ErrNotRequested is returned by the trie sync when it's requested to process a
@@ -214,7 +215,7 @@ func (s *Sync) Process(results []SyncResult) (bool, int, error) {
 
 // Commit flushes the data stored in the internal membatch out to persistent
 // storage, returning the number of items written and any occurred error.
-func (s *Sync) Commit(dbw ethdb.Putter) (int, error) {
+func (s *Sync) Commit(dbw dbhandle.Putter) (int, error) {
 	// Dump the membatch into a database dbw
 	for i, key := range s.membatch.order {
 		if err := dbw.Put(key[:], s.membatch.batch[key]); err != nil {

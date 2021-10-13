@@ -29,7 +29,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
 )
@@ -55,8 +55,8 @@ type PublicFilterAPI struct {
 	backend   Backend
 	mux       *event.TypeMux
 	quit      chan struct{}
-	chainDb   ethdb.Database
-	extDb   ethdb.Database
+	chainDb   dbhandle.Database
+	extDb     dbhandle.Database
 	events    *EventSystem
 	filtersMu sync.Mutex
 	filters   map[rpc.ID]*filter
@@ -68,7 +68,7 @@ func NewPublicFilterAPI(backend Backend, lightMode bool) *PublicFilterAPI {
 		backend: backend,
 		mux:     backend.EventMux(),
 		chainDb: backend.ChainDb(),
-		extDb:	 backend.ExtendedDb(),
+		extDb:   backend.ExtendedDb(),
 		events:  NewEventSystem(backend.EventMux(), backend, lightMode),
 		filters: make(map[rpc.ID]*filter),
 	}

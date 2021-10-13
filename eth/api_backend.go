@@ -31,7 +31,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/gasprice"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
@@ -224,11 +224,11 @@ func (b *EthAPIBackend) SuggestPrice(ctx context.Context) (*big.Int, error) {
 	return b.gpo.SuggestPrice(ctx)
 }
 
-func (b *EthAPIBackend) ExtendedDb() ethdb.Database {
+func (b *EthAPIBackend) ExtendedDb() dbhandle.Database {
 	return b.eth.ExtendedDb()
 }
 
-func (b *EthAPIBackend) ChainDb() ethdb.Database {
+func (b *EthAPIBackend) ChainDb() dbhandle.Database {
 	return b.eth.ChainDb()
 }
 

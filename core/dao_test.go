@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 )
 
@@ -31,13 +31,13 @@ func TestDAOForkRangeExtradata(t *testing.T) {
 	forkBlock := big.NewInt(32)
 
 	// Generate a common prefix for both pro-forkers and non-forkers
-	db := ethdb.NewMemDatabase()
+	db := memorydb.NewMemDatabase()
 	gspec := new(Genesis)
 	genesis := gspec.MustCommit(db)
 	prefix, _ := GenerateChain(params.TestChainConfig, genesis, nil, db, int(forkBlock.Int64()-1), func(i int, gen *BlockGen) {})
 
 	// Create the concurrent, conflicting two nodes
-	proDb := ethdb.NewMemDatabase()
+	proDb := memorydb.NewMemDatabase()
 	gspec.MustCommit(proDb)
 
 	proConf := *params.TestChainConfig
@@ -45,7 +45,7 @@ func TestDAOForkRangeExtradata(t *testing.T) {
 	proBc, _, _ := NewBlockChain(proDb, nil, nil, &proConf, nil, vm.Config{}, nil)
 	defer proBc.Stop()
 
-	conDb := ethdb.NewMemDatabase()
+	conDb := memorydb.NewMemDatabase()
 	gspec.MustCommit(conDb)
 
 	conConf := *params.TestChainConfig
@@ -60,7 +60,7 @@ func TestDAOForkRangeExtradata(t *testing.T) {
 		t.Fatalf("con-fork: failed to import chain prefix: %v", err)
 	}
 	// Verify that contra-forkers accept pro-fork extra-datas after forking finishes
-	db = ethdb.NewMemDatabase()
+	db = memorydb.NewMemDatabase()
 	gspec.MustCommit(db)
 	bc, _, _ := NewBlockChain(db, nil, nil, &conConf, nil, vm.Config{}, nil)
 	defer bc.Stop()
@@ -80,7 +80,7 @@ func TestDAOForkRangeExtradata(t *testing.T) {
 		t.Fatalf("contra-fork chain didn't accept pro-fork block post-fork: %v", err)
 	}
 	// Verify that pro-forkers accept contra-fork extra-datas after forking finishes
-	db = ethdb.NewMemDatabase()
+	db = memorydb.NewMemDatabase()
 	gspec.MustCommit(db)
 	bc, _, _ = NewBlockChain(db, nil, nil, &proConf, nil, vm.Config{}, nil)
 	defer bc.Stop()

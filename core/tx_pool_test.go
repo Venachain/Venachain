@@ -31,7 +31,8 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 )
@@ -96,9 +97,9 @@ func pricedTransaction(nonce uint64, gaslimit uint64, gasprice *big.Int, key *ec
 
 func setupTxPool() (*TxPool, *ecdsa.PrivateKey) {
 
-	statedb, _ := state.New(common.Hash{}, state.NewDatabase(ethdb.NewMemDatabase()))
+	statedb, _ := state.New(common.Hash{}, state.NewDatabase(memorydb.NewMemDatabase()))
 	blockchain := &testBlockChain{statedb, 1000000, new(event.Feed)}
-	db := ethdb.NewMemDatabase()
+	db := memorydb.NewMemDatabase()
 	key, _ := crypto.GenerateKey()
 	pool := NewTxPool(testTxPoolConfig, &TestChainConfig, blockchain, db, nil, key)
 
@@ -184,7 +185,7 @@ func (c *testChain) State() (*state.StateDB, error) {
 	// a state change between those fetches.
 	stdb := c.statedb
 	if *c.trigger {
-		c.statedb, _ = state.New(common.Hash{}, state.NewDatabase(ethdb.NewMemDatabase()))
+		c.statedb, _ = state.New(common.Hash{}, state.NewDatabase(memorydb.NewMemDatabase()))
 		// simulate that the new head block included tx0 and tx1
 		c.statedb.SetNonce(c.address, 2)
 		c.statedb.SetBalance(c.address, new(big.Int).SetUint64(params.Ether))
@@ -194,7 +195,7 @@ func (c *testChain) State() (*state.StateDB, error) {
 }
 
 type countingDB struct {
-	ethdb.Database
+	dbhandle.Database
 	gets map[string]int
 }
 
@@ -207,7 +208,7 @@ func TestStateChangeDuringTransactionPoolReset(t *testing.T) {
 	var (
 		key, _     = crypto.GenerateKey()
 		address    = crypto.PubkeyToAddress(key.PublicKey)
-		statedb, _ = state.New(common.Hash{}, state.NewDatabase(ethdb.NewMemDatabase()))
+		statedb, _ = state.New(common.Hash{}, state.NewDatabase(memorydb.NewMemDatabase()))
 		trigger    = false
 	)
 	// setup pool with 2 transaction in it
@@ -219,7 +220,7 @@ func TestStateChangeDuringTransactionPoolReset(t *testing.T) {
 
 	//pool := NewTxPool(testTxPoolConfig, params.TestChainConfig, blockchain)
 
-	db := ethdb.NewMemDatabase()
+	db := memorydb.NewMemDatabase()
 
 	pool := NewTxPool(testTxPoolConfig, &TestChainConfig, blockchain, db, nil, key)
 
@@ -388,7 +389,7 @@ func TestTransactionChainFork(t *testing.T) {
 
 	addr := crypto.PubkeyToAddress(key.PublicKey)
 	resetState := func() {
-		statedb, _ := state.New(common.Hash{}, state.NewDatabase(ethdb.NewMemDatabase()))
+		statedb, _ := state.New(common.Hash{}, state.NewDatabase(memorydb.NewMemDatabase()))
 		statedb.AddBalance(addr, big.NewInt(100000000000000))
 
 		pool.chain = &testBlockChain{statedb, 1000000, new(event.Feed)}
@@ -418,7 +419,7 @@ func TestDuplicateTx(t *testing.T) {
 
 	addr := crypto.PubkeyToAddress(key.PublicKey)
 	resetState := func() {
-		statedb, _ := state.New(common.Hash{}, state.NewDatabase(ethdb.NewMemDatabase()))
+		statedb, _ := state.New(common.Hash{}, state.NewDatabase(memorydb.NewMemDatabase()))
 		statedb.AddBalance(addr, big.NewInt(100000000000000))
 
 		pool.chain = &testBlockChain{statedb, 1000000, new(event.Feed)}
@@ -1702,9 +1703,9 @@ func testTransactionJournaling(t *testing.T, nolocals bool) {
 
 	pool.Stop()
 	//
-	statedb, _ := state.New(common.Hash{}, state.NewDatabase(ethdb.NewMemDatabase()))
+	statedb, _ := state.New(common.Hash{}, state.NewDatabase(memorydb.NewMemDatabase()))
 	blockchain := &testBlockChain{statedb, 1000000, new(event.Feed)}
-	db := ethdb.NewMemDatabase()
+	db := memorydb.NewMemDatabase()
 	key, _ := crypto.GenerateKey()
 	pool = NewTxPool(testTxPoolConfig, &TestChainConfig, blockchain, db, nil, key)
 	statedb.SetNonce(crypto.PubkeyToAddress(local.PublicKey), 1)
@@ -1731,10 +1732,9 @@ func testTransactionJournaling(t *testing.T, nolocals bool) {
 	pool.lockedReset(nil, nil)
 	time.Sleep(2 * config.Rejournal)
 	pool.Stop()
-
-	statedb, _ = state.New(common.Hash{}, state.NewDatabase(ethdb.NewMemDatabase()))
+	statedb, _ = state.New(common.Hash{}, state.NewDatabase(memorydb.NewMemDatabase()))
 	blockchain = &testBlockChain{statedb, 1000000, new(event.Feed)}
-	db = ethdb.NewMemDatabase()
+	db = memorydb.NewMemDatabase()
 	key, _ = crypto.GenerateKey()
 	pool = NewTxPool(testTxPoolConfig, &TestChainConfig, blockchain, db, nil, key)
 

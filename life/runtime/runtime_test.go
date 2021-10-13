@@ -1,9 +1,6 @@
 package runtime
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"bytes"
 	"fmt"
 	"io/ioutil"
@@ -12,8 +9,11 @@ import (
 	"testing"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
+	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
 func TestDefaults(t *testing.T) {
@@ -74,7 +74,7 @@ func TestExecute(t *testing.T) {
 }
 
 func TestCall(t *testing.T) {
-	state, _ := state.New(common.Hash{}, state.NewDatabase(ethdb.NewMemDatabase()))
+	state, _ := state.New(common.Hash{}, state.NewDatabase(memorydb.NewMemDatabase()))
 	address := common.HexToAddress("0x0a")
 	code := genCodeInput()
 	state.SetCode(address, code)
@@ -94,7 +94,7 @@ func TestCall(t *testing.T) {
 	}
 }
 
-func TestCallCode(t *testing.T){
+func TestCallCode(t *testing.T) {
 	code := genInput()
 	hexcode := common.Bytes2Hex(code)
 	fmt.Println("encoded(Input):", hexcode)
@@ -194,7 +194,7 @@ func genCodeInput() []byte {
 	return buffer.Bytes()
 }
 
-func TestCreateCode(t *testing.T){
+func TestCreateCode(t *testing.T) {
 	code := genCodeInput()
 	hexcode := common.Bytes2Hex(code)
 	fmt.Println("encoded :", hexcode)
@@ -255,7 +255,7 @@ func TestParseCode(t *testing.T) {
 func TestParseInput(t *testing.T) {
 	data := "f86e880000000000000002897472616e7366657231aa307861613331636139643839323830306161363733383362623838313134623631383638323231656532aa3078616133316361396438393238303061613637333833626238383131346236313836383232316565338400000014"
 	input := common.Hex2Bytes(data)
-	parseInputFromAbi(input,nil)
+	parseInputFromAbi(input, nil)
 }
 
 // parse input(payload)
@@ -288,5 +288,5 @@ func parseInputFromAbi(input []byte, abi []byte) (txType int, funcName string, p
 	if v, ok := iRlpList[1].([]byte); ok {
 		funcName = string(v)
 	}
-	return txType, funcName, params, returnType,nil
+	return txType, funcName, params, returnType, nil
 }

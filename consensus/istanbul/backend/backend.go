@@ -23,22 +23,21 @@ import (
 	"sync"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul"
 	istanbulCore "github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/validator"
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
+	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	lru "github.com/hashicorp/golang-lru"
 )
 
@@ -48,7 +47,7 @@ const (
 )
 
 // New creates an Ethereum backend for Istanbul core engine.
-func New(config *params.IstanbulConfig, privateKey *ecdsa.PrivateKey, db ethdb.Database) consensus.Istanbul {
+func New(config *params.IstanbulConfig, privateKey *ecdsa.PrivateKey, db dbhandle.Database) consensus.Istanbul {
 	// Allocate the snapshot caches and create the engine
 	recents, _ := lru.NewARC(inmemorySnapshots)
 	recentMessages, _ := lru.NewARC(inmemoryPeers)
@@ -102,7 +101,7 @@ type backend struct {
 	address          common.Address
 	core             istanbulCore.Engine
 	logger           log.Logger
-	db               ethdb.Database
+	db               dbhandle.Database
 	chain            consensus.ChainReader
 	currentBlock     func() *types.Block
 	current          *environment

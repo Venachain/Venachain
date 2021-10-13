@@ -60,6 +60,7 @@ var (
 		utils.BootnodesV4Flag,
 		utils.BootnodesV5Flag,
 		utils.DataDirFlag,
+		utils.DbTypeFlag,
 		utils.KeyStoreDirFlag,
 		utils.NoUSBFlag,
 		utils.DashboardEnabledFlag,
