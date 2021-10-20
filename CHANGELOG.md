@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.1.1.2.0]
+### Features
+* [storage] 存储插件化，新增可选存储引擎PebbleDB ——曾梦露
+
 ## [1.1.1.0.0]
 ### Features
 * [other] 轻节点功能完善 --陈明晶
