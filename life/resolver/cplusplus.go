@@ -86,7 +86,7 @@ func newCfcSet() map[string]map[string]*exec.FunctionImport {
 
 			"memcpy":  &exec.FunctionImport{Execute: envMemcpy, GasCost: envMemcpyGasCost},
 			"memmove": &exec.FunctionImport{Execute: envMemmove, GasCost: envMemmoveGasCost},
-			"memcmp":  &exec.FunctionImport{Execute: envMemcpy, GasCost: envMemmoveGasCost},
+			"memcmp":  &exec.FunctionImport{Execute: envMemcmp, GasCost: envMemcmpGasCost},
 			"memset":  &exec.FunctionImport{Execute: envMemset, GasCost: envMemsetGasCost},
 
 			"prints":     &exec.FunctionImport{Execute: envPrints, GasCost: envPrintsGasCost},

@@ -30,6 +30,7 @@ WS_PORT=26791
 BOOTNODES=""
 EXTRA_OPTIONS=" --debug "
 LOG_SIZE=67108864
+TX_COUNT=1000
 
 # todo
 DBTYPE="leveldb"
@@ -70,6 +71,9 @@ function readConf() {
     ;;
     logdir)
         LOG_DIR=$res
+    ;;
+    txcount)
+        TX_COUNT=$res
     ;;
     extraoptions)
         EXTRA_OPTIONS=$res
@@ -154,7 +158,7 @@ function readFile() {
     readConf $NODE_ID "logsize"
     readConf $NODE_ID "logdir"
     readConf $NODE_ID "extraoptions"
-
+    readConf $NODE_ID "txcount"
 
     if [ -d ${LOG_DIR} ]; then
         echo "logdir: ${LOG_DIR}"
@@ -181,12 +185,13 @@ flag_logs=" --wasmlog  ${LOG_DIR}/wasm_log --wasmlogsize ${LOG_SIZE} "
 flag_ipc="--ipcpath ${NODE_DIR}/node-${NODE_ID}.ipc "
 flag_pprof=" --pprof --pprofaddr 0.0.0.0 "
 flag_gcmode=" --gcmode  archive "
+flag_txcount=" --txpool.globaltxcount ${TX_COUNT} "
 
 echo "
 nohup ${BIN_PATH}/platone --identity platone ${flag_datadir}  --nodiscover \
         --port ${P2P_PORT}  ${flag_nodekey} ${flag_rpc} --rpccorsdomain \""*"\" ${flag_ws} \
         --wsorigins \""*"\" ${flag_logs} ${flag_ipc} \
-        --bootnodes ${BOOTNODES} \
+        --bootnodes ${BOOTNODES} ${flag_txcount} \
         --dbtype ${DBTYPE} \
         --moduleLogParams '{\"platone_log\": [\"/\"], \"__dir__\": [\"${LOG_DIR}\"], \"__size__\": [\"${LOG_SIZE}\"]}' ${flag_gcmode} ${EXTRA_OPTIONS} \
         1>/dev/null 2>${LOG_DIR}/platone_error.log &
@@ -202,7 +207,7 @@ fi
 nohup ${BIN_PATH}/platone --identity platone ${flag_datadir}  --nodiscover \
         --port ${P2P_PORT}  ${flag_nodekey} ${flag_rpc} --rpccorsdomain "*" ${flag_ws} \
         --wsorigins "*" ${flag_logs} ${flag_ipc} \
-        --bootnodes ${BOOTNODES} \
+        --bootnodes ${BOOTNODES} ${flag_txcount} \
         --verbosity 3 \
         --dbtype ${DBTYPE} \
         --moduleLogParams '{"platone_log": ["/"], "__dir__": ["'${LOG_DIR}'"], "__size__": ["'${LOG_SIZE}'"]}'  ${flag_gcmode}  ${EXTRA_OPTIONS} \
