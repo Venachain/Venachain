@@ -75,13 +75,12 @@ var (
 		utils.TxPoolPriceBumpFlag,
 		utils.TxPoolAccountSlotsFlag,
 		utils.TxPoolGlobalSlotsFlag,
-		utils.TxPoolAccountQueueFlag,
-		utils.TxPoolGlobalQueueFlag,
 		utils.TxPoolGlobalTxCountFlag,
+
 		utils.TxPoolIsAutoAdjustTxCountFlag,
 		utils.TxPoolRequestTimeoutRatioFloorFlag,
 		utils.TxPoolRequestTimeoutRatioCeilFlag,
-		utils.TxPoolLifetimeFlag,
+
 		utils.SyncModeFlag,
 		utils.GCModeFlag,
 		utils.LightServFlag,
