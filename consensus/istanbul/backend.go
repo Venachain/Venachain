@@ -69,4 +69,10 @@ type Backend interface {
 
 	// ParentValidators returns the validator set of the given proposal's parent block
 	ParentValidators(proposal Proposal) ValidatorSet
+
+	// SetConsensusTypeMuxSub set TypeMuxSubscription
+	SetConsensusTypeMuxSub(event *event.TypeMuxSubscription)
+
+	//SetCurrentRequestTimeout update request timeout
+	SetCurrentRequestTimeout(timeout uint64)
 }

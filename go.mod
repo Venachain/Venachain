@@ -22,7 +22,6 @@ require (
 	github.com/fjl/memsize v0.0.0-20180418122429-ca190fb6ffbc
 	github.com/gin-gonic/gin v1.7.1
 	github.com/gizak/termui v2.2.1-0.20170117222342-991cd3d38091+incompatible
-	github.com/go-bindata/go-bindata v3.1.2+incompatible // indirect
 	github.com/go-interpreter/wagon v0.6.0
 	github.com/go-stack/stack v1.8.1
 	github.com/golang/protobuf v1.5.2
@@ -58,6 +57,7 @@ require (
 	github.com/shirou/gopsutil v2.20.8+incompatible
 	github.com/stretchr/testify v1.7.0
 	github.com/syndtr/goleveldb v1.0.1-0.20200815110645-5c35d600f0ca
+	go.uber.org/atomic v1.9.0
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	golang.org/x/exp v0.0.0-20210916165020-5cb4fee858ee // indirect
 	golang.org/x/net v0.0.0-20210726213435-c6fcb2dbf985

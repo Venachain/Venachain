@@ -455,12 +455,10 @@ func (c *core) newRoundChangeTimerWhenEmpty() {
 	timeout := time.Duration(c.config.RequestTimeout) * time.Millisecond
 	round := c.current.Round().Uint64()
 	c.lastResetRound = round
-	//if round > 0 {
-	//	timeout += time.Duration(math.Pow(1.5, float64(round))) * time.Second
-	//}
+	c.backend.SetCurrentRequestTimeout(uint64(timeout.Milliseconds()))
 	log.Debug("newRoundChangeTimer", "round", round, "lastResetRound", c.lastResetRound, "timeout", timeout)
 	c.roundChangeTimer = time.AfterFunc(timeout, func() {
-		c.sendEvent(timeoutEvent{})
+		c.sendEvent(TimeoutEvent{})
 	})
 }
 
@@ -481,9 +479,11 @@ func (c *core) newRoundChangeTimer() {
 		c.lastResetRound = round
 	}
 
+	c.backend.SetCurrentRequestTimeout(uint64(timeout.Milliseconds()))
+
 	log.Debug("newRoundChangeTimer", "round", round, "lastResetRound", c.lastResetRound, "timeout", timeout)
 	c.roundChangeTimer = time.AfterFunc(timeout, func() {
-		c.sendEvent(timeoutEvent{})
+		c.sendEvent(TimeoutEvent{})
 	})
 }
 

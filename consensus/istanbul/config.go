@@ -24,6 +24,7 @@ const (
 	RoundRobin params.ProposerPolicy = iota
 	Sticky
 )
+
 /*
 type Config struct {
 	RequestTimeout uint64         `toml:",omitempty"` // The timeout for each Istanbul round in milliseconds.
@@ -34,7 +35,7 @@ type Config struct {
 */
 type Config params.IstanbulConfig
 
-var  DefaultConfig = &Config{
+var DefaultConfig = &Config{
 	RequestTimeout: 10000,
 	BlockPeriod:    1,
 	ProposerPolicy: RoundRobin,

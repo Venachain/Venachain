@@ -246,7 +246,7 @@ var (
 	TxPoolGlobalTxCountFlag = cli.Uint64Flag{
 		Name:  "txpool.globaltxcount",
 		Usage: "Maximum number of transactions for package",
-		Value: eth.DefaultConfig.TxPool.GlobalTxCount,
+		Value: eth.DefaultConfig.TxPool.GlobalTxCount.Load(),
 	}
 	TxPoolLifetimeFlag = cli.DurationFlag{
 		Name:  "txpool.lifetime",
@@ -977,7 +977,7 @@ func setTxPool(ctx *cli.Context, cfg *core.TxPoolConfig) {
 		cfg.GlobalQueue = ctx.GlobalUint64(TxPoolGlobalQueueFlag.Name)
 	}
 	if ctx.GlobalIsSet(TxPoolGlobalTxCountFlag.Name) {
-		cfg.GlobalTxCount = ctx.GlobalUint64(TxPoolGlobalTxCountFlag.Name)
+		cfg.GlobalTxCount.Store(ctx.GlobalUint64(TxPoolGlobalTxCountFlag.Name))
 	}
 	if ctx.GlobalIsSet(TxPoolLifetimeFlag.Name) {
 		cfg.Lifetime = ctx.GlobalDuration(TxPoolLifetimeFlag.Name)
