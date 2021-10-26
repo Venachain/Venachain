@@ -20,7 +20,6 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
-	"math"
 	"math/big"
 	"strconv"
 	"sync"
@@ -421,63 +420,12 @@ func (pool *TxPool) reset(oldBlock, newBlock *types.Block) {
 	if newHead != nil {
 		log.Debug("reset txpool", "RoutineID", common.CurrentGoRoutineID(), "oldHash", oldHash, "oldNumber", oldNumber, "newHash", newHead.Hash(), "newNumber", newHead.Number.Uint64())
 	}
-	// If we're reorging an old state, reinject all dropped transactions
-	var reinject types.Transactions
 
 	if oldHead != nil && oldHead.Hash() != newHead.ParentHash {
-		// If the reorg is too deep, avoid doing it (will happen during fast sync)
-		oldNum := oldHead.Number.Uint64()
-		newNum := newHead.Number.Uint64()
-
-		if depth := uint64(math.Abs(float64(oldNum) - float64(newNum))); depth > 64 {
-			log.Debug("Skipping deep transaction reorg", "depth", depth)
-		} else {
-			// Reorg seems shallow enough to pull in all transactions into memory
-			var discarded, included types.Transactions
-
-			var (
-				rem = oldBlock
-				add = newBlock
-			)
-
-			if rem == nil {
-				log.Debug("cannot find oldHead", "hash", oldHead.Hash(), "number", oldHead.Number.Uint64())
-			}
-			if add == nil {
-				log.Debug("cannot find newHead", "hash", newHead.Hash(), "number", newHead.Number.Uint64())
-			}
-
-			if rem != nil && add != nil {
-				for rem.NumberU64() > add.NumberU64() {
-					discarded = append(discarded, rem.Transactions()...)
-					if rem = pool.chain.GetBlock(rem.ParentHash(), rem.NumberU64()-1); rem == nil {
-						log.Error("Unrooted old chain seen by tx pool", "block", oldHead.Number, "hash", oldHead.Hash())
-						return
-					}
-				}
-				for add.NumberU64() > rem.NumberU64() {
-					included = append(included, add.Transactions()...)
-					if add = pool.chain.GetBlock(add.ParentHash(), add.NumberU64()-1); add == nil {
-						log.Error("Unrooted new chain seen by tx pool", "block", newHead.Number, "hash", newHead.Hash())
-						return
-					}
-				}
-				for rem.Hash() != add.Hash() {
-					discarded = append(discarded, rem.Transactions()...)
-					if rem = pool.chain.GetBlock(rem.ParentHash(), rem.NumberU64()-1); rem == nil {
-						log.Error("Unrooted old chain seen by tx pool", "block", oldHead.Number, "hash", oldHead.Hash())
-						return
-					}
-					included = append(included, add.Transactions()...)
-					if add = pool.chain.GetBlock(add.ParentHash(), add.NumberU64()-1); add == nil {
-						log.Error("Unrooted new chain seen by tx pool", "block", newHead.Number, "hash", newHead.Hash())
-						return
-					}
-				}
-				reinject = types.TxDifference(discarded, included)
-			}
-		}
+		log.Error("occur chain fork", "oldNumber", oldNumber, "oldHash", oldHash, "newHash", newHead.Hash(), "newNumber", newHead.Number.Uint64())
+		return
 	}
+
 	// Initialize the internal state to the current head
 	if newBlock == nil {
 		newBlock = pool.chain.CurrentBlock() // Special case during testing
@@ -492,12 +440,6 @@ func (pool *TxPool) reset(oldBlock, newBlock *types.Block) {
 	pool.pendingState = state.ManageState(statedb)
 	pool.currentMaxGas = newHead.GasLimit
 
-	if len(reinject) != 0 {
-		// Inject any transactions discarded due to reorgs
-		log.Info("Reinjecting stale transactions", "count", len(reinject))
-		senderCacher.recover(pool.signer, reinject)
-		pool.addTxsLocked(reinject, true)
-	}
 	// validate the pool of pending transactions, this will remove
 	// any transactions that have been included in the block or
 	// have been invalidated because of another transaction (e.g.
@@ -995,13 +937,25 @@ func (pool *TxPool) removeTx(hash common.Hash, outofbound bool) {
 func (pool *TxPool) demoteUnexecutables(txs types.Transactions) {
 	pool.all.RemoveTxs(txs)
 
+	pool.removeGivenTxs(txs)
+
+	pool.removeTxsForBalanceSufficient()
+}
+
+func (pool *TxPool) removeGivenTxs(txs types.Transactions) {
 	// Iterate over all accounts and demote any non-executable transactions
 	for addr, list := range pool.pending {
-		// Drop all transactions that are deemed too old
-		if list == nil || list.Len() == 0 {
-			continue
-		}
 		list.RemoveTxs(txs)
+
+		if list.Len() == 0 {
+			delete(pool.pending, addr)
+		}
+	}
+}
+
+func (pool *TxPool) removeTxsForBalanceSufficient() {
+	// Iterate over all accounts and demote any non-executable transactions
+	for addr, list := range pool.pending {
 		// drop all transactions that do not have enough balance
 		for _, tx := range list.Get() {
 			bal := pool.currentState.GetBalance(addr)
