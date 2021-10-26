@@ -21,10 +21,13 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"runtime"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/panjf2000/ants/v2"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
@@ -243,6 +246,8 @@ type TxPool struct {
 	txch        chan struct{}
 	completeCnt int32
 	pk          *ecdsa.PrivateKey
+
+	goroutinePool *ants.Pool
 }
 
 type txExt struct {
@@ -276,6 +281,19 @@ func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoo
 		completeCnt:      0,
 		pk:               key,
 	}
+
+	var err error
+	pool.goroutinePool, err = ants.NewPool(runtime.NumCPU(), ants.WithOptions(ants.Options{
+		PreAlloc: true,
+		PanicHandler: func(i interface{}) {
+			pool.Stop()
+		},
+	}))
+	if err != nil {
+		log.Error("New txpool failed", "err", err)
+		return nil
+	}
+
 	pool.locals = newAccountSet(pool.signer)
 	for _, addr := range config.Locals {
 		log.Info("Setting new local account", "address", addr)
@@ -456,6 +474,7 @@ func (pool *TxPool) Stop() {
 		pool.chainHeadSub.Unsubscribe()
 	}
 	close(pool.exitCh)
+	pool.goroutinePool.Release()
 
 	pool.wg.Wait()
 
@@ -810,9 +829,9 @@ func (pool *TxPool) addTxs(txs []*types.Transaction, local bool) []error {
 	wg := sync.WaitGroup{}
 	mutex := sync.Mutex{}
 	wg.Add(len(txs))
-	for i, tx := range txs {
-		//TODO avoid starting so many goroutines
-		go func(i int, tx *types.Transaction) {
+	for index, transaction := range txs {
+		i, tx := index, transaction
+		pool.goroutinePool.Submit(func() {
 			defer wg.Done()
 			if uint64(pool.all.Count()) >= pool.config.GlobalSlots {
 				errs[i] = ErrTxpoolIsFull
@@ -836,7 +855,7 @@ func (pool *TxPool) addTxs(txs []*types.Transaction, local bool) []error {
 			mutex.Lock()
 			news = append(news, tx)
 			mutex.Unlock()
-		}(i, tx)
+		})
 	}
 	wg.Wait()
 
