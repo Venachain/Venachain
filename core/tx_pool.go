@@ -27,6 +27,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	lru "github.com/hashicorp/golang-lru"
+
 	"github.com/panjf2000/ants/v2"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
@@ -147,6 +149,7 @@ type txPoolBlockChain interface {
 	GetBlock(hash common.Hash, number uint64) *types.Block
 	GetState(header *types.Header) (*state.StateDB, error)
 	SubscribeChainHeadEvent(ch chan<- ChainHeadEvent) event.Subscription
+	SubscribeBlockConsensusFinishEvent(ch chan<- BlockConsensusFinishEvent) event.Subscription
 }
 
 // TxPoolConfig are the configuration parameters of the transaction pool.
@@ -248,6 +251,10 @@ type TxPool struct {
 	pk          *ecdsa.PrivateKey
 
 	goroutinePool *ants.Pool
+
+	removeQueueTxBlockHash      *lru.ARCCache
+	blockConsensusFinishEventCh chan BlockConsensusFinishEvent
+	blockConsensusFinishSub     event.Subscription
 }
 
 type txExt struct {
@@ -283,6 +290,12 @@ func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoo
 	}
 
 	var err error
+	pool.removeQueueTxBlockHash, err = lru.NewARC(chainHeadChanSize)
+	if err != nil {
+		log.Error("New txpool failed", "err", err)
+		return nil
+	}
+
 	pool.goroutinePool, err = ants.NewPool(runtime.NumCPU(), ants.WithOptions(ants.Options{
 		PreAlloc: true,
 		PanicHandler: func(i interface{}) {
@@ -318,6 +331,9 @@ func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoo
 	// modified by PlatONE
 	if pool.chainconfig.Istanbul != nil {
 		pool.chainHeadSub = pool.chain.SubscribeChainHeadEvent(pool.chainHeadEventCh)
+
+		pool.blockConsensusFinishEventCh = make(chan BlockConsensusFinishEvent, chainHeadChanSize)
+		pool.blockConsensusFinishSub = pool.chain.SubscribeBlockConsensusFinishEvent(pool.blockConsensusFinishEventCh)
 	}
 
 	// Start the event loop and return
@@ -361,6 +377,9 @@ func (pool *TxPool) loop() {
 	// Keep waiting for and reacting to the various events
 	for {
 		select {
+		case ev := <-pool.blockConsensusFinishEventCh:
+			pool.removeGivenTxs(ev.Block.Transactions())
+			pool.removeQueueTxBlockHash.Add(ev.Block.Hash(), struct{}{})
 		// Handle ChainHeadEvent
 		case ev := <-pool.chainHeadEventCh:
 			if ev.Block != nil {
@@ -462,8 +481,7 @@ func (pool *TxPool) reset(oldBlock, newBlock *types.Block) {
 	// any transactions that have been included in the block or
 	// have been invalidated because of another transaction (e.g.
 	// higher gas price)
-	txs := newBlock.Transactions()
-	pool.demoteUnexecutables(txs)
+	pool.demoteUnexecutables(newBlock)
 }
 
 // Stop terminates the transaction pool.
@@ -953,10 +971,13 @@ func (pool *TxPool) removeTx(hash common.Hash, outofbound bool) {
 // demoteUnexecutables removes invalid and processed transactions from the pools
 // executable/pending queue and any subsequent transactions that become unexecutable
 // are moved back into the future queue.
-func (pool *TxPool) demoteUnexecutables(txs types.Transactions) {
+func (pool *TxPool) demoteUnexecutables(block *types.Block) {
+	txs := block.Transactions()
 	pool.all.RemoveTxs(txs)
 
-	pool.removeGivenTxs(txs)
+	if _, ok := pool.removeQueueTxBlockHash.Get(block.Hash()); !ok {
+		pool.removeGivenTxs(txs)
+	}
 
 	pool.removeTxsForBalanceSufficient()
 }

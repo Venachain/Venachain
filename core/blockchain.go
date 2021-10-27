@@ -100,13 +100,14 @@ type BlockChain struct {
 	triegc *prque.Prque  // Priority queue mapping block numbers to tries to gc
 	gcproc time.Duration // Accumulates canonical block processing for trie dumping
 
-	hc            *HeaderChain
-	rmLogsFeed    event.Feed
-	chainFeed     event.Feed
-	chainHeadFeed event.Feed
-	logsFeed      event.Feed
-	scope         event.SubscriptionScope
-	genesisBlock  *types.Block
+	hc                       *HeaderChain
+	rmLogsFeed               event.Feed
+	chainFeed                event.Feed
+	chainHeadFeed            event.Feed
+	blockConsensusFinishFeed event.Feed
+	logsFeed                 event.Feed
+	scope                    event.SubscriptionScope
+	genesisBlock             *types.Block
 
 	mu      sync.RWMutex // global mutex for locking chain operations
 	chainmu sync.RWMutex // blockchain insertion lock
@@ -1303,8 +1304,8 @@ func (bc *BlockChain) PostChainEvents(events []interface{}, logs []*types.Log) {
 		case ChainHeadEvent:
 			bc.chainHeadFeed.Send(ev)
 
-			//case ChainSideEvent:
-			//	bc.chainSideFeed.Send(ev)
+		case BlockConsensusFinishEvent:
+			bc.blockConsensusFinishFeed.Send(ev)
 		}
 	}
 }
@@ -1516,6 +1517,10 @@ func (bc *BlockChain) SubscribeChainEvent(ch chan<- ChainEvent) event.Subscripti
 // SubscribeChainHeadEvent registers a subscription of ChainHeadEvent.
 func (bc *BlockChain) SubscribeChainHeadEvent(ch chan<- ChainHeadEvent) event.Subscription {
 	return bc.scope.Track(bc.chainHeadFeed.Subscribe(ch))
+}
+
+func (bc *BlockChain) SubscribeBlockConsensusFinishEvent(ch chan<- BlockConsensusFinishEvent) event.Subscription {
+	return bc.scope.Track(bc.blockConsensusFinishFeed.Subscribe(ch))
 }
 
 // SubscribeLogsEvent registers a subscription of []*types.Log.
