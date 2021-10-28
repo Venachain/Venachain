@@ -265,7 +265,7 @@ func (sb *backend) calConsensusTimeRatio() {
 				committedTime := time.Now().UnixNano() / int64(time.Millisecond)
 				consensusCostTime := uint64(committedTime) - ev.HeadTime
 				sb.statusInfo.Lock()
-				sb.statusInfo.TxCount = ev.TxCount
+				sb.statusInfo.CurrentBlockTxCount = ev.TxCount
 				sb.statusInfo.Ratio = float64(consensusCostTime) / float64(sb.statusInfo.CurrentRequestTimeout)
 				sb.statusInfo.Unlock()
 			case istanbulCore.TimeoutEvent:
@@ -367,6 +367,10 @@ func (sb *backend) SetConsensusTypeMuxSub(event *event.TypeMuxSubscription) {
 	sb.statusInfo.Lock()
 	sb.statusInfo.Unlock()
 	sb.statusInfo.Event = event
+}
+
+func (sb *backend) GetConsensusTypeMuxSub() *event.TypeMuxSubscription {
+	return sb.statusInfo.Event
 }
 
 func (sb *backend) SetCurrentRequestTimeout(timeout uint64) {

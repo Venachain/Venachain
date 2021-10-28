@@ -248,6 +248,20 @@ var (
 		Usage: "Maximum number of transactions for package",
 		Value: eth.DefaultConfig.TxPool.GlobalTxCount.Load(),
 	}
+	TxPoolIsAutoAdjustTxCountFlag = cli.BoolFlag{
+		Name:  "txpool.isautoadjusttxcount",
+		Usage: "enable auto adjust the global number tx of block",
+	}
+	TxPoolRequestTimeoutRatioFloorFlag = cli.Float64Flag{
+		Name:  "txpool.requesttimeoutratiofloor",
+		Usage: "ratio=consensusRequestTimeCost/maxConsensuRequestTime,the min ratio",
+		Value: eth.DefaultConfig.TxPool.RequestTimeoutRatioFloor,
+	}
+	TxPoolRequestTimeoutRatioCeilFlag = cli.Float64Flag{
+		Name:  "txpool.requesttimeoutratioceil",
+		Usage: "ratio=consensusRequestTimeCost/maxConsensuRequestTime,the max ratio",
+		Value: eth.DefaultConfig.TxPool.RequestTimeoutRatioCeil,
+	}
 	TxPoolLifetimeFlag = cli.DurationFlag{
 		Name:  "txpool.lifetime",
 		Usage: "Maximum amount of time non-executable transaction are queued",
@@ -978,6 +992,15 @@ func setTxPool(ctx *cli.Context, cfg *core.TxPoolConfig) {
 	}
 	if ctx.GlobalIsSet(TxPoolGlobalTxCountFlag.Name) {
 		cfg.GlobalTxCount.Store(ctx.GlobalUint64(TxPoolGlobalTxCountFlag.Name))
+	}
+	if ctx.GlobalIsSet(TxPoolIsAutoAdjustTxCountFlag.Name) {
+		cfg.IsAutoAdjustTxCount = ctx.GlobalBool(TxPoolIsAutoAdjustTxCountFlag.Name)
+	}
+	if ctx.GlobalIsSet(TxPoolRequestTimeoutRatioFloorFlag.Name) {
+		cfg.RequestTimeoutRatioFloor = ctx.GlobalFloat64(TxPoolRequestTimeoutRatioFloorFlag.Name)
+	}
+	if ctx.GlobalIsSet(TxPoolRequestTimeoutRatioCeilFlag.Name) {
+		cfg.RequestTimeoutRatioCeil = ctx.GlobalFloat64(TxPoolRequestTimeoutRatioCeilFlag.Name)
 	}
 	if ctx.GlobalIsSet(TxPoolLifetimeFlag.Name) {
 		cfg.Lifetime = ctx.GlobalDuration(TxPoolLifetimeFlag.Name)

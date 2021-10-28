@@ -973,6 +973,10 @@ func (w *worker) adjustGlobalTxCount() uint64 {
 	ratioCeil := w.eth.TxPool().GetTxPoolConfig().RequestTimeoutRatioCeil
 	ratioFloor := w.eth.TxPool().GetTxPoolConfig().RequestTimeoutRatioFloor
 	originTxCount := w.eth.TxPool().GetTxPoolConfig().GlobalTxCount.Load()
+
+	if !w.eth.TxPool().GetTxPoolConfig().IsAutoAdjustTxCount {
+		return originTxCount
+	}
 	if _, ok := w.engine.(consensus.Istanbul); !ok {
 		return originTxCount
 	}
@@ -1002,7 +1006,7 @@ func (w *worker) adjustGlobalTxCount() uint64 {
 	res := originTxCount
 	if statusInfo.Ratio < ratioFloor {
 		if w.lastBlockTxCount == 0 || w.lastBlockTxCount < originTxCount {
-			w.lastBlockTxCount = statusInfo.TxCount
+			w.lastBlockTxCount = statusInfo.CurrentBlockTxCount
 			return originTxCount
 		}
 		res = uint64(ratioFloor * float64(originTxCount) / statusInfo.Ratio)
@@ -1014,6 +1018,6 @@ func (w *worker) adjustGlobalTxCount() uint64 {
 		res = 1
 	}
 	w.eth.TxPool().GetTxPoolConfig().GlobalTxCount.Store(res)
-	w.lastBlockTxCount = statusInfo.TxCount
+	w.lastBlockTxCount = statusInfo.CurrentBlockTxCount
 	return res
 }

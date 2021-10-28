@@ -164,8 +164,9 @@ type TxPoolConfig struct {
 	AccountQueue             uint64 // Maximum number of non-executable transaction slots permitted per account
 	GlobalQueue              uint64 // Maximum number of non-executable transaction slots for all accounts
 	GlobalTxCount            *uberAtomic.Uint64
-	RequestTimeoutRatioCeil  float64
 	RequestTimeoutRatioFloor float64
+	RequestTimeoutRatioCeil  float64
+	IsAutoAdjustTxCount      bool
 
 	Lifetime time.Duration // Maximum amount of time non-executable transaction are queued
 }
@@ -184,8 +185,9 @@ var DefaultTxPoolConfig = TxPoolConfig{
 	AccountQueue:             64,
 	GlobalQueue:              1024,
 	GlobalTxCount:            uberAtomic.NewUint64(10000),
-	RequestTimeoutRatioCeil:  0.3,
-	RequestTimeoutRatioFloor: 0.6,
+	RequestTimeoutRatioFloor: 0.3,
+	RequestTimeoutRatioCeil:  0.6,
+	IsAutoAdjustTxCount:      true,
 
 	Lifetime: 3 * time.Hour,
 }

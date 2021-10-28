@@ -24,9 +24,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul"
 	istanbulCore "github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/validator"
