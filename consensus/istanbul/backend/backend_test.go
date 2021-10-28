@@ -24,8 +24,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul"
+	istanbulCore "github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/validator"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
@@ -184,6 +187,31 @@ func TestGetProposer(t *testing.T) {
 	actual := engine.Address()
 	if actual != expected {
 		t.Errorf("proposer mismatch: have %v, want %v", actual.Hex(), expected.Hex())
+	}
+}
+
+func TestCalConsensusTimeRatio(t *testing.T) {
+	sb := &backend{
+		statusInfo: &consensus.StatusInfo{
+			CurrentRequestTimeout: uint64(time.Now().UnixNano() / int64(time.Millisecond)),
+		},
+	}
+	event := sb.EventMux().Subscribe(
+		istanbulCore.TimeoutEvent{},
+		istanbul.CommittedEvent{},
+	)
+	sb.statusInfo.Event = event
+
+	go sb.calConsensusTimeRatio()
+
+	go func() {
+		sb.EventMux().Post(istanbulCore.TimeoutEvent{})
+		sb.EventMux().Post(istanbul.CommittedEvent{})
+	}()
+	timer := time.NewTimer(500 * time.Millisecond)
+	<-timer.C
+	if !sb.statusInfo.IsTimeout || sb.statusInfo.Ratio == 0 {
+		t.Errorf("timeout should be true,ratio shoule be 0")
 	}
 }
 
