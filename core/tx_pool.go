@@ -481,7 +481,7 @@ func (pool *TxPool) reset(oldBlock, newBlock *types.Block) {
 	// any transactions that have been included in the block or
 	// have been invalidated because of another transaction (e.g.
 	// higher gas price)
-	pool.demoteUnexecutables(newBlock)
+	pool.demoteUnexecutables(newBlock.Transactions(), newBlock.Hash())
 }
 
 // Stop terminates the transaction pool.
@@ -604,15 +604,11 @@ func (pool *TxPool) PendingLimited(globalTxCount int) (types.Transactions, error
 	txCount := 0
 	pending := make(types.Transactions, 0, globalTxCount)
 	for _, list := range pool.pending {
-		if list != nil {
-			if list.Len() > 0 {
-				txs, length := list.GetByCount(globalTxCount - txCount)
-				pending = append(pending, txs...)
-				txCount += length
-				if txCount >= globalTxCount {
-					break
-				}
-			}
+		txs, length := list.GetByCount(globalTxCount - txCount)
+		pending = append(pending, txs...)
+		txCount += length
+		if txCount >= globalTxCount {
+			break
 		}
 	}
 	log.Info("Get pending txs", "duration", time.Since(now), "txCnt", txCount)
@@ -971,11 +967,10 @@ func (pool *TxPool) removeTx(hash common.Hash, outofbound bool) {
 // demoteUnexecutables removes invalid and processed transactions from the pools
 // executable/pending queue and any subsequent transactions that become unexecutable
 // are moved back into the future queue.
-func (pool *TxPool) demoteUnexecutables(block *types.Block) {
-	txs := block.Transactions()
+func (pool *TxPool) demoteUnexecutables(txs types.Transactions, blockHash common.Hash) {
 	pool.all.RemoveTxs(txs)
 
-	if _, ok := pool.removeQueueTxBlockHash.Get(block.Hash()); !ok {
+	if _, ok := pool.removeQueueTxBlockHash.Get(blockHash); !ok {
 		pool.removeGivenTxs(txs)
 	}
 

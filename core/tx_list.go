@@ -27,15 +27,15 @@ import (
 // txQueueMap is a txHash -> transaction hash map
 type txQueuedMap struct {
 	mu    *sync.RWMutex
-	items map[common.Hash]struct{} // Hash map storing the transaction data
-	data  *list.List               // a transaction queue
+	items map[common.Hash]*list.Element // Hash map storing the transaction data
+	data  *list.List                    // a transaction queue
 	size  int
 }
 
 func newTxQueuedMap() *txQueuedMap {
 	return &txQueuedMap{
 		mu:    &sync.RWMutex{},
-		items: make(map[common.Hash]struct{}),
+		items: make(map[common.Hash]*list.Element),
 		data:  list.New(),
 	}
 }
@@ -45,7 +45,6 @@ func (m *txQueuedMap) Get() types.Transactions {
 	defer m.mu.RUnlock()
 
 	txs := make(types.Transactions, 0, m.size+1)
-
 	for e := m.data.Front(); e != nil; e = e.Next() {
 		if tx, ok := e.Value.(*types.Transaction); ok {
 			txs = append(txs, tx)
@@ -62,7 +61,6 @@ func (m *txQueuedMap) GetByCount(max int) (types.Transactions, int) {
 	defer m.mu.RUnlock()
 	count := 0
 	txs := make(types.Transactions, 0, m.size+1)
-
 	for e := m.data.Front(); e != nil && count < max; e = e.Next() {
 		if tx, ok := e.Value.(*types.Transaction); ok {
 			txs = append(txs, tx)
@@ -90,8 +88,8 @@ func (m *txQueuedMap) Put(h common.Hash, tx *types.Transaction) {
 		return
 	}
 
-	m.data.PushBack(tx)
-	m.items[h] = struct{}{}
+	e := m.data.PushBack(tx)
+	m.items[h] = e
 	m.size++
 }
 
@@ -99,19 +97,10 @@ func (m *txQueuedMap) Remove(h common.Hash) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	if _, ok := m.items[h]; ok {
+	if e, ok := m.items[h]; ok {
 		delete(m.items, h)
 		m.size--
-
-		for e := m.data.Front(); e != nil; e = e.Next() {
-			// do something with e.Value
-			if tx, ok := e.Value.(*types.Transaction); ok {
-				if h == tx.Hash() {
-					m.data.Remove(e)
-					break
-				}
-			}
-		}
+		m.data.Remove(e)
 	}
 }
 
@@ -120,18 +109,10 @@ func (m *txQueuedMap) RemoveTxs(txs types.Transactions) {
 	defer m.mu.Unlock()
 	for _, tx := range txs {
 		hash := tx.Hash()
-		if _, ok := m.items[hash]; ok {
+		if e, ok := m.items[hash]; ok {
 			delete(m.items, hash)
 			m.size--
-			for e := m.data.Front(); e != nil; e = e.Next() {
-				// do something with e.Value
-				if tx, ok := e.Value.(*types.Transaction); ok {
-					if hash == tx.Hash() {
-						m.data.Remove(e)
-						break
-					}
-				}
-			}
+			m.data.Remove(e)
 		}
 	}
 }
