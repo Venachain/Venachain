@@ -376,6 +376,59 @@ func TestTransactionDropping(t *testing.T) {
 	}
 }
 
+// Tests that if the transaction pool has both executable and non-executable
+// transactions from an origin account, filling the nonce gap moves all queued
+// ones into the pending pool.
+func TestTransactionGapFilling(t *testing.T) {
+	t.Parallel()
+
+	// Create a test account and fund it
+	pool, key := setupTxPool()
+	defer pool.Stop()
+
+	account, _ := deriveSender(transaction(0, 0, key))
+	pool.currentState.AddBalance(account, big.NewInt(1000000))
+
+	// Keep track of transaction events to ensure all executables get announced
+	events := make(chan NewTxsEvent, 69)
+	sub := pool.txFeed.Subscribe(events)
+	defer sub.Unsubscribe()
+
+	// Create a pending and a queued transaction with a nonce-gap in between
+	if err := pool.AddRemote(transaction(0, 100000, key)); err != nil {
+		t.Fatalf("failed to add pending transaction: %v", err)
+	}
+	if err := pool.AddRemote(transaction(2, 100000, key)); err != nil {
+		t.Fatalf("failed to add queued transaction: %v", err)
+	}
+	pending, _ := pool.Stats()
+	if pending != 2 {
+		t.Fatalf("pending transactions mismatched: have %d, want %d", pending, 2)
+	}
+
+	if err := validateEvents(events, 2); err != nil {
+		t.Fatalf("original event firing failed: %v", err)
+	}
+	if err := validateTxPoolInternals(pool); err != nil {
+		t.Fatalf("pool internal state corrupted: %v", err)
+	}
+	// Fill the nonce gap and ensure all transactions become pending
+	if err := pool.AddRemote(transaction(1, 100000, key)); err != nil {
+		t.Fatalf("failed to add gapped transaction: %v", err)
+	}
+	pending, _ = pool.Stats()
+	if pending != 3 {
+		t.Fatalf("pending transactions mismatched: have %d, want %d", pending, 3)
+	}
+
+	if err := validateEvents(events, 1); err != nil {
+		t.Fatalf("gap-filling event firing failed: %v", err)
+	}
+	if err := validateTxPoolInternals(pool); err != nil {
+		t.Fatalf("pool internal state corrupted: %v", err)
+	}
+}
+
 // Tests that the transaction limits are enforced the same way irrelevant whether
 // the transactions are added one by one or in batches.
 func TestTransactionQueueLimitingEquivalency(t *testing.T) { testTransactionLimitingEquivalency(t, 1) }
@@ -560,7 +613,7 @@ func testTransactionJournaling(t *testing.T, nolocals bool) {
 	key, _ := crypto.GenerateKey()
 	pool = NewTxPool(testTxPoolConfig, &TestChainConfig, blockchain, db, nil, key)
 	statedb.SetNonce(crypto.PubkeyToAddress(local.PublicKey), 1)
-	//pending, queued = pool.Stats()
+	pending, queued = pool.Stats()
 	if queued != 0 {
 		t.Fatalf("queued transactions mismatched: have %d, want %d", queued, 0)
 	}
@@ -590,9 +643,6 @@ func testTransactionJournaling(t *testing.T, nolocals bool) {
 	pool = NewTxPool(testTxPoolConfig, &TestChainConfig, blockchain, db, nil, key)
 
 	statedb.SetNonce(crypto.PubkeyToAddress(local.PublicKey), 1)
-	//blockchain = &testBlockChain{statedb, 1000000, new(event.Feed)}
-	//pool,_ = setupTxPool()
-
 	pending, queued = pool.Stats()
 	if pending != 0 {
 		t.Fatalf("pending transactions mismatched: have %d, want %d", pending, 0)

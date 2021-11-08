@@ -299,6 +299,7 @@ func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoo
 	pool.goroutinePool, err = ants.NewPool(runtime.NumCPU(), ants.WithOptions(ants.Options{
 		PreAlloc: true,
 		PanicHandler: func(i interface{}) {
+			log.Error("goroutine pool meet panic", "err", i)
 			pool.Stop()
 		},
 	}))
@@ -460,6 +461,7 @@ func (pool *TxPool) reset(oldBlock, newBlock *types.Block) {
 
 	if oldHead != nil && oldHead.Hash() != newHead.ParentHash {
 		log.Error("occur chain fork", "oldNumber", oldNumber, "oldHash", oldHash, "newHash", newHead.Hash(), "newNumber", newHead.Number.Uint64())
+		pool.Stop()
 		return
 	}
 
@@ -490,7 +492,9 @@ func (pool *TxPool) Stop() {
 	pool.scope.Close()
 	if pool.chainconfig.Istanbul != nil {
 		pool.chainHeadSub.Unsubscribe()
+		pool.blockConsensusFinishSub.Unsubscribe()
 	}
+
 	close(pool.exitCh)
 	pool.goroutinePool.Release()
 

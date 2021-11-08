@@ -29,7 +29,6 @@ type txQueuedMap struct {
 	mu    *sync.RWMutex
 	items map[common.Hash]*list.Element // Hash map storing the transaction data
 	data  *list.List                    // a transaction queue
-	size  int
 }
 
 func newTxQueuedMap() *txQueuedMap {
@@ -44,7 +43,7 @@ func (m *txQueuedMap) Get() types.Transactions {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	txs := make(types.Transactions, 0, m.size+1)
+	txs := make(types.Transactions, 0, m.data.Len())
 	for e := m.data.Front(); e != nil; e = e.Next() {
 		if tx, ok := e.Value.(*types.Transaction); ok {
 			txs = append(txs, tx)
@@ -59,8 +58,12 @@ func (m *txQueuedMap) Get() types.Transactions {
 func (m *txQueuedMap) GetByCount(max int) (types.Transactions, int) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
+
 	count := 0
-	txs := make(types.Transactions, 0, m.size+1)
+	if max > m.data.Len() {
+		max = m.data.Len()
+	}
+	txs := make(types.Transactions, 0, max)
 	for e := m.data.Front(); e != nil && count < max; e = e.Next() {
 		if tx, ok := e.Value.(*types.Transaction); ok {
 			txs = append(txs, tx)
@@ -70,13 +73,15 @@ func (m *txQueuedMap) GetByCount(max int) (types.Transactions, int) {
 	if txs.Len() == 0 {
 		return nil, count
 	}
+
 	return txs, count
 }
 
 func (m *txQueuedMap) Len() int {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	return m.size
+
+	return m.data.Len()
 }
 
 func (m *txQueuedMap) Put(h common.Hash, tx *types.Transaction) {
@@ -90,7 +95,6 @@ func (m *txQueuedMap) Put(h common.Hash, tx *types.Transaction) {
 
 	e := m.data.PushBack(tx)
 	m.items[h] = e
-	m.size++
 }
 
 func (m *txQueuedMap) Remove(h common.Hash) {
@@ -99,7 +103,6 @@ func (m *txQueuedMap) Remove(h common.Hash) {
 
 	if e, ok := m.items[h]; ok {
 		delete(m.items, h)
-		m.size--
 		m.data.Remove(e)
 	}
 }
@@ -107,11 +110,11 @@ func (m *txQueuedMap) Remove(h common.Hash) {
 func (m *txQueuedMap) RemoveTxs(txs types.Transactions) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
 	for _, tx := range txs {
 		hash := tx.Hash()
 		if e, ok := m.items[hash]; ok {
 			delete(m.items, hash)
-			m.size--
 			m.data.Remove(e)
 		}
 	}
