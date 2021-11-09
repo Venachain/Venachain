@@ -719,7 +719,7 @@ func benchmarkPendingDemotion(b *testing.B, size int) {
 	blockHash := common.Hash{}
 	account, _ := deriveSender(transaction(0, 0, key))
 	pool.currentState.AddBalance(account, big.NewInt(1000000))
-	pool.removeQueueTxBlockHash.Add(blockHash, struct{}{})
+	pool.recentRemovedPending.Add(blockHash, struct{}{})
 
 	var txs types.Transactions
 	for i := 0; i < size; i++ {

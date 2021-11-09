@@ -252,7 +252,7 @@ type TxPool struct {
 
 	goroutinePool *ants.Pool
 
-	removeQueueTxBlockHash      *lru.ARCCache
+	recentRemovedPending        *lru.ARCCache
 	blockConsensusFinishEventCh chan BlockConsensusFinishEvent
 	blockConsensusFinishSub     event.Subscription
 }
@@ -290,7 +290,7 @@ func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoo
 	}
 
 	var err error
-	pool.removeQueueTxBlockHash, err = lru.NewARC(chainHeadChanSize)
+	pool.recentRemovedPending, err = lru.NewARC(chainHeadChanSize)
 	if err != nil {
 		log.Error("New txpool failed", "err", err)
 		return nil
@@ -380,7 +380,7 @@ func (pool *TxPool) loop() {
 		select {
 		case ev := <-pool.blockConsensusFinishEventCh:
 			pool.removeGivenTxs(ev.Block.Transactions())
-			pool.removeQueueTxBlockHash.Add(ev.Block.Hash(), struct{}{})
+			pool.recentRemovedPending.Add(ev.Block.Hash(), struct{}{})
 		// Handle ChainHeadEvent
 		case ev := <-pool.chainHeadEventCh:
 			if ev.Block != nil {
@@ -974,7 +974,7 @@ func (pool *TxPool) removeTx(hash common.Hash, outofbound bool) {
 func (pool *TxPool) demoteUnexecutables(txs types.Transactions, blockHash common.Hash) {
 	pool.all.RemoveTxs(txs)
 
-	if _, ok := pool.removeQueueTxBlockHash.Get(blockHash); !ok {
+	if _, ok := pool.recentRemovedPending.Get(blockHash); !ok {
 		pool.removeGivenTxs(txs)
 	}
 
