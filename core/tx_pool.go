@@ -38,6 +38,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/metrics"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	uberAtomic "go.uber.org/atomic"
 )
 
 const (
@@ -158,11 +159,14 @@ type TxPoolConfig struct {
 	PriceLimit uint64 // Minimum gas price to enforce for acceptance into the pool
 	PriceBump  uint64 // Minimum price bump percentage to replace an already existing transaction (nonce)
 
-	AccountSlots  uint64 // Number of executable transaction slots guaranteed per account
-	GlobalSlots   uint64 // Maximum number of executable transaction slots for all accounts
-	AccountQueue  uint64 // Maximum number of non-executable transaction slots permitted per account
-	GlobalQueue   uint64 // Maximum number of non-executable transaction slots for all accounts
-	GlobalTxCount uint64 // Maximum number of transactions for package
+	AccountSlots             uint64 // Number of executable transaction slots guaranteed per account
+	GlobalSlots              uint64 // Maximum number of executable transaction slots for all accounts
+	AccountQueue             uint64 // Maximum number of non-executable transaction slots permitted per account
+	GlobalQueue              uint64 // Maximum number of non-executable transaction slots for all accounts
+	GlobalTxCount            *uberAtomic.Uint64
+	RequestTimeoutRatioFloor float64
+	RequestTimeoutRatioCeil  float64
+	IsAutoAdjustTxCount      bool
 
 	Lifetime time.Duration // Maximum amount of time non-executable transaction are queued
 }
@@ -176,11 +180,14 @@ var DefaultTxPoolConfig = TxPoolConfig{
 	PriceLimit: 1,
 	PriceBump:  10,
 
-	AccountSlots:  16,
-	GlobalSlots:   40960,
-	AccountQueue:  64,
-	GlobalQueue:   1024,
-	GlobalTxCount: 10000,
+	AccountSlots:             16,
+	GlobalSlots:              40960,
+	AccountQueue:             64,
+	GlobalQueue:              1024,
+	GlobalTxCount:            uberAtomic.NewUint64(10000),
+	RequestTimeoutRatioFloor: 0.3,
+	RequestTimeoutRatioCeil:  0.6,
+	IsAutoAdjustTxCount:      true,
 
 	Lifetime: 3 * time.Hour,
 }
@@ -694,21 +701,21 @@ func (pool *TxPool) Pending() (map[common.Address]types.Transactions, error) {
 // PendingLimited retrieves `pool.config.GlobalTxCount` processable transactions,
 // grouped by origin account and stored by nonce. The returned transaction set
 // is a copy and can be freely modified by calling code.
-func (pool *TxPool) PendingLimited() (types.Transactions, error) {
+func (pool *TxPool) PendingLimited(globalTxCount int) (types.Transactions, error) {
 	now := time.Now()
 	pool.mu.Lock()
 	defer pool.mu.Unlock()
 
 	//log.Info("Pending txs before get", "txCnt", len(pool.pending))
 	txCount := 0
-	pending := make(types.Transactions, 0, pool.config.GlobalTxCount)
+	pending := make(types.Transactions, 0, globalTxCount)
 	for _, list := range pool.pending {
 		if list != nil {
 			if list.Len() > 0 {
-				txs, length := list.GetByCount(int(pool.config.GlobalTxCount) - txCount)
+				txs, length := list.GetByCount(globalTxCount - txCount)
 				pending = append(pending, txs...)
 				txCount += length
-				if txCount >= int(pool.config.GlobalTxCount) {
+				if txCount >= globalTxCount {
 					break
 				}
 			}
@@ -1306,6 +1313,10 @@ func (pool *TxPool) GetTxCh() chan struct{} {
 	return pool.txch
 }
 
+func (pool *TxPool) GetTxPoolConfig() *TxPoolConfig {
+	return &pool.config
+}
+
 // addressByHeartbeat is an account address tagged with its last activity timestamp.
 type addressByHeartbeat struct {
 	address   common.Address
@@ -1539,7 +1550,7 @@ func (pool *TxPool) generateTxs(cnt string, addr common.Address, preProducer boo
 	}
 
 	checkTxPool := func() {
-		for pool.GetTxCount() > int(pool.config.GlobalTxCount)*2 {
+		for pool.GetTxCount() > int(pool.config.GlobalTxCount.Load())*2 {
 			time.Sleep(500 * time.Millisecond)
 		}
 	}

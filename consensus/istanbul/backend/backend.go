@@ -73,6 +73,7 @@ func New(config *params.IstanbulConfig, privateKey *ecdsa.PrivateKey, db dbhandl
 		coreStarted:      false,
 		recentMessages:   recentMessages,
 		knownMessages:    knownMessages,
+		statusInfo:       &consensus.StatusInfo{},
 	}
 	backend.core = istanbulCore.New(backend, backend.config)
 	return backend
@@ -125,6 +126,12 @@ type backend struct {
 
 	recentMessages *lru.ARCCache // the cache of peer's messages
 	knownMessages  *lru.ARCCache // the cache of self messages
+
+	statusInfo *consensus.StatusInfo
+}
+
+func (sb *backend) GetStatusInfo() *consensus.StatusInfo {
+	return sb.statusInfo
 }
 
 // Address implements istanbul.Backend.Address
@@ -237,6 +244,39 @@ func (sb *backend) writeCommitedBlockWithState(block *types.Block) error {
 	return nil
 }
 
+//calConsensusTimeRatio catch timeout event or commit event,
+//return timeout signal or ration(=consensusCostTime/CurrentRequestTimeout)
+func (sb *backend) calConsensusTimeRatio() {
+	sb.statusInfo.Lock()
+	event := sb.statusInfo.Event
+	sb.statusInfo.Unlock()
+	if event == nil {
+		return
+	}
+
+	for {
+		select {
+		case eventVal, ok := <-event.Chan():
+			if !ok {
+				return
+			}
+			switch ev := eventVal.Data.(type) {
+			case istanbul.CommittedEvent:
+				committedTime := time.Now().UnixNano() / int64(time.Millisecond)
+				consensusCostTime := uint64(committedTime) - ev.HeadTime
+				sb.statusInfo.Lock()
+				sb.statusInfo.CurrentBlockTxCount = ev.TxCount
+				sb.statusInfo.Ratio = float64(consensusCostTime) / float64(sb.statusInfo.CurrentRequestTimeout)
+				sb.statusInfo.Unlock()
+			case istanbulCore.TimeoutEvent:
+				sb.statusInfo.Lock()
+				sb.statusInfo.IsTimeout = true
+				sb.statusInfo.Unlock()
+			}
+		}
+	}
+}
+
 // Commit implements istanbul.Backend.Commit
 func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 	// Check if the proposal is a valid block
@@ -259,6 +299,12 @@ func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 	isProduceEmptyBlock := common.SysCfg.IsProduceEmptyBlock()
 
 	if !isEmpty || isProduceEmptyBlock {
+		//post commit event
+		sb.EventMux().Post(istanbul.CommittedEvent{
+			HeadTime:      h.Time.Uint64(),
+			TxCount:       uint64(block.Transactions().Len()),
+			CommittedTime: uint64(time.Now().UnixNano() / int64(time.Millisecond)),
+		})
 		sb.logger.Info("Committed", "address", sb.Address(), "hash", proposal.Hash(), "number", proposal.Number().Uint64())
 	}
 	// - if the proposed and committed blocks are the same, send the proposed hash
@@ -315,6 +361,22 @@ func (sb *backend) EventMux() *event.TypeMux {
 // EventMux implements istanbul.Backend.EventMux
 func (sb *backend) MsgFeed() *event.Feed {
 	return sb.msgFeed
+}
+
+func (sb *backend) SetConsensusTypeMuxSub(event *event.TypeMuxSubscription) {
+	sb.statusInfo.Lock()
+	sb.statusInfo.Unlock()
+	sb.statusInfo.Event = event
+}
+
+func (sb *backend) GetConsensusTypeMuxSub() *event.TypeMuxSubscription {
+	return sb.statusInfo.Event
+}
+
+func (sb *backend) SetCurrentRequestTimeout(timeout uint64) {
+	sb.statusInfo.Lock()
+	defer sb.statusInfo.Unlock()
+	sb.statusInfo.CurrentRequestTimeout = timeout
 }
 
 // makeCurrent creates a new environment for the current cycle.

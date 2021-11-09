@@ -25,4 +25,4 @@ type backlogEvent struct {
 	msg *message
 }
 
-type timeoutEvent struct{}
+type TimeoutEvent struct{}

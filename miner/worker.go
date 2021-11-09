@@ -181,11 +181,11 @@ type worker struct {
 	// External functions
 	isLocalBlock func(block *types.Block) bool // Function used to determine whether the specified block is mined by local miner.
 
-	blockChainCache *core.BlockChainCache
-	commitWorkEnv   *commitWorkEnv
-	recommit        time.Duration
-	commitDuration  int64 //in Millisecond
-
+	blockChainCache  *core.BlockChainCache
+	commitWorkEnv    *commitWorkEnv
+	recommit         time.Duration
+	commitDuration   int64 //in Millisecond
+	lastBlockTxCount uint64
 	// Test hooks
 	newTaskHook  func(*task)                        // Method to call upon receiving a new sealing task.
 	skipSealHook func(*task) bool                   // Method to decide whether skipping the sealing.
@@ -847,7 +847,9 @@ func (w *worker) commitNewWork(interrupt *int32, timestamp int64, commitBlock *t
 
 	// Fill the block with all available pending transactions.
 	startTime := time.Now()
-	pending, err := w.eth.TxPool().PendingLimited()
+	globalTxCount := w.adjustGlobalTxCount()
+
+	pending, err := w.eth.TxPool().PendingLimited(int(globalTxCount))
 
 	if err != nil {
 		log.Error("Failed to fetch pending transactions", "time", common.PrettyDuration(time.Since(startTime)), "err", err)
@@ -951,41 +953,6 @@ func (w *worker) makePending() (*types.Block, *state.StateDB) {
 	return nil, nil
 }
 
-//
-//func (w *worker) shouldCommit(timestamp int64) (bool, *types.Block) {
-//	w.commitWorkEnv.baseLock.Lock()
-//	defer w.commitWorkEnv.baseLock.Unlock()
-//
-//	baseBlock, commitTime := w.commitWorkEnv.commitBaseBlock, w.commitWorkEnv.commitTime
-//	highestLogicalBlock := w.commitWorkEnv.getHighestLogicalBlock()
-//
-//	shouldCommit := false
-//	if baseBlock == nil || baseBlock.Hash().Hex() != highestLogicalBlock.Hash().Hex() {
-//		shouldCommit = true
-//	} else {
-//		pending, err := w.eth.TxPool().PendingLimited()
-//		if err == nil && len(pending) > 0 {
-//			log.Info("w.eth.TxPool()", "pending:", len(pending))
-//			shouldCommit = true
-//		}
-//	}
-//
-//	if shouldCommit && timestamp != 0 {
-//		shouldCommit = (timestamp - commitTime) >= w.recommit.Nanoseconds()/1e6
-//	}
-//	if shouldCommit {
-//		w.commitWorkEnv.commitBaseBlock = highestLogicalBlock
-//		w.commitWorkEnv.commitTime = time.Now().UnixNano() / 1e6
-//
-//		if baseBlock != nil {
-//			log.Info("baseBlock", "number", baseBlock.NumberU64(), "hash", baseBlock.Hash(), "hashHex", baseBlock.Hash().Hex())
-//			log.Info("commitTime", "commitTime", commitTime, "timestamp", timestamp)
-//			log.Info("highestLogicalBlock", "number", highestLogicalBlock.NumberU64(), "hash", highestLogicalBlock.Hash(), "hashHex", highestLogicalBlock.Hash().Hex())
-//		}
-//	}
-//	return shouldCommit, highestLogicalBlock
-//}
-
 func (w *worker) resetDone() bool {
 	if w.chain.CurrentBlock().Number().Cmp(w.eth.TxPool().GetResetNumber()) == 0 {
 		return true
@@ -1000,4 +967,57 @@ func isContainsCreateContract(pending []*types.Transaction) bool {
 		}
 	}
 	return false
+}
+
+func (w *worker) adjustGlobalTxCount() uint64 {
+	ratioCeil := w.eth.TxPool().GetTxPoolConfig().RequestTimeoutRatioCeil
+	ratioFloor := w.eth.TxPool().GetTxPoolConfig().RequestTimeoutRatioFloor
+	originTxCount := w.eth.TxPool().GetTxPoolConfig().GlobalTxCount.Load()
+
+	if !w.eth.TxPool().GetTxPoolConfig().IsAutoAdjustTxCount {
+		return originTxCount
+	}
+	if _, ok := w.engine.(consensus.Istanbul); !ok {
+		return originTxCount
+	}
+
+	statusInfo := w.engine.GetStatusInfo()
+	statusInfo.Lock()
+	defer statusInfo.Unlock()
+
+	if statusInfo.IsTimeout {
+		var res uint64
+		//第一次共识
+		if w.lastBlockTxCount == 0 && originTxCount >= 2 {
+			res = originTxCount >> 1
+		} else if w.lastBlockTxCount >= 2 {
+			res = w.lastBlockTxCount >> 1
+		}
+		//make sure at least txCount=1
+		if res == 0 {
+			res = 1
+		}
+		w.eth.TxPool().GetTxPoolConfig().GlobalTxCount.Store(res)
+		//清楚标记
+		statusInfo.IsTimeout = false
+		return res
+	}
+
+	res := originTxCount
+	if statusInfo.Ratio < ratioFloor {
+		if w.lastBlockTxCount == 0 || w.lastBlockTxCount < originTxCount {
+			w.lastBlockTxCount = statusInfo.CurrentBlockTxCount
+			return originTxCount
+		}
+		res = uint64(ratioFloor * float64(originTxCount) / statusInfo.Ratio)
+	} else if statusInfo.Ratio > ratioCeil {
+		res = uint64(ratioCeil * float64(originTxCount) / statusInfo.Ratio)
+	}
+	//make sure at least txCount=1
+	if res == 0 {
+		res = 1
+	}
+	w.eth.TxPool().GetTxPoolConfig().GlobalTxCount.Store(res)
+	w.lastBlockTxCount = statusInfo.CurrentBlockTxCount
+	return res
 }
