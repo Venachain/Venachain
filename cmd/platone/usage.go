@@ -104,10 +104,7 @@ var AppHelpFlagGroups = []flagGroup{
 			utils.TxPoolPriceBumpFlag,
 			utils.TxPoolAccountSlotsFlag,
 			utils.TxPoolGlobalSlotsFlag,
-			utils.TxPoolAccountQueueFlag,
-			utils.TxPoolGlobalQueueFlag,
 			utils.TxPoolGlobalTxCountFlag,
-			utils.TxPoolLifetimeFlag,
 		},
 	},
 	{

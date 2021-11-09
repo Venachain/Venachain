@@ -233,16 +233,6 @@ var (
 		Usage: "Maximum number of executable transaction slots for all accounts",
 		Value: eth.DefaultConfig.TxPool.GlobalSlots,
 	}
-	TxPoolAccountQueueFlag = cli.Uint64Flag{
-		Name:  "txpool.accountqueue",
-		Usage: "Maximum number of non-executable transaction slots permitted per account",
-		Value: eth.DefaultConfig.TxPool.AccountQueue,
-	}
-	TxPoolGlobalQueueFlag = cli.Uint64Flag{
-		Name:  "txpool.globalqueue",
-		Usage: "Maximum number of non-executable transaction slots for all accounts",
-		Value: eth.DefaultConfig.TxPool.GlobalQueue,
-	}
 	TxPoolGlobalTxCountFlag = cli.Uint64Flag{
 		Name:  "txpool.globaltxcount",
 		Usage: "Maximum number of transactions for package",
@@ -261,11 +251,6 @@ var (
 		Name:  "txpool.requesttimeoutratioceil",
 		Usage: "ratio=consensusRequestTimeCost/maxConsensuRequestTime,the max ratio",
 		Value: eth.DefaultConfig.TxPool.RequestTimeoutRatioCeil,
-	}
-	TxPoolLifetimeFlag = cli.DurationFlag{
-		Name:  "txpool.lifetime",
-		Usage: "Maximum amount of time non-executable transaction are queued",
-		Value: eth.DefaultConfig.TxPool.Lifetime,
 	}
 	// Performance tuning settings
 	CacheFlag = cli.IntFlag{
@@ -984,12 +969,6 @@ func setTxPool(ctx *cli.Context, cfg *core.TxPoolConfig) {
 	if ctx.GlobalIsSet(TxPoolGlobalSlotsFlag.Name) {
 		cfg.GlobalSlots = ctx.GlobalUint64(TxPoolGlobalSlotsFlag.Name)
 	}
-	if ctx.GlobalIsSet(TxPoolAccountQueueFlag.Name) {
-		cfg.AccountQueue = ctx.GlobalUint64(TxPoolAccountQueueFlag.Name)
-	}
-	if ctx.GlobalIsSet(TxPoolGlobalQueueFlag.Name) {
-		cfg.GlobalQueue = ctx.GlobalUint64(TxPoolGlobalQueueFlag.Name)
-	}
 	if ctx.GlobalIsSet(TxPoolGlobalTxCountFlag.Name) {
 		cfg.GlobalTxCount.Store(ctx.GlobalUint64(TxPoolGlobalTxCountFlag.Name))
 	}
@@ -1001,9 +980,6 @@ func setTxPool(ctx *cli.Context, cfg *core.TxPoolConfig) {
 	}
 	if ctx.GlobalIsSet(TxPoolRequestTimeoutRatioCeilFlag.Name) {
 		cfg.RequestTimeoutRatioCeil = ctx.GlobalFloat64(TxPoolRequestTimeoutRatioCeilFlag.Name)
-	}
-	if ctx.GlobalIsSet(TxPoolLifetimeFlag.Name) {
-		cfg.Lifetime = ctx.GlobalDuration(TxPoolLifetimeFlag.Name)
 	}
 }
 

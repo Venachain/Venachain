@@ -324,6 +324,13 @@ func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 			sb.commitCh <- nil
 			return istanbulCore.ErrEmpty
 		}
+
+		chain := sb.chain.(*core.BlockChain)
+		chain.PostChainEvents([]interface{}{
+			core.BlockConsensusFinishEvent{
+				Block: block,
+			},
+		}, nil)
 		sb.commitCh <- block
 		return nil
 	}
@@ -337,6 +344,12 @@ func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 			return istanbulCore.ErrEmpty
 		}
 
+		chain := sb.chain.(*core.BlockChain)
+		chain.PostChainEvents([]interface{}{
+			core.BlockConsensusFinishEvent{
+				Block: block,
+			},
+		}, nil)
 		if err := sb.writeCommitedBlockWithState(block); err != nil {
 			sb.logger.Error("writeCommitedBlockWithState() failed", "error", err.Error())
 			return err
