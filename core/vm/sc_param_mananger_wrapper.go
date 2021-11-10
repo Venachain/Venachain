@@ -181,6 +181,7 @@ func (u *scParamManagerWrapper) getIntParam(key string) (uint64, error) {
 	if reflect.TypeOf(data).Kind() == reflect.Uint32 {
 		return uint64(data.(uint32)), nil
 	}
+
 	return 0, errDataTypeInvalid
 }
 

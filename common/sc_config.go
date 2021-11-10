@@ -51,6 +51,7 @@ type SystemParameter struct {
 	IsProduceEmptyBlock           bool
 	VRF                           VRFParams
 	IsBlockUseTrieHash            bool
+	IsUseDAG                      bool
 }
 
 type ReplayParam struct {
@@ -87,6 +88,7 @@ var SysCfg = &SystemConfig{
 			ValidatorCount:    0,
 		},
 		IsBlockUseTrieHash: true,
+		IsUseDAG:           false,
 	},
 	ContractAddress: make(map[string]Address),
 	ReplayParam: &ReplayParam{
@@ -243,4 +245,10 @@ func (sc *SystemConfig) IsBlockUseTrieHash() bool {
 	sc.SystemConfigMu.RLock()
 	defer sc.SystemConfigMu.RUnlock()
 	return sc.SysParam.IsBlockUseTrieHash
+}
+
+func (sc *SystemConfig) IsUseDAG() bool {
+	sc.SystemConfigMu.RLock()
+	defer sc.SystemConfigMu.RUnlock()
+	return sc.SysParam.IsUseDAG
 }

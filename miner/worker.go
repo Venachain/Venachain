@@ -871,7 +871,7 @@ func (w *worker) commitNewWork(interrupt *int32, timestamp int64, commitBlock *t
 
 	startTime = time.Now()
 
-	if containsCreate {
+	if containsCreate || !common.SysCfg.IsUseDAG() {
 		if ok := w.commitTransactionsWithHeader(header, pending, w.coinbase, interrupt); ok {
 			return
 		}

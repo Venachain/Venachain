@@ -33,6 +33,7 @@ type TxSimulator struct {
 	reTry      bool
 	index      int
 	txRlp      []byte
+	isRevert   bool
 }
 
 func NewTxSimulator(sdb *StateDB, transaction *types.Transaction) *TxSimulator {
@@ -380,10 +381,11 @@ func (txSim *TxSimulator) RevertToSnapshot(i int) {
 		txSim.reTry = true
 	} else {
 		log.Debug("tx call vm err ,but still add ", "hash", txSim.tx.Hash())
-		txSim.balanceMap = make(map[common.Address]*BalanceOp)
-		txSim.writeMap = make(map[string]*WriteOp)
-		txSim.readMap = make(map[string]*ReadOp)
-		txSim.oc = make([]ObjectChange, 0)
+		txSim.isRevert = true
+		//txSim.balanceMap = make(map[common.Address]*BalanceOp)
+		//txSim.writeMap = make(map[string]*WriteOp)
+		//txSim.readMap = make(map[string]*ReadOp)
+		//txSim.oc = make([]ObjectChange, 0)
 	}
 }
 
@@ -1006,8 +1008,10 @@ func (self *StateDB) addTxSim(txSim *TxSimulator) {
 			if wp, ok := self.writeMap[op.KeyTrie]; ok {
 				depend = depend.Add(wp.Version)
 			}
-			op.Version = version
-			self.readMap[op.KeyTrie] = op
+			if !txSim.isRevert {
+				op.Version = version
+				self.readMap[op.KeyTrie] = op
+			}
 		}
 	}
 	if len(txSim.writeMap) != 0 {
@@ -1024,8 +1028,10 @@ func (self *StateDB) addTxSim(txSim *TxSimulator) {
 					depend = depend.Add(rp.Version)
 				}
 			}
-			op.Version = version
-			self.writeMap[op.KeyTrie] = op
+			if !txSim.isRevert {
+				op.Version = version
+				self.writeMap[op.KeyTrie] = op
+			}
 		}
 	}
 
@@ -1037,8 +1043,10 @@ func (self *StateDB) addTxSim(txSim *TxSimulator) {
 					depend = depend.Add(wp.Version)
 				}
 			}
-			op.Version = version
-			self.balanceMap[op.ContractAddress] = op
+			if !txSim.isRevert {
+				op.Version = version
+				self.balanceMap[op.ContractAddress] = op
+			}
 		}
 	}
 
@@ -1050,8 +1058,10 @@ func (self *StateDB) addTxSim(txSim *TxSimulator) {
 					depend = depend.Add(c.getVersion())
 				}
 			}
-			op.setVersion(version)
-			self.oc[op.getAddr()] = op
+			if !txSim.isRevert {
+				op.setVersion(version)
+				self.oc[op.getAddr()] = op
+			}
 		}
 	}
 

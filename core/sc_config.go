@@ -5,6 +5,7 @@ import (
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
@@ -64,6 +65,14 @@ func UpdateParamSysContractConfig(bc *BlockChain, sysContractConf *common.System
 	if res != nil && nil == err {
 		ret := common.CallResAsInt64(res)
 		sysContractConf.SysParam.IsBlockUseTrieHash = ret == 1
+	}
+
+	funcName = "getIntParam"
+	funcParams = []interface{}{vm.IsUseDAG}
+	res, err = InnerCallContractReadOnly(bc, paramAddr, funcName, funcParams)
+	if res != nil && nil == err {
+		ret := common.CallResAsInt64(res)
+		sysContractConf.SysParam.IsUseDAG = ret == 1
 	}
 
 	funcName = "getVRFParams"
