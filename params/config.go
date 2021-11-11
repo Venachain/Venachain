@@ -38,7 +38,7 @@ var (
 		BloomRoot:    common.HexToHash("0xd38be1a06aabd568e10957fee4fcc523bc64996bcf31bae3f55f86e0a583919f"),
 	}
 
-	TestChainConfig = &ChainConfig{big.NewInt(1), nil, ""}
+	TestChainConfig = &ChainConfig{big.NewInt(1), nil, "", false}
 )
 
 // TrustedCheckpoint represents a set of post-processed trie roots (CHT and
@@ -66,6 +66,8 @@ type ChainConfig struct {
 
 	// Various vm interpreter
 	VMInterpreter string `json:"interpreter,omitempty"`
+
+	LicenseCheck bool `json:"licenseCheck"`
 }
 
 // EthashConfig is the consensus engine configs for proof-of-work based sealing.
