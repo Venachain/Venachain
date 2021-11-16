@@ -53,9 +53,12 @@ var (
 
 	errValidatorCountInvalid = errors.New("Validator Count Invalid")
 
-	errAuthenticationFailed = errors.New("Authentication failed !!!")
+	//errAuthenticationFailed = errors.New("Authentication failed !!!")
 	errAlreadySetEvidence   = errors.New("This id Already exsit")
 	errEvidenceNotFound     = errors.New("Evidence Not Found")
+	errBPGetFalseResult     = errors.New("Bullet Proof get result false")
+	errAlreadySetPid   = errors.New("This pid Already exsit")
+
 )
 
 var (

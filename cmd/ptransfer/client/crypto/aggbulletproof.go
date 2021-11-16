@@ -717,6 +717,24 @@ func GenerateAggBpStatement(m, n int64) *AggBpStatement{
 	return &aggbpparam
 }
 
+func GenerateAggBpStatement_range(m, n int64, range_hash []byte) *AggBpStatement{
+	aggbpparam = AggBpStatement{}
+	aggbpparam.m = m
+	aggbpparam.bpParam.n = n
+
+	aggbpparam.bpParam.g = MapIntoGroup("g" + string(range_hash))
+	aggbpparam.bpParam.h = MapIntoGroup("h" + string(range_hash))
+	nm := aggbpparam.bpParam.n * aggbpparam.m
+	aggbpparam.bpParam.gVector = make([]*bn256.G1, nm)
+	aggbpparam.bpParam.hVector = make([]*bn256.G1, nm)
+	for i := 0; i < int(nm); i++ {
+		aggbpparam.bpParam.gVector[i] = MapIntoGroup("platone" + "g" + string(rune(i)))
+		aggbpparam.bpParam.hVector[i] = MapIntoGroup("platone" + "h" + string(rune(i)))
+	}
+	return &aggbpparam
+}
+
+
 func agginitbpparam() {
 	aggbpparam = AggBpStatement{}
 	aggbpparam.m = 2

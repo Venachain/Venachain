@@ -96,6 +96,7 @@ const (
 	FireWall          uint64 = 10000 //
 	CnsInvokeGas      uint64 = 80000 //
 	SCEvidenceGas     uint64 = 80000 //
+	SCBulletProofGas  uint64 = 80000 //
 )
 
 var (

@@ -1,13 +1,20 @@
 [
     {
-        "name": "saveEvidence",
+        "name": "verifyProofByRange",
         "inputs": [
             {
-                "name": "key",
+                "name": "userid",
                 "type": "string"
             },
             {
-                "name": "evidenceValue",
+                "name": "proof",
+                "type": "string"
+            },
+            {
+                "name": "pid",
+                "type": "string"
+            },{
+                "name": "range",
                 "type": "string"
             }
         ],
@@ -21,48 +28,10 @@
         "type": "function"
     },
     {
-        "name": "getEvidence",
+        "name": "getResult",
         "inputs": [
             {
-                "name": "key",
-                "type": "string"
-            }
-        ],
-        "outputs": [
-            {
-                "name": "",
-                "type": "string"
-            }
-        ],
-        "constant": "true",
-        "type": "function"
-    },
-    {
-        "name": "setJsonData",
-        "inputs": [
-            {
-                "name": "key",
-                "type": "string"
-            },
-            {
-                "name": "value",
-                "type": "string"
-            }
-        ],
-        "outputs": [
-            {
-                "name": "",
-                "type": "int32"
-            }
-        ],
-        "constant": "false",
-        "type": "function"
-    },
-    {
-        "name": "getJsonData",
-        "inputs": [
-            {
-                "name": "key",
+                "name": "pid",
                 "type": "string"
             }
         ],

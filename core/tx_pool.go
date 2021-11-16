@@ -57,7 +57,7 @@ const (
 	DoingPending = 1
 
 	// Define the size of the transaction.
-	TxSize = 1024
+	TxSize = 1024*1024
 )
 
 var (
@@ -646,7 +646,7 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 
 	// Heuristic limit, reject transactions over 32KB to prevent DOS attacks
 	// 32kb -> 1m
-	if tx.Size() > TxSize*1024 {
+	if tx.Size() > TxSize {
 		return ErrOversizedData
 	}
 	// Transactions can't be negative. This may never happen using RLP decoded
