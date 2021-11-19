@@ -23,7 +23,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 )
 
 // FakePeer is a mock downloader peer that operates on a local database instance
@@ -31,13 +31,13 @@ import (
 // sync commands from an existing local database.
 type FakePeer struct {
 	id string
-	db ethdb.Database
+	db dbhandle.Database
 	hc *core.HeaderChain
 	dl *Downloader
 }
 
 // NewFakePeer creates a new mock downloader peer with the given data sources.
-func NewFakePeer(id string, db ethdb.Database, hc *core.HeaderChain, dl *Downloader) *FakePeer {
+func NewFakePeer(id string, db dbhandle.Database, hc *core.HeaderChain, dl *Downloader) *FakePeer {
 	return &FakePeer{id: id, db: db, hc: hc, dl: dl}
 }
 
@@ -123,14 +123,14 @@ func (p *FakePeer) RequestHeadersByNumber(number uint64, amount int, skip int, r
 // corresponding to the specified block hashes.
 func (p *FakePeer) RequestBodies(hashes []common.Hash) error {
 	var (
-		txs    [][]*types.Transaction
+		bodies []*types.Body
 	)
 	for _, hash := range hashes {
 		block := rawdb.ReadBlock(p.db, hash, *p.hc.GetBlockNumber(hash))
 
-		txs = append(txs, block.Transactions())
+		bodies = append(bodies, block.Body())
 	}
-	p.dl.DeliverBodies(p.id, txs)
+	p.dl.DeliverBodies(p.id, bodies)
 	return nil
 }
 

@@ -168,6 +168,7 @@ func (sb *backend) verifyCascadingFields(chain consensus.ChainReader, header *ty
 	if err != nil {
 		return err
 	}
+
 	validators := make([]byte, len(snap.validators())*common.AddressLength)
 	for i, validator := range snap.validators() {
 		copy(validators[i*common.AddressLength:], validator[:])
@@ -177,7 +178,7 @@ func (sb *backend) verifyCascadingFields(chain consensus.ChainReader, header *ty
 	}
 
 	//// Verify VRF Nonce
-	if common.SysCfg.SysParam.VRF.ElectionEpoch != 0 {
+	if getVRFParamsAtNumber(chain, sb, number-1).ElectionEpoch != 0 {
 		if err := sb.verifyVRF(chain, header); err != nil {
 			return err
 		}
@@ -370,7 +371,7 @@ func (sb *backend) Prepare(chain consensus.ChainReader, header *types.Header) er
 //
 // Note, the block header and state database might be updated to reflect any
 // consensus rules that happen at finalization (e.g. block rewards).
-func (sb *backend) Finalize(chain consensus.ChainReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, receipts []*types.Receipt) (*types.Block, error) {
+func (sb *backend) Finalize(chain consensus.ChainReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, receipts []*types.Receipt, dag types.DAG) (*types.Block, error) {
 	log.Debug(fmt.Errorf("root before:%x", header.Root).Error())
 	// vrf election
 	scNode := vm.NewSCNode(state)
@@ -385,7 +386,7 @@ func (sb *backend) Finalize(chain consensus.ChainReader, header *types.Header, s
 	header.Root = state.IntermediateRoot(true)
 	log.Debug(fmt.Errorf("root after:%x", header.Root).Error())
 	// Assemble and return the final block for sealing
-	return types.NewBlock(header, txs, receipts), nil
+	return types.NewBlockWithDag(header, txs, receipts, dag), nil
 }
 
 // Seal generates a new block for the given input block with the local miner's
@@ -515,6 +516,7 @@ func (sb *backend) Start(chain consensus.ChainReader, currentBlock func() *types
 		return err
 	}
 
+	go sb.calConsensusTimeRatio()
 	sb.coreStarted = true
 	return nil
 }
@@ -764,5 +766,9 @@ func writeCommittedSeals(h *types.Header, committedSeals [][]byte) error {
 	}
 
 	h.Extra = append(h.Extra[:types.IstanbulExtraVanity], payload...)
+
+	// log the node signature to block
+	log.Debug("Signing to block", "number", h.Number, "signer", fmt.Sprintf("%x", istanbulExtra.Validators), "signature", fmt.Sprintf("%x", committedSeals))
+
 	return nil
 }

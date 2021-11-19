@@ -24,6 +24,7 @@ import (
 	"math/big"
 	"math/rand"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
@@ -42,9 +43,9 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
 	"github.com/davecgh/go-spew/spew"
+	lru "github.com/hashicorp/golang-lru"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
-	"strings"
 )
 
 const (
@@ -479,12 +480,14 @@ func (s *PrivateAccountAPI) SignAndSendTransaction(ctx context.Context, args Sen
 // PublicBlockChainAPI provides an API to access the Ethereum blockchain.
 // It offers only methods that operate on public data that is freely available to anyone.
 type PublicBlockChainAPI struct {
-	b Backend
+	b   Backend
+	lru *lru.Cache
 }
 
 // NewPublicBlockChainAPI creates a new Ethereum blockchain API.
 func NewPublicBlockChainAPI(b Backend) *PublicBlockChainAPI {
-	return &PublicBlockChainAPI{b}
+	lru, _ := lru.New(100)
+	return &PublicBlockChainAPI{b: b, lru: lru}
 }
 
 func (s *PublicBlockChainAPI) Monitor(ctx context.Context, hash common.Hash, monitorType string) map[string]interface{} {
@@ -586,6 +589,10 @@ func (s *PublicBlockChainAPI) GetAccountBaseInfo(ctx context.Context, address co
 func (s *PublicBlockChainAPI) GetBlockByNumber(ctx context.Context, blockNr rpc.BlockNumber, fullTx bool) (map[string]interface{}, error) {
 	block, err := s.b.BlockByNumber(ctx, blockNr)
 	if block != nil {
+		number := block.NumberU64()
+		if cached, ok := s.lru.Get(number); ok {
+			return cached.(map[string]interface{}), nil
+		}
 		response, err := s.rpcOutputBlock(block, true, fullTx)
 		if err == nil && blockNr == rpc.PendingBlockNumber {
 			// Pending blocks need to nil out a few fields
@@ -593,6 +600,7 @@ func (s *PublicBlockChainAPI) GetBlockByNumber(ctx context.Context, blockNr rpc.
 				response[field] = nil
 			}
 		}
+		s.lru.Add(number, response)
 		return response, err
 	}
 	return nil, err
@@ -839,6 +847,7 @@ func RPCMarshalBlock(b *types.Block, inclTx bool, fullTx bool) (map[string]inter
 		"timestamp":        (*hexutil.Big)(head.Time),
 		"transactionsRoot": head.TxHash,
 		"receiptsRoot":     head.ReceiptHash,
+		"dag":              b.Dag(),
 	}
 
 	if inclTx {
@@ -980,9 +989,11 @@ func (s *PublicTransactionPoolAPI) GetBlockTransactionCountByNumber(ctx context.
 
 // GetBlockTransactionCountByHash returns the number of transactions in the block with the given hash.
 func (s *PublicTransactionPoolAPI) GetBlockTransactionCountByHash(ctx context.Context, blockHash common.Hash) *hexutil.Uint {
-	if block, _ := s.b.GetBlock(ctx, blockHash); block != nil {
+	if block, err := s.b.GetBlock(ctx, blockHash); err == nil && block != nil {
 		n := hexutil.Uint(len(block.Transactions()))
 		return &n
+	} else {
+		log.Error("GetBlockTransactionCountByHash", "hash", blockHash, "err", err)
 	}
 	return nil
 }
@@ -1032,7 +1043,12 @@ func (s *PublicTransactionPoolAPI) GetTransactionCount(ctx context.Context, addr
 // GetTransactionByHash returns the transaction for the given hash
 func (s *PublicTransactionPoolAPI) GetTransactionByHash(ctx context.Context, hash common.Hash) *RPCTransaction {
 	// Try to return an already finalized transaction
-	if tx, blockHash, blockNumber, index := rawdb.ReadTransaction(s.b.ChainDb(), hash); tx != nil {
+	tx, blockHash, blockNumber, index, err := s.b.GetTransaction(ctx, hash)
+	if err != nil {
+		return nil
+	}
+
+	if tx != nil {
 		return newRPCTransaction(tx, blockHash, blockNumber, index)
 	}
 	// No finalized transaction, try to retrieve it from the pool
@@ -1048,7 +1064,12 @@ func (s *PublicTransactionPoolAPI) GetRawTransactionByHash(ctx context.Context, 
 	var tx *types.Transaction
 
 	// Retrieve a finalized transaction, or a pooled otherwise
-	if tx, _, _, _ = rawdb.ReadTransaction(s.b.ChainDb(), hash); tx == nil {
+	tx, _, _, _, err := s.b.GetTransaction(ctx, hash)
+	if err != nil {
+		return nil, err
+	}
+
+	if tx == nil {
 		if tx = s.b.GetPoolTransaction(hash); tx == nil {
 			// Transaction not found anywhere, abort
 			return nil, nil
@@ -1060,7 +1081,10 @@ func (s *PublicTransactionPoolAPI) GetRawTransactionByHash(ctx context.Context, 
 
 // GetTransactionReceipt returns the transaction receipt for the given transaction hash.
 func (s *PublicTransactionPoolAPI) GetTransactionReceipt(ctx context.Context, hash common.Hash) (map[string]interface{}, error) {
-	tx, blockHash, blockNumber, index := rawdb.ReadTransaction(s.b.ChainDb(), hash)
+	tx, blockHash, blockNumber, index, err := s.b.GetTransaction(ctx, hash)
+	if err != nil {
+		return nil, err
+	}
 	if tx == nil {
 		return nil, nil
 	}
@@ -1142,8 +1166,8 @@ type SendTxArgs struct {
 	Nonce    *hexutil.Uint64 `json:"nonce"`
 	// We accept "data" and "input" for backwards-compatibility reasons. "input" is the
 	// newer name and should be preferred by clients.
-	Data   *hexutil.Bytes `json:"data"`
-	Input  *hexutil.Bytes `json:"input"`
+	Data  *hexutil.Bytes `json:"data"`
+	Input *hexutil.Bytes `json:"input"`
 }
 
 // setDefaults is a helper function that fills in default values for unspecified tx fields.

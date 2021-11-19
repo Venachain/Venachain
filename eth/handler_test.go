@@ -17,7 +17,6 @@
 package eth
 
 import (
-	"github.com/jpmorganchase/quorum/consensus/ethash"
 	"math"
 	"math/big"
 	"math/rand"
@@ -31,10 +30,11 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"github.com/jpmorganchase/quorum/consensus/ethash"
 )
 
 // Tests that protocol versions and modes of operations are matched up properly.
@@ -364,7 +364,7 @@ func testGetNodeData(t *testing.T, protocol int) {
 			t.Errorf("data hash mismatch: have %x, want %x", hash, want)
 		}
 	}
-	statedb := ethdb.NewMemDatabase()
+	statedb := memorydb.NewMemDatabase()
 	for i := 0; i < len(data); i++ {
 		statedb.Put(hashes[i].Bytes(), data[i])
 	}
@@ -464,7 +464,7 @@ func testDAOChallenge(t *testing.T, localForked, remoteForked bool, timeout bool
 	var (
 		evmux         = new(event.TypeMux)
 		pow           = ethash.NewFaker()
-		db            = ethdb.NewMemDatabase()
+		db            = memorydb.NewMemDatabase()
 		config        = &params.ChainConfig{DAOForkBlock: big.NewInt(1), DAOForkSupport: localForked}
 		gspec         = &core.Genesis{Config: config}
 		genesis       = gspec.MustCommit(db)

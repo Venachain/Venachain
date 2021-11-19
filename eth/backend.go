@@ -18,13 +18,14 @@
 package eth
 
 import (
+	"bufio"
+	"crypto/ecdsa"
+	"crypto/sha256"
+	"crypto/x509"
+	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"fmt"
-	"math/big"
-	"runtime"
-	"sync"
-	"sync/atomic"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
@@ -39,8 +40,10 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/filters"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/gasprice"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
+	"github.com/PlatONEnetwork/PlatONE-Go/internal/debug"
 	"github.com/PlatONEnetwork/PlatONE-Go/internal/ethapi"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/miner"
@@ -50,6 +53,16 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
+	"io"
+	"io/ioutil"
+	"math/big"
+	"os"
+	"runtime"
+	"strconv"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
 )
 
 type LesServer interface {
@@ -74,10 +87,10 @@ type Ethereum struct {
 	lesServer       LesServer
 
 	// DB interfaces
-	chainDb ethdb.Database // Block chain database
+	chainDb dbhandle.Database // Block chain database
 
 	// ext db interfaces
-	extDb ethdb.Database
+	extDb dbhandle.Database
 
 	eventMux       *event.TypeMux
 	engine         consensus.Engine
@@ -96,6 +109,11 @@ type Ethereum struct {
 	netRPCService *ethapi.PublicNetAPI
 
 	lock sync.RWMutex // Protects the variadic fields (e.g. gas price and etherbase)
+}
+
+type Node struct {
+	Addr		string	`json:"addr"`
+	ExpireTime	string	`json:"expiretime"`
 }
 
 func (s *Ethereum) AddLesServer(ls LesServer) {
@@ -128,6 +146,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		return nil, err
 	}
 	chainConfig, _, genesisErr := core.SetupGenesisBlock(chainDb, config.Genesis)
+
 	if chainConfig == nil || genesisErr != nil {
 		return nil, genesisErr
 	}
@@ -168,6 +187,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	}
 	cacheConfig := &core.CacheConfig{Disabled: config.NoPruning, TrieNodeLimit: config.TrieCache, TrieTimeLimit: config.TrieTimeout}
 	common.SetCurrentInterpreterType(chainConfig.VMInterpreter)
+	common.SetParallelPoolSize(config.ParallelSize)
 
 	eth.blockchain, missingStateBlocks, err = core.NewBlockChain(chainDb, extDb, cacheConfig, eth.chainConfig, eth.engine, vmConfig, eth.shouldPreserve)
 	if err != nil {
@@ -177,7 +197,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 
 	eth.bloomIndexer.Start(eth.blockchain)
 
-	eth.APIBackend = &EthAPIBackend{eth, nil}
+	eth.APIBackend = &EthAPIBackend{eth: eth, gpo: nil}
 	gpoParams := config.GPO
 	if gpoParams.Default == nil {
 		gpoParams.Default = config.MinerGasPrice
@@ -211,6 +231,34 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		return nil, err
 	}
 
+	if chainConfig.LicenseCheck {
+		log.Info("license","enable", chainConfig.LicenseCheck)
+		log.Info("Start license check right now.")
+
+		checked, expireTime := licenseCheck(eth.etherbase)
+		if checked {
+			go func() {
+				remainingSecond := expireTime - time.Now().Unix()
+				timeout := time.After(time.Second * time.Duration(remainingSecond))
+
+				select {
+				case <-timeout:
+					//rawdb.ReadHeadBlockHash(eth.chainDb) //todo read timestamp in head block and compare.
+
+					log.Info("License expired: stopping the node right now.")
+
+					go eth.Stop()
+
+					debug.Exit() // ensure trace and CPU profile data is flushed.
+					debug.LoudPanic("boom")
+				}
+			}()
+		} else {
+			log.Info("license check error!")
+			os.Exit(1)
+		}
+	}
+
 	return eth, nil
 }
 
@@ -232,31 +280,31 @@ func makeExtraData(extra []byte) []byte {
 }
 
 // CreateDB creates the chain database.
-func CreateDB(ctx *node.ServiceContext, config *Config, name string) (ethdb.Database, error) {
+func CreateDB(ctx *node.ServiceContext, config *Config, name string) (dbhandle.Database, error) {
 	db, err := ctx.OpenDatabase(name, config.DatabaseCache, config.DatabaseHandles)
 	if err != nil {
 		return nil, err
 	}
-	if db, ok := db.(*ethdb.LDBDatabase); ok {
+	if db, ok := db.(*leveldb.LDBDatabase); ok {
 		db.Meter("eth/db/chaindata/")
 	}
 	return db, nil
 }
 
 // create extended database
-func CreateExtDB(ctx *node.ServiceContext, config *Config, name string) (ethdb.Database, error) {
+func CreateExtDB(ctx *node.ServiceContext, config *Config, name string) (dbhandle.Database, error) {
 	db, err := ctx.OpenDatabase(name, config.DatabaseCache, config.DatabaseHandles)
 	if err != nil {
 		return nil, err
 	}
-	if db, ok := db.(*ethdb.LDBDatabase); ok {
+	if db, ok := db.(*leveldb.LDBDatabase); ok {
 		db.Meter("eth/db/extdb/")
 	}
 	return db, nil
 }
 
 // CreateConsensusEngine creates the required type of consensus engine instance for an Ethereum service
-func CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *params.ChainConfig, db ethdb.Database) consensus.Engine {
+func CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *params.ChainConfig, db dbhandle.Database) consensus.Engine {
 	if ctx == nil || chainConfig == nil {
 		return nil
 	}
@@ -269,6 +317,7 @@ func CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *params.ChainCo
 // APIs return the collection of RPC services the ethereum package offers.
 // NOTE, some of these services probably need to be moved to somewhere else.
 func (s *Ethereum) APIs() []rpc.API {
+
 	apis := ethapi.GetAPIs(s.APIBackend)
 
 	// Append any APIs exposed explicitly by the consensus engine
@@ -282,12 +331,27 @@ func (s *Ethereum) APIs() []rpc.API {
 			Service:   NewPublicEthereumAPI(s),
 			Public:    true,
 		}, {
+			Namespace: "platone",
+			Version:   "1.0",
+			Service:   NewPublicEthereumAPI(s),
+			Public:    true,
+		}, {
 			Namespace: "eth",
 			Version:   "1.0",
 			Service:   NewPublicMinerAPI(s),
 			Public:    true,
 		}, {
+			Namespace: "platone",
+			Version:   "1.0",
+			Service:   NewPublicMinerAPI(s),
+			Public:    true,
+		}, {
 			Namespace: "eth",
+			Version:   "1.0",
+			Service:   downloader.NewPublicDownloaderAPI(s.protocolManager.downloader, s.eventMux),
+			Public:    true,
+		}, {
+			Namespace: "platone",
 			Version:   "1.0",
 			Service:   downloader.NewPublicDownloaderAPI(s.protocolManager.downloader, s.eventMux),
 			Public:    true,
@@ -298,6 +362,11 @@ func (s *Ethereum) APIs() []rpc.API {
 			Public:    false,
 		}, {
 			Namespace: "eth",
+			Version:   "1.0",
+			Service:   filters.NewPublicFilterAPI(s.APIBackend, false),
+			Public:    true,
+		}, {
+			Namespace: "platone",
 			Version:   "1.0",
 			Service:   filters.NewPublicFilterAPI(s.APIBackend, false),
 			Public:    true,
@@ -464,13 +533,13 @@ func (s *Ethereum) StopMining() {
 
 func (s *Ethereum) IsMining() bool                     { return s.miner.Mining() }
 func (s *Ethereum) Miner() *miner.Miner                { return s.miner }
-func (s *Ethereum) ExtendedDb() ethdb.Database         { return s.extDb }
+func (s *Ethereum) ExtendedDb() dbhandle.Database      { return s.extDb }
 func (s *Ethereum) AccountManager() *accounts.Manager  { return s.accountManager }
 func (s *Ethereum) BlockChain() *core.BlockChain       { return s.blockchain }
 func (s *Ethereum) TxPool() *core.TxPool               { return s.txPool }
 func (s *Ethereum) EventMux() *event.TypeMux           { return s.eventMux }
 func (s *Ethereum) Engine() consensus.Engine           { return s.engine }
-func (s *Ethereum) ChainDb() ethdb.Database            { return s.chainDb }
+func (s *Ethereum) ChainDb() dbhandle.Database         { return s.chainDb }
 func (s *Ethereum) IsListening() bool                  { return true } // Always listening
 func (s *Ethereum) EthVersion() int                    { return int(s.protocolManager.SubProtocols[0].Version) }
 func (s *Ethereum) NetVersion() uint64                 { return s.networkID }
@@ -537,4 +606,140 @@ func (s *Ethereum) Stop() error {
 	s.extDb.Close()
 	close(s.shutdownChan)
 	return nil
+}
+
+func licenseCheck(addr common.Address) (bool, int64) {
+	//log.Info("Node address: ", "addr", addr.String())
+	// load signature file.
+	dir,_ := os.Getwd()
+	fi, err := os.Open(dir + "/../data/sign" + addr.String())
+	if err != nil {
+		log.Info("Error: %s\n", err)
+		return false, 0
+	}
+	defer fi.Close()
+
+	var licenseInfo []string
+
+	br := bufio.NewReader(fi)
+	for {
+		a, _, c := br.ReadLine()
+		if c == io.EOF {
+			break
+		}
+		licenseInfo = append(licenseInfo, string(a))
+	}
+
+	licenseInfoSplit := strings.Split(licenseInfo[0], " ")
+
+	if len(licenseInfoSplit) != 4 {
+		log.Info("License info doesn't enough. Parameter required 4: [node address] [expire time] [R] [S]")
+		return false, 0
+	}
+
+	// check addr
+	if addr.String() != licenseInfoSplit[0] {
+		log.Info("Node address doesn't match the address license provided! ", "addr", addr.String(), licenseInfoSplit[0])
+		return false, 0
+	}
+
+	log.Info("Node address matched.", "addr", licenseInfoSplit[0])
+
+	// check expire time
+	expireTime, err := strconv.ParseInt(licenseInfoSplit[1], 10, 64)
+	if time.Now().Unix() >= expireTime {
+		log.Info("License expired!")
+		log.Info("The expire time is set to ", expireTime)
+		return false, 0
+	}
+
+	// following: check signature
+	nodeInfo := Node{
+		Addr: licenseInfoSplit[0],
+		ExpireTime: licenseInfoSplit[1],
+	}
+
+	jsonR, err := json.Marshal(nodeInfo)
+	if err != nil {
+		log.Info("Node info marshal err: ", err)
+		return false, 0
+	}
+
+	msgHash := sha256.New()
+	_, err = msgHash.Write(jsonR)
+	if err != nil {
+		log.Info("message hash error: ", err)
+		return false, 0
+	}
+	msgHashSum := msgHash.Sum(nil)
+
+	//read public key info.
+	publickeyInfo := `-----BEGIN ECDSA public key-----
+MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQBlG2xio9lfJaNVXmgGJamH2iBkBxA
+CUzh0qhn6F4AjPdupYVl0BFAFp8zcgf+T/CD63y82LTztJbhaMMGv67BEnEA0A2r
+vfEnetVuu9nvSJYdtXLqoPwKKmeKLzHuPciWYjVN659/ghsvX5t7D9muj0a5NDLp
+QN275TE7TLxctFVF0eY=
+-----END ECDSA public key-----
+`
+
+	//dstFile, err := os.Create(dir + "/../data/publickey.pem")
+	//if err != nil {
+	//	logrus.Fatal(err)
+	//}
+	//
+	//defer dstFile.Close()
+	//dstFile.WriteString(publickeyInfo)
+
+	tmpFile, err := ioutil.TempFile(dir + "/../data/", "tmp")
+	defer os.Remove(tmpFile.Name())
+	if err != nil {
+		log.Info("Error when creating temp file.", err)
+		return false, 0
+	}
+	tmpFile.WriteString(publickeyInfo)
+
+	publicKeyfile, err := os.Open(tmpFile.Name())
+	if err != nil {
+		log.Info("Open public key file error: ", err)
+		return false, 0
+	}
+
+	log.Info("Open public key file", tmpFile.Name())
+
+	publicInfo, _ := publicKeyfile.Stat()
+	publicBuf := make([]byte, publicInfo.Size())
+	publicKeyfile.Read(publicBuf)
+
+	publicBlock, _ := pem.Decode(publicBuf)
+
+	publicKey, err := x509.ParsePKIXPublicKey(publicBlock.Bytes)
+	if err != nil {
+		log.Info("Decode public key error: ", err)
+		return false, 0
+	}
+
+	publicKeyEcdsa := publicKey.(*ecdsa.PublicKey)
+
+	R := new(big.Int)
+	R, ok := R.SetString(licenseInfoSplit[2], 10) //R
+	if !ok {
+		log.Info("SetString: error")
+		return false, 0
+	}
+
+	S := new(big.Int)
+	S, ok = S.SetString(licenseInfoSplit[3], 10) //S
+	if !ok {
+		log.Info("SetString: error")
+		return false, 0
+	}
+
+	flag := ecdsa.Verify(publicKeyEcdsa, msgHashSum, R, S)
+	if flag != true {
+		log.Info("could not verify signature.")
+		return false, 0
+	}
+	log.Info("license check success!")
+
+	return true, expireTime
 }

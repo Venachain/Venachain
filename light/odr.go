@@ -21,11 +21,16 @@ package light
 import (
 	"context"
 	"errors"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/trie"
 )
 
 // NoOdr is the default context passed to an ODR capable function when the ODR
@@ -37,17 +42,18 @@ var ErrNoPeers = errors.New("no suitable peers available")
 
 // OdrBackend is an interface to a backend service that handles ODR retrievals type
 type OdrBackend interface {
-	Database() ethdb.Database
+	Database() dbhandle.Database
 	ChtIndexer() *core.ChainIndexer
 	BloomTrieIndexer() *core.ChainIndexer
 	BloomIndexer() *core.ChainIndexer
 	Retrieve(ctx context.Context, req OdrRequest) error
+	RetrieveTxStatus(ctx context.Context, req *TxStatusRequest) (err error)
 	IndexerConfig() *IndexerConfig
 }
 
 // OdrRequest is an interface for retrieval requests
 type OdrRequest interface {
-	StoreResult(db ethdb.Database)
+	StoreResult(db dbhandle.Database)
 }
 
 // TrieID identifies a state or account storage trie
@@ -83,14 +89,24 @@ func StorageTrieID(state *TrieID, addrHash, root common.Hash) *TrieID {
 // TrieRequest is the ODR request type for state/storage trie entries
 type TrieRequest struct {
 	OdrRequest
-	Id    *TrieID
-	Key   []byte
-	Proof *NodeSet
+	Id            *TrieID
+	Key           []byte
+	Proof         *NodeSet
+	StorageValues [][]byte
 }
 
 // StoreResult stores the retrieved data in local database
-func (req *TrieRequest) StoreResult(db ethdb.Database) {
+func (req *TrieRequest) StoreResult(db dbhandle.Database) {
 	req.Proof.Store(db)
+	for _, storageValue := range req.StorageValues {
+		valueKey := crypto.Keccak256Hash(append([]byte(state.StoragePrefix), storageValue...))
+		db.Put(secureKey(valueKey[:]), storageValue)
+		log.Debug("store result", "valueKey", valueKey, "value", req.StorageValues)
+	}
+}
+
+func secureKey(key []byte) []byte {
+	return append(trie.SecureKeyPrefix, key...)
 }
 
 // CodeRequest is the ODR request type for retrieving contract code
@@ -102,7 +118,7 @@ type CodeRequest struct {
 }
 
 // StoreResult stores the retrieved data in local database
-func (req *CodeRequest) StoreResult(db ethdb.Database) {
+func (req *CodeRequest) StoreResult(db dbhandle.Database) {
 	db.Put(req.Hash[:], req.Data)
 }
 
@@ -115,7 +131,7 @@ type BlockRequest struct {
 }
 
 // StoreResult stores the retrieved data in local database
-func (req *BlockRequest) StoreResult(db ethdb.Database) {
+func (req *BlockRequest) StoreResult(db dbhandle.Database) {
 	rawdb.WriteBodyRLP(db, req.Hash, req.Number, req.Rlp)
 }
 
@@ -128,7 +144,7 @@ type ReceiptsRequest struct {
 }
 
 // StoreResult stores the retrieved data in local database
-func (req *ReceiptsRequest) StoreResult(db ethdb.Database) {
+func (req *ReceiptsRequest) StoreResult(db dbhandle.Database) {
 	rawdb.WriteReceipts(db, req.Hash, req.Number, req.Receipts)
 }
 
@@ -143,7 +159,7 @@ type ChtRequest struct {
 }
 
 // StoreResult stores the retrieved data in local database
-func (req *ChtRequest) StoreResult(db ethdb.Database) {
+func (req *ChtRequest) StoreResult(db dbhandle.Database) {
 	hash, num := req.Header.Hash(), req.Header.Number.Uint64()
 
 	rawdb.WriteHeader(db, req.Header)
@@ -163,7 +179,7 @@ type BloomRequest struct {
 }
 
 // StoreResult stores the retrieved data in local database
-func (req *BloomRequest) StoreResult(db ethdb.Database) {
+func (req *BloomRequest) StoreResult(db dbhandle.Database) {
 	for i, sectionIdx := range req.SectionIndexList {
 		sectionHead := rawdb.ReadCanonicalHash(db, (sectionIdx+1)*req.Config.BloomTrieSize-1)
 		// if we don't have the canonical hash stored for this section head number, we'll still store it under
@@ -173,3 +189,17 @@ func (req *BloomRequest) StoreResult(db ethdb.Database) {
 		rawdb.WriteBloomBits(db, req.BitIdx, sectionIdx, sectionHead, req.BloomBits[i])
 	}
 }
+
+type TxStatus struct {
+	Status core.TxStatus
+	Lookup *rawdb.TxLookupEntry `rlp:"nil"`
+	Error  string
+}
+
+type TxStatusRequest struct {
+	Hashes []common.Hash
+	Status []TxStatus
+}
+
+// StoreResult stores the retrieved data in local database
+func (req *TxStatusRequest) StoreResult(db dbhandle.Database) {}

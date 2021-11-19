@@ -18,7 +18,6 @@ package fetcher
 
 import (
 	"errors"
-	istanbulBackend "github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/backend"
 	"math/big"
 	"sync"
 	"sync/atomic"
@@ -26,15 +25,16 @@ import (
 	"time"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	istanbulBackend "github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/backend"
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 )
 
 var (
-	testdb       = ethdb.NewMemDatabase()
+	testdb       = memorydb.NewMemDatabase()
 	testKey, _   = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 	testAddress  = crypto.PubkeyToAddress(testKey.PublicKey)
 	genesis      = core.GenesisBlockForTesting(testdb, testAddress, big.NewInt(1000000000))

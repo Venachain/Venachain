@@ -52,6 +52,10 @@ var (
 	errPhoneUnsupported       = errors.New("Unsupported phone number ")
 
 	errValidatorCountInvalid = errors.New("Validator Count Invalid")
+
+	errAuthenticationFailed = errors.New("Authentication failed !!!")
+	errAlreadySetEvidence   = errors.New("This id Already exsit")
+	errEvidenceNotFound     = errors.New("Evidence Not Found")
 )
 
 var (
@@ -72,7 +76,8 @@ func execSC(input []byte, fns SCExportFns) (string, []byte, error) {
 	//first result type is: primitive type, second result type: error
 	result := reflect.ValueOf(fn).Call(params)
 	if err, ok := result[1].Interface().(error); ok {
-		log.Error("execute system contract failed.", "error", err)
+		log.Error("execute system contract failed.", "funcName", fnName, "error", err)
+		return fnName, MakeReturnBytes([]byte(newInternalErrorResult(err).String())), err
 	}
 
 	//vm run successfully, so return nil
@@ -96,9 +101,10 @@ func toContractReturnValueType(txType int, val reflect.Value) []byte {
 		return toContractReturnValueStringType(txType, []byte(val.String()))
 	case reflect.Slice:
 		return toContractReturnValueStringType(txType, val.Bytes())
-	case reflect.Struct:{
-		return toContractReturnValueStructType(txType,val.Interface())
-	}
+	case reflect.Struct:
+		{
+			return toContractReturnValueStructType(txType, val.Interface())
+		}
 		//case reflect.Bool:
 		//case reflect.Float64, reflect.Float32:
 		// case reflect.Array

@@ -17,13 +17,11 @@
 package miner
 
 import (
+	"fmt"
 	"math/big"
 	"sync"
-
 	"sync/atomic"
 	"time"
-
-	"fmt"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
@@ -31,7 +29,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
@@ -88,6 +86,7 @@ type environment struct {
 	header   *types.Header
 	txs      []*types.Transaction
 	receipts []*types.Receipt
+	dag      types.DAG
 }
 
 // task contains all information for consensus engine sealing and result submitting.
@@ -134,7 +133,7 @@ func (e *commitWorkEnv) getHighestLogicalBlock() *types.Block {
 // worker is the main object which takes care of submitting new work to consensus engine
 // and gathering the sealing result.
 type worker struct {
-	extdb  ethdb.Database
+	extdb  dbhandle.Database
 	config *params.ChainConfig
 	engine consensus.Engine
 	eth    Backend
@@ -182,11 +181,11 @@ type worker struct {
 	// External functions
 	isLocalBlock func(block *types.Block) bool // Function used to determine whether the specified block is mined by local miner.
 
-	blockChainCache *core.BlockChainCache
-	commitWorkEnv   *commitWorkEnv
-	recommit        time.Duration
-	commitDuration  int64 //in Millisecond
-
+	blockChainCache  *core.BlockChainCache
+	commitWorkEnv    *commitWorkEnv
+	recommit         time.Duration
+	commitDuration   int64 //in Millisecond
+	lastBlockTxCount uint64
 	// Test hooks
 	newTaskHook  func(*task)                        // Method to call upon receiving a new sealing task.
 	skipSealHook func(*task) bool                   // Method to decide whether skipping the sealing.
@@ -382,7 +381,7 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 			// clear consensus cache
 			log.Info("received a event of ChainHeadEvent", "hash", head.Block.Hash(), "number", head.Block.NumberU64(), "parentHash", head.Block.ParentHash())
 			w.blockChainCache.ClearCache(head.Block)
-
+			<-core.WorkerEvent
 			if h, ok := w.engine.(consensus.Handler); ok {
 				h.NewChainHead()
 			}
@@ -606,7 +605,7 @@ func (w *worker) resultLoop() {
 			// Insert the block into the set of pending ones to resultLoop for confirmations
 			//w.unconfirmed.Insert(block.NumberU64(), block.Hash())
 
-			log.Info("result block ---------------------------", "duration", time.Since(now))
+			log.Debug("result block ---------------------------", "duration", time.Since(now))
 		case <-w.exitCh:
 			return
 		}
@@ -655,6 +654,23 @@ func (w *worker) updateSnapshot(block *types.Block) {
 	w.snapshotState = w.current.state.Copy()
 }
 
+func (w *worker) processTxs(stateDb *state.StateDB, header *types.Header, txs types.Transactions) bool {
+	if w.current == nil {
+		return false
+	}
+
+	if err := w.chain.Processor().ParallelProcessTxs(stateDb, header, txs); err != nil {
+		log.Error("commit transaction err", "err", err)
+		return false
+	}
+	w.current.txs = stateDb.GetTxs()
+	w.current.dag = stateDb.GetDag()
+	w.current.receipts = stateDb.GetReceipts()
+	w.current.header.TxHash = stateDb.GetTxHash()
+	w.current.header.ReceiptHash = stateDb.GetReceiptHash()
+	return true
+}
+
 func (w *worker) commitTransaction(tx *types.Transaction, coinbase common.Address) ([]*types.Log, error) {
 	snap := w.current.state.Snapshot()
 
@@ -669,9 +685,7 @@ func (w *worker) commitTransaction(tx *types.Transaction, coinbase common.Addres
 	return receipt.Logs, nil
 }
 
-func (w *worker) commitTransactionsWithHeader(header *types.Header, txs *types.TransactionsByPriceAndNonce, coinbase common.Address, interrupt *int32) bool {
-	// Short circuit if current is nil
-	//timeout := false
+func (w *worker) commitTransactionsWithHeader(header *types.Header, txs types.Transactions, coinbase common.Address, interrupt *int32) bool {
 
 	if w.current == nil {
 		return true
@@ -683,7 +697,7 @@ func (w *worker) commitTransactionsWithHeader(header *types.Header, txs *types.T
 
 	var coalescedLogs []*types.Log
 
-	for {
+	for index := 0; index < txs.Len(); index++ {
 		// In the following three cases, we will interrupt the execution of the transaction.
 		// (1) new head block event arrival, the interrupt signal is 1
 		// (2) worker start or restart, the interrupt signal is 1
@@ -710,10 +724,7 @@ func (w *worker) commitTransactionsWithHeader(header *types.Header, txs *types.T
 			break
 		}
 		// Retrieve the next transaction and abort if all done
-		tx := txs.Peek()
-		if tx == nil {
-			break
-		}
+		tx := txs[index]
 		// Error may be ignored here. The error has already been checked
 		// during transaction acceptance is the transaction pool.
 		//
@@ -731,29 +742,24 @@ func (w *worker) commitTransactionsWithHeader(header *types.Header, txs *types.T
 		case core.ErrGasLimitReached:
 			// Pop the current out-of-gas transaction without shifting in the next from the account
 			log.Warn("Gas limit exceeded for current block", "blockNumber", header.Number, "blockParentHash", header.ParentHash, "tx.hash", tx.Hash(), "sender", from, "senderCurNonce", w.current.state.GetNonce(from), "tx.nonce", tx.Nonce())
-			txs.Pop()
 			rpc.MonitorWriteData(rpc.TransactionExecuteStatus, tx.Hash().String(), "false", w.extdb)
 		case core.ErrNonceTooLow:
 			// New head notification data race between the transaction pool and miner, shift
 			log.Warn("Skipping transaction with low nonce", "blockNumber", header.Number, "blockParentHash", header.ParentHash, "tx.hash", tx.Hash(), "sender", from, "senderCurNonce", w.current.state.GetNonce(from), "tx.nonce", tx.Nonce())
-			txs.Shift()
 			rpc.MonitorWriteData(rpc.TransactionExecuteStatus, tx.Hash().String(), "false", w.extdb)
 		case core.ErrNonceTooHigh:
 			// Reorg notification data race between the transaction pool and miner, skip account =
 			log.Warn("Skipping account with hight nonce", "blockNumber", header.Number, "blockParentHash", header.ParentHash, "tx.hash", tx.Hash(), "sender", from, "senderCurNonce", w.current.state.GetNonce(from), "tx.nonce", tx.Nonce())
-			txs.Pop()
 			rpc.MonitorWriteData(rpc.TransactionExecuteStatus, tx.Hash().String(), "false", w.extdb)
 		case nil:
 			// Everything ok, collect the logs and shift in the next transaction from the same account
 			coalescedLogs = append(coalescedLogs, logs...)
 			w.current.tcount++
-			txs.Shift()
 			rpc.MonitorWriteData(rpc.TransactionExecuteStatus, tx.Hash().String(), "true", w.extdb)
 		default:
 			// Strange error, discard the transaction and get the next in line (note, the
 			// nonce-too-high clause will prevent us from executing in vain).
 			log.Warn("Transaction failed, account skipped", "blockNumber", header.Number, "blockParentHash", header.ParentHash, "hash", tx.Hash(), "hash", tx.Hash(), "err", err)
-			txs.Shift()
 			rpc.MonitorWriteData(rpc.TransactionExecuteStatus, tx.Hash().String(), "false", w.extdb)
 		}
 	}
@@ -841,14 +847,14 @@ func (w *worker) commitNewWork(interrupt *int32, timestamp int64, commitBlock *t
 
 	// Fill the block with all available pending transactions.
 	startTime := time.Now()
-	pending, err := w.eth.TxPool().PendingLimited()
+	globalTxCount := w.adjustGlobalTxCount()
+
+	pending, err := w.eth.TxPool().PendingLimited(int(globalTxCount))
 
 	if err != nil {
 		log.Error("Failed to fetch pending transactions", "time", common.PrettyDuration(time.Since(startTime)), "err", err)
 		return
 	}
-
-	//log.Info("Fetch pending transactions success", "pendingLength", len(pending), "time", common.PrettyDuration(time.Since(startTime)))
 
 	// Short circuit if there is no available pending transactions
 	if len(pending) == 0 {
@@ -860,34 +866,23 @@ func (w *worker) commitNewWork(interrupt *int32, timestamp int64, commitBlock *t
 		return
 	}
 
-	txsCount := 0
-	for _, accTxs := range pending {
-		txsCount = txsCount + len(accTxs)
-	}
-	// Split the pending transactions into locals and remotes
-	localTxs, remoteTxs := make(map[common.Address]types.Transactions), pending
-	for _, account := range w.eth.TxPool().Locals() {
-		if txs := remoteTxs[account]; len(txs) > 0 {
-			delete(remoteTxs, account)
-			localTxs[account] = txs
-		}
-	}
-	log.Debug("execute pending transactions", "localTxCount", len(localTxs), "remoteTxCount", len(remoteTxs), "txsCount", txsCount)
+	containsCreate := isContainsCreateContract(pending)
+	// pending里面是否包含创建合约的交易，如果包含则串行执行
 
 	startTime = time.Now()
-	if len(localTxs) > 0 {
-		txs := types.NewTransactionsByPriceAndNonce(w.current.signer, localTxs)
-		if ok := w.commitTransactionsWithHeader(header, txs, w.coinbase, interrupt); ok {
+
+	if containsCreate || !common.SysCfg.IsUseDAG() {
+		if ok := w.commitTransactionsWithHeader(header, pending, w.coinbase, interrupt); ok {
+			return
+		}
+	} else {
+		if result := w.processTxs(w.current.state, header, pending); !result {
 			return
 		}
 	}
-	if len(remoteTxs) > 0 {
-		txs := types.NewTransactionsByPriceAndNonce(w.current.signer, remoteTxs)
-		if ok := w.commitTransactionsWithHeader(header, txs, w.coinbase, interrupt); ok {
-			return
-		}
-	}
-	log.Info("commit transaction -------------------", "duration", time.Since(startTime))
+
+	log.Debug("commit transaction -------------------", "duration", time.Since(startTime))
+	//return
 
 	w.commit(w.fullTaskHook, true, tstart)
 }
@@ -903,8 +898,8 @@ func (w *worker) commit(interval func(), update bool, start time.Time) error {
 	}
 	s := w.current.state
 	now := time.Now()
-	block, err := w.engine.Finalize(w.chain, w.current.header, s, w.current.txs, w.current.receipts)
-	log.Info("engine Finalize block ---------------", "duration", time.Since(now))
+	block, err := w.engine.Finalize(w.chain, w.current.header, s, w.current.txs, w.current.receipts, w.current.dag)
+	log.Debug("engine Finalize block ---------------", "duration", time.Since(now))
 	if err != nil {
 		return err
 	}
@@ -915,16 +910,15 @@ func (w *worker) commit(interval func(), update bool, start time.Time) error {
 		select {
 		case w.taskCh <- &task{receipts: receipts, state: s, block: block, createdAt: time.Now()}:
 			//w.unconfirmed.Shift(block.NumberU64() - 1)
-
-			feesWei := new(big.Int)
-			for i, tx := range block.Transactions() {
-				feesWei.Add(feesWei, new(big.Int).Mul(new(big.Int).SetUint64(receipts[i].GasUsed), tx.GasPrice()))
+			if block.Transactions().Len() != 0 {
+				feesWei := new(big.Int)
+				for i, tx := range block.Transactions() {
+					feesWei.Add(feesWei, new(big.Int).Mul(new(big.Int).SetUint64(receipts[i].GasUsed), tx.GasPrice()))
+				}
+				feesEth := new(big.Float).Quo(new(big.Float).SetInt(feesWei), new(big.Float).SetInt(big.NewInt(params.Ether)))
+				log.Info("Commit new mining work", "number", block.Number(), "sealhash", w.engine.SealHash(block.Header()), "receiptHash", block.ReceiptHash(),
+					"txs", w.current.tcount, "gas", block.GasUsed(), "fees", feesEth, "elapsed", common.PrettyDuration(time.Since(start)))
 			}
-			feesEth := new(big.Float).Quo(new(big.Float).SetInt(feesWei), new(big.Float).SetInt(big.NewInt(params.Ether)))
-
-			log.Info("Commit new mining work", "number", block.Number(), "sealhash", w.engine.SealHash(block.Header()), "receiptHash", block.ReceiptHash(),
-				"txs", w.current.tcount, "gas", block.GasUsed(), "fees", feesEth, "elapsed", common.PrettyDuration(time.Since(start)))
-
 		case <-w.exitCh:
 			log.Info("Worker has exited")
 		}
@@ -959,44 +953,71 @@ func (w *worker) makePending() (*types.Block, *state.StateDB) {
 	return nil, nil
 }
 
-//
-//func (w *worker) shouldCommit(timestamp int64) (bool, *types.Block) {
-//	w.commitWorkEnv.baseLock.Lock()
-//	defer w.commitWorkEnv.baseLock.Unlock()
-//
-//	baseBlock, commitTime := w.commitWorkEnv.commitBaseBlock, w.commitWorkEnv.commitTime
-//	highestLogicalBlock := w.commitWorkEnv.getHighestLogicalBlock()
-//
-//	shouldCommit := false
-//	if baseBlock == nil || baseBlock.Hash().Hex() != highestLogicalBlock.Hash().Hex() {
-//		shouldCommit = true
-//	} else {
-//		pending, err := w.eth.TxPool().PendingLimited()
-//		if err == nil && len(pending) > 0 {
-//			log.Info("w.eth.TxPool()", "pending:", len(pending))
-//			shouldCommit = true
-//		}
-//	}
-//
-//	if shouldCommit && timestamp != 0 {
-//		shouldCommit = (timestamp - commitTime) >= w.recommit.Nanoseconds()/1e6
-//	}
-//	if shouldCommit {
-//		w.commitWorkEnv.commitBaseBlock = highestLogicalBlock
-//		w.commitWorkEnv.commitTime = time.Now().UnixNano() / 1e6
-//
-//		if baseBlock != nil {
-//			log.Info("baseBlock", "number", baseBlock.NumberU64(), "hash", baseBlock.Hash(), "hashHex", baseBlock.Hash().Hex())
-//			log.Info("commitTime", "commitTime", commitTime, "timestamp", timestamp)
-//			log.Info("highestLogicalBlock", "number", highestLogicalBlock.NumberU64(), "hash", highestLogicalBlock.Hash(), "hashHex", highestLogicalBlock.Hash().Hex())
-//		}
-//	}
-//	return shouldCommit, highestLogicalBlock
-//}
-
 func (w *worker) resetDone() bool {
 	if w.chain.CurrentBlock().Number().Cmp(w.eth.TxPool().GetResetNumber()) == 0 {
 		return true
 	}
 	return false
+}
+
+func isContainsCreateContract(pending []*types.Transaction) bool {
+	for _, tx := range pending {
+		if tx.To() == nil {
+			return true
+		}
+	}
+	return false
+}
+
+func (w *worker) adjustGlobalTxCount() uint64 {
+	ratioCeil := w.eth.TxPool().GetTxPoolConfig().RequestTimeoutRatioCeil
+	ratioFloor := w.eth.TxPool().GetTxPoolConfig().RequestTimeoutRatioFloor
+	originTxCount := w.eth.TxPool().GetTxPoolConfig().GlobalTxCount.Load()
+
+	if !w.eth.TxPool().GetTxPoolConfig().IsAutoAdjustTxCount {
+		return originTxCount
+	}
+	if _, ok := w.engine.(consensus.Istanbul); !ok {
+		return originTxCount
+	}
+
+	statusInfo := w.engine.GetStatusInfo()
+	statusInfo.Lock()
+	defer statusInfo.Unlock()
+
+	if statusInfo.IsTimeout {
+		var res uint64
+		//第一次共识
+		if w.lastBlockTxCount == 0 && originTxCount >= 2 {
+			res = originTxCount >> 1
+		} else if w.lastBlockTxCount >= 2 {
+			res = w.lastBlockTxCount >> 1
+		}
+		//make sure at least txCount=1
+		if res == 0 {
+			res = 1
+		}
+		w.eth.TxPool().GetTxPoolConfig().GlobalTxCount.Store(res)
+		//清楚标记
+		statusInfo.IsTimeout = false
+		return res
+	}
+
+	res := originTxCount
+	if statusInfo.Ratio < ratioFloor {
+		if w.lastBlockTxCount == 0 || w.lastBlockTxCount < originTxCount {
+			w.lastBlockTxCount = statusInfo.CurrentBlockTxCount
+			return originTxCount
+		}
+		res = uint64(ratioFloor * float64(originTxCount) / statusInfo.Ratio)
+	} else if statusInfo.Ratio > ratioCeil {
+		res = uint64(ratioCeil * float64(originTxCount) / statusInfo.Ratio)
+	}
+	//make sure at least txCount=1
+	if res == 0 {
+		res = 1
+	}
+	w.eth.TxPool().GetTxPoolConfig().GlobalTxCount.Store(res)
+	w.lastBlockTxCount = statusInfo.CurrentBlockTxCount
+	return res
 }

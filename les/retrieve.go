@@ -28,6 +28,7 @@ import (
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common/mclock"
 	"github.com/PlatONEnetwork/PlatONE-Go/light"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 )
 
 var (
@@ -309,6 +310,8 @@ func (r *sentReq) tryRequest() {
 			p = <-sent
 		}
 	}
+	log.Trace("try request", "peer", p)
+	log.Trace("try request", "=======================================")
 
 	r.eventsCh <- reqPeerEvent{rpSent, p}
 	if p == nil {

@@ -58,6 +58,8 @@ function usage() {
 #c4                                         when set: eg ".\/logs"
 #c4            --extraoptions, -e           extra platone command options when platone starts
 #c4                                         (default: --debug)
+#c4            --txcount, -c                max tx count in a block
+#c4                                         (default:1000)
 #c4            --all, -a                    start all node
 #c4            --help, -h                   show help
 #c0        stop                             try to stop the specified node
@@ -426,6 +428,7 @@ function start() {
     logsize=""
     logdir=""
     extraoptions=""
+    txcount=""
     all="false"
     if [[ $# -eq 0 ]]; then
         showUsage 4
@@ -464,6 +467,11 @@ function start() {
             extraoptions=$2
             shift 2
             ;;
+        --txcount | -c)
+            shiftOption2 $#
+            txcount=$2
+            shift 2
+            ;;
         --all | -a)
             echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Start all nodes"
             all=true
@@ -481,18 +489,20 @@ function start() {
         for d in ${DISENABLE}; do
             echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Start all disable nodes"
             saveConf $d bootnodes "${bns}"
-            saveConf $d log_size "${logsize}"
-            saveConf $d log_dir "${logdir}"
-            saveConf $d extra_options "${extraoptions}"
+            saveConf $d logsize "${logsize}"
+            saveConf $d logdir "${logdir}"
+            saveConf $d extraoptions "${extraoptions}"
+            saveConf $d txcount "${txcount}"
             ./local-run-node.sh -n $d
         done
         exit
     fi
     saveConf $nid bootnodes "${bns}"
-    saveConf $nid log_size "${logsize}"
-    saveConf $nid log_dir "${logdir}"
-    saveConf $nid extra_options "${extraoptions}"
-    ./local-run-node.sh -n $nid
+    saveConf $nid logsize "${logsize}"
+    saveConf $nid logdir "${logdir}"
+    saveConf $nid extraoptions "${extraoptions}"
+    saveConf $nid txcount "${txcount}"
+    ./local-run-node.sh -n $d
 }
 
 function deploySys() {

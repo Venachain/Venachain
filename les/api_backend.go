@@ -31,7 +31,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/gasprice"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/light"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
@@ -111,6 +111,10 @@ func (b *LesApiBackend) SendTx(ctx context.Context, signedTx *types.Transaction)
 	return b.eth.txPool.Add(ctx, signedTx)
 }
 
+func (b *LesApiBackend) GetTransaction(ctx context.Context, txHash common.Hash) (*types.Transaction, common.Hash, uint64, uint64, error) {
+	return light.GetTransaction(ctx, b.eth.odr, txHash)
+}
+
 func (b *LesApiBackend) RemoveTx(txHash common.Hash) {
 	b.eth.txPool.RemoveTx(txHash)
 }
@@ -171,11 +175,11 @@ func (b *LesApiBackend) SuggestPrice(ctx context.Context) (*big.Int, error) {
 	return b.gpo.SuggestPrice(ctx)
 }
 
-func (b *LesApiBackend) ExtendedDb() ethdb.Database {
+func (b *LesApiBackend) ExtendedDb() dbhandle.Database {
 	return b.eth.extDb
 }
 
-func (b *LesApiBackend) ChainDb() ethdb.Database {
+func (b *LesApiBackend) ChainDb() dbhandle.Database {
 	return b.eth.chainDb
 }
 

@@ -20,33 +20,34 @@ import (
 	"bytes"
 	"container/heap"
 	"errors"
+	"io"
+	"math/big"
+	"sync/atomic"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto/sha3"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
-	lru "github.com/hashicorp/golang-lru"
-	"io"
-	"math/big"
-	"sync/atomic"
 )
 
 //go:generate gencodec -type txdata -field-override txdataMarshaling -out gen_tx_json.go
 
 var (
-	ErrInvalidSig           = errors.New("invalid transaction v, r, s values")
-	ErrInvalidOldTrx        = errors.New("invalid old transaction payload")
-	TransactionsRlpCache, _ = lru.NewARC(4)
+	ErrInvalidSig    = errors.New("invalid transaction v, r, s values")
+	ErrInvalidOldTrx = errors.New("invalid old transaction payload")
 )
 
 type Transaction struct {
 	data txdata
 	// caches
-	hash   atomic.Value
-	size   atomic.Value
-	from   atomic.Value
-	router int32
+	hash       atomic.Value
+	size       atomic.Value
+	from       atomic.Value
+	rlp        atomic.Value
+	router     int32
+	processCnt int32
 }
 
 type txdata struct {
@@ -133,7 +134,18 @@ func isProtectedV(V *big.Int) bool {
 
 // EncodeRLP implements rlp.Encoder
 func (tx *Transaction) EncodeRLP(w io.Writer) error {
-	return rlp.Encode(w, &tx.data)
+	if rlp := tx.rlp.Load(); rlp != nil {
+		_, err := w.Write(rlp.([]byte))
+		return err
+	}
+	value, err := rlp.EncodeToBytes(&tx.data)
+	if err != nil {
+		return err
+	}
+	// cache the transaction rlp data
+	tx.rlp.Store(value)
+	_, err = w.Write(value)
+	return err
 }
 
 // DecodeRLP implements rlp.Decoder
@@ -289,6 +301,11 @@ func (tx *Transaction) FromRemote() bool {
 	return tx.router == 1
 }
 
+func (tx *Transaction) Try() bool {
+	tx.processCnt++
+	return tx.processCnt < 5
+}
+
 // Transactions is a Transaction slice type for basic sorting.
 type Transactions []*Transaction
 
@@ -307,20 +324,10 @@ func (s Transactions) GetRlp(i int) []byte {
 func (s Transactions) GetHash() common.Hash {
 	var h common.Hash
 	d := sha3.NewKeccak256()
-	body := &Body{s}
-	bytes, _ := rlp.EncodeToBytes(body)
+	bytes, _ := rlp.EncodeListToBytes(s)
 	d.Write(bytes)
 	d.Sum(h[:0])
-	//cache the rlp bytes
-	TransactionsRlpCache.Add(h, bytes)
 	return h
-}
-
-func GetbodyRlpByCache(h common.Hash) []byte {
-	if data, ok := TransactionsRlpCache.Get(h); ok {
-		return data.([]byte)
-	}
-	return nil
 }
 
 // TxDifference returns a new set which is the difference between a and b.

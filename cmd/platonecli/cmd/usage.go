@@ -48,6 +48,7 @@ var AppHelpFlagGroups = []flagGroup{
 		Flags: []cli.Flag{
 			UrlFlags,
 			AccountFlags,
+			TransferValueFlag,
 			GasFlags,
 			GasPriceFlags,
 			LocalFlags,
@@ -95,7 +96,7 @@ var AppHelpFlagGroups = []flagGroup{
 			ContractIDFlag,
 			ContractAbiFilePathFlag,
 			ContractVmFlags,
-			TransferValueFlag,
+			//TransferValueFlag,
 			ShowContractMethodsFlag,
 		},
 	},

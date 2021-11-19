@@ -80,6 +80,7 @@ var AppHelpFlagGroups = []flagGroup{
 			utils.LightServFlag,
 			utils.LightPeersFlag,
 			utils.LightKDFFlag,
+			utils.ParallelProcessSize,
 		},
 	},
 	//{
@@ -103,10 +104,7 @@ var AppHelpFlagGroups = []flagGroup{
 			utils.TxPoolPriceBumpFlag,
 			utils.TxPoolAccountSlotsFlag,
 			utils.TxPoolGlobalSlotsFlag,
-			utils.TxPoolAccountQueueFlag,
-			utils.TxPoolGlobalQueueFlag,
 			utils.TxPoolGlobalTxCountFlag,
-			utils.TxPoolLifetimeFlag,
 		},
 	},
 	{

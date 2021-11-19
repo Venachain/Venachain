@@ -29,12 +29,12 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
-	"github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 var (
@@ -48,7 +48,7 @@ var (
 type LightChain struct {
 	hc            *core.HeaderChain
 	indexerConfig *IndexerConfig
-	chainDb       ethdb.Database
+	chainDb       dbhandle.Database
 	odr           OdrBackend
 	chainFeed     event.Feed
 	chainSideFeed event.Feed
@@ -113,6 +113,10 @@ func NewLightChain(odr OdrBackend, config *params.ChainConfig, engine consensus.
 			log.Error("Chain rewind was successful, resuming normal operation")
 		}
 	}
+
+	bc.hc.SetLightStateAt(func(ctx context.Context, header *types.Header) *state.StateDB {
+		return NewState(ctx, header, bc.odr)
+	})
 	return bc, nil
 }
 
@@ -352,6 +356,22 @@ func (self *LightChain) postChainEvents(events []interface{}) {
 // In the case of a light chain, InsertHeaderChain also creates and posts light
 // chain events when necessary.
 func (self *LightChain) InsertHeaderChain(chain []*types.Header, checkFreq int) (int, error) {
+	log.Trace("LightChain InsertHeaderChain", "count", len(chain), "from", chain[0].Number.Uint64())
+	for i, _ := range chain {
+		if chain[i].Number.Uint64() != self.hc.CurrentHeader().Number.Uint64()+1 {
+			continue
+		}
+		_, err := self.insertHeaderChain(chain[i:i+1], checkFreq)
+		log.Trace("light inserted result", "insertedNumber", chain[i].Number.Uint64(),
+			"currentHeight", self.CurrentHeader().Number.Uint64(), "err", err)
+		if err != nil {
+			return i, err
+		}
+	}
+	return 0, nil
+}
+
+func (self *LightChain) insertHeaderChain(chain []*types.Header, checkFreq int) (int, error) {
 	start := time.Now()
 	if i, err := self.hc.ValidateHeaderChain(chain, checkFreq); err != nil {
 		return i, err

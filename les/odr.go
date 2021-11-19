@@ -20,21 +20,21 @@ import (
 	"context"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/light"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 )
 
 // LesOdr implements light.OdrBackend
 type LesOdr struct {
-	db                                         ethdb.Database
+	db                                         dbhandle.Database
 	indexerConfig                              *light.IndexerConfig
 	chtIndexer, bloomTrieIndexer, bloomIndexer *core.ChainIndexer
 	retriever                                  *retrieveManager
 	stop                                       chan struct{}
 }
 
-func NewLesOdr(db ethdb.Database, config *light.IndexerConfig, retriever *retrieveManager) *LesOdr {
+func NewLesOdr(db dbhandle.Database, config *light.IndexerConfig, retriever *retrieveManager) *LesOdr {
 	return &LesOdr{
 		db:            db,
 		indexerConfig: config,
@@ -49,7 +49,7 @@ func (odr *LesOdr) Stop() {
 }
 
 // Database returns the backing database
-func (odr *LesOdr) Database() ethdb.Database {
+func (odr *LesOdr) Database() dbhandle.Database {
 	return odr.db
 }
 
@@ -88,6 +88,7 @@ const (
 	MsgProofsV2
 	MsgHeaderProofs
 	MsgHelperTrieProofs
+	MsgTxStatus
 )
 
 // Msg encodes a LES message that delivers reply data for a request
@@ -125,5 +126,34 @@ func (odr *LesOdr) Retrieve(ctx context.Context, req light.OdrRequest) (err erro
 	} else {
 		log.Debug("Failed to retrieve data from network", "err", err)
 	}
+	return
+}
+
+func (odr *LesOdr) RetrieveTxStatus(ctx context.Context, req *light.TxStatusRequest) (err error) {
+	lreq := &TxStatusRequest{Hashes: req.Hashes}
+	reqID := genReqID()
+	rq := &distReq{
+		getCost: func(dp distPeer) uint64 {
+			return lreq.GetCost(dp.(*peer))
+		},
+		canSend: func(dp distPeer) bool {
+			p := dp.(*peer)
+			return lreq.CanSend(p)
+		},
+		request: func(dp distPeer) func() {
+			p := dp.(*peer)
+			cost := lreq.GetCost(p)
+			p.fcServer.QueueRequest(reqID, cost)
+			return func() { lreq.Request(reqID, p) }
+		},
+	}
+
+	if err = odr.retriever.retrieve(ctx, reqID, rq, func(p distPeer, msg *Msg) error { return lreq.Validate(odr.db, msg) }, odr.stop); err == nil {
+		// Not need to store in DB
+		req.Status = lreq.Status
+	} else {
+		log.Debug("Failed to retrieve data from network", "err", err)
+	}
+
 	return
 }

@@ -47,8 +47,8 @@ var (
 const (
 	BlockNonceLen = 81
 )
-type BlockNonce [BlockNonceLen]byte
 
+type BlockNonce [BlockNonceLen]byte
 
 // EncodeNonce converts the given integer to a block nonce.
 func EncodeNonce(i uint64) BlockNonce {
@@ -78,7 +78,6 @@ func (n BlockNonce) MarshalText() ([]byte, error) {
 func (n *BlockNonce) UnmarshalText(input []byte) error {
 	return hexutil.UnmarshalFixedText("BlockNonce", input, n[:])
 }
-
 
 func (n *BlockNonce) DecodeRLP(s *rlp.Stream) error {
 	_, size, err := s.Kind()
@@ -201,13 +200,18 @@ func rlpHash(x interface{}) (h common.Hash) {
 // a block's data contents (transactions) together.
 type Body struct {
 	Transactions []*Transaction
+	Dag          DAG
+}
+
+type BodyOld struct {
+	Transactions []*Transaction
 }
 
 // Block represents an entire block in the Ethereum blockchain.
 type Block struct {
 	header       *Header
 	transactions Transactions
-
+	dag          DAG
 	// caches
 	hash atomic.Value
 	size atomic.Value
@@ -229,6 +233,7 @@ type StorageBlock Block
 type extblock struct {
 	Header *Header
 	Txs    []*Transaction
+	Dag    DAG
 }
 
 // [deprecated by eth/63]
@@ -236,6 +241,27 @@ type extblock struct {
 type storageblock struct {
 	Header *Header
 	Txs    []*Transaction
+	Dag    DAG
+}
+
+//记录有交易依赖关系的交易依赖情况
+//数组中的index用于标识交易在body中的位置
+type DAG []Dependency
+
+//该数组中的内容为直接依赖的交易在body中的位置（不考虑间接依赖关系）
+type Dependency []uint
+
+func (d Dependency) Add(index int) Dependency {
+	uIndex := uint(index)
+	if len(d) == 0 {
+		return append(d, uIndex)
+	}
+	for _, v := range d {
+		if v == uIndex {
+			return d
+		}
+	}
+	return append(d, uIndex)
 }
 
 // NewBlock creates a new block. The input data is copied,
@@ -252,7 +278,9 @@ func NewBlock(header *Header, txs []*Transaction, receipts []*Receipt) *Block {
 	if len(txs) == 0 {
 		b.header.TxHash = EmptyRootHash
 	} else {
-		b.header.TxHash = DeriveSha(Transactions(txs))
+		if common.EmptyHash(b.header.TxHash) {
+			b.header.TxHash = DeriveSha(Transactions(txs))
+		}
 		b.transactions = make(Transactions, len(txs))
 		copy(b.transactions, txs)
 	}
@@ -260,11 +288,19 @@ func NewBlock(header *Header, txs []*Transaction, receipts []*Receipt) *Block {
 	if len(receipts) == 0 {
 		b.header.ReceiptHash = EmptyRootHash
 	} else {
-		b.header.ReceiptHash = DeriveSha(Receipts(receipts))
+		if common.EmptyHash(b.header.ReceiptHash) {
+			b.header.ReceiptHash = DeriveSha(Receipts(receipts))
+		}
 		b.header.Bloom = CreateBloom(receipts)
 	}
 
 	return b
+}
+
+func NewBlockWithDag(header *Header, txs []*Transaction, receipts []*Receipt, dag DAG) *Block {
+	block := NewBlock(header, txs, receipts)
+	block.dag = dag
+	return block
 }
 
 // NewBlockWithHeader creates a block with the given header data. The
@@ -298,7 +334,7 @@ func (b *Block) DecodeRLP(s *rlp.Stream) error {
 	if err := s.Decode(&eb); err != nil {
 		return err
 	}
-	b.header, b.transactions = eb.Header, eb.Txs
+	b.header, b.transactions, b.dag = eb.Header, eb.Txs, eb.Dag
 	b.size.Store(common.StorageSize(rlp.ListSize(size)))
 	return nil
 }
@@ -308,6 +344,7 @@ func (b *Block) EncodeRLP(w io.Writer) error {
 	return rlp.Encode(w, extblock{
 		Header: b.header,
 		Txs:    b.transactions,
+		Dag:    b.dag,
 	})
 }
 
@@ -317,7 +354,7 @@ func (b *StorageBlock) DecodeRLP(s *rlp.Stream) error {
 	if err := s.Decode(&sb); err != nil {
 		return err
 	}
-	b.header, b.transactions = sb.Header, sb.Txs
+	b.header, b.transactions, b.dag = sb.Header, sb.Txs, sb.Dag
 	return nil
 }
 
@@ -354,7 +391,9 @@ func (b *Block) Header() *Header { return CopyHeader(b.header) }
 func (b *Block) String() string  { return fmt.Sprintf("{BlockHeader: %v", b.header) }
 
 // Body returns the non-header content of the block.
-func (b *Block) Body() *Body { return &Body{b.transactions} }
+func (b *Block) Body() *Body { return &Body{b.transactions, b.dag} }
+
+func (b *Block) Dag() DAG { return b.dag }
 
 // Size returns the true RLP encoded storage size of the block, either by encoding
 // and returning it, or returning a previsouly cached value.
@@ -383,14 +422,16 @@ func (b *Block) WithSeal(header *Header) *Block {
 	return &Block{
 		header:       &cpy,
 		transactions: b.transactions,
+		dag:          b.dag,
 	}
 }
 
 // WithBody returns a new block with the given transaction.
-func (b *Block) WithBody(transactions []*Transaction) *Block {
+func (b *Block) WithBody(transactions []*Transaction, dag DAG) *Block {
 	block := &Block{
 		header:       CopyHeader(b.header),
 		transactions: make([]*Transaction, len(transactions)),
+		dag:          dag,
 	}
 	copy(block.transactions, transactions)
 	return block

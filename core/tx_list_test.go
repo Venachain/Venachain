@@ -17,35 +17,45 @@
 package core
 
 import (
-	"math/rand"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 )
 
-// Tests that transactions can be added to strict lists and list contents and
-// nonce boundaries are correctly maintained.
-func TestStrictTxListAdd(t *testing.T) {
-	// Generate a list of transactions to insert
-	key, _ := crypto.GenerateKey()
+func TestTxQueuedMap(t *testing.T) {
+	queueMap, txHashList := makeTxQueuedMapWithTxs(100)
 
-	txs := make(types.Transactions, 1024)
-	for i := 0; i < len(txs); i++ {
-		txs[i] = transaction(uint64(i), 0, key)
+	if queueMap.Len() != 100 {
+		t.Errorf("queueMap transaction mismatch: have %d, want %d", queueMap.Len(), 100)
 	}
-	// Insert the transactions in a random order
-	list := newTxList(true)
-	for _, v := range rand.Perm(len(txs)) {
-		list.Add(txs[v], DefaultTxPoolConfig.PriceBump)
+
+	queueMap.Remove(txHashList[3])
+	if queueMap.data.Len() != 99 {
+		t.Errorf("queueMap transaction mismatch: have %d, want %d", queueMap.Len(), 99)
 	}
-	// Verify internal state
-	if len(list.txs.items) != len(txs) {
-		t.Errorf("transaction count mismatch: have %d, want %d", len(list.txs.items), len(txs))
+
+	_, count := queueMap.GetByCount(50)
+	if count != 50 {
+		t.Errorf("queueMap get transaction mismatch: got %d, want %d", queueMap.Len(), 50)
 	}
-	for i, tx := range txs {
-		if list.txs.items[tx.Nonce()] != tx {
-			t.Errorf("item %d: transaction mismatch: have %v, want %v", i, list.txs.items[tx.Nonce()], tx)
-		}
+
+	txs := queueMap.Get()
+	if len(txs) != 99 {
+		t.Errorf("queueMap get transaction mismatch: got %d, want %d", queueMap.Len(), 99)
 	}
+}
+
+func makeTxQueuedMapWithTxs(txsCount int) (*txQueuedMap, []common.Hash) {
+	queueMap := newTxQueuedMap()
+	key, _ := crypto.GenerateKey()
+	txsHash := make([]common.Hash, 0, txsCount)
+
+	for nonce := 0; nonce < txsCount; nonce++ {
+		tx := transaction(uint64(nonce), 0, key)
+		queueMap.Put(tx.Hash(), tx)
+		txsHash = append(txsHash, tx.Hash())
+	}
+
+	return queueMap, txsHash
 }

@@ -26,7 +26,8 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/bloombits"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
 )
 
 const (
@@ -91,7 +92,7 @@ const (
 // for the Ethereum header bloom filters, permitting blazing fast filtering.
 type BloomIndexer struct {
 	size    uint64               // section size to generate bloombits for
-	db      ethdb.Database       // database instance to write index data and metadata into
+	db      dbhandle.Database    // database instance to write index data and metadata into
 	gen     *bloombits.Generator // generator to rotate the bloom bits crating the bloom index
 	section uint64               // Section is the section number being processed currently
 	head    common.Hash          // Head is the hash of the last header processed
@@ -99,12 +100,12 @@ type BloomIndexer struct {
 
 // NewBloomIndexer returns a chain indexer that generates bloom bits data for the
 // canonical chain for fast logs filtering.
-func NewBloomIndexer(db ethdb.Database, size, confirms uint64) *core.ChainIndexer {
+func NewBloomIndexer(db dbhandle.Database, size, confirms uint64) *core.ChainIndexer {
 	backend := &BloomIndexer{
 		db:   db,
 		size: size,
 	}
-	table := ethdb.NewTable(db, string(rawdb.BloomBitsIndexPrefix))
+	table := leveldb.NewTable(db, string(rawdb.BloomBitsIndexPrefix))
 
 	return core.NewChainIndexer(db, table, backend, size, confirms, bloomThrottling, "bloombits")
 }

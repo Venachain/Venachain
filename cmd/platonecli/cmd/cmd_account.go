@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
 	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/precompiled"
+	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
@@ -89,11 +89,9 @@ The unit conversion table are as follows:
 
 func transfer(c *cli.Context) {
 	to := c.Args().First()
-	value := c.Args().Get(1)
-
-	value = cmd_common.ChainParamConvert(value, "value").(string)
+	//value := c.Args().Get(1)
+	//value = cmd_common.ChainParamConvert(value, "value").(string)
 	toNew := cmd_common.ChainParamConvert(to, "to").(common.Address)
-
 	result := clientCommonV2(c, nil, &toNew)
 	fmt.Printf("result: %v\n", result[0])
 }

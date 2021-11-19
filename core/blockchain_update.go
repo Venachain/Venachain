@@ -178,7 +178,7 @@ func (bc *BlockChain) GetBlockMaybeOld(hash common.Hash, number uint64, version 
 				txs = append(txs, types.NewTransaction(tx.data.AccountNonce, *(tx.data.Recipient), tx.data.Amount, tx.data.GasLimit, tx.data.Price, payload))
 			}
 		}
-		block := types.NewBlockWithHeader(header).WithBody(txs)
+		block := types.NewBlockWithHeader(header).WithBody(txs, nil)
 		return block
 	}
 

@@ -27,7 +27,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/les/flowcontrol"
 	"github.com/PlatONEnetwork/PlatONE-Go/light"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
@@ -50,7 +50,7 @@ type LesServer struct {
 
 func NewLesServer(eth *eth.Ethereum, config *eth.Config) (*LesServer, error) {
 	quitSync := make(chan struct{})
-	pm, err := NewProtocolManager(eth.BlockChain().Config(), light.DefaultServerIndexerConfig, false, config.NetworkId, eth.EventMux(), eth.Engine(), newPeerSet(), eth.BlockChain(), eth.TxPool(), eth.ChainDb(), eth.ExtendedDb(),nil, nil, nil, quitSync, new(sync.WaitGroup))
+	pm, err := NewProtocolManager(eth.BlockChain().Config(), light.DefaultServerIndexerConfig, false, config.NetworkId, eth.EventMux(), eth.Engine(), newPeerSet(), eth.BlockChain(), eth.TxPool(), eth.ChainDb(), eth.ExtendedDb(), nil, nil, nil, quitSync, new(sync.WaitGroup))
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func NewLesServer(eth *eth.Ethereum, config *eth.Config) (*LesServer, error) {
 		lesCommons: lesCommons{
 			config:           config,
 			chainDb:          eth.ChainDb(),
-			extDb:			  eth.ExtendedDb(),
+			extDb:            eth.ExtendedDb(),
 			iConfig:          light.DefaultServerIndexerConfig,
 			chtIndexer:       light.NewChtIndexer(eth.ChainDb(), nil, params.CHTFrequencyServer, params.HelperTrieProcessConfirmations),
 			bloomTrieIndexer: light.NewBloomTrieIndexer(eth.ChainDb(), nil, params.BloomBitsBlocks, params.BloomTrieFrequency),
@@ -229,7 +229,7 @@ func linRegFromBytes(data []byte) *linReg {
 
 type requestCostStats struct {
 	lock  sync.RWMutex
-	db    ethdb.Database
+	db    dbhandle.Database
 	stats map[uint64]*linReg
 }
 
@@ -240,7 +240,7 @@ type requestCostStatsRlp []struct {
 
 var rcStatsKey = []byte("_requestCostStats")
 
-func newCostStats(db ethdb.Database) *requestCostStats {
+func newCostStats(db dbhandle.Database) *requestCostStats {
 	stats := make(map[uint64]*linReg)
 	for _, code := range reqList {
 		stats[code] = &linReg{cnt: 100}

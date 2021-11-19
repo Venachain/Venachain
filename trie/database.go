@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/metrics"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
@@ -43,8 +43,8 @@ var (
 	memcacheCommitSizeMeter  = metrics.NewRegisteredMeter("trie/memcache/commit/size", nil)
 )
 
-// secureKeyPrefix is the database key prefix used to store trie node preimages.
-var secureKeyPrefix = []byte("secure-key-")
+// SecureKeyPrefix is the database key prefix used to store trie node preimages.
+var SecureKeyPrefix = []byte("secure-key-")
 
 // secureKeyLength is the length of the above prefix + 32byte hash.
 const secureKeyLength = 11 + 32
@@ -62,7 +62,7 @@ type DatabaseReader interface {
 // the disk database. The aim is to accumulate trie writes in-memory and only
 // periodically flush a couple tries to disk, garbage collecting the remainder.
 type Database struct {
-	diskdb ethdb.Database // Persistent storage for matured trie nodes
+	diskdb dbhandle.Database // Persistent storage for matured trie nodes
 
 	nodes  map[common.Hash]*cachedNode // Data and references relationships of a node
 	oldest common.Hash                 // Oldest tracked node, flush-list head
@@ -124,9 +124,11 @@ type rawShortNode struct {
 	Val node
 }
 
-func (n rawShortNode) canUnload(uint16, uint16) bool { panic("this should never end up in a live trie") }
-func (n rawShortNode) cache() (hashNode, bool)       { panic("this should never end up in a live trie") }
-func (n rawShortNode) fstring(ind string) string     { panic("this should never end up in a live trie") }
+func (n rawShortNode) canUnload(uint16, uint16) bool {
+	panic("this should never end up in a live trie")
+}
+func (n rawShortNode) cache() (hashNode, bool)   { panic("this should never end up in a live trie") }
+func (n rawShortNode) fstring(ind string) string { panic("this should never end up in a live trie") }
 
 // cachedNode is all the information we know about a single cached node in the
 // memory database write layer.
@@ -263,7 +265,7 @@ func expandNode(hash hashNode, n node, cachegen uint16) node {
 
 // NewDatabase creates a new trie database to store ephemeral trie content before
 // its written out to disk or garbage collected.
-func NewDatabase(diskdb ethdb.Database) *Database {
+func NewDatabase(diskdb dbhandle.Database) *Database {
 	return &Database{
 		diskdb:    diskdb,
 		nodes:     map[common.Hash]*cachedNode{{}: {}},
@@ -376,16 +378,21 @@ func (db *Database) preimage(hash common.Hash) ([]byte, error) {
 		return preimage, nil
 	}
 	// Content unavailable in memory, attempt to retrieve from disk
-	return db.diskdb.Get(db.secureKey(hash[:]))
+	return db.diskdb.Get(preimageKey(hash))
 }
 
 // secureKey returns the database key for the preimage of key, as an ephemeral
 // buffer. The caller must not hold onto the return value because it will become
 // invalid on the next call.
 func (db *Database) secureKey(key []byte) []byte {
-	buf := append(db.seckeybuf[:0], secureKeyPrefix...)
+	buf := append(db.seckeybuf[:0], SecureKeyPrefix...)
 	buf = append(buf, key...)
 	return buf
+}
+
+// preimageKey = secureKeyPrefix + hash
+func preimageKey(hash common.Hash) []byte {
+	return append(SecureKeyPrefix, hash[:]...)
 }
 
 // Nodes retrieves the hashes of all the nodes cached within the memory database.
@@ -527,7 +534,7 @@ func (db *Database) Cap(limit common.StorageSize) error {
 				db.lock.RUnlock()
 				return err
 			}
-			if batch.ValueSize() > ethdb.IdealBatchSize {
+			if batch.ValueSize() > dbhandle.IdealBatchSize {
 				if err := batch.Write(); err != nil {
 					db.lock.RUnlock()
 					return err
@@ -546,7 +553,7 @@ func (db *Database) Cap(limit common.StorageSize) error {
 			return err
 		}
 		// If we exceeded the ideal batch size, commit and reset
-		if batch.ValueSize() >= ethdb.IdealBatchSize {
+		if batch.ValueSize() >= dbhandle.IdealBatchSize {
 			if err := batch.Write(); err != nil {
 				log.Error("Failed to write flush list to disk", "err", err)
 				db.lock.RUnlock()
@@ -622,7 +629,7 @@ func (db *Database) Commit(node common.Hash, report bool) error {
 			db.lock.RUnlock()
 			return err
 		}
-		if batch.ValueSize() > ethdb.IdealBatchSize {
+		if batch.ValueSize() > dbhandle.IdealBatchSize {
 			if err := batch.Write(); err != nil {
 				return err
 			}
@@ -672,7 +679,7 @@ func (db *Database) Commit(node common.Hash, report bool) error {
 }
 
 // commit is the private locked version of Commit.
-func (db *Database) commit(hash common.Hash, batch ethdb.Batch) error {
+func (db *Database) commit(hash common.Hash, batch dbhandle.Batch) error {
 	// If the node does not exist, it's a previously committed node
 	node, ok := db.nodes[hash]
 	if !ok {
@@ -687,7 +694,7 @@ func (db *Database) commit(hash common.Hash, batch ethdb.Batch) error {
 		return err
 	}
 	// If we've reached an optimal batch size, commit and start over
-	if batch.ValueSize() >= ethdb.IdealBatchSize {
+	if batch.ValueSize() >= dbhandle.IdealBatchSize {
 		if err := batch.Write(); err != nil {
 			return err
 		}

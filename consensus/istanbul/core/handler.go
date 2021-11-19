@@ -58,7 +58,7 @@ func (c *core) subscribeEvents() {
 		backlogEvent{},
 	)
 	c.timeoutSub = c.backend.EventMux().Subscribe(
-		timeoutEvent{},
+		TimeoutEvent{},
 	)
 	c.finalCommittedSub = c.backend.EventMux().Subscribe(
 		istanbul.FinalCommittedEvent{},
@@ -66,6 +66,12 @@ func (c *core) subscribeEvents() {
 
 	c.msgCh = make(chan istanbul.MessageEvent)
 	c.msgFeedSub = c.backend.MsgFeed().Subscribe(c.msgCh)
+
+	event := c.backend.EventMux().Subscribe(
+		TimeoutEvent{},
+		istanbul.CommittedEvent{},
+	)
+	c.backend.SetConsensusTypeMuxSub(event)
 }
 
 // Unsubscribe all events
@@ -74,6 +80,7 @@ func (c *core) unsubscribeEvents() {
 	c.timeoutSub.Unsubscribe()
 	c.finalCommittedSub.Unsubscribe()
 	c.msgFeedSub.Unsubscribe()
+	c.backend.GetConsensusTypeMuxSub().Unsubscribe()
 }
 
 func (c *core) handleEvents() {
@@ -153,7 +160,8 @@ func (c *core) handleMsg(payload []byte) error {
 	// Decode message and check its signature
 	msg := new(message)
 	if err := msg.FromPayload(payload, c.validateFn); err != nil {
-		logger.Error("Failed to decode message from payload", "err", err)
+		//logger.Error("Failed to decode message from payload", "err", err)
+		logger.Info("Failed to decode message from payload", "notice", err)
 		return err
 	}
 	// Only accept message if the address is valid

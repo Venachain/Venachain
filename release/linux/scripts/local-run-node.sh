@@ -26,9 +26,14 @@ WS_PORT=""
 LOG_SIZE=""
 LOG_DIR=""
 GCMODE=""
+TX_COUNT=""
 BOOTNODES=""
 EXTRA_OPTIONS=""
 PPROF_ADDR=""
+
+# TODO
+DBTYPE="leveldb"
+#DBTYPE="pebbledb"
 
 #############################################################################################################
 ################################################# FUNCTIONS #################################################
@@ -70,6 +75,8 @@ function readFile() {
     LOG_SIZE=$(cat $file | grep "log_size=" | sed -e 's/log_size=\(.*\)/\1/g')
     LOG_DIR=$(cat $file | grep "log_dir=" | sed -e 's/log_dir=\(.*\)/\1/g')
     GCMODE=$(cat $file | grep "gcmode=" | sed -e 's/gcmode=\(.*\)/\1/g')
+    TX_COUNT=$(cat $file | grep "txcount=" | sed -e 's/txcount=\(.*\)/\1/g')
+
 
     BOOTNODES=$(cat $file | grep "bootnodes=" | sed -e 's/bootnodes=\(.*\)/\1/g')
     if [[ "${BOOTNODES}" == "" ]]; then
@@ -98,6 +105,7 @@ function startCmd() {
     flag_logs="--wasmlog  ${LOG_DIR}/wasm_log --wasmlogsize ${LOG_SIZE} "
     flag_ipc="--ipcpath ${NODE_DIR}/node-${NODE_ID}.ipc "
     flag_gcmode="--gcmode  ${GCMODE} "
+    flag_txcount=" --txpool.globaltxcount ${TX_COUNT} "
 
     # include pprof if setted
     flag_pprof=""
@@ -124,11 +132,29 @@ function startCmd() {
     fi
 
     ## execute command
+    echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : Exec command: "
+    echo "
+        nohup ${BIN_PATH}/platone --identity platone ${flag_datadir} --nodiscover 
+            --port ${P2P_PORT} ${flag_nodekey} 
+            ${flag_rpc} --rpccorsdomain \""*"\" 
+            ${flag_ws} --wsorigins \""*"\" 
+            ${flag_logs} ${flag_ipc} 
+            --bootnodes ${BOOTNODES} 
+            --verbosity 3 
+            --dbtype ${DBTYPE} 
+            --moduleLogParams '{\"platone_log\": [\"/\"], \"__dir__\": [\"'${LOG_DIR}'\"], \"__size__\": [\"'${LOG_SIZE}'\"]}' ${flag_gcmode} ${EXTRA_OPTIONS} 
+            ${flag_pprof} 
+            1>/dev/null 2>${LOG_DIR}/platone_error.log &
+    "
     nohup ${BIN_PATH}/platone --identity platone ${flag_datadir} --nodiscover \
-        --port ${P2P_PORT} ${flag_nodekey} ${flag_rpc} --rpccorsdomain "*" ${flag_ws} \
-        --wsorigins "*" ${flag_logs} ${flag_ipc} \
+        --port ${P2P_PORT} ${flag_nodekey} \
+        ${flag_rpc} --rpccorsdomain "*" \
+        ${flag_ws} --wsorigins "*" \
+        ${flag_logs} ${flag_ipc} \
         --bootnodes ${BOOTNODES} \
-        --moduleLogParams '{"platone_log": ["/"], "__dir__": ["'${LOG_DIR}'"], "__size__": ["'${LOG_SIZE}'"]}' ${flag_gcmode} ${EXTRA_OPTIONS} \
+        --verbosity 3 \
+        --dbtype ${DBTYPE} \
+        --moduleLogParams '{"platone_log": ["/"], "__dir__": ["'${LOG_DIR}'"], "__size__": ["'${LOG_SIZE}'"]}'  ${flag_gcmode}  ${EXTRA_OPTIONS} \
         ${flag_pprof} \
         1>/dev/null 2>${LOG_DIR}/platone_error.log &
 

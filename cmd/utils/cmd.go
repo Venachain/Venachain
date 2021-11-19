@@ -33,7 +33,9 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/pebbledb"
 	"github.com/PlatONEnetwork/PlatONE-Go/internal/debug"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/node"
@@ -60,6 +62,7 @@ func Fatalf(format string, args ...interface{}) {
 			w = os.Stderr
 		}
 	}
+
 	fmt.Fprintf(w, "Fatal: "+format+"\n", args...)
 	os.Exit(1)
 }
@@ -270,7 +273,7 @@ func ExportAppendChain(blockchain *core.BlockChain, fn string, version string, f
 }
 
 // ImportPreimages imports a batch of exported hash preimages into the database.
-func ImportPreimages(db *ethdb.LDBDatabase, fn string) error {
+func ImportPreimages(db dbhandle.Database, fn string) error {
 	log.Info("Importing preimages", "file", fn)
 
 	// Open the file handle and potentially unwrap the gzip stream
@@ -317,7 +320,7 @@ func ImportPreimages(db *ethdb.LDBDatabase, fn string) error {
 
 // ExportPreimages exports all known hash preimages into the specified file,
 // truncating any data already present in the file.
-func ExportPreimages(db *ethdb.LDBDatabase, fn string) error {
+func ExportPreimages(db dbhandle.Database, fn string) error {
 	log.Info("Exporting preimages", "file", fn)
 
 	// Open the file handle and potentially wrap with a gzip stream
@@ -333,11 +336,23 @@ func ExportPreimages(db *ethdb.LDBDatabase, fn string) error {
 		defer writer.(*gzip.Writer).Close()
 	}
 	// Iterate over the preimages and export them
-	it := db.NewIteratorWithPrefix([]byte("secure-key-"))
-	for it.Next() {
-		if err := rlp.Encode(writer, it.Value()); err != nil {
-			return err
+	switch dbItem := db.(type) {
+	case *leveldb.LDBDatabase:
+		it := dbItem.NewIteratorWithPrefix([]byte("secure-key-"))
+		for it.Next() {
+			if err := rlp.Encode(writer, it.Value()); err != nil {
+				return err
+			}
 		}
+	case *pebbledb.PebbleDatabase:
+		it := dbItem.NewIteratorWithPrefix([]byte("secure-key-"))
+		for it.Next() {
+			if err := rlp.Encode(writer, it.Value()); err != nil {
+				return err
+			}
+		}
+	default:
+		return fmt.Errorf("database type not support")
 	}
 	log.Info("Exported preimages", "file", fn)
 	return nil

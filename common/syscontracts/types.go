@@ -15,6 +15,7 @@ var (
 	GroupManagementAddress       = common.HexToAddress("0x1000000000000000000000000000000000000006") // The PlatONE Precompiled contract addr for group management
 	ContractDataProcessorAddress = common.HexToAddress("0x1000000000000000000000000000000000000007") // The PlatONE Precompiled contract addr for group management
 	CnsInvokeAddress             = common.HexToAddress("0x0000000000000000000000000000000000000000") // The PlatONE Precompiled contract addr for group management
+	EvidenceManagementAddress    = common.HexToAddress("0x0000000000000000000000000000000000000099") // The PlatONE Precompiled contract addr for evidence management
 )
 
 type UpdateNode struct {

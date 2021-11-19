@@ -14,10 +14,11 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-package ethdb
+package memorydb
 
 import (
 	"errors"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"sync"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
@@ -90,7 +91,7 @@ func (db *MemDatabase) Delete(key []byte) error {
 
 func (db *MemDatabase) Close() {}
 
-func (db *MemDatabase) NewBatch() Batch {
+func (db *MemDatabase) NewBatch() dbhandle.Batch {
 	return &memBatch{db: db}
 }
 

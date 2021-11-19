@@ -1,13 +1,13 @@
 package log
 
 import (
-	"sync"
-	"fmt"
-	"strings"
-	"path/filepath"
 	"encoding/json"
-	"strconv"
+	"fmt"
 	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"sync"
 )
 
 var (
@@ -20,6 +20,7 @@ var (
 	vModule         string
 	backtraceAt     string
 	moduleParamsStr string
+	useColor        bool
 )
 
 const (
@@ -44,6 +45,10 @@ func SetModuleLogLvl(lvl Lvl) {
 	moduleLogLvl = lvl
 }
 
+func SetUseColor(color bool) {
+	useColor = color
+}
+
 func SetModuleParamsStr(str string) {
 	moduleParamsStr = str
 }
@@ -62,8 +67,8 @@ type modulesHandlersState struct {
 	mu    sync.RWMutex
 	once  sync.Once
 	ModulesHandlerState
-	dir   string
-	size  uint
+	dir  string
+	size uint
 }
 
 func (m *modulesHandlersState) Init() {
@@ -175,7 +180,7 @@ func ModuleRotatingHandler(dir string, size uint) Handler {
 	g := NewGlogHandler(must(RotatingFileHandler(
 		dir,
 		size,
-		TerminalFormat(true)),
+		TerminalFormat(useColor)),
 	))
 	g.Verbosity(moduleLogLvl)
 	g.Vmodule(vModule)

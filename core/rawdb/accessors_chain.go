@@ -19,12 +19,13 @@ package rawdb
 import (
 	"bytes"
 	"encoding/binary"
+	"math/big"
+	"sync"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
-	"math/big"
-	"sync"
 )
 
 var (
@@ -295,6 +296,14 @@ func ReadReceipts(db DatabaseReader, hash common.Hash, number uint64) types.Rece
 	return receipts
 }
 
+func ReadReceiptForStorageRlp(db DatabaseReader, hash common.Hash, number uint64) []byte {
+	data, _ := db.Get(blockReceiptsKey(number, hash))
+	if len(data) == 0 {
+		return nil
+	}
+	return data
+}
+
 // WriteReceipts stores all the transaction receipts belonging to a block.
 func WriteReceipts(db DatabaseWriter, hash common.Hash, number uint64, receipts types.Receipts) {
 	// Convert the receipts into their storage form and serialize them
@@ -323,7 +332,7 @@ func EncodeReceipts(ch chan<- common.DBItems, close chan struct{}, hash common.H
 	if err != nil {
 		log.Crit("Failed to encode block receipts", "err", err)
 	}
-	log.Info("EncodeReceipts complete")
+	log.Debug("EncodeReceipts complete")
 	select {
 	case <-close:
 		return
@@ -379,16 +388,13 @@ func ReadBlock(db DatabaseReader, hash common.Hash, number uint64) *types.Block 
 	if body == nil {
 		return nil
 	}
-	return types.NewBlockWithHeader(header).WithBody(body.Transactions)
+	return types.NewBlockWithHeader(header).WithBody(body.Transactions, body.Dag)
 }
 
 // WriteBlock serializes a block into the database, header and body separately.
 func WriteBlock(db DatabaseWriter, block *types.Block) {
-	if bodyrlp := types.GetbodyRlpByCache(block.Header().TxHash); bodyrlp == nil {
-		WriteBody(db, block.Hash(), block.NumberU64(), block.Body())
-	} else {
-		WriteBodyRLP(db, block.Hash(), block.NumberU64(), bodyrlp)
-	}
+	WriteBody(db, block.Hash(), block.NumberU64(), block.Body())
+
 	WriteHeader(db, block.Header())
 }
 

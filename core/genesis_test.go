@@ -23,7 +23,8 @@ import (
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/davecgh/go-spew/spew"
 )
@@ -42,14 +43,14 @@ func TestSetupGenesis(t *testing.T) {
 	oldcustomg.Config = &params.ChainConfig{}
 	tests := []struct {
 		name       string
-		fn         func(ethdb.Database) (*params.ChainConfig, common.Hash, error)
+		fn         func(dbhandle.Database) (*params.ChainConfig, common.Hash, error)
 		wantConfig *params.ChainConfig
 		wantHash   common.Hash
 		wantErr    error
 	}{
 		{
 			name: "custom block in DB, genesis == nil",
-			fn: func(db ethdb.Database) (*params.ChainConfig, common.Hash, error) {
+			fn: func(db dbhandle.Database) (*params.ChainConfig, common.Hash, error) {
 				customg.MustCommit(db)
 				return SetupGenesisBlock(db, nil)
 			},
@@ -58,7 +59,7 @@ func TestSetupGenesis(t *testing.T) {
 		},
 		{
 			name: "compatible config in DB",
-			fn: func(db ethdb.Database) (*params.ChainConfig, common.Hash, error) {
+			fn: func(db dbhandle.Database) (*params.ChainConfig, common.Hash, error) {
 				oldcustomg.MustCommit(db)
 				return SetupGenesisBlock(db, &customg)
 			},
@@ -68,7 +69,7 @@ func TestSetupGenesis(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		db := ethdb.NewMemDatabase()
+		db := memorydb.NewMemDatabase()
 		config, hash, err := test.fn(db)
 		// Check the return values.
 		if !reflect.DeepEqual(err, test.wantErr) {

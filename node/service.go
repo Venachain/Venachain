@@ -22,6 +22,8 @@ import (
 
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
 	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
@@ -40,11 +42,11 @@ type ServiceContext struct {
 // OpenDatabase opens an existing database with the given name (or creates one
 // if no previous can be found) from within the node's data directory. If the
 // node is an ephemeral one, a memory database is returned.
-func (ctx *ServiceContext) OpenDatabase(name string, cache int, handles int) (ethdb.Database, error) {
+func (ctx *ServiceContext) OpenDatabase(name string, cache int, handles int) (dbhandle.Database, error) {
 	if ctx.config.DataDir == "" {
-		return ethdb.NewMemDatabase(), nil
+		return memorydb.NewMemDatabase(), nil
 	}
-	db, err := ethdb.NewLDBDatabase(ctx.config.ResolvePath(name), cache, handles)
+	db, err := ethdb.New(ctx.config.DBType, ctx.config.ResolvePath(name), cache, handles)
 	if err != nil {
 		return nil, err
 	}

@@ -28,7 +28,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
 	"github.com/PlatONEnetwork/PlatONE-Go/light"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
@@ -402,7 +402,7 @@ func testGetCHTProofs(t *testing.T, protocol int) {
 	switch protocol {
 	case 1:
 		root := light.GetChtRoot(server.db, 0, bc.GetHeaderByNumber(frequency-1).Hash())
-		trie, _ := trie.New(root, trie.NewDatabase(ethdb.NewTable(server.db, light.ChtTablePrefix)))
+		trie, _ := trie.New(root, trie.NewDatabase(leveldb.NewTable(server.db, light.ChtTablePrefix)))
 
 		var proof light.NodeList
 		trie.Prove(key, 0, &proof)
@@ -410,7 +410,7 @@ func testGetCHTProofs(t *testing.T, protocol int) {
 
 	case 2:
 		root := light.GetChtRoot(server.db, (frequency/config.ChtSize)-1, bc.GetHeaderByNumber(frequency-1).Hash())
-		trie, _ := trie.New(root, trie.NewDatabase(ethdb.NewTable(server.db, light.ChtTablePrefix)))
+		trie, _ := trie.New(root, trie.NewDatabase(leveldb.NewTable(server.db, light.ChtTablePrefix)))
 		trie.Prove(key, 0, &proofsV2.Proofs)
 	}
 	// Assemble the requests for the different protocols
@@ -477,7 +477,7 @@ func TestGetBloombitsProofs(t *testing.T) {
 		var proofs HelperTrieResps
 
 		root := light.GetBloomTrieRoot(server.db, 0, bc.GetHeaderByNumber(config.BloomTrieSize-1).Hash())
-		trie, _ := trie.New(root, trie.NewDatabase(ethdb.NewTable(server.db, light.BloomTrieTablePrefix)))
+		trie, _ := trie.New(root, trie.NewDatabase(leveldb.NewTable(server.db, light.BloomTrieTablePrefix)))
 		trie.Prove(key, 0, &proofs.Proofs)
 
 		// Send the proof request and verify the response
@@ -488,4 +488,3 @@ func TestGetBloombitsProofs(t *testing.T) {
 		}
 	}
 }
-

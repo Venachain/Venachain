@@ -19,7 +19,7 @@ package core
 import (
 	"bytes"
 	"errors"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"fmt"
 	"math"
 	"math/big"
 	"sync"
@@ -31,6 +31,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/metrics"
+	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"gopkg.in/karalabe/cookiejar.v2/collections/prque"
 )
 
@@ -297,9 +298,8 @@ func (c *core) startNewRoundWhenEmpty(round *big.Int) {
 
 	c.newRoundChangeTimerWhenEmpty()
 	log.Info("==================================================")
-	log.Info("RoundChange\t"+"Height: "+newView.Sequence.String()+"\tRound: "+newView.Round.String()+"\tProposer: "+c.valSet.GetProposer().Address().String(), "IsProposer: ", c.IsProposer())
-	log.Info("==================================================")
-	logger.Info("New round", "valSet", c.valSet.List(), "size", c.valSet.Size())
+	str := fmt.Sprintf("New round Height: %s\tRound: %s\tProposer: %s\tIsProposer: %v", newView.Sequence.String(), newView.Round.String(), c.valSet.GetProposer().Address().String(), c.IsProposer())
+	logger.Info(str, "valSet", c.valSet.List(), "size", c.valSet.Size())
 }
 
 // startNewRound starts a new round. if round equals to 0, it means to starts a new sequence
@@ -379,9 +379,8 @@ func (c *core) startNewRound(round *big.Int) {
 	}
 	c.newRoundChangeTimer()
 	log.Info("==================================================")
-	log.Info("RoundChange\t"+"Height: "+newView.Sequence.String()+"\tRound: "+newView.Round.String()+"\tProposer: "+c.valSet.GetProposer().Address().String(), "IsProposer: ", c.IsProposer())
-	log.Info("==================================================")
-	logger.Info("New round", "valSet", c.valSet.List(), "size", c.valSet.Size())
+	str := fmt.Sprintf("New round Height: %s\tRound: %s\tProposer: %s\tIsProposer: %v", newView.Sequence.String(), newView.Round.String(), c.valSet.GetProposer().Address().String(), c.IsProposer())
+	logger.Info(str, "valSet", c.valSet.List(), "size", c.valSet.Size())
 }
 
 func (c *core) catchUpRound(view *istanbul.View) {
@@ -456,12 +455,10 @@ func (c *core) newRoundChangeTimerWhenEmpty() {
 	timeout := time.Duration(c.config.RequestTimeout) * time.Millisecond
 	round := c.current.Round().Uint64()
 	c.lastResetRound = round
-	//if round > 0 {
-	//	timeout += time.Duration(math.Pow(1.5, float64(round))) * time.Second
-	//}
+	c.backend.SetCurrentRequestTimeout(uint64(timeout.Milliseconds()))
 	log.Debug("newRoundChangeTimer", "round", round, "lastResetRound", c.lastResetRound, "timeout", timeout)
 	c.roundChangeTimer = time.AfterFunc(timeout, func() {
-		c.sendEvent(timeoutEvent{})
+		c.sendEvent(TimeoutEvent{})
 	})
 }
 
@@ -482,9 +479,11 @@ func (c *core) newRoundChangeTimer() {
 		c.lastResetRound = round
 	}
 
+	c.backend.SetCurrentRequestTimeout(uint64(timeout.Milliseconds()))
+
 	log.Debug("newRoundChangeTimer", "round", round, "lastResetRound", c.lastResetRound, "timeout", timeout)
 	c.roundChangeTimer = time.AfterFunc(timeout, func() {
-		c.sendEvent(timeoutEvent{})
+		c.sendEvent(TimeoutEvent{})
 	})
 }
 

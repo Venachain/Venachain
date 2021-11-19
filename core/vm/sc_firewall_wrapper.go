@@ -35,7 +35,7 @@ func (u *FwWrapper) Run(input []byte) ([]byte, error) {
 		u.base.emitEvent(fnName, operateFail, err.Error())
 	}
 
-	return ret, nil
+	return ret, err
 }
 
 // for access control
@@ -82,7 +82,7 @@ func (u *FwWrapper) fwClear(contractAddr common.Address, action string) (int32, 
 	case fwErrNotOwner:
 		return int32(fwNoPermission), err
 	case state.ErrInvalidFwAction:
-		return int32(fwInvalidArgument), nil
+		return int32(fwInvalidArgument), err
 	}
 
 	return int32(fwOpSuccess), nil
@@ -95,7 +95,7 @@ func (u *FwWrapper) fwAdd(contractAddr common.Address, action, lst string) (int3
 	case fwErrNotOwner:
 		return int32(fwNoPermission), err
 	case state.ErrInvalidFwAction, ErrFwRule, ErrFwRuleName, ErrFwRuleAddr:
-		return int32(fwInvalidArgument), nil
+		return int32(fwInvalidArgument), err
 	}
 
 	return int32(fwOpSuccess), nil
@@ -108,7 +108,7 @@ func (u *FwWrapper) fwDel(contractAddr common.Address, action, lst string) (int3
 	case fwErrNotOwner:
 		return int32(fwNoPermission), err
 	case state.ErrInvalidFwAction, ErrFwRule, ErrFwRuleName, ErrFwRuleAddr:
-		return int32(fwInvalidArgument), nil
+		return int32(fwInvalidArgument), err
 	}
 
 	return int32(fwOpSuccess), nil
@@ -121,7 +121,7 @@ func (u *FwWrapper) fwSet(contractAddr common.Address, act, lst string) (int32, 
 	case fwErrNotOwner:
 		return int32(fwNoPermission), err
 	case state.ErrInvalidFwAction, ErrFwRule, ErrFwRuleName, ErrFwRuleAddr:
-		return int32(fwInvalidArgument), nil
+		return int32(fwInvalidArgument), err
 	}
 
 	return int32(fwOpSuccess), nil

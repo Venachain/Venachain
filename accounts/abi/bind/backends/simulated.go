@@ -24,7 +24,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go"
+	ethereum "github.com/PlatONEnetwork/PlatONE-Go"
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi/bind"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
@@ -35,7 +35,8 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/filters"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
@@ -50,8 +51,8 @@ var errGasEstimationFailed = errors.New("gas required exceeds allowance or alway
 // SimulatedBackend implements bind.ContractBackend, simulating a blockchain in
 // the background. Its main purpose is to allow easily testing contract bindings.
 type SimulatedBackend struct {
-	database   ethdb.Database   // In memory database to store our testing data
-	blockchain *core.BlockChain // Ethereum blockchain to handle the consensus
+	database   dbhandle.Database // In memory database to store our testing data
+	blockchain *core.BlockChain  // Ethereum blockchain to handle the consensus
 
 	mu           sync.Mutex
 	pendingBlock *types.Block   // Currently pending block that will be imported on request
@@ -65,8 +66,8 @@ type SimulatedBackend struct {
 // NewSimulatedBackend creates a new binding backend using a simulated blockchain
 // for testing purposes.
 func NewSimulatedBackend(alloc core.GenesisAlloc, gasLimit uint64) *SimulatedBackend {
-	database := ethdb.NewMemDatabase()
-	simConfig := &params.ChainConfig{big.NewInt(1337), nil, ""}
+	database := memorydb.NewMemDatabase()
+	simConfig := &params.ChainConfig{big.NewInt(1337), nil, "", false}
 	genesis := core.Genesis{Config: simConfig, GasLimit: gasLimit, Alloc: alloc}
 	genesis.MustCommit(database)
 	blockchain, _, _ := core.NewBlockChain(database, nil, nil, genesis.Config, nil, vm.Config{}, nil)
@@ -428,13 +429,13 @@ func (m callmsg) SetNonce(n uint64)       {}
 // filterBackend implements filters.Backend to support filtering for logs without
 // taking bloom-bits acceleration structures into account.
 type filterBackend struct {
-	db ethdb.Database
+	db dbhandle.Database
 	bc *core.BlockChain
 }
 
-func (fb *filterBackend) ExtendedDb() ethdb.Database { return nil }
-func (fb *filterBackend) ChainDb() ethdb.Database    { return fb.db }
-func (fb *filterBackend) EventMux() *event.TypeMux   { panic("not supported") }
+func (fb *filterBackend) ExtendedDb() dbhandle.Database { return nil }
+func (fb *filterBackend) ChainDb() dbhandle.Database    { return fb.db }
+func (fb *filterBackend) EventMux() *event.TypeMux      { panic("not supported") }
 
 func (fb *filterBackend) HeaderByNumber(ctx context.Context, block rpc.BlockNumber) (*types.Header, error) {
 	if block == rpc.LatestBlockNumber {

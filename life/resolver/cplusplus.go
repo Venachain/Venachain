@@ -86,7 +86,7 @@ func newCfcSet() map[string]map[string]*exec.FunctionImport {
 
 			"memcpy":  &exec.FunctionImport{Execute: envMemcpy, GasCost: envMemcpyGasCost},
 			"memmove": &exec.FunctionImport{Execute: envMemmove, GasCost: envMemmoveGasCost},
-			"memcmp":  &exec.FunctionImport{Execute: envMemcpy, GasCost: envMemmoveGasCost},
+			"memcmp":  &exec.FunctionImport{Execute: envMemcmp, GasCost: envMemcmpGasCost},
 			"memset":  &exec.FunctionImport{Execute: envMemset, GasCost: envMemsetGasCost},
 
 			"prints":     &exec.FunctionImport{Execute: envPrints, GasCost: envPrintsGasCost},
@@ -224,7 +224,8 @@ func newCfcSet() map[string]map[string]*exec.FunctionImport {
 			"secp256r1SigVerify": &exec.FunctionImport{Execute: envP256r1SigVerify, GasCost: envSMVerifyGasCost},
 			//secp256k1
 			"secp256k1SigVerify": &exec.FunctionImport{Execute: envP256k1SigVerify, GasCost: envSMVerifyGasCost},
-
+			//sm3
+			"sm3":         &exec.FunctionImport{Execute: envSm3, GasCost: envSha3GasCost},
 			//bulletproof
 			"bulletProofVerify": &exec.FunctionImport{Execute: envBulletProofVerify, GasCost: envSMVerifyGasCost},
 		},
@@ -685,6 +686,27 @@ func envSha3(vm *exec.VirtualMachine) int64 {
 	copy(vm.Memory.Memory[destOffset:], hash)
 	return 0
 }
+
+func envSm3(vm *exec.VirtualMachine) int64 {
+	offset := int(int32(vm.GetCurrentFrame().Locals[0]))
+	size := int(int32(vm.GetCurrentFrame().Locals[1]))
+	destOffset := int(int32(vm.GetCurrentFrame().Locals[2]))
+	destSize := int(int32(vm.GetCurrentFrame().Locals[3]))
+	data := vm.Memory.Memory[offset : offset+size]
+	data = append(data, 0)
+
+	dest := vm.Memory.Memory[destOffset : destOffset + destSize]
+	dest = append(dest, 0)
+	dataPtr := (*C.char)(unsafe.Pointer(&data[0]))
+	destPtr := (*C.char)(unsafe.Pointer(&dest[0]))
+
+	hash := C.sm3_compute(dataPtr, destPtr)
+	if hash == (C.int)(0){
+		return 0
+	}
+	return 0
+}
+
 
 func envEcrecover(vm *exec.VirtualMachine) int64 {
 	hashOffset := int(int32(vm.GetCurrentFrame().Locals[0]))

@@ -7,7 +7,8 @@
       	"period": 1,
       	"policy": 0,
         "firstValidatorNode": __VALIDATOR__
-    }
+    },
+    "licenseCheck": true
   },
   "timestamp": "TIMESTAMP",
   "extraData": "0x00",

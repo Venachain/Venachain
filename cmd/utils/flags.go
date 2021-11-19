@@ -32,7 +32,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/fdlimit"
 	istanbulBackend "github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/backend"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
@@ -41,7 +40,8 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/eth"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/gasprice"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	types2 "github.com/PlatONEnetwork/PlatONE-Go/ethdb/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/ethstats"
 	"github.com/PlatONEnetwork/PlatONE-Go/les"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
@@ -115,6 +115,11 @@ var (
 		Name:  "datadir",
 		Usage: "Data directory for the databases and keystore",
 		Value: DirectoryString{node.DefaultDataDir()},
+	}
+	DbTypeFlag = DirectoryFlag{
+		Name:  "dbtype",
+		Usage: "DB type for the data",
+		Value: DirectoryString{types2.LevelDbStr},
 	}
 	KeyStoreDirFlag = DirectoryFlag{
 		Name:  "keystore",
@@ -228,25 +233,24 @@ var (
 		Usage: "Maximum number of executable transaction slots for all accounts",
 		Value: eth.DefaultConfig.TxPool.GlobalSlots,
 	}
-	TxPoolAccountQueueFlag = cli.Uint64Flag{
-		Name:  "txpool.accountqueue",
-		Usage: "Maximum number of non-executable transaction slots permitted per account",
-		Value: eth.DefaultConfig.TxPool.AccountQueue,
-	}
-	TxPoolGlobalQueueFlag = cli.Uint64Flag{
-		Name:  "txpool.globalqueue",
-		Usage: "Maximum number of non-executable transaction slots for all accounts",
-		Value: eth.DefaultConfig.TxPool.GlobalQueue,
-	}
 	TxPoolGlobalTxCountFlag = cli.Uint64Flag{
 		Name:  "txpool.globaltxcount",
 		Usage: "Maximum number of transactions for package",
-		Value: eth.DefaultConfig.TxPool.GlobalTxCount,
+		Value: eth.DefaultConfig.TxPool.GlobalTxCount.Load(),
 	}
-	TxPoolLifetimeFlag = cli.DurationFlag{
-		Name:  "txpool.lifetime",
-		Usage: "Maximum amount of time non-executable transaction are queued",
-		Value: eth.DefaultConfig.TxPool.Lifetime,
+	TxPoolIsAutoAdjustTxCountFlag = cli.BoolFlag{
+		Name:  "txpool.isautoadjusttxcount",
+		Usage: "enable auto adjust the global number tx of block",
+	}
+	TxPoolRequestTimeoutRatioFloorFlag = cli.Float64Flag{
+		Name:  "txpool.requesttimeoutratiofloor",
+		Usage: "ratio=consensusRequestTimeCost/maxConsensuRequestTime,the min ratio",
+		Value: eth.DefaultConfig.TxPool.RequestTimeoutRatioFloor,
+	}
+	TxPoolRequestTimeoutRatioCeilFlag = cli.Float64Flag{
+		Name:  "txpool.requesttimeoutratioceil",
+		Usage: "ratio=consensusRequestTimeCost/maxConsensuRequestTime,the max ratio",
+		Value: eth.DefaultConfig.TxPool.RequestTimeoutRatioCeil,
 	}
 	// Performance tuning settings
 	CacheFlag = cli.IntFlag{
@@ -564,6 +568,12 @@ var (
 		Name:  "vm.evm",
 		Usage: "External EVM configuration (default = built-in interpreter)",
 		Value: "",
+	}
+
+	ParallelProcessSize = cli.IntFlag{
+		Name:  "process.size",
+		Usage: "parallel process transactions go routine pool size",
+		Value: 0,
 	}
 )
 
@@ -903,6 +913,10 @@ func SetNodeConfig(ctx *cli.Context, cfg *node.Config) {
 		cfg.DataDir = ctx.GlobalString(DataDirFlag.Name)
 	}
 
+	if ctx.GlobalIsSet(DbTypeFlag.Name) {
+		cfg.DBType = ctx.GlobalString(DbTypeFlag.Name)
+	}
+
 	if ctx.GlobalIsSet(KeyStoreDirFlag.Name) {
 		cfg.KeyStoreDir = ctx.GlobalString(KeyStoreDirFlag.Name)
 	}
@@ -955,17 +969,17 @@ func setTxPool(ctx *cli.Context, cfg *core.TxPoolConfig) {
 	if ctx.GlobalIsSet(TxPoolGlobalSlotsFlag.Name) {
 		cfg.GlobalSlots = ctx.GlobalUint64(TxPoolGlobalSlotsFlag.Name)
 	}
-	if ctx.GlobalIsSet(TxPoolAccountQueueFlag.Name) {
-		cfg.AccountQueue = ctx.GlobalUint64(TxPoolAccountQueueFlag.Name)
-	}
-	if ctx.GlobalIsSet(TxPoolGlobalQueueFlag.Name) {
-		cfg.GlobalQueue = ctx.GlobalUint64(TxPoolGlobalQueueFlag.Name)
-	}
 	if ctx.GlobalIsSet(TxPoolGlobalTxCountFlag.Name) {
-		cfg.GlobalTxCount = ctx.GlobalUint64(TxPoolGlobalTxCountFlag.Name)
+		cfg.GlobalTxCount.Store(ctx.GlobalUint64(TxPoolGlobalTxCountFlag.Name))
 	}
-	if ctx.GlobalIsSet(TxPoolLifetimeFlag.Name) {
-		cfg.Lifetime = ctx.GlobalDuration(TxPoolLifetimeFlag.Name)
+	if ctx.GlobalIsSet(TxPoolIsAutoAdjustTxCountFlag.Name) {
+		cfg.IsAutoAdjustTxCount = ctx.GlobalBool(TxPoolIsAutoAdjustTxCountFlag.Name)
+	}
+	if ctx.GlobalIsSet(TxPoolRequestTimeoutRatioFloorFlag.Name) {
+		cfg.RequestTimeoutRatioFloor = ctx.GlobalFloat64(TxPoolRequestTimeoutRatioFloorFlag.Name)
+	}
+	if ctx.GlobalIsSet(TxPoolRequestTimeoutRatioCeilFlag.Name) {
+		cfg.RequestTimeoutRatioCeil = ctx.GlobalFloat64(TxPoolRequestTimeoutRatioCeilFlag.Name)
 	}
 }
 
@@ -989,9 +1003,10 @@ func checkExclusive(ctx *cli.Context, args ...interface{}) {
 				// Extended flag, expand the name and shift the arguments
 				if ctx.GlobalString(flag.GetName()) == option {
 					name += "=" + option
+					set = append(set, "--"+name)
 				}
 				i++
-
+				continue
 			case cli.Flag:
 			default:
 				panic(fmt.Sprintf("invalid argument, not cli.Flag or string extension: %T", args[i+1]))
@@ -1089,6 +1104,10 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *eth.Config) {
 		cfg.EVMInterpreter = ctx.GlobalString(EVMInterpreterFlag.Name)
 	}
 
+	if ctx.GlobalIsSet(ParallelProcessSize.Name) {
+		cfg.ParallelSize = ctx.GlobalInt(ParallelProcessSize.Name)
+	}
+
 	// TODO(fjl): move trie cache generations into config
 	if gen := ctx.GlobalInt(TrieCacheGenFlag.Name); gen > 0 {
 		state.MaxTrieCacheGen = uint16(gen)
@@ -1171,7 +1190,7 @@ func SetupMetrics(ctx *cli.Context) {
 }
 
 // MakeChainDatabase open an LevelDB using the flags passed to the client and will hard crash if it fails.
-func MakeChainDatabase(ctx *cli.Context, stack *node.Node) ethdb.Database {
+func MakeChainDatabase(ctx *cli.Context, stack *node.Node) dbhandle.Database {
 	var (
 		cache   = ctx.GlobalInt(CacheFlag.Name) * ctx.GlobalInt(CacheDatabaseFlag.Name) / 100
 		handles = makeDatabaseHandles()
@@ -1192,7 +1211,7 @@ func MakeGenesis(ctx *cli.Context) *core.Genesis {
 }
 
 // MakeChain creates a chain manager from set command line flags.
-func MakeChain(ctx *cli.Context, stack *node.Node) (chain *core.BlockChain, chainDb ethdb.Database) {
+func MakeChain(ctx *cli.Context, stack *node.Node) (chain *core.BlockChain, chainDb dbhandle.Database) {
 	var err error
 	chainDb = MakeChainDatabase(ctx, stack)
 

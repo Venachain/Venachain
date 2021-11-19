@@ -28,7 +28,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
@@ -41,8 +41,8 @@ type Backend interface {
 	Downloader() *downloader.Downloader
 	ProtocolVersion() int
 	SuggestPrice(ctx context.Context) (*big.Int, error)
-	ChainDb() ethdb.Database
-	ExtendedDb() ethdb.Database
+	ChainDb() dbhandle.Database
+	ExtendedDb() dbhandle.Database
 	EventMux() *event.TypeMux
 	AccountManager() *accounts.Manager
 
@@ -59,6 +59,7 @@ type Backend interface {
 
 	// TxPool API
 	SendTx(ctx context.Context, signedTx *types.Transaction) error
+	GetTransaction(ctx context.Context, txHash common.Hash) (*types.Transaction, common.Hash, uint64, uint64, error)
 	GetPoolTransactions() (types.Transactions, error)
 	GetPoolTransaction(txHash common.Hash) *types.Transaction
 	GetPoolNonce(ctx context.Context, addr common.Address) (uint64, error)
@@ -80,12 +81,27 @@ func GetAPIs(apiBackend Backend) []rpc.API {
 			Service:   NewPublicEthereumAPI(apiBackend),
 			Public:    true,
 		}, {
+			Namespace: "platone",
+			Version:   "1.0",
+			Service:   NewPublicEthereumAPI(apiBackend),
+			Public:    true,
+		}, {
 			Namespace: "eth",
 			Version:   "1.0",
 			Service:   NewPublicBlockChainAPI(apiBackend),
 			Public:    true,
 		}, {
+			Namespace: "platone",
+			Version:   "1.0",
+			Service:   NewPublicBlockChainAPI(apiBackend),
+			Public:    true,
+		}, {
 			Namespace: "eth",
+			Version:   "1.0",
+			Service:   NewPublicTransactionPoolAPI(apiBackend, nonceLock),
+			Public:    true,
+		}, {
+			Namespace: "platone",
 			Version:   "1.0",
 			Service:   NewPublicTransactionPoolAPI(apiBackend, nonceLock),
 			Public:    true,
@@ -105,6 +121,11 @@ func GetAPIs(apiBackend Backend) []rpc.API {
 			Service:   NewPrivateDebugAPI(apiBackend),
 		}, {
 			Namespace: "eth",
+			Version:   "1.0",
+			Service:   NewPublicAccountAPI(apiBackend.AccountManager()),
+			Public:    true,
+		}, {
+			Namespace: "platone",
 			Version:   "1.0",
 			Service:   NewPublicAccountAPI(apiBackend.AccountManager()),
 			Public:    true,

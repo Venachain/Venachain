@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/PlatONEnetwork/PlatONE-Go"
+	ethereum "github.com/PlatONEnetwork/PlatONE-Go"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
@@ -115,7 +115,7 @@ func (ec *Client) getBlock(ctx context.Context, method string, args ...interface
 		}
 		txs[i] = tx.tx
 	}
-	return types.NewBlockWithHeader(head).WithBody(txs), nil
+	return types.NewBlockWithHeader(head).WithBody(txs, nil), nil
 }
 
 // HeaderByHash returns the block header with the given hash.
@@ -132,6 +132,15 @@ func (ec *Client) HeaderByHash(ctx context.Context, hash common.Hash) (*types.He
 // nil, the latest known header is returned.
 func (ec *Client) HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error) {
 	var head *types.Header
+	err := ec.c.CallContext(ctx, &head, "eth_getBlockByNumber", toBlockNumArg(number), false)
+	if err == nil && head == nil {
+		err = ethereum.NotFound
+	}
+	return head, err
+}
+
+func (ec *Client) HeaderJsonByNumber(ctx context.Context, number *big.Int) ([]byte, error) {
+	var head json.RawMessage
 	err := ec.c.CallContext(ctx, &head, "eth_getBlockByNumber", toBlockNumArg(number), false)
 	if err == nil && head == nil {
 		err = ethereum.NotFound

@@ -18,6 +18,7 @@
 package core
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"math/big"
@@ -35,7 +36,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/metrics"
@@ -94,18 +95,19 @@ type BlockChain struct {
 	chainConfig *params.ChainConfig // Chain & network configuration
 	cacheConfig *CacheConfig        // Cache configuration for pruning
 
-	db     ethdb.Database // Low level persistent database to store final content in
-	extdb  ethdb.Database
+	db     dbhandle.Database // Low level persistent database to store final content in
+	extdb  dbhandle.Database
 	triegc *prque.Prque  // Priority queue mapping block numbers to tries to gc
 	gcproc time.Duration // Accumulates canonical block processing for trie dumping
 
-	hc            *HeaderChain
-	rmLogsFeed    event.Feed
-	chainFeed     event.Feed
-	chainHeadFeed event.Feed
-	logsFeed      event.Feed
-	scope         event.SubscriptionScope
-	genesisBlock  *types.Block
+	hc                       *HeaderChain
+	rmLogsFeed               event.Feed
+	chainFeed                event.Feed
+	chainHeadFeed            event.Feed
+	blockConsensusFinishFeed event.Feed
+	logsFeed                 event.Feed
+	scope                    event.SubscriptionScope
+	genesisBlock             *types.Block
 
 	mu      sync.RWMutex // global mutex for locking chain operations
 	chainmu sync.RWMutex // blockchain insertion lock
@@ -140,7 +142,7 @@ type BlockChain struct {
 // NewBlockChain returns a fully initialised block chain using information
 // available in the database. It initialises the default Ethereum Validator and
 // Processor.
-func NewBlockChain(db ethdb.Database, extdb ethdb.Database, cacheConfig *CacheConfig, chainConfig *params.ChainConfig, engine consensus.Engine, vmConfig vm.Config, shouldPreserve func(block *types.Block) bool) (*BlockChain, types.Blocks, error) {
+func NewBlockChain(db dbhandle.Database, extdb dbhandle.Database, cacheConfig *CacheConfig, chainConfig *params.ChainConfig, engine consensus.Engine, vmConfig vm.Config, shouldPreserve func(block *types.Block) bool) (*BlockChain, types.Blocks, error) {
 	if cacheConfig == nil {
 		cacheConfig = &CacheConfig{
 			TrieNodeLimit: 256 * 1024 * 1024,
@@ -179,6 +181,7 @@ func NewBlockChain(db ethdb.Database, extdb ethdb.Database, cacheConfig *CacheCo
 	if err != nil {
 		return nil, nil, err
 	}
+	bc.CheckAndUpdateBody()
 	bc.genesisBlock = bc.GetBlockByNumber(0)
 	if bc.genesisBlock == nil {
 		return nil, nil, ErrNoGenesis
@@ -834,7 +837,7 @@ func (bc *BlockChain) InsertReceiptChain(blockChain types.Blocks, receiptChain [
 
 		stats.processed++
 
-		if batch.ValueSize() >= ethdb.IdealBatchSize {
+		if batch.ValueSize() >= dbhandle.IdealBatchSize {
 			if err := batch.Write(); err != nil {
 				return 0, err
 			}
@@ -915,11 +918,27 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 		rawdb.WriteBlock(bc.db, block)
 		bc.cacheData(block, receipts)
 	}
+	// Write other block data using a batch.
+	batch := bc.db.NewBatch()
+
+	if block.ConfirmSigns != nil {
+		rawdb.WriteBlockConfirmSigns(batch, block.Hash(), block.NumberU64(), block.ConfirmSigns)
+	}
+	rawdb.WritePreimages(batch, block.NumberU64(), state.Preimages())
+
+	for i := 0; i < count; i++ {
+		items := <-itemch
+		for _, item := range items {
+			batch.Put(item.Key, item.Value)
+		}
+	}
+	if err := batch.Write(); err != nil {
+		return NonStatTy, err
+	}
 
 	root, err := state.Commit(true)
 	if err != nil {
 		log.Error("check block is EIP158 error", "hash", block.Hash(), "number", block.NumberU64())
-		close(closeCh)
 		return NonStatTy, err
 	}
 	triedb := bc.stateCache.TrieDB()
@@ -928,7 +947,6 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 	if bc.cacheConfig.Disabled {
 		if err := triedb.Commit(root, false); err != nil {
 			log.Error("Commit to triedb error", "root", root)
-			close(closeCh)
 			return NonStatTy, err
 		}
 	} else {
@@ -943,7 +961,7 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 				limit       = common.StorageSize(bc.cacheConfig.TrieNodeLimit) * 1024 * 1024
 			)
 			if nodes > limit || imgs > 4*1024*1024 {
-				triedb.Cap(limit - ethdb.IdealBatchSize)
+				triedb.Cap(limit - dbhandle.IdealBatchSize)
 			}
 			// Find the next state trie we need to commit
 			header := bc.GetHeaderByNumber(current - triesInMemory)
@@ -973,39 +991,14 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 		}
 	}
 
-	// Write other block data using a batch.
-	batch := bc.db.NewBatch()
-
-	//rawdb.WriteReceipts(batch, block.Hash(), block.NumberU64(), receipts)
-	if block.ConfirmSigns != nil {
-		rawdb.WriteBlockConfirmSigns(batch, block.Hash(), block.NumberU64(), block.ConfirmSigns)
-	}
-	//// Write the positional metadata for transaction/receipt lookups and preimages
-	//rawdb.WriteTxLookupEntries(batch, block)
-	rawdb.WritePreimages(batch, block.NumberU64(), state.Preimages())
-
-	for i := 0; i < count; i++ {
-		items := <-itemch
-		for _, item := range items {
-			batch.Put(item.Key, item.Value)
-		}
-	}
-
 	status = CanonStatTy
-	if err := batch.Write(); err != nil {
-		return NonStatTy, err
-	}
 	log.Debug("insert into chain", "WriteStatus", status, "hash", block.Hash(), "number", block.NumberU64(), "signs", rawdb.ReadBlockConfirmSigns(bc.db, block.Hash(), block.NumberU64()))
 
 	// Set new head.
 	if status == CanonStatTy {
 		bc.insert(block)
-
-		// parse block and retrieves txs
-
 	}
-
-	bc.futureBlocks.Remove(block.Hash())
+	//bc.futureBlocks.Remove(block.Hash())
 	return status, nil
 }
 
@@ -1311,8 +1304,8 @@ func (bc *BlockChain) PostChainEvents(events []interface{}, logs []*types.Log) {
 		case ChainHeadEvent:
 			bc.chainHeadFeed.Send(ev)
 
-			//case ChainSideEvent:
-			//	bc.chainSideFeed.Send(ev)
+		case BlockConsensusFinishEvent:
+			bc.blockConsensusFinishFeed.Send(ev)
 		}
 	}
 }
@@ -1526,6 +1519,10 @@ func (bc *BlockChain) SubscribeChainHeadEvent(ch chan<- ChainHeadEvent) event.Su
 	return bc.scope.Track(bc.chainHeadFeed.Subscribe(ch))
 }
 
+func (bc *BlockChain) SubscribeBlockConsensusFinishEvent(ch chan<- BlockConsensusFinishEvent) event.Subscription {
+	return bc.scope.Track(bc.blockConsensusFinishFeed.Subscribe(ch))
+}
+
 // SubscribeLogsEvent registers a subscription of []*types.Log.
 func (bc *BlockChain) SubscribeLogsEvent(ch chan<- []*types.Log) event.Subscription {
 	return bc.scope.Track(bc.logsFeed.Subscribe(ch))
@@ -1554,4 +1551,43 @@ func (bc *BlockChain) RunInterpreterDirectly(caller common.Address, contractAddr
 	contract := vm.NewContract(vm.AccountRef(caller), vm.AccountRef(contractAddr), big.NewInt(0), uint64(0xffffffffff))
 	contract.SetCallCode(&contractAddr, evm.StateDB.GetCodeHash(contractAddr), evm.StateDB.GetCode(contractAddr))
 	return bc.runInterpreter(evm, contract, input)
+}
+
+func (bc *BlockChain) CheckAndUpdateBody() {
+	if bc.CheckBodyOld() {
+		log.Info("Body is old , need update to new body ,please wait")
+		headHash := rawdb.ReadHeadBlockHash(bc.db)
+		number := bc.hc.GetBlockNumber(headHash)
+		var i uint64
+		for i = 0; i <= *number; i++ {
+			hash := rawdb.ReadCanonicalHash(bc.db, i)
+			rlpData := rawdb.ReadBodyRLP(bc.db, hash, i)
+			oldBody := new(types.BodyOld)
+			if err := rlp.Decode(bytes.NewReader(rlpData), oldBody); err != nil {
+				log.Error("Invalid block body RLP", "hash", hash, "err", err)
+				return
+			}
+			body := &types.Body{Transactions: oldBody.Transactions}
+			rawdb.WriteBody(bc.db, hash, i, body)
+		}
+	}
+}
+
+func (bc *BlockChain) CheckBodyOld() bool {
+	hash := rawdb.ReadCanonicalHash(bc.db, 0)
+	rlpData := rawdb.ReadBodyRLP(bc.db, hash, 0)
+
+	body := new(types.Body)
+	if err := rlp.Decode(bytes.NewReader(rlpData), body); err != nil {
+		if err.Error() == "rlp: too few elements for types.Body" {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (bc *BlockChain) IsLightNode() bool {
+
+	return false
 }

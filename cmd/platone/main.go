@@ -60,6 +60,7 @@ var (
 		utils.BootnodesV4Flag,
 		utils.BootnodesV5Flag,
 		utils.DataDirFlag,
+		utils.DbTypeFlag,
 		utils.KeyStoreDirFlag,
 		utils.NoUSBFlag,
 		utils.DashboardEnabledFlag,
@@ -74,10 +75,12 @@ var (
 		utils.TxPoolPriceBumpFlag,
 		utils.TxPoolAccountSlotsFlag,
 		utils.TxPoolGlobalSlotsFlag,
-		utils.TxPoolAccountQueueFlag,
-		utils.TxPoolGlobalQueueFlag,
 		utils.TxPoolGlobalTxCountFlag,
-		utils.TxPoolLifetimeFlag,
+
+		utils.TxPoolIsAutoAdjustTxCountFlag,
+		utils.TxPoolRequestTimeoutRatioFloorFlag,
+		utils.TxPoolRequestTimeoutRatioCeilFlag,
+
 		utils.SyncModeFlag,
 		utils.GCModeFlag,
 		utils.LightServFlag,
@@ -123,6 +126,7 @@ var (
 		utils.GpoPercentileFlag,
 		utils.EWASMInterpreterFlag,
 		utils.EVMInterpreterFlag,
+		utils.ParallelProcessSize,
 		configFileFlag,
 	}
 
@@ -153,7 +157,7 @@ var (
 func init() {
 	// Initialize the CLI app and start Geth
 	app.Action = geth
-	// app.HideVersion = true // we have a command to print the version	
+	// app.HideVersion = true // we have a command to print the version
 	app.Copyright = "Copyright 2013-2018 The go-ethereum Authors"
 	app.Commands = []cli.Command{
 		// See chaincmd.go:

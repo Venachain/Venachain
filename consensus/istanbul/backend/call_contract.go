@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"context"
 	"encoding/json"
 	"math/big"
 	"reflect"
@@ -25,7 +26,7 @@ type ChainContext struct {
 }
 
 func (cc *ChainContext) GetHeader(hash common.Hash, number uint64) *types.Header {
-	return cc.GetHeader(hash, number)
+	return (*cc.chain).GetHeader(hash, number)
 }
 
 func (cc *ChainContext) Engine() consensus.Engine {
@@ -47,7 +48,6 @@ func getConsensusNodesList(chain consensus.ChainReader, sb *backend, number uint
 	nodeIDs := make([]discover.NodeID, 0, len(tmp))
 	for _, dataObj := range tmp {
 		if pubKey := dataObj.PublicKey; len(pubKey) > 0 {
-			log.Debug("Consensus node", "PublicKey", pubKey)
 			if nodeID, err := discover.HexID(pubKey); err == nil {
 				nodeIDs = append(nodeIDs, nodeID)
 			}
@@ -57,40 +57,39 @@ func getConsensusNodesList(chain consensus.ChainReader, sb *backend, number uint
 }
 
 func getVRFParamsAtNumber(chain consensus.ChainReader, sb *backend, number uint64) *common.VRFParams {
-	isOldBlock := number < chain.CurrentHeader().Number.Uint64()
-	if !isOldBlock {
-		return &common.SysCfg.SysParam.VRF
-	}
-
 	resVRF := CallSystemContractAtBlockNumber(chain, sb, number, syscontracts.ParameterManagementAddress, "getVRFParams", []interface{}{})
 	vrf := ParseResultToExtractType(resVRF, common.VRFParams{})
+	log.Trace("call system contract", "number", number, "vrf", string(resVRF))
 	if vrf != nil {
 		return vrf.(*common.VRFParams)
 	}
-	return nil
+
+	return &common.VRFParams{}
 }
 
 func getVrfConsensusNodesAtNumber(chain consensus.ChainReader, sb *backend, number uint64) []common.NodeInfo {
 	resVrfConsensusNodes := CallSystemContractAtBlockNumber(chain, sb, number, syscontracts.NodeManagementAddress, "getVrfConsensusNodes", []interface{}{})
 	nodes := ParseResultToExtractType(resVrfConsensusNodes, common.CommonResult{})
+	log.Trace("call system contract", "number", number, "VrfConsensusNodes", string(resVrfConsensusNodes))
 	if nodes != nil {
 		return nodes.(*common.CommonResult).Data
 	}
+
 	return []common.NodeInfo{}
 }
 
 func getCandidateNodesAtNumber(chain consensus.ChainReader, sb *backend, number uint64) []common.NodeInfo {
-	isOldBlock := number < chain.CurrentHeader().Number.Uint64()
 	nodes := make([]common.NodeInfo, 0)
-	if isOldBlock {
-		resNodes := CallSystemContractAtBlockNumber(chain, sb, number, syscontracts.NodeManagementAddress, "getAllNodes", []interface{}{})
-		tmp := ParseResultToExtractType(resNodes, common.CommonResult{})
-		if tmp != nil {
-			nodes = tmp.(*common.CommonResult).Data
-		}
+
+	resNodes := CallSystemContractAtBlockNumber(chain, sb, number, syscontracts.NodeManagementAddress, "getAllNodes", []interface{}{})
+	log.Trace("call system contract", "number", number, "allNodes", string(resNodes))
+	tmp := ParseResultToExtractType(resNodes, common.CommonResult{})
+	if tmp != nil {
+		nodes = tmp.(*common.CommonResult).Data
 	}
 
-	return common.SysCfg.GetConsensusNodesFilterDelay(number, nodes, isOldBlock)
+	log.Trace("call system contract", "nodesLength", len(nodes))
+	return common.SysCfg.GetConsensusNodesFilterDelay(number, nodes)
 }
 
 func ParseResultToExtractType(res []byte, v interface{}) interface{} {
@@ -112,19 +111,29 @@ func CallSystemContractAtBlockNumber(
 	sysFuncName string,
 	sysFuncParams []interface{},
 ) []byte {
-	_state, _ := state.New(chain.GetHeaderByNumber(number).Root, state.NewDatabase(sb.db))
+	var _state *state.StateDB
+	if chain.IsLightNode() {
+		//light node's chain is headerChain
+		hc := chain.(*core.HeaderChain)
+		_state = hc.NewLightState(context.Background(), number)
+	} else {
+		_state, _ = state.New(chain.GetHeaderByNumber(number).Root, state.NewDatabase(sb.db))
+	}
+
 	if _state == nil {
 		log.Warn("load state fail at block number", "number", number)
 		return nil
 	}
 	msg := types.NewMessage(common.Address{}, nil, 1, big.NewInt(1), 0x1, big.NewInt(1), nil, false)
 	cc := ChainContext{&chain, sb}
-	context := core.NewEVMContext(msg, chain.CurrentHeader(), &cc, nil)
+	context := core.NewEVMContext(msg, chain.GetHeaderByNumber(number), &cc, nil)
 	evm := vm.NewEVM(context, _state, chain.Config(), vm.Config{})
 	callData := common.GenCallData(sysFuncName, sysFuncParams)
 	res, _, err := evm.Call(vm.AccountRef(common.Address{}), sysContractAddr, callData, uint64(0xffffffffff), big.NewInt(0))
 	if err != nil {
+		log.Error("CallSystemContractAtBlockNumber", "err", err, "sysFuncName", sysFuncName)
 		return nil
 	}
+
 	return res
 }

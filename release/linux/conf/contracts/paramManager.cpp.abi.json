@@ -248,7 +248,7 @@
         "type":"event"
     },
     {
-        "name":"IsCheckContractDeployPermission",
+        "name":"setCheckContractDeployPermission",
         "inputs":[
             {"type":"uint32"},
             {"type":"string"}
@@ -257,6 +257,22 @@
     },
     {
         "name":"IsApproveDeployedContract",
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"IsCheckContractDeployPermission",
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"",
         "inputs":[
             {"type":"uint32"},
             {"type":"string"}
@@ -327,8 +343,8 @@
         "name": "getIntParam",
         "inputs": [
             {
-            "name": "",
-            "type": "string"
+                "name": "",
+                "type": "string"
             }
         ],
         "outputs": [
@@ -390,4 +406,3 @@
         "type": "function"
     }
 ]
-

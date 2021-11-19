@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"math"
 	"math/big"
 	"sync"
@@ -31,9 +30,11 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/fetcher"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
@@ -110,7 +111,7 @@ type ProtocolManager struct {
 // NewProtocolManager returns a new Ethereum sub protocol manager. The Ethereum sub protocol manages peers capable
 // with the Ethereum network.
 func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux,
-	txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb ethdb.Database) (*ProtocolManager, error) {
+	txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb dbhandle.Database) (*ProtocolManager, error) {
 	// Create the protocol manager with the base fields
 	manager := &ProtocolManager{
 		networkID:   networkID,
@@ -283,6 +284,10 @@ func (pm *ProtocolManager) newPeer(pv int, p *p2p.Peer, rw p2p.MsgReadWriter) *p
 // handle is the callback invoked to manage the life cycle of an eth peer. When
 // this function terminates, the peer is disconnected.
 func (pm *ProtocolManager) handle(p *peer) error {
+	if p.types == int32(vm.NodeTypeLight) {
+		return errors.New("light node imitates full/fast node, deny connection")
+	}
+
 	// Ignore maxPeers if this is a trusted peer
 	if pm.peers.Len() >= pm.maxPeers && !p.Peer.Info().Network.Trusted {
 		return p2p.DiscTooManyPeers
@@ -534,18 +539,18 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 			return errResp(ErrDecode, "msg %v: %v", msg, err)
 		}
 		// Deliver them all to the downloader for queuing
-		transactions := make([][]*types.Transaction, len(request))
+		bodies := make([]*types.Body, len(request))
 
 		for i, body := range request {
-			transactions[i] = body.Transactions
+			bodies[i] = &types.Body{Transactions: body.Transactions, Dag: body.Dag}
 		}
 		// Filter out any explicitly requested bodies, deliver the rest to the downloader
-		filter := len(transactions) > 0
+		filter := len(bodies) > 0
 		if filter {
-			transactions = pm.fetcher.FilterBodies(p.id, transactions, time.Now())
+			bodies = pm.fetcher.FilterBodies(p.id, bodies, time.Now())
 		}
-		if len(transactions) > 0 || !filter {
-			err := pm.downloader.DeliverBodies(p.id, transactions)
+		if len(bodies) > 0 || !filter {
+			err := pm.downloader.DeliverBodies(p.id, bodies)
 			if err != nil {
 				log.Debug("Failed to deliver bodies", "err", err)
 			}
@@ -652,6 +657,10 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		for _, block := range announces {
 			if !pm.blockchain.HasBlock(block.Hash, block.Number) {
 				unknown = append(unknown, block)
+			}
+
+			if _, bn := p.Head(); bn.Uint64() < block.Number {
+				p.SetHead(block.Hash, big.NewInt(0).SetUint64(block.Number))
 			}
 		}
 		for _, block := range unknown {

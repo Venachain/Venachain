@@ -19,6 +19,7 @@
 package les
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -26,8 +27,9 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/light"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
@@ -50,7 +52,7 @@ type LesOdrRequest interface {
 	GetCost(*peer) uint64
 	CanSend(*peer) bool
 	Request(uint64, *peer) error
-	Validate(ethdb.Database, *Msg) error
+	Validate(dbhandle.Database, *Msg) error
 }
 
 func LesRequest(req light.OdrRequest) LesOdrRequest {
@@ -95,7 +97,7 @@ func (r *BlockRequest) Request(reqID uint64, peer *peer) error {
 // Valid processes an ODR request reply message from the LES network
 // returns true and stores results in memory if the message was a valid reply
 // to the request (implementation of LesOdrRequest)
-func (r *BlockRequest) Validate(db ethdb.Database, msg *Msg) error {
+func (r *BlockRequest) Validate(db dbhandle.Database, msg *Msg) error {
 	log.Debug("Validating block body", "hash", r.Hash)
 
 	// Ensure we have a correct message with a single block body
@@ -148,7 +150,7 @@ func (r *ReceiptsRequest) Request(reqID uint64, peer *peer) error {
 // Valid processes an ODR request reply message from the LES network
 // returns true and stores results in memory if the message was a valid reply
 // to the request (implementation of LesOdrRequest)
-func (r *ReceiptsRequest) Validate(db ethdb.Database, msg *Msg) error {
+func (r *ReceiptsRequest) Validate(db dbhandle.Database, msg *Msg) error {
 	log.Debug("Validating block receipts", "hash", r.Hash)
 
 	// Ensure we have a correct message with a single block receipt
@@ -167,6 +169,8 @@ func (r *ReceiptsRequest) Validate(db ethdb.Database, msg *Msg) error {
 		return errHeaderUnavailable
 	}
 	if header.ReceiptHash != types.DeriveSha(receipt) {
+		log.Warn("validate receipts failed", "txHash", receipt[0].TxHash.Hex(),
+			"headerReceiptHash", header.ReceiptHash, "myReceiptHash", types.DeriveSha(receipt))
 		return errReceiptHashMismatch
 	}
 	// Validations passed, store and return
@@ -215,8 +219,10 @@ func (r *TrieRequest) Request(reqID uint64, peer *peer) error {
 // Valid processes an ODR request reply message from the LES network
 // returns true and stores results in memory if the message was a valid reply
 // to the request (implementation of LesOdrRequest)
-func (r *TrieRequest) Validate(db ethdb.Database, msg *Msg) error {
-	log.Debug("Validating trie proof", "root", r.Id.Root, "key", r.Key)
+func (r *TrieRequest) Validate(db dbhandle.Database, msg *Msg) error {
+	logger := log.New("blockNumber", r.Id.BlockNumber, "blockHash",
+		r.Id.BlockHash, "root", r.Id.Root, "accKey", common.BytesToHash(r.Id.AccKey), "key", common.BytesToHash(r.Key))
+	logger.Trace("validate trie proof")
 
 	switch msg.MsgType {
 	case MsgProofsV1:
@@ -233,23 +239,41 @@ func (r *TrieRequest) Validate(db ethdb.Database, msg *Msg) error {
 		return nil
 
 	case MsgProofsV2:
-		proofs := msg.Obj.(light.NodeList)
+		proofs := msg.Obj.(ProofsResponseData)
 		// Verify the proof and store if checks out
-		nodeSet := proofs.NodeSet()
+		nodeSet := proofs.Nodes.NodeSet()
 		reads := &readTraceDB{db: nodeSet}
-		if _, _, err := trie.VerifyProof(r.Id.Root, r.Key, reads); err != nil {
-			return fmt.Errorf("merkle proof verification failed: %v", err)
+
+		// precompileContract's parameter is not initialized in storage
+		if len(proofs.Nodes) != 0 || !accKeyIsPrecompileContract(r.Id.AccKey) {
+			if _, _, err := trie.VerifyProof(r.Id.Root, r.Key, reads); err != nil {
+				logger.Warn("validate trie proof failed", "err", err, "nodesLen", len(nodeSet.NodeList()))
+				return fmt.Errorf("merkle proof verification failed: %v", err)
+			}
 		}
+
 		// check if all nodes have been read by VerifyProof
 		if len(reads.reads) != nodeSet.KeyCount() {
 			return errUselessNodes
 		}
 		r.Proof = nodeSet
+		r.StorageValues = proofs.StorageValues
+		logger.Trace("validate trie proof success")
 		return nil
 
 	default:
 		return errInvalidMessageType
 	}
+}
+
+func accKeyIsPrecompileContract(accKey []byte) bool {
+	for addr := range vm.PlatONEPrecompiledContracts {
+		addrKey := crypto.Keccak256Hash(addr[:])
+		if bytes.Compare(addrKey[:], accKey) == 0 {
+			return true
+		}
+	}
+	return false
 }
 
 type CodeReq struct {
@@ -284,7 +308,7 @@ func (r *CodeRequest) Request(reqID uint64, peer *peer) error {
 // Valid processes an ODR request reply message from the LES network
 // returns true and stores results in memory if the message was a valid reply
 // to the request (implementation of LesOdrRequest)
-func (r *CodeRequest) Validate(db ethdb.Database, msg *Msg) error {
+func (r *CodeRequest) Validate(db dbhandle.Database, msg *Msg) error {
 	log.Debug("Validating code data", "hash", r.Hash)
 
 	// Ensure we have a correct message with a single code element
@@ -395,7 +419,7 @@ func (r *ChtRequest) Request(reqID uint64, peer *peer) error {
 // Valid processes an ODR request reply message from the LES network
 // returns true and stores results in memory if the message was a valid reply
 // to the request (implementation of LesOdrRequest)
-func (r *ChtRequest) Validate(db ethdb.Database, msg *Msg) error {
+func (r *ChtRequest) Validate(db dbhandle.Database, msg *Msg) error {
 	log.Debug("Validating CHT", "cht", r.ChtNum, "block", r.BlockNum)
 
 	switch msg.MsgType {
@@ -517,7 +541,7 @@ func (r *BloomRequest) Request(reqID uint64, peer *peer) error {
 // Valid processes an ODR request reply message from the LES network
 // returns true and stores results in memory if the message was a valid reply
 // to the request (implementation of LesOdrRequest)
-func (r *BloomRequest) Validate(db ethdb.Database, msg *Msg) error {
+func (r *BloomRequest) Validate(db dbhandle.Database, msg *Msg) error {
 	log.Debug("Validating BloomBits", "bloomTrie", r.BloomTrieNum, "bitIdx", r.BitIdx, "sections", r.SectionIndexList)
 
 	// Ensure we have a correct message with a single proof element
@@ -548,6 +572,43 @@ func (r *BloomRequest) Validate(db ethdb.Database, msg *Msg) error {
 		return errUselessNodes
 	}
 	r.Proofs = nodeSet
+	return nil
+}
+
+// TxStatusRequest is the ODR request type for transaction status
+type TxStatusRequest light.TxStatusRequest
+
+// GetCost returns the cost of the given ODR request according to the serving
+// peer's cost table (implementation of LesOdrRequest)
+func (r *TxStatusRequest) GetCost(peer *peer) uint64 {
+	return peer.GetRequestCost(GetTxStatusMsg, len(r.Hashes))
+}
+
+// CanSend tells if a certain peer is suitable for serving the given request
+func (r *TxStatusRequest) CanSend(peer *peer) bool {
+	return true
+}
+
+// Request sends an ODR request to the LES network (implementation of LesOdrRequest)
+func (r *TxStatusRequest) Request(reqID uint64, peer *peer) error {
+	peer.Log().Debug("Requesting transaction status", "count", len(r.Hashes))
+	return peer.RequestTxStatus(reqID, r.GetCost(peer), r.Hashes)
+}
+
+// Validate processes an ODR request reply message from the LES network
+// returns true and stores results in memory if the message was a valid reply
+// to the request (implementation of LesOdrRequest)
+func (r *TxStatusRequest) Validate(db dbhandle.Database, msg *Msg) error {
+	log.Debug("Validating transaction status", "count", len(r.Hashes))
+
+	if msg.MsgType != MsgTxStatus {
+		return errInvalidMessageType
+	}
+	status := msg.Obj.([]light.TxStatus)
+	if len(status) != len(r.Hashes) {
+		return errInvalidEntryCount
+	}
+	r.Status = status
 	return nil
 }
 

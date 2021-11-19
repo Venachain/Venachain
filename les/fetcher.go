@@ -338,7 +338,9 @@ func (f *lightFetcher) announce(p *peer, head *announceData) {
 	fp.lastAnnounced = n
 	p.lock.Unlock()
 	f.checkUpdateStats(p, nil)
-	f.requestChn <- true
+
+	// TODO:
+	//f.requestChn <- true
 }
 
 // peerHasBlock returns true if we can assume the peer knows the given block
@@ -369,7 +371,10 @@ func (f *lightFetcher) peerHasBlock(p *peer, hash common.Hash, number uint64) bo
 	//
 	// when syncing, just check if it is part of the known chain, there is nothing better we
 	// can do since we do not know the most recent block hash yet
-	return rawdb.ReadCanonicalHash(f.pm.chainDb, fp.root.number) == fp.root.hash && rawdb.ReadCanonicalHash(f.pm.chainDb, number) == hash
+	//return rawdb.ReadCanonicalHash(f.pm.chainDb, fp.root.number) == fp.root.hash && rawdb.ReadCanonicalHash(f.pm.chainDb, number) == hash
+
+	// platone's light node need to call contract before synchronising to fp.root.number
+	return rawdb.ReadCanonicalHash(f.pm.chainDb, number) == hash
 }
 
 // requestAmount calculates the amount of headers to be downloaded starting
@@ -413,7 +418,7 @@ func (f *lightFetcher) nextRequest() (*distReq, uint64) {
 				if bestBn == nil || n.number > bestBn.Uint64() || amount < bestAmount {
 					bestHash = hash
 					bestAmount = amount
-					bestBn = new (big.Int).SetUint64(n.number)
+					bestBn = new(big.Int).SetUint64(n.number)
 					bestSyncing = fp.bestConfirmed == nil || fp.root == nil || !f.checkKnownNode(p, fp.root)
 				}
 			}
@@ -635,7 +640,7 @@ func (f *lightFetcher) checkSyncedHeaders(p *peer) {
 	n := fp.lastAnnounced
 	//var td *big.Int
 	for n != nil {
-		if n.hash != (common.Hash{}){
+		if n.hash != (common.Hash{}) {
 			break
 		}
 		n = n.parent

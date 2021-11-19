@@ -43,20 +43,20 @@ func (c *CnsInvoke) Run(input []byte) ([]byte, error) {
 	if err := rlp.DecodeBytes(cnsRawData, &cnsData); err != nil {
 		log.Warn("Decode cnsRawData failed", "err", err)
 		c.emitNotifyEventInCnsInvoke(InvokeString, encodeFail, fmt.Sprintf("cnsRawData encode fail."))
-		c.evm.StateDB.SetNonce(c.caller, c.evm.StateDB.GetNonce(c.caller)+1)
+		c.evm.StateDB.AddNonce(c.caller)
 		return nil, err
 	}
 
 	if len(cnsData) < 3 {
 		c.emitNotifyEventInCnsInvoke(InvokeString, lengthInvalid, fmt.Sprintf("param length invalid."))
-		c.evm.StateDB.SetNonce(c.caller, c.evm.StateDB.GetNonce(c.caller)+1)
+		c.evm.StateDB.AddNonce(c.caller)
 		return nil, nil
 	}
 
 	addr, err := c.getCnsAddr(string(cnsData[1]))
 	if err != nil {
 		log.Warn("GetCnsAddr failed", "err", err)
-		c.evm.StateDB.SetNonce(c.caller, c.evm.StateDB.GetNonce(c.caller)+1)
+		c.evm.StateDB.AddNonce(c.caller)
 		return nil, err
 	}
 
@@ -68,7 +68,7 @@ func (c *CnsInvoke) Run(input []byte) ([]byte, error) {
 	cnsRawData, err = rlp.EncodeToBytes(cnsData)
 	if err != nil {
 		log.Warn("Encode Cns Data failed", "err", err)
-		c.evm.StateDB.SetNonce(c.caller, c.evm.StateDB.GetNonce(c.caller)+1)
+		c.evm.StateDB.AddNonce(c.caller)
 		return nil, err
 	}
 

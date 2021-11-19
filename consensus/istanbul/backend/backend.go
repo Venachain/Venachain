@@ -23,22 +23,21 @@ import (
 	"sync"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul"
 	istanbulCore "github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/validator"
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
+	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	lru "github.com/hashicorp/golang-lru"
 )
 
@@ -48,7 +47,7 @@ const (
 )
 
 // New creates an Ethereum backend for Istanbul core engine.
-func New(config *params.IstanbulConfig, privateKey *ecdsa.PrivateKey, db ethdb.Database) consensus.Istanbul {
+func New(config *params.IstanbulConfig, privateKey *ecdsa.PrivateKey, db dbhandle.Database) consensus.Istanbul {
 	// Allocate the snapshot caches and create the engine
 	recents, _ := lru.NewARC(inmemorySnapshots)
 	recentMessages, _ := lru.NewARC(inmemoryPeers)
@@ -74,6 +73,7 @@ func New(config *params.IstanbulConfig, privateKey *ecdsa.PrivateKey, db ethdb.D
 		coreStarted:      false,
 		recentMessages:   recentMessages,
 		knownMessages:    knownMessages,
+		statusInfo:       &consensus.StatusInfo{},
 	}
 	backend.core = istanbulCore.New(backend, backend.config)
 	return backend
@@ -102,7 +102,7 @@ type backend struct {
 	address          common.Address
 	core             istanbulCore.Engine
 	logger           log.Logger
-	db               ethdb.Database
+	db               dbhandle.Database
 	chain            consensus.ChainReader
 	currentBlock     func() *types.Block
 	current          *environment
@@ -126,6 +126,12 @@ type backend struct {
 
 	recentMessages *lru.ARCCache // the cache of peer's messages
 	knownMessages  *lru.ARCCache // the cache of self messages
+
+	statusInfo *consensus.StatusInfo
+}
+
+func (sb *backend) GetStatusInfo() *consensus.StatusInfo {
+	return sb.statusInfo
 }
 
 // Address implements istanbul.Backend.Address
@@ -238,6 +244,39 @@ func (sb *backend) writeCommitedBlockWithState(block *types.Block) error {
 	return nil
 }
 
+//calConsensusTimeRatio catch timeout event or commit event,
+//return timeout signal or ration(=consensusCostTime/CurrentRequestTimeout)
+func (sb *backend) calConsensusTimeRatio() {
+	sb.statusInfo.Lock()
+	event := sb.statusInfo.Event
+	sb.statusInfo.Unlock()
+	if event == nil {
+		return
+	}
+
+	for {
+		select {
+		case eventVal, ok := <-event.Chan():
+			if !ok {
+				return
+			}
+			switch ev := eventVal.Data.(type) {
+			case istanbul.CommittedEvent:
+				committedTime := time.Now().UnixNano() / int64(time.Millisecond)
+				consensusCostTime := uint64(committedTime) - ev.HeadTime
+				sb.statusInfo.Lock()
+				sb.statusInfo.CurrentBlockTxCount = ev.TxCount
+				sb.statusInfo.Ratio = float64(consensusCostTime) / float64(sb.statusInfo.CurrentRequestTimeout)
+				sb.statusInfo.Unlock()
+			case istanbulCore.TimeoutEvent:
+				sb.statusInfo.Lock()
+				sb.statusInfo.IsTimeout = true
+				sb.statusInfo.Unlock()
+			}
+		}
+	}
+}
+
 // Commit implements istanbul.Backend.Commit
 func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 	// Check if the proposal is a valid block
@@ -260,6 +299,12 @@ func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 	isProduceEmptyBlock := common.SysCfg.IsProduceEmptyBlock()
 
 	if !isEmpty || isProduceEmptyBlock {
+		//post commit event
+		sb.EventMux().Post(istanbul.CommittedEvent{
+			HeadTime:      h.Time.Uint64(),
+			TxCount:       uint64(block.Transactions().Len()),
+			CommittedTime: uint64(time.Now().UnixNano() / int64(time.Millisecond)),
+		})
 		sb.logger.Info("Committed", "address", sb.Address(), "hash", proposal.Hash(), "number", proposal.Number().Uint64())
 	}
 	// - if the proposed and committed blocks are the same, send the proposed hash
@@ -279,6 +324,13 @@ func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 			sb.commitCh <- nil
 			return istanbulCore.ErrEmpty
 		}
+
+		chain := sb.chain.(*core.BlockChain)
+		chain.PostChainEvents([]interface{}{
+			core.BlockConsensusFinishEvent{
+				Block: block,
+			},
+		}, nil)
 		sb.commitCh <- block
 		return nil
 	}
@@ -292,6 +344,12 @@ func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 			return istanbulCore.ErrEmpty
 		}
 
+		chain := sb.chain.(*core.BlockChain)
+		chain.PostChainEvents([]interface{}{
+			core.BlockConsensusFinishEvent{
+				Block: block,
+			},
+		}, nil)
 		if err := sb.writeCommitedBlockWithState(block); err != nil {
 			sb.logger.Error("writeCommitedBlockWithState() failed", "error", err.Error())
 			return err
@@ -316,6 +374,22 @@ func (sb *backend) EventMux() *event.TypeMux {
 // EventMux implements istanbul.Backend.EventMux
 func (sb *backend) MsgFeed() *event.Feed {
 	return sb.msgFeed
+}
+
+func (sb *backend) SetConsensusTypeMuxSub(event *event.TypeMuxSubscription) {
+	sb.statusInfo.Lock()
+	sb.statusInfo.Unlock()
+	sb.statusInfo.Event = event
+}
+
+func (sb *backend) GetConsensusTypeMuxSub() *event.TypeMuxSubscription {
+	return sb.statusInfo.Event
+}
+
+func (sb *backend) SetCurrentRequestTimeout(timeout uint64) {
+	sb.statusInfo.Lock()
+	defer sb.statusInfo.Unlock()
+	sb.statusInfo.CurrentRequestTimeout = timeout
 }
 
 // makeCurrent creates a new environment for the current cycle.
@@ -351,9 +425,10 @@ func (sb *backend) makeCurrent(parentRoot common.Hash, header *types.Header) err
 	return nil
 }
 
-func (sb *backend) excuteBlock(proposal istanbul.Proposal) error {
+//func (sb *backend) excuteBlock(proposal istanbul.Proposal) error {
+func (sb *backend) excuteBlock(block *types.Block) error {
 	var (
-		block  *types.Block
+		//block  *types.Block
 		chain  *core.BlockChain
 		parent *types.Block
 		header *types.Header
@@ -361,9 +436,9 @@ func (sb *backend) excuteBlock(proposal istanbul.Proposal) error {
 		err    error
 	)
 
-	if block, ok = proposal.(*types.Block); !ok {
-		return errors.New("invalid proposal")
-	}
+	//if block, ok = proposal.(*types.Block); !ok {
+	//	return errors.New("invalid proposal")
+	//}
 
 	if chain, ok = sb.chain.(*core.BlockChain); !ok {
 		return errors.New("sb.chain not a core.BlockChain")
@@ -379,35 +454,14 @@ func (sb *backend) excuteBlock(proposal istanbul.Proposal) error {
 		return err
 	} else {
 		// Iterate over and process the individual transactios
-		txsMap := make(map[common.Hash]struct{})
-		for _, tx := range block.Transactions() {
-			sb.current.state.Prepare(tx.Hash(), common.Hash{}, sb.current.tcount)
-			snap := sb.current.state.Snapshot()
-			if r := chain.GetReceiptsByHash(tx.Hash()); r != nil {
-				return errors.New("Already executed tx")
-			}
-			if _, ok := txsMap[tx.Hash()]; ok {
-				return errors.New("Repeated tx in one block")
-			} else {
-				txsMap[tx.Hash()] = struct{}{}
-			}
 
-			receipt, _, err := core.ApplyTransaction(chain.Config(), chain, &sb.address, sb.current.gasPool, sb.current.state, sb.current.header, tx, &sb.current.header.GasUsed, vm.Config{})
-			if err != nil {
-				sb.current.state.RevertToSnapshot(snap)
-				return err
-			}
-			sb.current.txs = append(sb.current.txs, tx)
-			sb.current.receipts = append(sb.current.receipts, receipt)
-			sb.current.tcount++
-
-			sb.current.state.Finalise(true)
-		}
-
-		cblock, err := sb.Finalize(chain, header, sb.current.state, block.Transactions(), sb.current.receipts)
+		cblock, receipts, err := chain.Processor().CheckAndProcess(block, sb.current.state, vm.Config{})
 		if err != nil {
 			return err
 		}
+		sb.current.txs = block.Transactions()
+		sb.current.receipts = receipts
+		sb.current.tcount = block.Transactions().Len()
 
 		if cblock.Root() != block.Root() {
 			sb.current = nil
@@ -443,7 +497,10 @@ func (sb *backend) Verify(proposal istanbul.Proposal, isProposer bool) (time.Dur
 	// If this node is proposer and the proposal is mined by this node, need not to execute the block
 	if (block.Coinbase() != sb.address) || !isProposer {
 		//excute txs in block
-		if err := sb.excuteBlock(proposal); err != nil {
+		//if err := sb.excuteBlock(proposal); err != nil {
+		//	return 0, err
+		//}
+		if err := sb.excuteBlock(block); err != nil {
 			return 0, err
 		}
 	}

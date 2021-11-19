@@ -13,3 +13,4 @@ int p256r1_verify_with_base64(const char* msg, const char* pub_data, const char*
 
 int p256k1_sign_with_base64(const char *msg, const char *privkey, char *out);
 int p256k1_verify_with_base64(const char* msg, const char* pub_data, const char* sig_data);
+int sm3_compute(const char *msg, char *output);

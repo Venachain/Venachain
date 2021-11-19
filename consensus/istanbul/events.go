@@ -33,3 +33,9 @@ type MessageEvent struct {
 // FinalCommittedEvent is posted when a proposal is committed
 type FinalCommittedEvent struct {
 }
+
+type CommittedEvent struct {
+	HeadTime      uint64
+	CommittedTime uint64
+	TxCount       uint64
+}

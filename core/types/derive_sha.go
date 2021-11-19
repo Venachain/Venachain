@@ -18,6 +18,7 @@ package types
 
 import (
 	"bytes"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"github.com/PlatONEnetwork/PlatONE-Go/trie"

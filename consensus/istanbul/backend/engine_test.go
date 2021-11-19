@@ -32,7 +32,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
@@ -42,7 +42,7 @@ import (
 // other fake events to process Istanbul.
 func newBlockChain(n int) (*core.BlockChain, *backend) {
 	genesis, nodeKeys := getGenesisAndKeys(n)
-	memDB := ethdb.NewMemDatabase()
+	memDB := memorydb.NewMemDatabase()
 	config := istanbul.DefaultConfig
 	// Use the first key as private key
 	b, _ := New(config, nodeKeys[0], memDB).(*backend)

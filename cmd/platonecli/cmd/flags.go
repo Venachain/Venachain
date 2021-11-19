@@ -18,6 +18,10 @@ var (
 		Name:  "account",
 		Usage: "Specify the local or remote account address used to send the message calls",
 	}
+	ValueFlags = cli.StringFlag{
+		Name:  "value",
+		Usage: "Specify the transfer count",
+	}
 	GasFlags = cli.StringFlag{
 		Name:  "gas",
 		Usage: "Specify the gas allowance for the code execution",
@@ -303,6 +307,11 @@ var (
 		Usage: "Specify the rest server listening port number, e.g. :8000",
 	}
 
+	PassPhraseFlags = cli.StringFlag{
+		Name:  "passphrase",
+		Usage: "passphrase",
+	}
+
 	//=============================================================================
 	globalCmdFlags = []cli.Flag{
 		UrlFlags,
@@ -313,6 +322,9 @@ var (
 		KeyfileFlags,
 		SyncFlags,
 		DefaultFlags,
+		TransferValueFlag,
+		PassPhraseFlags,
+
 	}
 
 	// system config
@@ -370,7 +382,7 @@ var (
 		ContractAbiFilePathFlag,
 		ContractParamFlag,
 		ContractVmFlags,
-		TransferValueFlag,
+		//TransferValueFlag,
 		ShowContractMethodsFlag)
 	contractMethodsCmd = append([]cli.Flag{}, ContractAbiFilePathFlag)
 

@@ -40,7 +40,7 @@ func (n *scNodeWrapper) Run(input []byte) ([]byte, error) {
 			return MakeReturnBytes([]byte(newInternalErrorResult(err).String())), err
 		}
 	}
-	return ret, nil
+	return ret, err
 }
 
 func (n *scNodeWrapper) add(node *syscontracts.NodeInfo) (int, error) {
@@ -73,8 +73,8 @@ func (n *scNodeWrapper) update(name string, node *syscontracts.UpdateNode) (int,
 
 func (n *scNodeWrapper) getAllNodes() (string, error) {
 	nodes, err := n.base.GetAllNodes()
-	if err != nil && err != errNodeNotFound{
-		return "", err
+	if err != nil && err != errNodeNotFound {
+		return err.Error(), nil
 	} else if errNodeNotFound == err {
 		nodes = []*syscontracts.NodeInfo{}
 	}

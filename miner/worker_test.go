@@ -27,14 +27,16 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"github.com/ethereum/go-ethereum/consensus/clique"
 )
 
 var (
 	// Test chain configurations
-	testTxPoolConfig  core.TxPoolConfig
+	testTxPoolConfig core.TxPoolConfig
 
 	// Test accounts
 	testBankKey, _  = crypto.GenerateKey()
@@ -60,7 +62,7 @@ func init() {
 
 // testWorkerBackend implements worker.Backend interfaces and wraps all information needed during the testing.
 type testWorkerBackend struct {
-	db         ethdb.Database
+	db         dbhandle.Database
 	txPool     *core.TxPool
 	chain      *core.BlockChain
 	testTxFeed event.Feed
@@ -68,7 +70,7 @@ type testWorkerBackend struct {
 
 func newTestWorkerBackend(t *testing.T, chainConfig *params.ChainConfig, engine consensus.Engine, n int) *testWorkerBackend {
 	var (
-		db    = ethdb.NewMemDatabase()
+		db    = memorydb.NewMemDatabase()
 		gspec = core.Genesis{
 			Config: chainConfig,
 			Alloc:  core.GenesisAlloc{testBankAddress: {Balance: testBankFunds}},

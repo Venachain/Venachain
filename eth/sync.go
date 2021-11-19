@@ -216,11 +216,10 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 		log.Info("boot nodes is unnormal nodes: ", "local", "at sync")
 	}
 	pHead, pBn := peer.Head()
-	//modified by platone
-	//diff := new(big.Int).Sub(pBn, bn)
-	//if diff.Cmp(big.NewInt(5)) <= 0 {
-	//	return
-	//}
+	if pBn.Cmp(currentBlock.Number()) <= 0 {
+		return
+	}
+
 	// Otherwise try to sync with the downloader
 	mode := downloader.FullSync
 	if atomic.LoadUint32(&pm.fastSync) == 1 {

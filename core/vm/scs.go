@@ -24,6 +24,7 @@ var PlatONEPrecompiledContracts = map[common.Address]PrecompiledContract{
 	syscontracts.ContractDataProcessorAddress: &ContractDataProcessor{},
 	syscontracts.GroupManagementAddress:       &GroupManagement{},
 	syscontracts.CnsInvokeAddress:             &CnsInvoke{},
+	syscontracts.EvidenceManagementAddress:    &SCEvidenceWrapper{},
 }
 
 func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Contract, evm *EVM) (ret []byte, err error) {
@@ -99,6 +100,13 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 				blockNumber: evm.BlockNumber,
 			}
 			return ci.Run(input)
+		case *SCEvidenceWrapper:
+			ew := NewEvidenceWrapper(evm.StateDB)
+			ew.base.caller = evm.Context.Origin
+			ew.base.blockNumber = evm.BlockNumber
+			ew.base.contractAddr = *contract.CodeAddr
+			return ew.Run(input)
+
 		default:
 			panic("system contract handler not found")
 		}
