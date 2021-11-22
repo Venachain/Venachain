@@ -228,6 +228,8 @@ func newCfcSet() map[string]map[string]*exec.FunctionImport {
 			"sm3":         &exec.FunctionImport{Execute: envSm3, GasCost: envSha3GasCost},
 			//bulletproof
 			"bulletProofVerify": &exec.FunctionImport{Execute: envBulletProofVerify, GasCost: envSMVerifyGasCost},
+			//bind proof to range
+			"bulletProofVerify_range": &exec.FunctionImport{Execute: envBulletProofVerify_range, GasCost: envSMVerifyGasCost},
 		},
 	}
 }
@@ -707,7 +709,6 @@ func envSm3(vm *exec.VirtualMachine) int64 {
 	return 0
 }
 
-
 func envEcrecover(vm *exec.VirtualMachine) int64 {
 	hashOffset := int(int32(vm.GetCurrentFrame().Locals[0]))
 	rsOffset := int(int32(vm.GetCurrentFrame().Locals[1]))
@@ -912,6 +913,39 @@ func envBulletProofVerify(vm *exec.VirtualMachine) int64 {
 		return 0
 	}
 
+	copy(vm.Memory.Memory[resultOffset:], resultBts)
+
+	return 0
+}
+//bind proof to range
+
+func envBulletProofVerify_range(vm *exec.VirtualMachine) int64 {
+	proofOffset := int(int32(vm.GetCurrentFrame().Locals[0]))
+	proofSize := int(int32(vm.GetCurrentFrame().Locals[1]))
+	rangeOffset := int(int32(vm.GetCurrentFrame().Locals[2]))
+	rangeSize := int(int32(vm.GetCurrentFrame().Locals[3]))
+	resultOffset := int(int32(vm.GetCurrentFrame().Locals[4]))
+	resultSize := int(int32(vm.GetCurrentFrame().Locals[5]))
+
+	proof := vm.Memory.Memory[proofOffset : proofSize + proofOffset]
+	range_string := vm.Memory.Memory[rangeOffset : rangeOffset + rangeSize]
+	range_hash := crypto.Keccak256(range_string)
+
+	//hexproof := hexutil.Encode(proof)
+	statement := cryptoZk.GenerateAggBpStatement_range(2, 16, range_hash)
+	result, err := cryptoZk.AggBpVerify_s(string(proof), statement)
+
+	//fmt.Println("result:", result)
+	ret := "1"
+	if err !=nil || !result {
+		ret = "0"
+	}
+	resultBts := []byte(ret)
+	resultBts = append(resultBts, 0)
+
+	if resultSize < len(resultBts) {
+		return 0
+	}
 	copy(vm.Memory.Memory[resultOffset:], resultBts)
 
 	return 0

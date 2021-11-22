@@ -317,6 +317,7 @@ func (n *Node) startIPC(apis []rpc.API) error {
 	}
 	listener, handler, err := rpc.StartIPCEndpoint(n.ipcEndpoint, apis)
 	if err != nil {
+		log.Error(err.Error())
 		return err
 	}
 	n.ipcListener = listener

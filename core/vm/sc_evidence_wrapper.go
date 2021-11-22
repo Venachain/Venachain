@@ -9,7 +9,7 @@ import (
 
 const (
 	setEvidenceSuccess      CodeType = 0
-	setEvidenceAuthFailed   CodeType = 1
+	setEvidenceFailed       CodeType = 1
 	setEvidenceAlreadyExist CodeType = 2
 )
 
@@ -42,32 +42,57 @@ func NewEvidenceWrapper(db StateDB) *SCEvidenceWrapper {
 	return &SCEvidenceWrapper{NewSCEvidence(db)}
 }
 
-func (e *SCEvidenceWrapper) saveEvidence(id string, hash string, sig string) (int, error) {
-	if err := e.base.saveEvidence(id, hash, sig); nil != err {
+func (e *SCEvidenceWrapper) saveEvidence(key string, value string) (int, error) {
+	if err := e.base.setEvidence(key, value, false); nil != err {
 		switch err {
-		case errAuthenticationFailed:
-			return int(setEvidenceAuthFailed), err
+		//case errAuthenticationFailed:
+		//	return int(setEvidenceFailed), err
 		case errAlreadySetEvidence:
 			return int(setEvidenceAlreadyExist), err
 		default:
-			return int(setEvidenceAuthFailed), err
+			return int(setEvidenceFailed), err
 		}
 	}
-
+	e.base.emitNotifyEvent(setEvidenceSuccess,"save evidence success")
 	return int(setEvidenceSuccess), nil
 }
 
-func (e *SCEvidenceWrapper) getEvidence(id string) (string, error) {
-	evidence, err := e.base.getEvidenceById(id)
+func (e *SCEvidenceWrapper) getEvidence(key string) (string, error) {
+	evidence, err := e.base.getEvidenceById(key)
 	if err != nil {
 		return "", err
 	}
 	return newSuccessResult(evidence).String(), nil
 }
 
+func (e *SCEvidenceWrapper) setJsonData(key string, hash string) (int, error) {
+	if err := e.base.setEvidence(key, hash, true); nil != err {
+		switch err {
+		//case errAuthenticationFailed:
+		//	return int(setEvidenceFailed), err
+		case errAlreadySetEvidence:
+			return int(setEvidenceAlreadyExist), err
+		default:
+			return int(setEvidenceFailed), err
+		}
+	}
+	e.base.emitNotifyEvent(setEvidenceSuccess,"set jsondata success.")
+	return int(setEvidenceSuccess), nil
+}
+
+func (e *SCEvidenceWrapper) getJsonData(key string) (string, error) {
+	evidence, err := e.base.getEvidenceById(key)
+	if err != nil {
+		return "", err
+	}
+	return evidence.EvidenceValue, nil
+}
+
 func (e *SCEvidenceWrapper) allExportFns() SCExportFns {
 	return SCExportFns{
 		"saveEvidence": e.saveEvidence,
 		"getEvidence":  e.getEvidence,
+		"setJsonData":  e.setJsonData,
+		"getJsonData":  e.getJsonData,
 	}
 }

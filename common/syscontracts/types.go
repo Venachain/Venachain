@@ -16,6 +16,7 @@ var (
 	ContractDataProcessorAddress = common.HexToAddress("0x1000000000000000000000000000000000000007") // The PlatONE Precompiled contract addr for group management
 	CnsInvokeAddress             = common.HexToAddress("0x0000000000000000000000000000000000000000") // The PlatONE Precompiled contract addr for group management
 	EvidenceManagementAddress    = common.HexToAddress("0x0000000000000000000000000000000000000099") // The PlatONE Precompiled contract addr for evidence management
+	BulletProofAddress 			 = common.HexToAddress("0x0000000000000000000000000000000000000100") // The PlatONE Precompiled contract addr for Bullet proof
 )
 
 type UpdateNode struct {
@@ -44,7 +45,7 @@ type NodeInfo struct {
 	Name  string `json:"name,omitempty,required"` //全网唯一，不能重复。所有接口均以此为主键。 这个名称意义是？
 	Owner string `json:"owner"`
 	Desc  string `json:"desc"`
-	Typ   uint32 `json:"type"` // 0:观察者节点；1:共识节点
+	Typ   uint32 `json:"type"` // 1:共识节点; 2:观察者节点
 	// status 1为正常节点, 2为删除节点
 	Status     uint32 `json:"status,required"`
 	ExternalIP string `json:"externalIP,required"`

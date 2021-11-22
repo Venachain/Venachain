@@ -5,8 +5,6 @@ import (
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
@@ -17,10 +15,16 @@ type SCEvidence struct {
 	blockNumber  *big.Int
 }
 
+//type Evidence struct {
+//	Owner        common.Address
+//	EvidenceHash common.Hash
+//	EvidenceSig  string
+//	Timestamp    *big.Int
+//}
+
 type Evidence struct {
 	Owner        common.Address
-	EvidenceHash common.Hash
-	EvidenceSig  string
+	EvidenceValue  string
 	Timestamp    *big.Int
 }
 
@@ -34,47 +38,47 @@ func NewSCEvidence(db StateDB) *SCEvidence {
 func NewEvidence() *Evidence {
 	return &Evidence{
 		Owner:        ZeroAddress,
-		EvidenceHash: common.Hash{},
-		EvidenceSig:  "",
+		//EvidenceHash: common.Hash{},
+		EvidenceValue:  "",
 		Timestamp:    big.NewInt(0),
 	}
 }
 
-func (e *SCEvidence) saveEvidence(id string, hash string, sig string) error {
-	//if !e.checkSignature(hash, sig) {
-	//	return errAuthenticationFailed
-	//}
+// isUpdateEvidence 判断是否需要对Evidence 进行更新。
+func (e *SCEvidence) setEvidence(key string, value string, isUpdateEvidence bool) error {
 	evidence := NewEvidence()
-	evidence.EvidenceHash = common.BytesToHash([]byte(hash))
-	evidence.EvidenceSig = sig
+	evidence.EvidenceValue = value
 	evidence.Owner = e.caller
 	evidence.Timestamp = e.blockNumber
 	valueInBytes, err := rlp.EncodeToBytes(evidence)
 	if err != nil {
+		//e.emitNotifyEvent(setEvidenceFailed,err.Error())
 		return err
 	}
-	if e.getState(id) != nil {
+	// 如果不需要对Evidence 进行更新
+	if !isUpdateEvidence && e.getState(key) != nil {
+		//e.emitNotifyEvent(setEvidenceFailed,"evidence already exists")
 		return errAlreadySetEvidence
 	}
-	e.setState(id, valueInBytes)
+	e.setState(key, valueInBytes)
 	return nil
 }
 
-func (e *SCEvidence) checkSignature(hash string, sig string) bool {
-	pub, err := crypto.SigToPub(crypto.Keccak256([]byte(hash)), []byte(sig))
-	if err != nil {
-		log.Error("Ecrecover Fail", "hash =", hash, "signature =", sig)
-		return false
-	}
-	if e.caller != crypto.PubkeyToAddress(*pub) {
-		log.Error("Authentication failed！！！")
-		return false
-	}
-	return true
-}
+//func (e *SCEvidence) checkSignature(hash string, sig string) bool {
+//	pub, err := crypto.SigToPub(crypto.Keccak256([]byte(hash)), []byte(sig))
+//	if err != nil {
+//		log.Error("Ecrecover Fail", "hash =", hash, "signature =", sig)
+//		return false
+//	}
+//	if e.caller != crypto.PubkeyToAddress(*pub) {
+//		log.Error("Authentication failed！！！")
+//		return false
+//	}
+//	return true
+//}
 
-func (e *SCEvidence) getEvidenceById(id string) (*Evidence, error) {
-	value := e.getState(id)
+func (e *SCEvidence) getEvidenceById(key string) (*Evidence, error) {
+	value := e.getState(key)
 	if len(value) == 0 {
 		return nil, errEvidenceNotFound
 	}
