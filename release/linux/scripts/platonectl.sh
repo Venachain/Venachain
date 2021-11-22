@@ -23,6 +23,10 @@ function usage() {
 #h0        ${SCRIPT_NAME} <command> [command options] [arguments...]
 #h0
 #h0    COMMANDS
+#c0        one                              start a node completely
+#c0                                         default account password: 0
+#c0        four                             start four node completely
+#c0                                         default account password: 0
 #c0        init                             initialize node. please setup genesis first
 #c1        init OPTIONS
 #c1            --nodeid, -n                 set node id (default=0)
@@ -33,19 +37,6 @@ function usage() {
 #c1            --auto                       auto=true: will no prompt to create
 #c1                                         the node key and init (default: false)
 #c1            --help, -h                   show help
-#c1
-#c1        example: ${SCRIPT_NAME} init -n 1
-#c1                                    --ip 127.0.0.1
-#c1                                    --rpc_port 6790
-#c1                                    --p2p_port 16790
-#c1                                    --ws_port 26790
-#c1                                    --auto "true"
-#c1                 or:
-#c1                     ${SCRIPT_NAME} init
-#c0        one                              start a node completely
-#c0                                         default account password: 0
-#c0        four                             start four node completely
-#c0                                         default account password: 0
 #c0        start                            try to start the specified node
 #c4        start OPTIONS
 #c4            --nodeid, -n                 start the specified node
@@ -58,8 +49,9 @@ function usage() {
 #c4                                         when set: eg ".\/logs"
 #c4            --extraoptions, -e           extra platone command options when platone starts
 #c4                                         (default: --debug)
-#c4            --txcount, -c                max tx count in a block
-#c4                                         (default:1000)
+#c4            --txcount, -c                max tx count in a block (default:1000)
+#c4            --lightmode                  light node mode
+#c4                                         option: lightnode, lightserver or ''
 #c4            --all, -a                    start all node
 #c4            --help, -h                   show help
 #c0        stop                             try to stop the specified node
@@ -90,10 +82,12 @@ function usage() {
 #c0        updatesys                        normal node update to consensus node
 #c9        updatesys OPTIONS
 #c9            --nodeid, -n                 the specified node id
+#c9            --content, -c                update content (default: 'consensus')
 #c9            --help, -h                   show help
 #c0        addnode                          add normal node to system contract
 #c10       addnode OPTIONS
 #c10           --nodeid, -n                 the specified node id. must be specified
+#c10           --desc                       the specified node desc
 #c10           --p2p_port                   the specified node p2p_port
 #c10                                        If the node specified by nodeid is local,
 #c10                                        then you do not need to specify this option.
@@ -104,6 +98,9 @@ function usage() {
 #c10                                        If the node specified by nodeid is local,
 #c10                                        then you do not need to specify this option.
 #c10           --pubkey                     the specified node pubkey
+#c10                                        If the node specified by nodeid is local,
+#c10                                        then you do not need to specify this option.
+#c10           --account                    the specified node account
 #c10                                        If the node specified by nodeid is local,
 #c10                                        then you do not need to specify this option.
 #c10           --help, -h                   show help
@@ -141,15 +138,15 @@ function usage() {
 #c15       createacc OPTIONS
 #c15           --nodeid, -n                 create account for specified node
 #c15           --help, -h                   show help
-#c0        remote                           remote deploy 
+#c0        remote                           remote deploy (recommended)
 #c16       remote OPTIONS
-#c16           --deploy                 deploy nodes
-#c16           --prepare                generate directory structure and deployment conf file
-#c16           --transfer               transfer necessary file to target node
-#c16           --init                   initialize the target node
-#c16           --start                  start the target node
-#c16           --clear                  clear the target node
-#c16           --help, -h               show help
+#c16           deploy                       deploy nodes
+#c16           prepare                      generate directory structure and deployment conf file
+#c16           transfer                     transfer necessary file to target node
+#c16           init                         initialize the target node
+#c16           start                        start the target node
+#c16           clear                        clear the target node
+#c16           --help, -h                   show help
 #c0        version                          show platone release version
 #c0===============================================================
 #c0    INFORMATION
@@ -429,6 +426,7 @@ function start() {
     logdir=""
     extraoptions=""
     txcount=""
+    lightmode=""
     all="false"
     if [[ $# -eq 0 ]]; then
         showUsage 4
@@ -472,6 +470,11 @@ function start() {
             txcount=$2
             shift 2
             ;;
+        --lightmode)
+            shiftOption2 $#
+            lightmode=$2
+            shift 2
+            ;;
         --all | -a)
             echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Start all nodes"
             all=true
@@ -493,7 +496,7 @@ function start() {
             saveConf $d logdir "${logdir}"
             saveConf $d extraoptions "${extraoptions}"
             saveConf $d txcount "${txcount}"
-            ./local-run-node.sh -n $d
+            ./local-run-node.sh -n $d --lightmode "${lightmode}"
         done
         exit
     fi
@@ -502,7 +505,7 @@ function start() {
     saveConf $nid logdir "${logdir}"
     saveConf $nid extraoptions "${extraoptions}"
     saveConf $nid txcount "${txcount}"
-    ./local-run-node.sh -n $d
+    ./local-run-node.sh -n $nid --lightmode "${lightmode}"
 }
 
 function deploySys() {
@@ -514,7 +517,7 @@ function deploySys() {
     ./local-create-account.sh "$@" "--admin"
     ./local-add-admin-role.sh "$@"
     ./local-add-node.sh "$@"
-    ./local-update-to-consensus-node.sh "$@"
+    ./local-update-node.sh "$@"
 }
 
 function addNode() {
@@ -530,6 +533,8 @@ function addNode() {
     rpc_port=""
     ip=""
     pubkey=""
+    desc=""
+    account=""
     while [ ! $# -eq 0 ]; do
         case "$1" in
         --nodeid | -n)
@@ -551,6 +556,12 @@ function addNode() {
             ;;
         --pubkey)
             pubkey=$2
+            ;;
+        --desc)
+            desc=$2
+            ;;
+        --account)
+            account=$2
             ;;
         *)
             showUsage 10
@@ -575,6 +586,12 @@ function addNode() {
     if [[ "${pubkey}" != "" ]]; then
         param="${param} --pubkey ${pubkey}"
     fi
+    if [[ "${desc}" != "" ]]; then
+        param = "${param} --desc ${desc}"
+    fi
+    if [[ "${account}" != "" ]]; then
+        param = "${param} --account ${account}"
+    fi
     ## addnode
     ./local-add-node.sh -n ${nodeid} ${param}
 }
@@ -582,10 +599,10 @@ function addNode() {
 function updateSys() {
     helpOption "$@"
     if [[ $? -ne 0 ]]; then
-        ./local-update-to-consensus-node.sh "-h"
+        ./local-update-node.sh "-h"
         return
     fi
-    ./local-update-to-consensus-node.sh "$@"
+    ./local-update-node.sh "$@"
 }
 
 function stop() {
@@ -890,23 +907,23 @@ function unlockAcc() {
 ################################################# Remote Deploy Functions #################################################
 function remote() {
     case "$1" in
-    --deploy)
+    deploy)
         shift
         ./deploy.sh "$@"
         ;;
-    --prepare)
+    prepare)
         shift
         ./prepare.sh "$@"
         ;;
-    --transfer)
+    transfer)
         shift
         ./transfer.sh "$@"
         ;;
-    --init)
+    init)
         shift
         ./init.sh "$@"
         ;;
-    --start)
+    start)
         shift
         ./start.sh "$@"
         ;;

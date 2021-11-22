@@ -22,6 +22,8 @@ IP_ADDR=""
 FIRSTNODE_IP_ADDR=""
 FIRSTNODE_RPC_PORT=""
 
+NODE_TYPE="consensus"
+
 #############################################################################################################
 ################################################# FUNCTIONS #################################################
 #############################################################################################################
@@ -34,8 +36,8 @@ USAGE: ${SCRIPT_NAME}  [options] [value]
 
         OPTIONS:
 
-           --nodeid, -n                   the specified node name. must be specified
-
+           --nodeid, -n                 the specified node name. must be specified
+           --content, -c                update content (default: consensus)
            --help, -h                   show help
 "
 }
@@ -70,29 +72,42 @@ function readFile() {
 
 ################################################# Update To Consensus Node #################################################
 function updateToConsensusNode() {
-    ${BIN_PATH}/platonecli node update "${NODE_ID}" --type "consensus" --keyfile "${CONF_PATH}"/keyfile.json --url "${FIRSTNODE_IP_ADDR}:${FIRSTNODE_RPC_PORT}" <"${CONF_PATH}"/keyfile.phrase >/dev/null 2>&1
-    timer=0
     update_node_flag=""
-    while [ ${timer} -lt 10 ]; do
-        update_node_flag=$(${BIN_PATH}/platonecli node query --type consensus --name ${NODE_ID} --keyfile ${CONF_PATH}/keyfile.json --url "${FIRSTNODE_IP_ADDR}:${FIRSTNODE_RPC_PORT}" <"${CONF_PATH}"/keyfile.phrase) >/dev/null 2>&1
-        if [[ $(echo ${update_node_flag} | grep "success") != "" ]]; then
-            break
-        fi
-        sleep 1
-        let timer++
-    done
+    if [[ "${NODE_TYPE}" == "consensus" ]]; then
+        ${BIN_PATH}/platonecli node update "${NODE_ID}" --type "consensus" --keyfile "${CONF_PATH}"/keyfile.json --url "${FIRSTNODE_IP_ADDR}:${FIRSTNODE_RPC_PORT}" <"${CONF_PATH}"/keyfile.phrase >/dev/null 2>&1
+        timer=0
+        while [ ${timer} -lt 10 ]; do
+            update_node_flag=$(${BIN_PATH}/platonecli node query --type consensus --name ${NODE_ID} --keyfile ${CONF_PATH}/keyfile.json --url "${FIRSTNODE_IP_ADDR}:${FIRSTNODE_RPC_PORT}" <"${CONF_PATH}"/keyfile.phrase) >/dev/null 2>&1
+            if [[ $(echo ${update_node_flag} | grep "success") != "" ]]; then
+                break
+            fi
+            sleep 1
+            let timer++
+        done
+    elif [[ "${NODE_TYPE}" == "observer" ]]; then
+        ${BIN_PATH}/platonecli node update "${NODE_ID}" --type "observer" --keyfile "${CONF_PATH}"/keyfile.json --url "${FIRSTNODE_IP_ADDR}:${FIRSTNODE_RPC_PORT}" <"${CONF_PATH}"/keyfile.phrase >/dev/null 2>&1
+        timer=0
+        while [ ${timer} -lt 10 ]; do
+            update_node_flag=$(${BIN_PATH}/platonecli node query --type observer --name ${NODE_ID} --keyfile ${CONF_PATH}/keyfile.json --url "${FIRSTNODE_IP_ADDR}:${FIRSTNODE_RPC_PORT}" <"${CONF_PATH}"/keyfile.phrase) >/dev/null 2>&1
+            if [[ $(echo ${update_node_flag} | grep "success") != "" ]]; then
+                break
+            fi
+            sleep 1
+            let timer++
+        done
+    fi
     if [[ $(echo ${update_node_flag} | grep "success") == "" ]]; then
-        echo "[ERROR] [$(echo $0 | sed -e 's/.\/\(.*\).sh/\1/g')] : ********* UPDATE NODE-${NODE_ID} TO CONSENSUS NODE FAILED**********"
+        echo "[ERROR] [$(echo $0 | sed -e 's/.\/\(.*\).sh/\1/g')] : ********* UPDATE NODE-${NODE_ID} FAILED**********"
         exit
     fi
 }
 
 ################################################# Main #################################################
 function main() {
-    echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ## Update Node-${NODE_ID} To Consensus Node Start ##"
+    echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ## Update Node-${NODE_ID} Start ##"
     readFile
     updateToConsensusNode
-    echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : Update Node-${NODE_ID} to consensus node succeeded"
+    echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : Update Node-${NODE_ID} succeeded"
 }
 
 ###########################################################################################################
@@ -110,9 +125,14 @@ while [ ! $# -eq 0 ]; do
         NODE_DIR="${DATA_PATH}/node-$2"
 
         if [ ! -f "${NODE_DIR}/deploy_node-$2.conf" ]; then
-            echo "[ERROR]: ********* FILE ${NODE_DIR}/deploy_node-$2.conf NOT FOUND **********"
+            echo "[ERROR] : ********* FILE ${NODE_DIR}/deploy_node-$2.conf NOT FOUND **********"
             exit
         fi
+        shift 2
+        ;;
+    --content | -c)
+        echo "[Info] : updateContent: $2"
+        NODE_TYPE=${2}
         shift 2
         ;;
     --auto)
@@ -120,7 +140,7 @@ while [ ! $# -eq 0 ]; do
         shift 1
         ;;
     *)
-        echo "[ERROR]: ********* COMMAND \"$1\" NOT FOUND **********"
+        echo "[ERROR] : ********* COMMAND \"$1\" NOT FOUND **********"
         help
         exit
         ;;

@@ -9,7 +9,7 @@ p2p_port=16791
 ## RPC
 rpc_addr=0.0.0.0
 rpc_port=6791
-rpc_api=db,eth,net,web3,admin,personal,txpool,istanbul
+rpc_api=db,eth,platone,net,web3,admin,personal,txpool,istanbul
 
 ## WEBSOCKET
 ws_addr=0.0.0.0
@@ -21,6 +21,7 @@ log_size=67108864
 
 ## NODE START
 gcmode=archive
+txcount=1000
 bootnodes=
 extra_options=
 pprof_addr=

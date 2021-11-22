@@ -27,6 +27,7 @@ LOG_SIZE=""
 LOG_DIR=""
 GCMODE=""
 TX_COUNT=""
+LIGHTMODE=""
 BOOTNODES=""
 EXTRA_OPTIONS=""
 PPROF_ADDR=""
@@ -48,6 +49,9 @@ USAGE: ${SCRIPT_NAME}  [options] [value]
         OPTIONS:
 
            --node, -n                   the specified node name. must be specified
+
+           --lightmode                  light node mode
+                                        option: lightnode, lightserver or ''
 
            --help, -h                   show help
 "
@@ -107,6 +111,14 @@ function startCmd() {
     flag_gcmode="--gcmode  ${GCMODE} "
     flag_txcount=" --txpool.globaltxcount ${TX_COUNT} "
 
+    # lightnode mode
+    flag_lightmode=""
+    if [[ "${LIGHTMODE}" == "lightnode" ]]; then
+        flag_lightmode="--syncmode light"
+    elif [[ "${LIGHTMODE}" == "lightserver" ]]; then
+        flag_lightmode="--lightserv 70"
+    fi
+
     # include pprof if setted
     flag_pprof=""
     if [[ "${PPROF_ADDR}" != "" ]]; then
@@ -143,7 +155,7 @@ function startCmd() {
             --verbosity 3 
             --dbtype ${DBTYPE} 
             --moduleLogParams '{\"platone_log\": [\"/\"], \"__dir__\": [\"'${LOG_DIR}'\"], \"__size__\": [\"'${LOG_SIZE}'\"]}' ${flag_gcmode} ${EXTRA_OPTIONS} 
-            ${flag_pprof} 
+            ${flag_lightmode}
             1>/dev/null 2>${LOG_DIR}/platone_error.log &
     "
     nohup ${BIN_PATH}/platone --identity platone ${flag_datadir} --nodiscover \
@@ -155,6 +167,7 @@ function startCmd() {
         --verbosity 3 \
         --dbtype ${DBTYPE} \
         --moduleLogParams '{"platone_log": ["/"], "__dir__": ["'${LOG_DIR}'"], "__size__": ["'${LOG_SIZE}'"]}'  ${flag_gcmode}  ${EXTRA_OPTIONS} \
+        ${flag_lightmode} \
         ${flag_pprof} \
         1>/dev/null 2>${LOG_DIR}/platone_error.log &
 
@@ -206,6 +219,9 @@ while [ ! $# -eq 0 ]; do
             exit
         fi
         ;;
+    --lightmode)
+        LIGHTMODE=$2
+    ;;
     *)
         echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ********* COMMAND \"$1\" NOT FOUND **********"
         help

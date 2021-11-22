@@ -194,7 +194,7 @@ function addNode() {
 ################################################# Update Node To Consensus #################################################
 function updateNodeToConsensus() {
     if [ ! -f "${PROJECT_CONF_PATH}/logs/deploy_log.txt" ] || [[ $(grep $(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g') "${PROJECT_CONF_PATH}/logs/deploy_log.txt" | grep "node-${NODE_ID}" | grep "Update node") == "" ]]; then
-        xcmd "${USER_NAME}@${IP_ADDR}" "${SCRIPT_PATH}/local-update-to-consensus-node.sh -n ${NODE_ID}"
+        xcmd "${USER_NAME}@${IP_ADDR}" "${SCRIPT_PATH}/local-update-node.sh -n ${NODE_ID}"
         if [[ $? -ne 0 ]]; then
             echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* UPDATE NODE NODE-${NODE_ID} TO CONSENSUS NODE FAILED **********"
             return 1

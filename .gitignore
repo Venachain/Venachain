@@ -100,3 +100,4 @@ release/linux/conf/keyfile.json
 release/linux/conf/keyfile.account
 release/linux/conf/keyfile.phrase
 release/linux/conf/firstnode.info
+release/linux/scripts/*.bak
