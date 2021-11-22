@@ -1,32 +1,44 @@
 # Changelog
 
-## [1.1.1.2.0]
+## [1.1.2]
 ### Features
-* [storage] 存储插件化，新增可选存储引擎PebbleDB ——曾梦露
+* [storage] 存储插件化，新增可选存储引擎PebbleDB --曾梦露
+* [other] PlatONE支持节点License，对节点可用性进行控制 --杜代栋
+* [chain] 区块打包交易个数自动控制  --张伟
+* [deploy] 重构部署脚本支持多机一键部署  --吴经文
+* [contract] 预编译合约添加bulletproof合约 --陈炫慧
 
-## [1.1.1.0.0]
+### Improvements
+* [chain] 交易池优化-增加各个阶段的交易池预处理  --陈明晶
+* [chain] 并行处理添加参数用于是否开启 --张玉坚
+* [contract] 优化存证预编译合约  --陈炫慧
+
+### Bug Fixes
+* [chain] 修复并行处理时，因资源竞争失败后的依赖关系处理 --张玉坚
+
+## [1.1.1]
 ### Features
 * [other] 轻节点功能完善 --陈明晶
 
 ### Improvements
-* [download] 区块同步优化重复同步。 --陈明晶
+* [download] 区块同步优化重复同步 --陈明晶
 * [evm] 合约支持SM3              --李京京
 * [rpc] namespace增加platone   --张玉坚
 
 ### Bug Fixes
-* [chain] badBlock问题修复。 -- 张玉坚
+* [chain] badBlock问题修复 -- 张玉坚
 
 ## [1.1.0.0.0]
 ### Features
-* [contract] 增加存证预编译合约。  --李京京
+* [contract] 增加存证预编译合约  --李京京
 * [chain] 增加DAG信息，可以并行执行交易 --张玉坚
 
 ### Improvements
-* [other] 节点间同步的交易可并行进行验证。 --陈炫慧
+* [other] 节点间同步的交易可并行进行验证 --陈炫慧
 
 ### Bug Fixes
-* [evm]   合约运行中的错误信息可以正常返回。 --张玉坚
-* [chain] badBlock问题修复。 -- 张玉坚
+* [evm]   合约运行中的错误信息可以正常返回 --张玉坚
+* [chain] badBlock问题修复 -- 张玉坚
 
 ## [1.0.1.0.4]
 ### Improvements
