@@ -987,7 +987,7 @@ func (w *worker) adjustGlobalTxCount() uint64 {
 
 	if statusInfo.IsTimeout {
 		var res uint64
-		//第一次共识
+		//first consensus timeout
 		if w.lastBlockTxCount == 0 && originTxCount >= 2 {
 			res = originTxCount >> 1
 		} else if w.lastBlockTxCount >= 2 {
@@ -998,8 +998,9 @@ func (w *worker) adjustGlobalTxCount() uint64 {
 			res = 1
 		}
 		w.eth.TxPool().GetTxPoolConfig().GlobalTxCount.Store(res)
-		//清楚标记
+		//clear timeout flag
 		statusInfo.IsTimeout = false
+		log.Debug("consensus timeout.", "last globalTxCount:", originTxCount, "current globalTxCount:", res)
 		return res
 	}
 
@@ -1019,5 +1020,6 @@ func (w *worker) adjustGlobalTxCount() uint64 {
 	}
 	w.eth.TxPool().GetTxPoolConfig().GlobalTxCount.Store(res)
 	w.lastBlockTxCount = statusInfo.CurrentBlockTxCount
+	log.Debug("ratio out of expected range", "current ratio:", statusInfo.Ratio, "last globalTxCount:", originTxCount, "current globalTxCount:", res)
 	return res
 }
