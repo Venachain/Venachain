@@ -22,6 +22,7 @@ log_size=67108864
 ## NODE START
 gcmode=archive
 txcount=1000
+tx_global_slots=4096
 bootnodes=
 extra_options=
 pprof_addr=

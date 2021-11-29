@@ -27,6 +27,7 @@ LOG_SIZE=""
 LOG_DIR=""
 GCMODE=""
 TX_COUNT=""
+TX_GLOBAL_SLOTS=""
 LIGHTMODE=""
 BOOTNODES=""
 EXTRA_OPTIONS=""
@@ -80,7 +81,7 @@ function readFile() {
     LOG_DIR=$(cat $file | grep "log_dir=" | sed -e 's/log_dir=\(.*\)/\1/g')
     GCMODE=$(cat $file | grep "gcmode=" | sed -e 's/gcmode=\(.*\)/\1/g')
     TX_COUNT=$(cat $file | grep "txcount=" | sed -e 's/txcount=\(.*\)/\1/g')
-
+    TX_GLOBAL_SLOTS=$(cat $file | grep "tx_global_slots=" | sed -e 's/tx_global_slots=\(.*\)/\1/g')
 
     BOOTNODES=$(cat $file | grep "bootnodes=" | sed -e 's/bootnodes=\(.*\)/\1/g')
     if [[ "${BOOTNODES}" == "" ]]; then
@@ -110,6 +111,7 @@ function startCmd() {
     flag_ipc="--ipcpath ${NODE_DIR}/node-${NODE_ID}.ipc "
     flag_gcmode="--gcmode  ${GCMODE} "
     flag_txcount=" --txpool.globaltxcount ${TX_COUNT} "
+    flag_tx_global_slots=" --txpool.globalslots ${TX_GLOBAL_SLOTS}"
 
     # lightnode mode
     flag_lightmode=""
@@ -155,7 +157,7 @@ function startCmd() {
             --verbosity 3 
             --dbtype ${DBTYPE} 
             --moduleLogParams '{\"platone_log\": [\"/\"], \"__dir__\": [\"'${LOG_DIR}'\"], \"__size__\": [\"'${LOG_SIZE}'\"]}' ${flag_gcmode} ${EXTRA_OPTIONS} 
-            ${flag_lightmode}
+            ${flag_lightmode} ${flag_txcount} ${flag_tx_global_slots}
             1>/dev/null 2>${LOG_DIR}/platone_error.log &
     "
     nohup ${BIN_PATH}/platone --identity platone ${flag_datadir} --nodiscover \
@@ -167,7 +169,7 @@ function startCmd() {
         --verbosity 3 \
         --dbtype ${DBTYPE} \
         --moduleLogParams '{"platone_log": ["/"], "__dir__": ["'${LOG_DIR}'"], "__size__": ["'${LOG_SIZE}'"]}'  ${flag_gcmode}  ${EXTRA_OPTIONS} \
-        ${flag_lightmode} \
+        ${flag_lightmode} ${flag_txcount} ${flag_tx_global_slots} \
         ${flag_pprof} \
         1>/dev/null 2>${LOG_DIR}/platone_error.log &
 
