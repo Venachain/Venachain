@@ -72,8 +72,8 @@ func (c *CnsInvoke) Run(input []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	if _, pass := fwCheck(c.evm.StateDB, *addr, c.caller, cnsRawData); !pass {
-		return nil, PermissionErr
+	if res, pass := fwCheck(c.evm.StateDB, *addr, c.caller, cnsRawData); !pass {
+		return res, PermissionErr
 	}
 
 	res, _, err := c.evm.Call(AccountRef(c.caller), *addr, cnsRawData, c.contract.Gas, c.contract.value)
