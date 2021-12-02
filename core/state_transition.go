@@ -29,7 +29,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
 var (
@@ -37,7 +36,6 @@ var (
 )
 
 var zeroAddress common.Address
-var PermissionErr = errors.New("Permission Denied!")
 
 /*
 A state transition is a change made when a transaction is applied to the current world state
@@ -230,50 +228,6 @@ func addressCompare(addr1, addr2 common.Address) bool {
 	return strings.ToLower(addr1.String()) == strings.ToLower(addr2.String())
 }
 
-// 合约防火墙的检查：
-//  1. 如果账户结构体code字段为空，pass
-//  2. 如果账户data字段为空，pass
-// 	3. 黑名单优先于白名单，后续只有不在黑名单列表，同时在白名单列表里的账户才能pass
-func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Address, input []byte) ([]byte, bool) {
-	if stateDb.IsFwOpened(contractAddr) == false {
-		return nil, true
-	}
-
-	// 如果账户结构体code字段为空或tx.data为空，pass
-	if len(stateDb.GetCode(contractAddr)) == 0 || len(input) == 0 {
-		return nil, true
-	}
-
-	var data [][]byte
-	if err := rlp.DecodeBytes(input, &data); err != nil {
-		log.Debug("FW : Input decode error")
-		return vm.MakeReturnBytes([]byte("FW : Input decode error")), false
-	}
-	if len(data) < 2 {
-		log.Debug("FW : Missing function name")
-		return vm.MakeReturnBytes([]byte("FW : Missing function name")), false
-	}
-	funcName := string(data[1])
-
-	if stateDb.GetContractCreator(contractAddr) == caller {
-		return nil, true
-	}
-
-	fwStatus := stateDb.GetFwStatus(contractAddr)
-
-	var fwLog string = "FW : Access to contract:" + contractAddr.String() + " by " + funcName + "is refused by firewall."
-
-	if fwStatus.IsRejected(funcName, caller) {
-		return vm.MakeReturnBytes([]byte(fwLog)), false
-	}
-
-	if fwStatus.IsAccepted(funcName, caller) {
-		return nil, true
-	}
-
-	return vm.MakeReturnBytes([]byte(fwLog)), false
-}
-
 func (st *StateTransition) ifUseContractTokenAsFee() (common.Address, bool) {
 	isUseContractToken := common.SysCfg.GetIsTxUseGas()
 	contractAddr := common.SysCfg.GetGasContractAddress()
@@ -334,15 +288,15 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, gasPrice 
 		allowDeployContract := checkContractDeployPermission(sender.Address(), evm)
 		if !allowDeployContract {
 			st.state.AddNonce(msg.From())
-			return nil, 0, gasPrice, true, PermissionErr
+			return nil, 0, gasPrice, true, vm.PermissionErr
 		}
 		ret, _, st.gas, vmerr = evm.Create(sender, st.data, st.gas, st.value)
 	} else {
 		st.state.AddNonce(msg.From())
 		var pass bool
-		if ret, pass = fwCheck(evm.StateDB, st.to(), msg.From(), msg.Data()); !pass {
-			err = PermissionErr
-			vmerr = PermissionErr
+		if ret, pass = vm.FwCheck(evm.StateDB, st.to(), msg.From(), msg.Data()); !pass {
+			err = vm.PermissionErr
+			vmerr = vm.PermissionErr
 			log.Debug("Calling contract was refused by firewall", "err", vmerr)
 		} else {
 			// Increment the nonce for the next transaction

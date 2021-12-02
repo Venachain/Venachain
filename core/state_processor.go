@@ -591,7 +591,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 
 	if err != nil {
 		switch err {
-		case PermissionErr:
+		case vm.PermissionErr:
 			data := [][]byte{}
 			data = append(data, []byte(err.Error()))
 			encodeData, _ := rlp.EncodeToBytes(data)
@@ -710,7 +710,7 @@ func ApplyTransactionForSimulator(config *params.ChainConfig, bc ChainContext, g
 
 	if err != nil {
 		switch err {
-		case PermissionErr:
+		case vm.PermissionErr:
 			data := [][]byte{}
 			data = append(data, []byte(err.Error()))
 			encodeData, _ := rlp.EncodeToBytes(data)
