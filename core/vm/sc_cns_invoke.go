@@ -72,12 +72,17 @@ func (c *CnsInvoke) Run(input []byte) ([]byte, error) {
 		return nil, err
 	}
 
+	if res, pass := fwCheck(c.evm.StateDB, *addr, c.caller, cnsRawData); !pass {
+		return res, PermissionErr
+	}
+
 	res, _, err := c.evm.Call(AccountRef(c.caller), *addr, cnsRawData, c.contract.Gas, c.contract.value)
 	if err != nil {
 		return nil, err
 	}
 	return res, nil
 }
+
 func (c *CnsInvoke) getCnsAddr(cnsName string) (*common.Address, error) {
 
 	var contractName, contractVer string

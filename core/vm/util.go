@@ -2,12 +2,17 @@ package vm
 
 import (
 	"encoding/json"
+	"errors"
 	"math/big"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
 	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
+
+var PermissionErr = errors.New("Permission Denied!")
 
 func toContractReturnValueIntType(txType int, res int64) []byte {
 	if txType == common.CallContractFlag {
@@ -65,4 +70,52 @@ func MakeReturnBytes(ret []byte) []byte {
 	finalData = append(finalData, dataByt...)
 
 	return finalData
+}
+
+func FwCheck(stateDb StateDB, contractAddr common.Address, caller common.Address, input []byte) ([]byte, bool) {
+	return fwCheck(stateDb, contractAddr, caller, input)
+}
+
+// 合约防火墙的检查：
+//  1. 如果账户结构体code字段为空，pass
+//  2. 如果账户data字段为空，pass
+// 	3. 黑名单优先于白名单，后续只有不在黑名单列表，同时在白名单列表里的账户才能pass
+func fwCheck(stateDb StateDB, contractAddr common.Address, caller common.Address, input []byte) ([]byte, bool) {
+	if stateDb.IsFwOpened(contractAddr) == false {
+		return nil, true
+	}
+
+	// 如果账户结构体code字段为空或tx.data为空，pass
+	if len(stateDb.GetCode(contractAddr)) == 0 || len(input) == 0 {
+		return nil, true
+	}
+
+	var data [][]byte
+	if err := rlp.DecodeBytes(input, &data); err != nil {
+		log.Debug("FW : Input decode error")
+		return MakeReturnBytes([]byte("FW : Input decode error")), false
+	}
+	if len(data) < 2 {
+		log.Debug("FW : Missing function name")
+		return MakeReturnBytes([]byte("FW : Missing function name")), false
+	}
+	funcName := string(data[1])
+
+	if stateDb.GetContractCreator(contractAddr) == caller {
+		return nil, true
+	}
+
+	fwStatus := stateDb.GetFwStatus(contractAddr)
+
+	fwLog := "FW : Access to contract:" + contractAddr.String() + " by " + funcName + "is refused by firewall."
+
+	if fwStatus.IsRejected(funcName, caller) {
+		return MakeReturnBytes([]byte(fwLog)), false
+	}
+
+	if fwStatus.IsAccepted(funcName, caller) {
+		return nil, true
+	}
+
+	return MakeReturnBytes([]byte(fwLog)), false
 }

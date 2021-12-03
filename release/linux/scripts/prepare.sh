@@ -331,6 +331,7 @@ function generateConfFile() {
             echo "## NODE START"
             echo "gcmode=archive"
             echo "txcount=1000"
+            echo "tx_global_slots=4096"
             echo "bootnodes="
             echo "extra_options="
             echo "pprof_addr="

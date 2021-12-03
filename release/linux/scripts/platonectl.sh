@@ -426,6 +426,7 @@ function start() {
     logdir=""
     extraoptions=""
     txcount=""
+    tx_global_slots=""
     lightmode=""
     all="false"
     if [[ $# -eq 0 ]]; then
@@ -470,6 +471,11 @@ function start() {
             txcount=$2
             shift 2
             ;;
+        --tx_global_slots | -tgs)
+            shiftOption2 $#
+            tx_global_slots=$2
+            shift 2
+            ;;
         --lightmode)
             shiftOption2 $#
             lightmode=$2
@@ -496,6 +502,7 @@ function start() {
             saveConf $d logdir "${logdir}"
             saveConf $d extraoptions "${extraoptions}"
             saveConf $d txcount "${txcount}"
+            saveConf $d tx_global_slots = "${tx_global_slots}"
             ./local-run-node.sh -n $d --lightmode "${lightmode}"
         done
         exit
@@ -505,6 +512,7 @@ function start() {
     saveConf $nid logdir "${logdir}"
     saveConf $nid extraoptions "${extraoptions}"
     saveConf $nid txcount "${txcount}"
+    saveConf $nid tx_global_slots = "${tx_global_slots}"
     ./local-run-node.sh -n $nid --lightmode "${lightmode}"
 }
 
