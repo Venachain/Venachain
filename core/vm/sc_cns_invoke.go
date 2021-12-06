@@ -80,11 +80,12 @@ func (c *CnsInvoke) Run(input []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	c.emitNotifyEventInCnsInvoke(InvokeString, cnsInvokeSuccess, fmt.Sprintf("cnsinvoke successful."))
 	return res, nil
 }
 
 func (c *CnsInvoke) getCnsAddr(cnsName string) (*common.Address, error) {
-
 	var contractName, contractVer string
 	var ToAddr common.Address
 
@@ -104,9 +105,8 @@ func (c *CnsInvoke) getCnsAddr(cnsName string) (*common.Address, error) {
 		c.emitNotifyEventInCnsInvoke(InvokeString, getCnsAddressFail, fmt.Sprintf("getCnsAddress fail"))
 		return nil, err
 	}
-	c.emitNotifyEventInCnsInvoke(InvokeString, cnsInvokeSuccess, fmt.Sprintf("cnsinvoke successful."))
-	return &ToAddr, nil
 
+	return &ToAddr, nil
 }
 func (c *CnsInvoke) emitNotifyEventInCnsInvoke(topic string, code CodeType, msg string) {
 	emitEvent(*c.contract.CodeAddr, c.evm.StateDB, c.blockNumber.Uint64(), topic, code, msg)

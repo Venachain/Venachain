@@ -313,6 +313,11 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, gasPrice 
 			log.Error("ErrInsufficientBalance")
 			return nil, 0, gasPrice, false, vmerr
 		}
+
+		// FwCheck permission error in evm call
+		if vmerr == vm.PermissionErr {
+			err = vm.PermissionErr
+		}
 	}
 	if isUseContractToken {
 		err = st.refundContractGas(feeContractAddr)

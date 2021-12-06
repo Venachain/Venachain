@@ -512,7 +512,7 @@ function start() {
     saveConf $nid logdir "${logdir}"
     saveConf $nid extraoptions "${extraoptions}"
     saveConf $nid txcount "${txcount}"
-    saveConf $nid tx_global_slots = "${tx_global_slots}"
+    saveConf $nid tx_global_slots "${tx_global_slots}"
     ./local-run-node.sh -n $nid --lightmode "${lightmode}"
 }
 

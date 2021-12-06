@@ -554,7 +554,6 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 		gasPrice = 0
 	} else {
 		var msg *types.Message
-		var err error
 		if header.Number.Uint64() <= common.SysCfg.ReplayParam.Pivot {
 			msg, err = tx.OldAsMessage()
 			if err == types.ErrInvalidOldTrx {
@@ -677,7 +676,6 @@ func ApplyTransactionForSimulator(config *params.ChainConfig, bc ChainContext, g
 		gasPrice = 0
 	} else {
 		var msg *types.Message
-		var err error
 		if header.Number.Uint64() <= common.SysCfg.ReplayParam.Pivot {
 			msg, err = tx.OldAsMessage()
 			if err == types.ErrInvalidOldTrx {
