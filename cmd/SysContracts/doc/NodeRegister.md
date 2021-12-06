@@ -7,7 +7,7 @@ struct RegisterInfo{
     string      name			//节点名称
     address     owner           //申请者的地址
     string      desc			//节点描述
-    int         type	        //1:共识节点；0:观察者节点
+    int         type	        //1:共识节点；2:观察者节点；3：轻节点
     string      publicKey 		//节点公钥
     string      externalIP    	//外网 IP
     string      internalIP		//内网 IP
@@ -42,7 +42,7 @@ RegisterInfo是Json字符串，包含以下内容：
 · 只能由chainCreater、chainAdmin、nodeAdmin调用
 · name：只可包含字母、数字、下划线、连字符，审核通过的name不可以重复
 · desc：长度限制为4-1000
-· type：必须是0或者1，0表示观察者节点
+· type：必须是1或者2，2表示观察者节点
 · publicKey：长度限制为4-1000，publicKey不能重复申请
 · IP和端口：任意组合审核通过后，不能重复申请
 ```
