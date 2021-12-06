@@ -21,7 +21,7 @@ var (
 
 type UpdateNode struct {
 	Desc *string `json:"desc,omitempty"`
-	Typ  *uint32 `json:"type,omitempty"` // 0:观察者节点；1:共识节点
+	Typ  *uint32 `json:"type,omitempty"` // 1:共识节点；2:观察者节点；3：轻节点
 	// status 1为正常节点, 2为删除节点
 	Status *uint32 `json:"status,omitempty,required"`
 	// delay set validatorSet
