@@ -28,7 +28,7 @@ var (
 	NodeAddCmd = cli.Command{
 		Name:      "add",
 		Usage:     "Add a node to the node list",
-		ArgsUsage: "<name> <publicKey> <externalIP> <internalIP> <status>",
+		ArgsUsage: "<name> <publicKey> <externalIP> <internalIP> <type>",
 		Action:    nodeAdd,
 		Flags:     nodeAddCmdFlags,
 		Description: `
@@ -87,8 +87,12 @@ func nodeAdd(c *cli.Context) {
 	nodeinfo.ExternalIP = c.Args().Get(2)
 	nodeinfo.InternalIP = c.Args().Get(3)
 	nodeinfo.Status = 1
-	nodeType, _ := strconv.ParseInt(c.Args().Get(4), 10, 32)
-	nodeinfo.Types = int32(nodeType)
+	if c.Args().Get(4) != ""{
+		nodeType, _ := strconv.ParseInt(c.Args().Get(4), 10, 32)
+		nodeinfo.Types = int32(nodeType)
+	}else {
+		nodeinfo.Types = 2
+	}
 	delayNum, _ := strconv.ParseInt(c.String(NodeDelayNumFlags.Name), 10, 32)
 	nodeinfo.DelayNum = uint64(delayNum)
 	p2pPort, _ := strconv.ParseInt(c.String(NodeP2pPortFlags.Name), 10, 32)
