@@ -125,11 +125,13 @@ func checkNodeType(typ uint32) error {
 	return nil
 }
 
-func checkNodeTypeForObserver(typ uint32) error {
-	if typ != NodeTypeObserver {
+func checkNodeTypeForObserverOrLight(typ uint32) error {
+	if typ != NodeTypeObserver &&
+		typ != NodeTypeLight{
 		return errors.New(
-			fmt.Sprintf("The type of node must be OBSERVER(%d)",
+			fmt.Sprintf("The type of node must be OBSERVER(%d) or LightNode(%d)",
 				NodeTypeObserver,
+				NodeTypeLight,
 			))
 	}
 	return nil
@@ -193,7 +195,7 @@ func (n *SCNode) checkParamsOfAddNode(node *syscontracts.NodeInfo) error {
 		return err
 	}
 
-	if err := checkNodeTypeForObserver(node.Typ); err != nil {
+	if err := checkNodeTypeForObserverOrLight(node.Typ); err != nil {
 		return err
 	}
 
