@@ -3,12 +3,11 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"strconv"
 
 	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/client/precompiled"
-
+	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -88,7 +87,8 @@ func nodeAdd(c *cli.Context) {
 	nodeinfo.ExternalIP = c.Args().Get(2)
 	nodeinfo.InternalIP = c.Args().Get(3)
 	nodeinfo.Status = 1
-	nodeinfo.Types = 2
+	nodeType, _ := strconv.ParseInt(c.Args().Get(4), 10, 32)
+	nodeinfo.Types = int32(nodeType)
 	delayNum, _ := strconv.ParseInt(c.String(NodeDelayNumFlags.Name), 10, 32)
 	nodeinfo.DelayNum = uint64(delayNum)
 	p2pPort, _ := strconv.ParseInt(c.String(NodeP2pPortFlags.Name), 10, 32)
