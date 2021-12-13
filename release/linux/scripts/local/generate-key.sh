@@ -4,19 +4,20 @@
 ################################################# VRIABLES #################################################
 ###########################################################################################################
 SCRIPT_NAME="$(basename ${0})"
+SCRIPT_ALIAS="$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')"
 PROJECT_PATH=$(
     cd $(dirname $0)
-    cd ../
+    cd ../../
     pwd
 )
 BIN_PATH=${PROJECT_PATH}/bin
 DATA_PATH=${PROJECT_PATH}/data
 
 NODE_ID=""
+NODE_DIR=""
+DEPLOY_CONF=""
 AUTO=""
 
-NODE_DIR=""
-NODE_DIR=""
 
 #############################################################################################################
 ################################################# FUNCTIONS #################################################
@@ -30,20 +31,34 @@ USAGE: ${SCRIPT_NAME}  [options] [value]
 
         OPTIONS:
 
-           --nodeid, -n                   the specified node name. must be specified
+           --nodeid, -n                   the specified node name, must be specified
 
-           --auto                   auto=true: will no prompt to create the node key 
-            　　　　　　　　　　　　　　　　　default='false'
+           --auto                         will no prompt to create the node key 
 
-           --help, -h                   show help
+           --help, -h                     show help
 
 "
+}
+
+################################################# Print Log #################################################
+function printLog() {
+    if [[ "${1}" == "error" ]]; then
+        echo -e "\033[31m[ERROR] [${SCRIPT_ALIAS}] ${2}\033[0m"
+    elif [[ "${1}" == "warn" ]]; then
+        echo -e "\033[33m[WARN] [${SCRIPT_ALIAS}] ${2}\033[0m"
+    elif [[ "${1}" == "success" ]]; then
+        echo -e "\033[32m[SUCCESS] [${SCRIPT_ALIAS}] ${2}\033[0m"
+    elif [[ "${1}" == "question" ]]; then
+        echo -e "\033[36m[${SCRIPT_ALIAS}] ${2}\033[0m"
+    else
+        echo "[INFO] [${SCRIPT_ALIAS}] ${2}"
+    fi
 }
 
 ################################################# Check Shift Option #################################################
 function shiftOption2() {
     if [[ $1 -lt 2 ]]; then
-        echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ********* MISS OPTION VALUE! PLEASE SET THE VALUE **********"
+        printLog "error" "MISS OPTION VALUE! PLEASE SET THE VALUE"
         help
         exit
     fi
@@ -54,13 +69,21 @@ function yesOrNo() {
     read -p "" anw
     case $anw in
     [Yy][Ee][Ss] | [yY])
-        return 0
-        ;;
-    [Nn][Oo] | [Nn])
         return 1
         ;;
+    [Nn][Oo] | [Nn])
+        return 0
+        ;;
     esac
-    return 1
+    return 0
+}
+
+################################################# Check Env #################################################
+function checkEnv() {
+    if [ ! -f "${DEPLOY_CONF}" ]; then
+        printLog "error" "${DEPLOY_CONF} NOT FOUND"
+        exit
+    fi
 }
 
 ################################################# Generate Key #################################################
@@ -71,9 +94,10 @@ function generateKey() {
     prikey="${keyinfo:62:64}"
     pubkey="${keyinfo:137:128}"
     if [ ${#prikey} -ne 64 ]; then
-        echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ********* PRIVATE KEY LENGTH INVALID **********"
+        printLog "error" "PRIVATE KEY LENGTH INVALID"
         exit
     fi
+    mkdir -p ${NODE_DIR}
 
     ## backup node key
     if [ -f "${NODE_DIR}/node.address" ]; then
@@ -81,9 +105,9 @@ function generateKey() {
         mkdir -p "${NODE_DIR}/bak"
         mv "${NODE_DIR}/node.address" "${NODE_DIR}/bak/node.address.bak.${timestamp}"
         if [ -f "${NODE_DIR}/bak/node.address.bak.${timestamp}" ]; then
-            echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : Backup ${NODE_DIR}/node.address completed"
+            printLog "info" "Backup ${NODE_DIR}/node.address completed"
         else
-            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ********* BACKUP NODE ADDRESS FAILED **********"
+            printLog "error" "BACKUP NODE ADDRESS FAILED"
             exit
         fi
     fi
@@ -92,9 +116,9 @@ function generateKey() {
         mkdir -p "${NODE_DIR}/bak"
         mv "${NODE_DIR}/node.prikey" "${NODE_DIR}/bak/node.prikey.bak.${timestamp}"
         if [ -f "${NODE_DIR}/bak/node.prikey.bak.${timestamp}" ]; then
-            echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : Backup ${NODE_DIR}/node.prikey succ"
+            printLog "info" "Backup ${NODE_DIR}/node.prikey completed"
         else
-            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ********* BACKUP NODE PRIVATE KEY FAILED **********"
+            printLog "error" "BACKUP NODE PRIVATE KEY FAILED"
             exit
         fi
     fi
@@ -103,9 +127,9 @@ function generateKey() {
         mkdir -p "${NODE_DIR}/bak"
         mv "${NODE_DIR}/node.pubkey" "${NODE_DIR}/bak/node.pubkey.bak.${timestamp}"
         if [ -f "${NODE_DIR}/bak/node.pubkey.bak.${timestamp}" ]; then
-            echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : Backup ${NODE_DIR}/node.pubkey succ"
+            printLog "info" "Backup ${NODE_DIR}/node.pubkey completed"
         else
-            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ********* BACKUP NODE PUBLIC KEY FAILED **********"
+            printLog "error" "BACKUP NODE PUBLIC KEY FAILED"
             exit
         fi
     fi
@@ -115,7 +139,7 @@ function generateKey() {
     echo "${prikey}" >"${NODE_DIR}/node.prikey"
     echo "${pubkey}" >"${NODE_DIR}/node.pubkey"
     if [ ! -f "${NODE_DIR}/node.address" ] || [ ! -f "${NODE_DIR}/node.prikey" ] || [ ! -f "${NODE_DIR}/node.pubkey" ]; then
-        echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ********* STORE KEY INFO FAILED **********"
+        printLog "error" "STORE KEY INFO FAILED"
         exit
     fi
 }
@@ -125,7 +149,7 @@ function readKey() {
     address=$(cat "${NODE_DIR}"/node.address)
     pubkey=$(cat "${NODE_DIR}"/node.pubkey)
     prikey=$(cat "${NODE_DIR}"/node.prikey)
-    echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : Key files: ${NODE_DIR}/node.address, ${NODE_DIR}/node.prikey, ${NODE_DIR}/node.pubkey"
+    printLog "info" "Key files: ${NODE_DIR}/node.address, ${NODE_DIR}/node.prikey, ${NODE_DIR}/node.pubkey"
     echo "        Node-${NODE_ID}'s address: ${address}"
     echo "        Node-${NODE_ID}'s private key: ${prikey}"
     echo "        Node-${NODE_ID}'s public key: ${pubkey}"
@@ -133,34 +157,39 @@ function readKey() {
 
 ################################################# Main #################################################
 function main() {
-    echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ## Node-${NODE_ID} Keygen Start ##"
+    printLog "info" "## Node-${NODE_ID} generate key Start ##"
+    checkEnv
     if [[ "${AUTO}" == "true" ]]; then
         if [ ! -f "${NODE_DIR}"/node.pubkey ] || [ ! -f "${NODE_DIR}"/node.prikey ] || [ ! -f "${NODE_DIR}"/node.address ]; then
             generateKey
+        else
+            printLog "warn" "Key Already Exists, Will Read Them Automatically"
         fi
     else
         echo
-        echo "Do You What To Create a new node key ? (Please do not recreate the first node node.key) Yes or No(y/n):"
+        printLog "question" "Do You What To Create a new node key ? Yes or No(y/n):"
         yesOrNo
-        if [ $? -eq 0 ]; then
+        if [ $? -eq 1 ]; then
             if [ -f "${NODE_DIR}"/node.pubkey ] || [ -f "${NODE_DIR}"/node.prikey ] || [ -f "${NODE_DIR}"/node.address ]; then
-                echo "Node key already exists, re create? (Please do not recreate the first node node.key) Yes or No(y/n):"
+                printLog "question" "Node key already exists, overwrite it? Yes or No(y/n):"
                 yesOrNo
-                if [ $? -eq 0 ]; then
-                    generateKey
+                if [ $? -ne 1 ]; then
+                    if [ ! -f "${NODE_DIR}"/node.pubkey ] || [ ! -f "${NODE_DIR}"/node.prikey ] || [ ! -f "${NODE_DIR}"/node.address ]; then
+                        printLog "warn" "Please Put Your Nodekey file \"node.prikey\",\"node.pubkey\",\"node.address\" to the directory ${NODE_DIR}"
+                    fi
+                    exit
                 fi
-            else
-                generateKey
             fi
+            generateKey
         else
             if [ ! -f "${NODE_DIR}"/node.pubkey ] || [ ! -f "${NODE_DIR}"/node.prikey ] || [ ! -f "${NODE_DIR}"/node.address ]; then
-                echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ********* Please Put Your Node's key file \"node.pubkey\" to the directory ${NODE_DIR} *********"
-                exit
+                printLog "warn" "Please Put Your Nodekey file \"node.prikey\",\"node.pubkey\",\"node.address\" to the directory ${NODE_DIR}"
             fi
+            exit
         fi
     fi
     readKey
-    echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : Node-${NODE_ID} keygen succeeded"
+    printLog "success" "Node-${NODE_ID} generate key succeeded"
 }
 
 ###########################################################################################################
@@ -175,21 +204,20 @@ while [ ! $# -eq 0 ]; do
     --nodeid | -n)
         shiftOption2 $#
         NODE_ID=$2
-        NODE_DIR="${DATA_PATH}/node-$2"
-
-        if [ ! -f "${NODE_DIR}/deploy_node-$2.conf" ]; then
-            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ********* ${NODE_DIR}/deploy_node-$2.conf NOT FOUND **********"
-            exit
-        fi
+        NODE_DIR="${DATA_PATH}/node-${NODE_ID}"
+        DEPLOY_CONF="${NODE_DIR}/deploy_node-${NODE_ID}.conf"
         shift 2
-
         ;;
     --auto)
         AUTO="true"
         shift 1
         ;;
+    --help | -h)
+        help
+        exit
+        ;;
     *)
-        echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ********* COMMAND \"$1\" NOT FOUND **********"
+        printLog "error" "COMMAND \"$1\" NOT FOUND"
         help
         exit
         ;;

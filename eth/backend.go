@@ -26,6 +26,17 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"math/big"
+	"os"
+	"runtime"
+	"strconv"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
@@ -53,16 +64,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
-	"io"
-	"io/ioutil"
-	"math/big"
-	"os"
-	"runtime"
-	"strconv"
-	"strings"
-	"sync"
-	"sync/atomic"
-	"time"
 )
 
 type LesServer interface {
@@ -112,8 +113,8 @@ type Ethereum struct {
 }
 
 type Node struct {
-	Addr		string	`json:"addr"`
-	ExpireTime	string	`json:"expiretime"`
+	Addr       string `json:"addr"`
+	ExpireTime string `json:"expiretime"`
 }
 
 func (s *Ethereum) AddLesServer(ls LesServer) {
@@ -232,7 +233,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	}
 
 	if chainConfig.LicenseCheck {
-		log.Info("license","enable", chainConfig.LicenseCheck)
+		log.Info("license", "enable", chainConfig.LicenseCheck)
 		log.Info("Start license check right now.")
 
 		checked, expireTime := licenseCheck(eth.etherbase)
@@ -611,10 +612,10 @@ func (s *Ethereum) Stop() error {
 func licenseCheck(addr common.Address) (bool, int64) {
 	//log.Info("Node address: ", "addr", addr.String())
 	// load signature file.
-	dir,_ := os.Getwd()
+	dir, _ := os.Getwd()
 	fi, err := os.Open(dir + "/../data/sign" + addr.String())
 	if err != nil {
-		log.Info("Error: %s\n", err)
+		log.Error("Failed to check license", "err", err)
 		return false, 0
 	}
 	defer fi.Close()
@@ -655,7 +656,7 @@ func licenseCheck(addr common.Address) (bool, int64) {
 
 	// following: check signature
 	nodeInfo := Node{
-		Addr: licenseInfoSplit[0],
+		Addr:       licenseInfoSplit[0],
 		ExpireTime: licenseInfoSplit[1],
 	}
 
@@ -690,7 +691,7 @@ QN275TE7TLxctFVF0eY=
 	//defer dstFile.Close()
 	//dstFile.WriteString(publickeyInfo)
 
-	tmpFile, err := ioutil.TempFile(dir + "/../data/", "tmp")
+	tmpFile, err := ioutil.TempFile(dir+"/../data/", "tmp")
 	defer os.Remove(tmpFile.Name())
 	if err != nil {
 		log.Info("Error when creating temp file.", err)
