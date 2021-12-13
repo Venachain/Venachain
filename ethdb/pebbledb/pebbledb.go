@@ -26,7 +26,7 @@ type PebbleDatabase struct {
 func NewPebbleDB(file string, cache int, handles int) (*PebbleDatabase, error) {
 
 	logger := log.New("database", file)
-	logger.Error("Allocated cache and file handles", "file", file, "cache", cache, "handles", handles)
+	logger.Info("Allocated cache and file handles", "file", file, "cache", cache, "handles", handles)
 
 	// options
 	minHandles := 16384

@@ -4,9 +4,10 @@
 ################################################# VRIABLES #################################################
 ###########################################################################################################
 SCRIPT_NAME="$(basename ${0})"
+SCRIPT_ALIAS="$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')"
 DEPLOYMENT_PATH=$(
     cd $(dirname $0)
-    cd ../../
+    cd ../../../
     pwd
 )
 DEPLOYMENT_CONF_PATH="${DEPLOYMENT_PATH}/deployment_conf"
@@ -56,10 +57,25 @@ USAGE: ${SCRIPT_NAME}  [options] [value]
 "
 }
 
+################################################# Print Log #################################################
+function printLog() {
+    if [[ "${1}" == "error" ]]; then
+        echo -e "\033[31m[ERROR] [${SCRIPT_ALIAS}] ${2}\033[0m"
+    elif [[ "${1}" == "warn" ]]; then
+        echo -e "\033[33m[WARN] [${SCRIPT_ALIAS}] ${2}\033[0m"
+    elif [[ "${1}" == "success" ]]; then
+        echo -e "\033[32m[SUCCESS] [${SCRIPT_ALIAS}] ${2}\033[0m"
+    elif [[ "${1}" == "question" ]]; then
+        echo -e "\033[36m[${SCRIPT_ALIAS}] ${2}\033[0m"
+    else
+        echo "[INFO] [${SCRIPT_ALIAS}] ${2}"
+    fi
+}
+
 ################################################# Check Shift Option #################################################
 function shiftOption2() {
     if [[ $1 -lt 2 ]]; then
-        echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* MISS OPTION VALUE! PLEASE SET THE VALUE **********"
+        printLog "error" "MISS OPTION VALUE! PLEASE SET THE VALUE"
         help
         exit
     fi
@@ -103,13 +119,13 @@ function clearData() {
 ################################################# Read File #################################################
 function readFile() {
     file=$1
-    DEPLOY_PATH=$(cat ${file} | grep "deploy_path=" | sed -e 's/deploy_path=\(.*\)/\1/g')
-    USER_NAME=$(cat ${file} | grep "user_name=" | sed -e 's/user_name=\(.*\)/\1/g')
-    IP_ADDR=$(cat ${file} | grep "ip_addr=" | sed -e 's/ip_addr=\(.*\)/\1/g')
-    P2P_PORT=$(cat ${file} | grep "p2p_port=" | sed -e 's/p2p_port=\(.*\)/\1/g')
+    DEPLOY_PATH=$(cat ${file} | grep "deploy_path=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
+    USER_NAME=$(cat ${file} | grep "user_name=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
+    IP_ADDR=$(cat ${file} | grep "ip_addr=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
+    P2P_PORT=$(cat ${file} | grep "p2p_port=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
 
     if [[ "${USER_NAME}" == "" ]] || [[ "${IP_ADDR}" == "" ]] || [[ "${P2P_PORT}" == "" ]] || [[ "${DEPLOY_PATH}" == "" ]]; then
-        echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* FILE ${file} MISS VALUE **********"
+        printLog "error" "FILE ${file} MISS VALUE"
         return 1
     fi
 
@@ -142,74 +158,74 @@ function transfer() {
         xcmd "${USER_NAME}@${IP_ADDR}" "mkdir -p ${DEPLOY_PATH}/conf"
         xcmd "${USER_NAME}@${IP_ADDR}" "[ -d ${DEPLOY_PATH}/conf ]"
         if [[ $? -ne 0 ]]; then
-            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* CREATE ${DEPLOY_PATH}/conf FAILED **********"
+            printLog "error" "CREATE ${DEPLOY_PATH}/conf FAILED"
+            return 1
+        fi
+        xcmd "${USER_NAME}@${IP_ADDR}" "mkdir -p ${DEPLOY_PATH}/conf/contracts"
+        xcmd "${USER_NAME}@${IP_ADDR}" "[ -d ${DEPLOY_PATH}/conf/contracts ]"
+        if [[ $? -ne 0 ]]; then
+            printLog "error" "CREATE ${DEPLOY_PATH}/conf/contracts"
+            return 1
+        fi
+        xcmd "${USER_NAME}@${IP_ADDR}" "mkdir -p ${DEPLOY_PATH}/conf/contracts_privacy"
+        xcmd "${USER_NAME}@${IP_ADDR}" "[ -d ${DEPLOY_PATH}/conf/contracts_privacy ]"
+        if [[ $? -ne 0 ]]; then
+            printLog "error" "CREATE ${DEPLOY_PATH}/conf/contracts_privacy FAILED"
             return 1
         fi
         echo "[$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] [${path_id}] : Create conf directory completed" >>"${PROJECT_CONF_PATH}/logs/deploy_log.txt"
-        echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Create ${DEPLOY_PATH}/conf completed"
+        printLog "info" "Create ${DEPLOY_PATH}/conf completed"
     fi
     # create script directory
     if [ ! -f "${PROJECT_CONF_PATH}/logs/deploy_log.txt" ] || [[ $(grep $(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g') "${PROJECT_CONF_PATH}/logs/deploy_log.txt" | grep "${path_id}" | grep "Create scripts directory") == "" ]]; then
         xcmd "${USER_NAME}@${IP_ADDR}" "mkdir -p ${DEPLOY_PATH}/scripts"
         xcmd "${USER_NAME}@${IP_ADDR}" "[ -d ${DEPLOY_PATH}/scripts ]"
         if [[ $? -ne 0 ]]; then
-            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* CREATE ${DEPLOY_PATH}/scripts FAILED **********"
+            printLog "error" "CREATE ${DEPLOY_PATH}/scripts FAILED"
             return 1
         fi
         echo "[$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] [${path_id}] : Create scripts directory completed" >>"${PROJECT_CONF_PATH}/logs/deploy_log.txt"
-        echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Create ${DEPLOY_PATH}/scripts completed"
+        printLog "info" "Create ${DEPLOY_PATH}/scripts completed"
     fi
     # create bin directory
     if [ ! -f "${PROJECT_CONF_PATH}/logs/deploy_log.txt" ] || [[ $(grep $(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g') "${PROJECT_CONF_PATH}/logs/deploy_log.txt" | grep "${path_id}" | grep "Create bin directory") == "" ]]; then
         xcmd "${USER_NAME}@${IP_ADDR}" "mkdir -p ${DEPLOY_PATH}/bin"
         xcmd "${USER_NAME}@${IP_ADDR}" "[ -d ${DEPLOY_PATH}/bin ]"
         if [[ $? -ne 0 ]]; then
-            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* CREATE ${DEPLOY_PATH}/bin FAILED **********"
+            printLog "error" "CREATE ${DEPLOY_PATH}/bin FAILED"
             return 1
         fi
         echo "[$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] [${path_id}] : Create bin directory completed" >>"${PROJECT_CONF_PATH}/logs/deploy_log.txt"
-        echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Create ${DEPLOY_PATH}/bin completed"
+        printLog "info" "Create ${DEPLOY_PATH}/bin completed"
     fi
 
     ## transfer files
     # transfer conf file
     cd ${DEPLOYMENT_FILE_PATH}/conf
-    for f in $(ls ./); do
-        if [ ! -f "${f}" ]; then
-            continue
+    if [ ! -f "${PROJECT_CONF_PATH}/logs/deploy_log.txt" ] || [[ $(grep $(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g') "${PROJECT_CONF_PATH}/logs/deploy_log.txt" | grep "${path_id}" | grep "Transfer conf file") == "" ]]; then
+        xcmd "${USER_NAME}@${IP_ADDR}" "cp -r ${DEPLOYMENT_FILE_PATH}/conf ${DEPLOY_PATH}" "target"
+        file_num=$(xcmd "${USER_NAME}@${IP_ADDR}" "cd ${DEPLOY_PATH}/conf && ls -lR | grep "^-" | wc -l")
+        if [[ "$(cd ${DEPLOYMENT_FILE_PATH}/conf && ls -lR | grep "^-" | wc -l)" != "${file_num}" ]]; then
+            printLog "error" "TRANSFER ${DEPLOY_PATH}/conf FAILED"
+            return 1
+        else
+            echo "[$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] [${path_id}] : Transfer conf file completed" >>"${PROJECT_CONF_PATH}/logs/deploy_log.txt"
+            printLog "info" "Transfer ${DEPLOY_PATH}/conf completed"
         fi
-        if [ ! -f "${PROJECT_CONF_PATH}/logs/deploy_log.txt" ] || [[ $(grep $(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g') "${PROJECT_CONF_PATH}/logs/deploy_log.txt" | grep "${path_id}" | grep "Transfer ${f}") == "" ]]; then
-            xcmd "${USER_NAME}@${IP_ADDR}" "cp -r ${f} ${DEPLOY_PATH}/conf" "target"
-            xcmd "${USER_NAME}@${IP_ADDR}" "[ -f ${DEPLOY_PATH}/conf/${f} ]"
-            if [[ $? -ne 0 ]]; then
-                echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* TRANSFER ${DEPLOY_PATH}/conf/${f} FAILED **********"
-                return 1
-            else
-                echo "[$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] [${path_id}] : Transfer ${f} completed" >>"${PROJECT_CONF_PATH}/logs/deploy_log.txt"
-                echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Transfer ${DEPLOY_PATH}/conf/${f} completed"
-            fi
-        fi
-        cd ${DEPLOYMENT_FILE_PATH}/conf
-    done
+    fi
     # transfer script files
     cd ${DEPLOYMENT_FILE_PATH}/scripts
-    for f in $(ls ./); do
-        if [ ! -f "${f}" ]; then
-            continue
+    if [ ! -f "${PROJECT_CONF_PATH}/logs/deploy_log.txt" ] || [[ $(grep $(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g') "${PROJECT_CONF_PATH}/logs/deploy_log.txt" | grep "${path_id}" | grep "Transfer scripts file") == "" ]]; then
+        xcmd "${USER_NAME}@${IP_ADDR}" "cp -r ${DEPLOYMENT_FILE_PATH}/scripts ${DEPLOY_PATH}" "target"
+        file_num=$(xcmd "${USER_NAME}@${IP_ADDR}" "cd ${DEPLOY_PATH}/scripts && ls -lR | grep "^-" | wc -l")
+        if [[ "$(cd ${DEPLOYMENT_FILE_PATH}/scripts && ls -lR | grep "^-" | wc -l)" != "${file_num}" ]]; then
+            printLog "error" "TRANSFER ${DEPLOY_PATH}/scripts FAILED"
+            return 1
+        else
+            echo "[$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] [${path_id}] : Transfer scripts file completed" >>"${PROJECT_CONF_PATH}/logs/deploy_log.txt"
+            printLog "info" "Transfer ${DEPLOY_PATH}/scripts completed"
         fi
-        if [ ! -f "${PROJECT_CONF_PATH}/logs/deploy_log.txt" ] || [[ $(grep $(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g') "${PROJECT_CONF_PATH}/logs/deploy_log.txt" | grep "${path_id}" | grep "Transfer ${f}") == "" ]]; then
-            xcmd "${USER_NAME}@${IP_ADDR}" "cp -r ${f} ${DEPLOY_PATH}/scripts" "target"
-            xcmd "${USER_NAME}@${IP_ADDR}" "[ -f ${DEPLOY_PATH}/scripts/${f} ]"
-            if [[ $? -ne 0 ]]; then
-                echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* TRANSFER ${DEPLOY_PATH}/scripts/${f} FAILED **********"
-                return 1
-            else
-                echo "[$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] [${path_id}] : Transfer ${f} completed" >>"${PROJECT_CONF_PATH}/logs/deploy_log.txt"
-                echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Transfer ${DEPLOY_PATH}/scripts/${f} completed"
-            fi
-        fi
-        cd ${DEPLOYMENT_FILE_PATH}/scripts
-    done
+    fi
     # transfer bin file
     cd ${DEPLOYMENT_FILE_PATH}/bin
     for f in $(ls ./); do
@@ -220,11 +236,11 @@ function transfer() {
             xcmd "${USER_NAME}@${IP_ADDR}" "cp -r ${f} ${DEPLOY_PATH}/bin" "target"
             xcmd "${USER_NAME}@${IP_ADDR}" "[ -f ${DEPLOY_PATH}/bin/${f} ]"
             if [[ $? -ne 0 ]]; then
-                echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* TRANSFER ${DEPLOY_PATH}/bin/${f} FAILED **********"
+                printLog "error" "TRANSFER ${DEPLOY_PATH}/bin/${f} FAILED"
                 return 1
             else
                 echo "[$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] [${path_id}] : Transfer ${f} completed" >>"${PROJECT_CONF_PATH}/logs/deploy_log.txt"
-                echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Transfer ${DEPLOY_PATH}/bin/${f} completed"
+                printLog "info" "Transfer ${DEPLOY_PATH}/bin/${f} completed"
             fi
         fi
         cd ${DEPLOYMENT_FILE_PATH}/bin
@@ -235,11 +251,11 @@ function transfer() {
         xcmd "${USER_NAME}@${IP_ADDR}" "mkdir -p ${DEPLOY_PATH}/data/node-${NODE_ID}"
         xcmd "${USER_NAME}@${IP_ADDR}" "[ -d ${DEPLOY_PATH}/data/node-${NODE_ID} ]"
         if [[ $? -ne 0 ]]; then
-            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* CREATE ${DEPLOY_PATH}/data/node-${NODE_ID} FAILED **********"
+            printLog "error" "CREATE ${DEPLOY_PATH}/data/node-${NODE_ID} FAILED"
             return 1
         fi
         echo "[$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] [node-${NODE_ID}] : Create node directory completed" >>"${PROJECT_CONF_PATH}/logs/deploy_log.txt"
-        echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Create ${DEPLOY_PATH}/data/node-${NODE_ID} completed"
+        printLog "info" "Create ${DEPLOY_PATH}/data/node-${NODE_ID} completed"
     fi
 
     # transfer deploy conf file
@@ -247,22 +263,23 @@ function transfer() {
         xcmd "${USER_NAME}@${IP_ADDR}" "cp -r ${file} ${DEPLOY_PATH}/data/node-${NODE_ID}" "target"
         xcmd "${USER_NAME}@${IP_ADDR}" "[ -f ${DEPLOY_PATH}/data/node-${NODE_ID}/deploy_node-${NODE_ID}.conf ]"
         if [[ $? -ne 0 ]]; then
-            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* TRANSFER ${DEPLOY_PATH}/data/node-${NODE_ID}/deploy_node-${NODE_ID}.conf  FAILED **********"
+            printLog "error" "TRANSFER ${DEPLOY_PATH}/data/node-${NODE_ID}/deploy_node-${NODE_ID}.conf FAILED"
             return 1
         else
             echo "[$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] [node-${NODE_ID}] : Transfer deploy conf completed" >>"${PROJECT_CONF_PATH}/logs/deploy_log.txt"
-            echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Transfer ${DEPLOY_PATH}/data/node-${NODE_ID}/deploy_node-${NODE_ID}.conf completed"
+            printLog "info" "Transfer ${DEPLOY_PATH}/data/node-${NODE_ID}/deploy_node-${NODE_ID}.conf completed"
         fi
     fi
     echo "[$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] [node-${NODE_ID}] : Transfer files completed" >>"${PROJECT_CONF_PATH}/logs/deploy_log.txt"
-    echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Transfer files to Node-${NODE_ID} completed"
+    printLog "success" "Transfer files to Node-${NODE_ID} succeeded"
 }
 
 ################################################# Main #################################################
 function main() {
+    showTitle
     mkdir -p ${PROJECT_CONF_PATH}/global && mkdir -p ${PROJECT_CONF_PATH}/logs
     if [ ! -d ${PROJECT_CONF_PATH}/global ] || [ ! -d ${PROJECT_CONF_PATH}/logs ]; then
-        echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* GLOBAL OR LOGS DIRECTORY UNDER PROJECT DEPLOYMENT PATH NOT EXIST **********"
+        printLog "error" "GLOBAL OR LOGS DIRECTORY UNDER PROJECT DEPLOYMENT PATH NOT EXIST"
         exit
     fi
 
@@ -272,7 +289,7 @@ function main() {
             if [ -f "$file" ]; then
                 transfer "${PROJECT_CONF_PATH}/$file"
                 if [[ $? -ne 0 ]]; then
-                    echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* TRANSFER FILES TO NODE-${NODE_ID} FAILED **********"
+                    printLog "error" "TRANSFER FILES TO NODE-${NODE_ID} FAILED"
                     exit
                 fi
             fi
@@ -285,23 +302,22 @@ function main() {
             if [ -f "${PROJECT_CONF_PATH}/deploy_node-${param}.conf" ]; then
                 transfer "${PROJECT_CONF_PATH}/deploy_node-${param}.conf"
                 if [[ $? -ne 0 ]]; then
-                    echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* TRANSFER FILES TO NODE-${NODE_ID} FAILED **********"
+                    printLog "error" "TRANSFER FILES TO NODE-${NODE_ID} FAILED"
                     exit
                 fi
             else
-                echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* FILE deploy_node-${param}.conf NOT EXISTS **********"
+                printLog "error" "FILE deploy_node-${param}.conf NOT EXISTS"
             fi
             cd ${PROJECT_CONF_PATH}
         done
     fi
     echo
-    echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Transfer completed"
+    printLog "info" "Transfer completed"
 }
 
 ###########################################################################################################
 #################################################  EXECUTE #################################################
 ###########################################################################################################
-showTitle
 if [ $# -eq 0 ]; then
     help
     exit
@@ -311,7 +327,7 @@ while [ ! $# -eq 0 ]; do
     --project | -p)
         shiftOption2 $#
         if [ ! -d "${DEPLOYMENT_CONF_PATH}/$2" ]; then
-            echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* ${DEPLOYMENT_CONF_PATH}/$2 HAS NOT BEEN CREATED **********"
+            printLog "error" "${DEPLOYMENT_CONF_PATH}/$2 HAS NOT BEEN CREATED"
             exit
         fi
         PROJECT_CONF_PATH="${DEPLOYMENT_CONF_PATH}/$2"
@@ -322,8 +338,12 @@ while [ ! $# -eq 0 ]; do
         NODE=$2
         shift 2
         ;;
+    --help | -h)
+        help
+        exit
+        ;;
     *)
-        echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* COMMAND \"$1\" NOT FOUND **********"
+        printLog "error" "COMMAND \"$1\" NOT FOUND"
         help
         exit
         ;;

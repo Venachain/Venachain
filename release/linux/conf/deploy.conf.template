@@ -19,10 +19,16 @@ ws_port=26791
 log_dir=
 log_size=67108864
 
+## NODE INIT
+validator_nodes=
+interpreter=all
+
 ## NODE START
-gcmode=archive
-txcount=1000
-tx_global_slots=4096
 bootnodes=
-extra_options=
+gcmode=archive
+tx_count=1000
+tx_global_slots=4096
+dbtype=leveldb
+lightmode=
+extra_options=--debug
 pprof_addr=
