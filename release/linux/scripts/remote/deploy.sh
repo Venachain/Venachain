@@ -4,10 +4,11 @@
 ################################################# VRIABLES #################################################
 ###########################################################################################################
 SCRIPT_NAME="$(basename ${0})"
+SCRIPT_ALIAS="$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')"
 LOCAL_IP="127.0.0.1"
 DEPLOYMENT_PATH=$(
     cd $(dirname $0)
-    cd ../../
+    cd ../../../
     pwd
 )
 USER_NAME=$USER
@@ -17,7 +18,7 @@ if [ ! -d "${DEPLOYMENT_CONF_PATH}" ]; then
     mkdir -p ${DEPLOYMENT_CONF_PATH}
 fi
 PROJECT="test"
-PROJECT_CONF_PATH=""
+PROJECT_CONF_PATH="${DEPLOYMENT_CONF_PATH}/${PROJECT}"
 
 NODE="all"
 MODE="conf"
@@ -53,10 +54,25 @@ USAGE: ${SCRIPT_NAME}  [options] [value]
 "
 }
 
+################################################# Print Log #################################################
+function printLog() {
+    if [[ "${1}" == "error" ]]; then
+        echo -e "\033[31m[ERROR] [${SCRIPT_ALIAS}] ${2}\033[0m"
+    elif [[ "${1}" == "warn" ]]; then
+        echo -e "\033[33m[WARN] [${SCRIPT_ALIAS}] ${2}\033[0m"
+    elif [[ "${1}" == "success" ]]; then
+        echo -e "\033[32m[SUCCESS] [${SCRIPT_ALIAS}] ${2}\033[0m"
+    elif [[ "${1}" == "question" ]]; then
+        echo -e "\033[36m[${SCRIPT_ALIAS}] ${2}\033[0m"
+    else
+        echo "[INFO] [${SCRIPT_ALIAS}] ${2}"
+    fi
+}
+
 ################################################# Check Shift Option #################################################
 function shiftOption2() {
     if [[ $1 -lt 2 ]]; then
-        echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* MISS OPTION VALUE! PLEASE SET THE VALUE **********"
+        printLog "error" "MISS OPTION VALUE! PLEASE SET THE VALUE"
         help
         exit
     fi
@@ -64,72 +80,90 @@ function shiftOption2() {
 
 ################################################# Yes Or No #################################################
 function yesOrNo() {
-    read -p "" anw
+    read anw
     case $anw in
     [Yy][Ee][Ss] | [yY])
-        return 0
-        ;;
-    [Nn][Oo] | [Nn])
         return 1
         ;;
+    [Nn][Oo] | [Nn])
+        return 0
+        ;;
     esac
-    return 1
+    return 0
 }
 
 ################################################# CONF #################################################
 function conf() {
     if [[ "${ADDRESS}" != "" ]]; then
         if [ -d "${PROJECT_CONF_PATH}" ]; then
-            echo "${PROJECT_CONF_PATH} has already been existed, do you want to cover it?"
+            printLog "question" "${PROJECT_CONF_PATH} has already been existed, do you want to continue?"
             yesOrNo
-            if [[ $? -ne 0 ]]; then
+            if [[ $? -ne 1 ]]; then
                 exit
             fi
         fi
-        ./prepare.sh -p "${PROJECT}" -a "${ADDRESS}" --cover
+        ${DEPLOYMENT_PATH}/linux/scripts/remote/prepare.sh -p "${PROJECT}" -a "${ADDRESS}" --cover
     elif [[ "${NODE}" == "" ]]; then
-        echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* NODE MUST BE SET IN CONF MODE **********"
+        printLog "error" "NODE MUST BE SET IN CONF MODE"
         help
         exit
     elif [ ! -d "${PROJECT_CONF_PATH}" ]; then
-        echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* ${PROJECT_CONF_PATH} NOT CREATED **********"
+        printLog "error" "${PROJECT_CONF_PATH} NOT CREATED"
         help
         exit
     fi
 
-    ./transfer.sh -p "${PROJECT}" -n "${NODE}"
-    ./init.sh -p "${PROJECT}" -n "${NODE}"
-    ./start.sh -p "${PROJECT}" -n "${NODE}"
+    cd ${PROJECT_CONF_PATH}
+    for f in $(ls ./); 
+    do
+        if [ ! -f "${f}" ]; then
+            continue
+        fi
+        node_id=$(echo ${f} | sed -e 's/\(.*\)deploy_node-\(.*\).conf/\2/g')
+        ${DEPLOYMENT_PATH}/linux/scripts/remote/transfer.sh -p "${PROJECT}" -n ${node_id}
+        ${DEPLOYMENT_PATH}/linux/scripts/remote/init.sh -p "${PROJECT}" -n ${node_id}
+        ${DEPLOYMENT_PATH}/linux/scripts/remote/start.sh -p "${PROJECT}" -n ${node_id}
+        cd ${PROJECT_CONF_PATH}
+    done
 }
 
 ################################################# ONE #################################################
 function one() {
     if [ -d "${PROJECT_CONF_PATH}" ]; then
-        echo "${PROJECT_CONF_PATH} has already been existed, do you want to cover it?"
+        printLog "question" "${PROJECT_CONF_PATH} has already been existed, do you want to overwrite it?"
         yesOrNo
-        if [[ $? -ne 0 ]]; then
+        if [[ $? -ne 1 ]]; then
             exit
         fi
     fi
-    ./prepare.sh -p "${PROJECT}" -a "${USER_NAME}@${LOCAL_IP}"
-    ./transfer.sh -p "${PROJECT}"
-    ./init.sh -p "${PROJECT}"
-    ./start.sh -p "${PROJECT}"
+    ${DEPLOYMENT_PATH}/linux/scripts/remote/prepare.sh -p "${PROJECT}" -a "${USER_NAME}@${LOCAL_IP}"
+    ${DEPLOYMENT_PATH}/linux/scripts/remote/transfer.sh -p "${PROJECT}"
+    ${DEPLOYMENT_PATH}/linux/scripts/remote/init.sh -p "${PROJECT}"
+    ${DEPLOYMENT_PATH}/linux/scripts/remote/start.sh -p "${PROJECT}"
 }
 
 ################################################# FOUR #################################################
 function four() {
     if [ -d "${PROJECT_CONF_PATH}" ]; then
-        echo "${PROJECT_CONF_PATH} has already been existed, do you want to cover it?"
+        printLog "question" "${PROJECT_CONF_PATH} has already been existed, do you want to overwrite it?"
         yesOrNo
-        if [[ $? -ne 0 ]]; then
+        if [[ $? -ne 1 ]]; then
             exit
         fi
     fi
-    ./prepare.sh -p "${PROJECT}" -a "${USER_NAME}@${LOCAL_IP},${USER_NAME}@${LOCAL_IP},${USER_NAME}@${LOCAL_IP},${USER_NAME}@${LOCAL_IP}"
-    ./transfer.sh -p "${PROJECT}"
-    ./init.sh -p "${PROJECT}"
-    ./start.sh -p "${PROJECT}"
+    ${DEPLOYMENT_PATH}/linux/scripts/remote/prepare.sh -p "${PROJECT}" -a "${USER_NAME}@${LOCAL_IP},${USER_NAME}@${LOCAL_IP},${USER_NAME}@${LOCAL_IP},${USER_NAME}@${LOCAL_IP}"
+    cd ${PROJECT_CONF_PATH}
+    for f in $(ls ./); 
+    do
+        if [ ! -f "${f}" ]; then
+            continue
+        fi
+        node_id=$(echo ${f} | sed -e 's/\(.*\)deploy_node-\(.*\).conf/\2/g')
+        ${DEPLOYMENT_PATH}/linux/scripts/remote/transfer.sh -p "${PROJECT}" -n ${node_id}
+        ${DEPLOYMENT_PATH}/linux/scripts/remote/init.sh -p "${PROJECT}" -n ${node_id}
+        ${DEPLOYMENT_PATH}/linux/scripts/remote/start.sh -p "${PROJECT}" -n ${node_id}
+        cd ${PROJECT_CONF_PATH}
+    done
 }
 
 ################################################# Main #################################################
@@ -145,7 +179,7 @@ function deploy() {
         four
         ;;
     *)
-        echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* MODE ${MODE} NOT FOUND **********"
+        printLog "error" "MODE ${MODE} NOT FOUND"
         help
         exit
         ;;
@@ -171,11 +205,11 @@ while [ ! $# -eq 0 ]; do
             PROJECT=$2
         fi
         PROJECT_CONF_PATH="${DEPLOYMENT_CONF_PATH}/${PROJECT}"
-        echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Project's conf path: ${PROJECT_CONF_PATH}"
+        printLog "info" "Project's conf path: ${PROJECT_CONF_PATH}"
         ;;
     --node | -n)
         NODE=$2
-        echo "[INFO] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : Node ${NODE} will be deployed"
+        printLog "info" "Node ${NODE} will be deployed"
         ;;
     --mode | -m)
         MODE=$2
@@ -184,7 +218,7 @@ while [ ! $# -eq 0 ]; do
         ADDRESS=$2
         ;;
     *)
-        echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')] : ********* COMMAND \"$1\" NOT FOUND **********"
+        printLog "error" "COMMAND \"$1\" NOT FOUND"
         help
         exit
         ;;
