@@ -1,6 +1,6 @@
-## Go PlatONE
+## Go VenaChain
 
-Welcome to the PlatONE source code repository! This software is Ethereum-based and it has changed some peculiarities according the PlatONE's [Documents](https://platonenterprise.github.io/Docs/)
+Welcome to the VenaChain source code repository! This software is Ethereum-based and it has changed some peculiarities according the VenaChain's [Documents](https://platonenterprise.github.io/Docs/)
 
 ## Use
 

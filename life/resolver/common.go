@@ -2,10 +2,11 @@ package resolver
 
 import (
 	"encoding/hex"
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/exec"
 	"strings"
+
+	"github.com/Venachain/Venachain/accounts/abi"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/life/exec"
 )
 
 func parseWasmCallSolInput(vm *exec.VirtualMachine, address, input []byte) ([]byte, error) {

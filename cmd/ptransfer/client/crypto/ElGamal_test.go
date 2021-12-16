@@ -3,10 +3,11 @@ package crypto
 import (
 	"crypto/rand"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/bn256"
 	"math/big"
 	"regexp"
 	"testing"
+
+	"github.com/Venachain/Venachain/crypto/bn256"
 )
 
 func TestEnc(t *testing.T) {
@@ -46,10 +47,10 @@ func TestDec(t *testing.T) {
 	name := "./privacy_Account.json"
 	//res,err := regexp.Match(`^[a-z0-9A-Z\p{Han}]+(_[a-z0-9A-Z\p{Han}]+)*$`,[]byte(name))
 	reg := "^.\\/(\\w+\\/?)+.json$"
-	res,err := regexp.Match(reg,[]byte(name))
+	res, err := regexp.Match(reg, []byte(name))
 
-	if err != nil{
-    	fmt.Println(err)
+	if err != nil {
+		fmt.Println(err)
 	}
 	//if name != `^[a-z0-9A-Z\p{Han}]+(_[a-z0-9A-Z\p{Han}]+)*$`{
 	//	fmt.Println("error:filename is illegal")
@@ -57,6 +58,6 @@ func TestDec(t *testing.T) {
 	//if name =="null"{
 	//	fmt.Println("error:filename is null")
 	//}
-	fmt.Println("name:",name)
-	fmt.Println("res:",res)
+	fmt.Println("name:", name)
+	fmt.Println("res:", res)
 }

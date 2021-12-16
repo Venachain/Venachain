@@ -18,12 +18,12 @@
 package consensus
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
-	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core/state"
+	"github.com/Venachain/Venachain/core/types"
+	"github.com/Venachain/Venachain/p2p"
+	"github.com/Venachain/Venachain/params"
+	"github.com/Venachain/Venachain/rpc"
 )
 
 // ChainReader defines a small collection of methods needed to access the local

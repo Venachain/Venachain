@@ -31,9 +31,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/secp256k1"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/crypto"
+	"github.com/Venachain/Venachain/crypto/secp256k1"
 )
 
 const NodeIDBits = 512
@@ -177,7 +177,7 @@ func parseComplete(rawurl string) (*Node, error) {
 		return nil, fmt.Errorf("invalid host: %v", err)
 	}
 	if ip = net.ParseIP(host); ip == nil {
-		if ips, err := net.LookupIP(host); (err == nil && len(ips) != 0) {
+		if ips, err := net.LookupIP(host); err == nil && len(ips) != 0 {
 			ip = ips[0]
 		} else {
 			return nil, errors.New("invalid IP address")

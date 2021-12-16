@@ -17,11 +17,12 @@
 package core
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"reflect"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul"
+	"github.com/Venachain/Venachain/log"
+
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/consensus/istanbul"
 )
 
 func (c *core) sendCommit() {

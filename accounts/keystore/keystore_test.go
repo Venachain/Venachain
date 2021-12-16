@@ -26,9 +26,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/event"
+	"github.com/Venachain/Venachain/accounts"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/event"
 )
 
 var testSigData = make([]byte, 32)

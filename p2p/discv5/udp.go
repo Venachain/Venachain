@@ -24,12 +24,12 @@ import (
 	"net"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/nat"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/netutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/crypto"
+	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/p2p/nat"
+	"github.com/Venachain/Venachain/p2p/netutil"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 const Version = 4

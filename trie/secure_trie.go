@@ -19,8 +19,8 @@ package trie
 import (
 	"fmt"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/log"
 )
 
 // SecureTrie wraps a trie with key hashing. In a secure trie, all
@@ -37,7 +37,7 @@ type SecureTrie struct {
 	trie             Trie
 	hashKeyBuf       [common.HashLength]byte
 	secKeyCache      map[string][]byte
-	newSecKeyCache      map[string][]byte
+	newSecKeyCache   map[string][]byte
 	secKeyCacheOwner *SecureTrie // Pointer to self, replace the key cache on mismatch
 }
 
@@ -107,7 +107,7 @@ func (t *SecureTrie) TryUpdate(key, value []byte) error {
 	if err != nil {
 		return err
 	}
-  	t.getSecKeyCache()[string(hk)] = common.CopyBytes(key)
+	t.getSecKeyCache()[string(hk)] = common.CopyBytes(key)
 	return nil
 }
 

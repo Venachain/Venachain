@@ -24,7 +24,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/Venachain/Venachain/common"
 )
 
 func TestPack(t *testing.T) {

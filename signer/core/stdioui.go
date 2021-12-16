@@ -21,9 +21,9 @@ import (
 	"context"
 	"sync"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/internal/ethapi"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
+	"github.com/Venachain/Venachain/internal/ethapi"
+	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/rpc"
 )
 
 type StdIOUI struct {

@@ -19,7 +19,7 @@
 package fetcher
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/metrics"
+	"github.com/Venachain/Venachain/metrics"
 )
 
 var (

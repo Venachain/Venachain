@@ -22,9 +22,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	elog "github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/Venachain/Venachain/consensus/istanbul"
+	"github.com/Venachain/Venachain/core/types"
+	elog "github.com/Venachain/Venachain/log"
 )
 
 func makeBlock(number int64) *types.Block {

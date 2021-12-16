@@ -6,10 +6,10 @@ package contract
 import (
 	"strings"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi/bind"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/Venachain/Venachain/accounts/abi"
+	"github.com/Venachain/Venachain/accounts/abi/bind"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core/types"
 )
 
 // FIFSRegistrarABI is the input ABI used to generate the binding from.

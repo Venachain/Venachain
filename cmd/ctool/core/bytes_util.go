@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	math2 "github.com/PlatONEnetwork/PlatONE-Go/common/math"
 	"math"
 	"math/big"
 	"strconv"
+
+	"github.com/Venachain/Venachain/common"
+	math2 "github.com/Venachain/Venachain/common/math"
 )
 
 func BytesCombine(pBytes ...[]byte) []byte {

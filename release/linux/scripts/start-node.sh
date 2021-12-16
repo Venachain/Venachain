@@ -2,7 +2,7 @@
 function help() {
     echo 
     echo "
-USAGE: platonectl.sh start [options]
+USAGE: venachainctl.sh start [options]
     OPTIONS:
         --nodeid, -n                 start the specified node
         --bootnodes, -b              Connect to the specified bootnodes node
@@ -184,12 +184,12 @@ flag_gcmode=" --gcmode  archive "
 flag_txcount=" --txpool.globaltxcount ${TX_COUNT} "
 
 echo "
-nohup ${BIN_PATH}/platone --identity platone ${flag_datadir}  --nodiscover \
+nohup ${BIN_PATH}/venachain --identity venachain ${flag_datadir}  --nodiscover \
         --port ${P2P_PORT}  ${flag_nodekey} ${flag_rpc} --rpccorsdomain \""*"\" ${flag_ws} \
         --wsorigins \""*"\" ${flag_logs} ${flag_ipc} \
         --bootnodes ${BOOTNODES}  ${flag_txcount} \
-        --moduleLogParams '{\"platone_log\": [\"/\"], \"__dir__\": [\"${LOG_DIR}\"], \"__size__\": [\"${LOG_SIZE}\"]}' ${flag_gcmode} ${EXTRA_OPTIONS} \
-        1>/dev/null 2>${LOG_DIR}/platone_error.log &
+        --moduleLogParams '{\"venachain_log\": [\"/\"], \"__dir__\": [\"${LOG_DIR}\"], \"__size__\": [\"${LOG_SIZE}\"]}' ${flag_gcmode} ${EXTRA_OPTIONS} \
+        1>/dev/null 2>${LOG_DIR}/venachain_error.log &
 "
 
 
@@ -199,10 +199,10 @@ if [ -f ${LOG_DIR}/node-${NODE_ID}.log ]; then
     mv ${LOG_DIR}/node-${NODE_ID}.log ${LOG_DIR}/node-${NODE_ID}.log.bak.$ts
 fi
 
-nohup ${BIN_PATH}/platone --identity platone ${flag_datadir}  --nodiscover \
+nohup ${BIN_PATH}/venachain --identity venachain ${flag_datadir}  --nodiscover \
         --port ${P2P_PORT}  ${flag_nodekey} ${flag_rpc} --rpccorsdomain "*" ${flag_ws} \
         --wsorigins "*" ${flag_logs} ${flag_ipc} \
         --bootnodes ${BOOTNODES}  ${flag_txcount} \
-        --moduleLogParams '{"platone_log": ["/"], "__dir__": ["'${LOG_DIR}'"], "__size__": ["'${LOG_SIZE}'"]}'  ${flag_gcmode}  ${EXTRA_OPTIONS} \
-        1>/dev/null 2>${LOG_DIR}/platone_error.log &
+        --moduleLogParams '{"venachain_log": ["/"], "__dir__": ["'${LOG_DIR}'"], "__size__": ["'${LOG_SIZE}'"]}'  ${flag_gcmode}  ${EXTRA_OPTIONS} \
+        1>/dev/null 2>${LOG_DIR}/venachain_error.log &
 sleep 3

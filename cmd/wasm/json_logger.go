@@ -22,9 +22,9 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/math"
+	"github.com/Venachain/Venachain/core/vm"
 )
 
 type JSONLogger struct {

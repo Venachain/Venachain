@@ -3,7 +3,7 @@
 function help() {
     echo 
     echo "
-USAGE: platonectl.sh [options]
+USAGE: venachainctl.sh [options]
     OPTIONS:
             --nodeid, -n                 the specified node id
             --content, -c                update content (default: '{"type":1}')

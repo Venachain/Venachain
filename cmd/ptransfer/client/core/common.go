@@ -4,24 +4,24 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"math/big"
 	"os"
 	"strings"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/ptransfer/client/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/ptransfer/client/platoneclient"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/ptransfer/client/utils"
-	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/bn256"
+	"github.com/Venachain/Venachain/log"
+
+	"github.com/Venachain/Venachain/cmd/ptransfer/client/crypto"
+	"github.com/Venachain/Venachain/cmd/ptransfer/client/utils"
+	"github.com/Venachain/Venachain/cmd/ptransfer/client/venachainclient"
+	utl "github.com/Venachain/Venachain/cmd/utils"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/hexutil"
+	"github.com/Venachain/Venachain/crypto/bn256"
 	"gopkg.in/urfave/cli.v1"
 )
 
-var pc *platoneclient.PClient
+var pc *venachainclient.PClient
 var ErrNonceUsed = errors.New("nonce is used")
-
 
 //New ZSCparams: zsc,address,
 func newZscInfo(c *cli.Context) (*ZCS, common.Address, *Account, string, *big.Int, *big.Int) {
@@ -45,7 +45,7 @@ func initial(c *cli.Context) (*ZCS, common.Address) {
 	}
 
 	// set url
-	pc, err = platoneclient.SetupClient(url)
+	pc, err = venachainclient.SetupClient(url)
 	if err != nil {
 		utl.Fatalf(err.Error())
 	}
@@ -62,7 +62,7 @@ func initial(c *cli.Context) (*ZCS, common.Address) {
 
 	// 4. set contract abi
 	funcAbi, err := Asset("privacy_contract/PToken_sol_PToken.abi")
-	if err != nil{
+	if err != nil {
 		utl.Fatalf("abi file not found")
 	}
 	z := newZCS(contract, funcAbi, "evm")
@@ -80,7 +80,7 @@ func initial(c *cli.Context) (*ZCS, common.Address) {
 
 	//6. initial log handler
 	verbosity := c.Int(verbosityFlag.Name)
-	if verbosity == 0{
+	if verbosity == 0 {
 		verbosity = config.Verbosity
 	}
 	log.Root().SetHandler(log.LvlFilterHandler(log.Lvl(verbosity), log.StreamHandler(os.Stdout, log.TerminalFormat(false))))
@@ -105,14 +105,14 @@ func loadAccount(c *cli.Context) *Account {
 	if err != nil {
 		utl.Fatalf(err.Error())
 	}
-	log.Debug("load account","balance", account.State.Balance)
+	log.Debug("load account", "balance", account.State.Balance)
 	return account
 }
 
 func storeAccount(origin Account, filePath string) error {
 
 	dataBytes, err := origin.Marshal()
-	log.Debug("account data","account", dataBytes[:])
+	log.Debug("account data", "account", dataBytes[:])
 	if err != nil {
 		return fmt.Errorf("account marshal error: %v\n", err)
 	}
@@ -123,8 +123,6 @@ func storeAccount(origin Account, filePath string) error {
 
 	return nil
 }
-
-
 
 func writeAccountFile(filename string, content []byte) error {
 
@@ -154,9 +152,9 @@ func getInterval(c *cli.Context) (*big.Int, *big.Int) {
 	r := big.NewInt(c.Int64(RightIntervalFlag.Name))
 	if r.Cmp(big.NewInt(0)) == 0 {
 		r = new(big.Int).Sub(crypto.MAX, big.NewInt(1))
-		
+
 	}
-	log.Debug("get interval l & r","value", l, r)
+	log.Debug("get interval l & r", "value", l, r)
 	return l, r
 }
 
@@ -301,11 +299,11 @@ func decodePubKey(pubKeyStr string) (string, error) {
 	index2 := strings.LastIndex(pubKeyStr, "]")
 	pubKeyStr = pubKeyStr[index1+1 : index2]
 	arr := strings.Split(pubKeyStr, ",")
-	if index2 != 134{
-		return "" ,errors.New("The length of receiver pk is illegal")
+	if index2 != 134 {
+		return "", errors.New("The length of receiver pk is illegal")
 	}
 	if len(arr) != 2 {
-		return "" ,errors.New("Decode receiver pk failed !!!")
+		return "", errors.New("Decode receiver pk failed !!!")
 
 	}
 

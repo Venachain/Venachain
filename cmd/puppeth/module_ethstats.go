@@ -25,7 +25,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/Venachain/Venachain/log"
 )
 
 // ethstatsDockerfile is the Dockerfile required to build an ethstats backend

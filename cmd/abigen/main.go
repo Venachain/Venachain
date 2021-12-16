@@ -24,8 +24,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi/bind"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/compiler"
+	"github.com/Venachain/Venachain/accounts/abi/bind"
+	"github.com/Venachain/Venachain/common/compiler"
 )
 
 var (

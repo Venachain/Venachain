@@ -27,33 +27,33 @@ import (
 	"strings"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts/keystore"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/fdlimit"
-	istanbulBackend "github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/backend"
+	"github.com/Venachain/Venachain/accounts"
+	"github.com/Venachain/Venachain/accounts/keystore"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/fdlimit"
+	istanbulBackend "github.com/Venachain/Venachain/consensus/istanbul/backend"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/core"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/dashboard"
-	"github.com/PlatONEnetwork/PlatONE-Go/eth"
-	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
-	"github.com/PlatONEnetwork/PlatONE-Go/eth/gasprice"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethstats"
-	"github.com/PlatONEnetwork/PlatONE-Go/les"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/PlatONEnetwork/PlatONE-Go/metrics"
-	"github.com/PlatONEnetwork/PlatONE-Go/metrics/influxdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/node"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discv5"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/nat"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/netutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"github.com/Venachain/Venachain/core"
+	"github.com/Venachain/Venachain/core/state"
+	"github.com/Venachain/Venachain/core/vm"
+	"github.com/Venachain/Venachain/crypto"
+	"github.com/Venachain/Venachain/dashboard"
+	"github.com/Venachain/Venachain/eth"
+	"github.com/Venachain/Venachain/eth/downloader"
+	"github.com/Venachain/Venachain/eth/gasprice"
+	"github.com/Venachain/Venachain/ethdb"
+	"github.com/Venachain/Venachain/ethstats"
+	"github.com/Venachain/Venachain/les"
+	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/metrics"
+	"github.com/Venachain/Venachain/metrics/influxdb"
+	"github.com/Venachain/Venachain/node"
+	"github.com/Venachain/Venachain/p2p"
+	"github.com/Venachain/Venachain/p2p/discover"
+	"github.com/Venachain/Venachain/p2p/discv5"
+	"github.com/Venachain/Venachain/p2p/nat"
+	"github.com/Venachain/Venachain/p2p/netutil"
+	"github.com/Venachain/Venachain/params"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -533,7 +533,7 @@ var (
 	MetricsInfluxDBDatabaseFlag = cli.StringFlag{
 		Name:  "metrics.influxdb.database",
 		Usage: "InfluxDB database name to push reported metrics to",
-		Value: "platone",
+		Value: "venachain",
 	}
 	MetricsInfluxDBUsernameFlag = cli.StringFlag{
 		Name:  "metrics.influxdb.username",
@@ -782,7 +782,7 @@ func MakeAddress(ks *keystore.KeyStore, account string) (accounts.Account, error
 	log.Warn("-------------------------------------------------------------------")
 	log.Warn("Referring to accounts by order in the keystore folder is dangerous!")
 	log.Warn("This functionality is deprecated and will be removed in the future!")
-	log.Warn("Please use explicit addresses! (can search via `platone account list`)")
+	log.Warn("Please use explicit addresses! (can search via `venachain account list`)")
 	log.Warn("-------------------------------------------------------------------")
 
 	accs := ks.Accounts()
@@ -1163,7 +1163,7 @@ func SetupMetrics(ctx *cli.Context) {
 
 		if enableExport {
 			log.Info("Enabling metrics export to InfluxDB")
-			go influxdb.InfluxDBWithTags(metrics.DefaultRegistry, 10*time.Second, endpoint, database, username, password, "platone.", map[string]string{
+			go influxdb.InfluxDBWithTags(metrics.DefaultRegistry, 10*time.Second, endpoint, database, username, password, "venachain.", map[string]string{
 				"host": hosttag,
 			})
 		}

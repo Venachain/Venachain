@@ -3,16 +3,17 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/Venachain/Venachain/common/hexutil"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 const (
-	defaultContractType = 2
+	defaultContractType   = 2
 	DefaultConfigFilePath = "/../conf/ctool.json"
 )
 
@@ -204,12 +205,12 @@ func GetFuncNameAndParams(funcAndParams string) (string, []string) {
 				}
 			}
 		case '\'':
-			if len(symStack) < 1{
+			if len(symStack) < 1 {
 				symStack = append(symStack, '\'')
-			}else{
-				if symStack[len(symStack) - 1] == '\''{
-					symStack = symStack[:len(symStack) - 1]
-				}else{
+			} else {
+				if symStack[len(symStack)-1] == '\'' {
+					symStack = symStack[:len(symStack)-1]
+				} else {
 					symStack = append(symStack, '\'')
 				}
 			}

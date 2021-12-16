@@ -191,7 +191,7 @@ function main() {
 function help() {
     echo
     echo "
-USAGE: platonectl.sh deploysys [options]
+USAGE: venachainctl.sh deploysys [options]
 
         OPTIONS:
             --nodeid, -n                 the specified node id (default: 0)

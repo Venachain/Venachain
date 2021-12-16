@@ -2,9 +2,10 @@ package vm
 
 import (
 	"encoding/json"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"reflect"
+
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/params"
 )
 
 type scParamManagerWrapper struct {

@@ -1,4 +1,4 @@
-module github.com/PlatONEnetwork/PlatONE-Go
+module github.com/Venachain/Venachain
 
 go 1.13
 

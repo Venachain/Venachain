@@ -25,8 +25,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/jackpal/go-nat-pmp"
+	"github.com/Venachain/Venachain/log"
+	natpmp "github.com/jackpal/go-nat-pmp"
 )
 
 // An implementation of nat.Interface can map local ports to ports

@@ -22,8 +22,8 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/ethdb"
 )
 
 func TestIterator(t *testing.T) {

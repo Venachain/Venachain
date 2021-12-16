@@ -1,4 +1,5 @@
 package resolver
+
 //#cgo LDFLAGS: -L ./nizkpail/ -lnizkpail -lpthread
 //#include "./nizkpail/nizkpail.h"
 
@@ -16,20 +17,19 @@ import "C"
 
 import "C"
 import (
-	cryptoZk "github.com/PlatONEnetwork/PlatONE-Go/cmd/ptransfer/client/crypto"
-	"unsafe"
-)
-import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
 	"math"
 	"math/big"
+	"unsafe"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	inner "github.com/PlatONEnetwork/PlatONE-Go/common/math"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/exec"
+	cryptoZk "github.com/Venachain/Venachain/cmd/ptransfer/client/crypto"
+	"github.com/Venachain/Venachain/common"
+
+	inner "github.com/Venachain/Venachain/common/math"
+	"github.com/Venachain/Venachain/crypto"
+	"github.com/Venachain/Venachain/life/exec"
 )
 
 var (
@@ -752,7 +752,6 @@ func envSmSigVerify(vm *exec.VirtualMachine) int64 {
 	return 0
 }
 
-
 func envSmSecSigVerify(vm *exec.VirtualMachine) int64 {
 	msgOffset := int(int32(vm.GetCurrentFrame().Locals[0]))
 	msgSize := int(int32(vm.GetCurrentFrame().Locals[1]))
@@ -872,7 +871,7 @@ func envBulletProofVerify(vm *exec.VirtualMachine) int64 {
 	resultOffset := int(int32(vm.GetCurrentFrame().Locals[2]))
 	resultSize := int(int32(vm.GetCurrentFrame().Locals[3]))
 
-	proof := vm.Memory.Memory[proofOffset : proofSize + proofOffset]
+	proof := vm.Memory.Memory[proofOffset : proofSize+proofOffset]
 
 	//hexproof := hexutil.Encode(proof)
 	statement := cryptoZk.GenerateAggBpStatement(2, 16)
@@ -880,7 +879,7 @@ func envBulletProofVerify(vm *exec.VirtualMachine) int64 {
 
 	//fmt.Println("result:", result)
 	ret := "1"
-	if err !=nil || !result {
+	if err != nil || !result {
 		ret = "0"
 	}
 	resultBts := []byte(ret)
@@ -1203,7 +1202,7 @@ func envBCWasmCall(vm *exec.VirtualMachine) int64 {
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
 
-	_, err := vm.Context.StateDB.Call(vm.Memory.Memory[addr : addr+20], vm.Memory.Memory[params:params+paramsLen])
+	_, err := vm.Context.StateDB.Call(vm.Memory.Memory[addr:addr+20], vm.Memory.Memory[params:params+paramsLen])
 	if err != nil {
 		common.ErrPrintln("call error: ", err.Error())
 		return 0
@@ -1235,7 +1234,7 @@ func envBCWasmCallInt64(vm *exec.VirtualMachine) int64 {
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
 
-	ret, err := vm.Context.StateDB.Call(vm.Memory.Memory[addr : addr+20], vm.Memory.Memory[params:params+paramsLen])
+	ret, err := vm.Context.StateDB.Call(vm.Memory.Memory[addr:addr+20], vm.Memory.Memory[params:params+paramsLen])
 	if err != nil {
 		common.ErrPrintln("call error: ", err.Error())
 		return 0
@@ -1271,7 +1270,7 @@ func envBCWasmCallString(vm *exec.VirtualMachine) int64 {
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
 
-	ret, err := vm.Context.StateDB.Call(vm.Memory.Memory[addr : addr+20], vm.Memory.Memory[params:params+paramsLen])
+	ret, err := vm.Context.StateDB.Call(vm.Memory.Memory[addr:addr+20], vm.Memory.Memory[params:params+paramsLen])
 	if err != nil {
 		common.ErrPrintln("call error: ", err.Error())
 		return 0

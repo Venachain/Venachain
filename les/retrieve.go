@@ -26,8 +26,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common/mclock"
-	"github.com/PlatONEnetwork/PlatONE-Go/light"
+	"github.com/Venachain/Venachain/common/mclock"
+	"github.com/Venachain/Venachain/light"
 )
 
 var (

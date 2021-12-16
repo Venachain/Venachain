@@ -19,14 +19,14 @@ package les
 import (
 	"fmt"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core"
-	"github.com/PlatONEnetwork/PlatONE-Go/eth"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/light"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core"
+	"github.com/Venachain/Venachain/eth"
+	"github.com/Venachain/Venachain/ethdb"
+	"github.com/Venachain/Venachain/light"
+	"github.com/Venachain/Venachain/p2p"
+	"github.com/Venachain/Venachain/p2p/discover"
+	"github.com/Venachain/Venachain/params"
 )
 
 // lesCommons contains fields needed by both server and client.
@@ -42,11 +42,11 @@ type lesCommons struct {
 // NodeInfo represents a short summary of the Ethereum sub-protocol metadata
 // known about the host peer.
 type NodeInfo struct {
-	Network    uint64                   `json:"network"`    // Ethereum network ID (1=Frontier, 2=Morden, Ropsten=3, Rinkeby=4)
-	Genesis    common.Hash              `json:"genesis"`    // SHA3 hash of the host's genesis block
-	Config     *params.ChainConfig      `json:"config"`     // Chain configuration for the fork rules
-	Head       common.Hash              `json:"head"`       // SHA3 hash of the host's best owned block
-	CHT        params.TrustedCheckpoint `json:"cht"`        // Trused CHT checkpoint for fast catchup
+	Network uint64                   `json:"network"` // Ethereum network ID (1=Frontier, 2=Morden, Ropsten=3, Rinkeby=4)
+	Genesis common.Hash              `json:"genesis"` // SHA3 hash of the host's genesis block
+	Config  *params.ChainConfig      `json:"config"`  // Chain configuration for the fork rules
+	Head    common.Hash              `json:"head"`    // SHA3 hash of the host's best owned block
+	CHT     params.TrustedCheckpoint `json:"cht"`     // Trused CHT checkpoint for fast catchup
 }
 
 // makeProtocols creates protocol descriptors for the given LES versions.
@@ -107,10 +107,10 @@ func (c *lesCommons) nodeInfo() interface{} {
 
 	chain := c.protocolManager.blockchain
 	return &NodeInfo{
-		Network:    c.config.NetworkId,
-		Genesis:    chain.Genesis().Hash(),
-		Config:     chain.Config(),
-		Head:       chain.CurrentHeader().Hash(),
-		CHT:        cht,
+		Network: c.config.NetworkId,
+		Genesis: chain.Genesis().Hash(),
+		Config:  chain.Config(),
+		Head:    chain.CurrentHeader().Hash(),
+		CHT:     cht,
 	}
 }

@@ -1,6 +1,6 @@
 package precompile
 
-// import "github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
+// import "github.com/Venachain/Venachain/common/syscontracts"
 
 /*
 var (

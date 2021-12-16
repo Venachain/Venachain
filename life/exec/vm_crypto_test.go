@@ -1,4 +1,5 @@
 package exec
+
 //
 //import (
 //	"encoding/binary"
@@ -7,11 +8,11 @@ package exec
 //	"math/bits"
 //	"time"
 //
-//	"github.com/PlatONEnetwork/PlatONE-Go/log"
+//	"github.com/Venachain/Venachain/log"
 //
-//	"github.com/PlatONEnetwork/PlatONE-Go/life/compiler"
-//	"github.com/PlatONEnetwork/PlatONE-Go/life/compiler/opcodes"
-//	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
+//	"github.com/Venachain/Venachain/life/compiler"
+//	"github.com/Venachain/Venachain/life/compiler/opcodes"
+//	"github.com/Venachain/Venachain/life/utils"
 //
 //	"github.com/go-interpreter/wagon/wasm"
 //)

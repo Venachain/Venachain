@@ -26,7 +26,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/Venachain/Venachain/common"
 	"golang.org/x/tools/imports"
 )
 

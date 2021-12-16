@@ -30,8 +30,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Venachain/Venachain/log"
 	"github.com/davecgh/go-spew/spew"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
 )
 
 func TestClientRequest(t *testing.T) {

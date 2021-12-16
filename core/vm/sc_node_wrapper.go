@@ -3,9 +3,9 @@ package vm
 import (
 	"strings"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/syscontracts"
+	"github.com/Venachain/Venachain/params"
 )
 
 const (
@@ -73,7 +73,7 @@ func (n *scNodeWrapper) update(name string, node *syscontracts.UpdateNode) (int,
 
 func (n *scNodeWrapper) getAllNodes() (string, error) {
 	nodes, err := n.base.GetAllNodes()
-	if err != nil && err != errNodeNotFound{
+	if err != nil && err != errNodeNotFound {
 		return "", err
 	} else if errNodeNotFound == err {
 		nodes = []*syscontracts.NodeInfo{}

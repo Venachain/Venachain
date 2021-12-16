@@ -25,13 +25,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/eth"
-	"github.com/PlatONEnetwork/PlatONE-Go/les/flowcontrol"
-	"github.com/PlatONEnetwork/PlatONE-Go/light"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core/types"
+	"github.com/Venachain/Venachain/eth"
+	"github.com/Venachain/Venachain/les/flowcontrol"
+	"github.com/Venachain/Venachain/light"
+	"github.com/Venachain/Venachain/p2p"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 var (
@@ -104,9 +104,9 @@ func (p *peer) queueSend(f func()) {
 // Info gathers and returns a collection of metadata known about a peer.
 func (p *peer) Info() *eth.PeerInfo {
 	return &eth.PeerInfo{
-		Version:    p.version,
-		BN:         new(big.Int).SetUint64(p.headInfo.Number),
-		Head:       fmt.Sprintf("%x", p.Head()),
+		Version: p.version,
+		BN:      new(big.Int).SetUint64(p.headInfo.Number),
+		Head:    fmt.Sprintf("%x", p.Head()),
 	}
 }
 

@@ -3,13 +3,14 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"io/ioutil"
 	"strings"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/common"
+
+	"github.com/Venachain/Venachain/common/hexutil"
+	"github.com/Venachain/Venachain/rlp"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -149,9 +150,9 @@ func DeployContract(abiFilePath string, codeFilePath string) error {
 
 	select {
 	case address := <-ch:
-		if common.IsHexAddress(address){
+		if common.IsHexAddress(address) {
 			fmt.Printf("contract address: %s\n", address)
-		}else {
+		} else {
 			fmt.Printf("contract deploy failed\n")
 		}
 	case <-time.After(time.Second * 200):
@@ -188,7 +189,7 @@ func fwInvoke(c *cli.Context) error {
 
 	parseConfigJson(c.String(ConfigPathFlag.Name))
 
-	err := FwInvokeContract(addr,funcName, funcParams, hasBracket)
+	err := FwInvokeContract(addr, funcName, funcParams, hasBracket)
 	if err != nil {
 		panic(fmt.Errorf("FwInvokeContract contract error, %s", err.Error()))
 	}
@@ -212,7 +213,6 @@ func migInvoke(c *cli.Context) error {
 
 	hasBracket := strings.Contains(funcName, "(") && strings.Contains(funcName, ")")
 
-
 	parseConfigJson(c.String(ConfigPathFlag.Name))
 
 	err := migInvokeContract(addr, funcName, funcParams, hasBracket)
@@ -221,9 +221,6 @@ func migInvoke(c *cli.Context) error {
 	}
 	return nil
 }
-
-
-
 
 func cnsInvoke(c *cli.Context) error {
 	//addr := c.String("addr")
@@ -251,7 +248,7 @@ func cnsInvoke(c *cli.Context) error {
 
 	parseConfigJson(c.String(ConfigPathFlag.Name))
 
-	err := CnsInvokeContract(cnsName, abiPath, funcName,funcParams, hasBracket)
+	err := CnsInvokeContract(cnsName, abiPath, funcName, funcParams, hasBracket)
 	if err != nil {
 		panic(fmt.Errorf("invokeContract contract error, %s", err.Error()))
 	}
@@ -279,10 +276,10 @@ func invoke(c *cli.Context) error {
 		fmt.Printf("func can't be empty!")
 		return nil
 	}
-	hasBracket := strings.Contains(funcName, "(") && strings.Contains(funcName,")")
+	hasBracket := strings.Contains(funcName, "(") && strings.Contains(funcName, ")")
 	parseConfigJson(c.String(ConfigPathFlag.Name))
 
-	err := InvokeContract(addr, abiPath, funcName, funcParams,hasBracket)
+	err := InvokeContract(addr, abiPath, funcName, funcParams, hasBracket)
 	if err != nil {
 		panic(fmt.Errorf("invokeContract contract error, %s", err.Error()))
 	}
@@ -294,11 +291,11 @@ func invoke(c *cli.Context) error {
 func FwInvokeContract(contractAddr string, funcName string, inputParams []string, hasBracket bool) error {
 
 	//parse the function and param
-	if hasBracket{
+	if hasBracket {
 		funcName, inputParams = GetFuncNameAndParams(funcName)
 	}
 
-	txType:=defaultContractType
+	txType := defaultContractType
 	paramArr := [][]byte{
 		Int64ToBytes(int64(txType)),
 		[]byte(funcName),
@@ -362,11 +359,11 @@ func FwInvokeContract(contractAddr string, funcName string, inputParams []string
 func migInvokeContract(contractAddr string, funcName string, inputParams []string, hasBracket bool) error {
 
 	//parse the function and param
-	if hasBracket{
+	if hasBracket {
 		funcName, inputParams = GetFuncNameAndParams(funcName)
 	}
 
-	txType:=defaultContractType
+	txType := defaultContractType
 	paramArr := [][]byte{
 		Int64ToBytes(int64(txType)),
 		[]byte(funcName),
@@ -415,10 +412,10 @@ func migInvokeContract(contractAddr string, funcName string, inputParams []strin
 // CnsInvokeContract function
 // invoke a contract with contract name
 // TODO: cnsInvoke相关方法合并到invoke相关方法中
-func CnsInvokeContract(contractName string, abiPath string, funcName string,inputParams []string, hasBracket bool) error {
+func CnsInvokeContract(contractName string, abiPath string, funcName string, inputParams []string, hasBracket bool) error {
 
 	//parse the function and param
-	if hasBracket{
+	if hasBracket {
 		funcName, inputParams = GetFuncNameAndParams(funcName)
 	}
 
@@ -432,7 +429,7 @@ func CnsInvokeContract(contractName string, abiPath string, funcName string,inpu
 		return fmt.Errorf("incorrect number of parameters ,request=%d,get=%d\n", len(abiFunc.Inputs), len(inputParams))
 	}
 
-	txType:=defaultContractType
+	txType := defaultContractType
 	paramArr := [][]byte{
 		Int64ToBytes(int64(txType)),
 		[]byte(contractName),
@@ -508,7 +505,7 @@ func InvokeContract(contractAddr string, abiPath string, funcName string,
 	funcParams []string, hasBracket bool) error {
 
 	//parse the function and param
-	if hasBracket{
+	if hasBracket {
 		funcName, funcParams = GetFuncNameAndParams(funcName)
 	}
 	//Judging whether this contract exists or not

@@ -28,10 +28,10 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/sha3"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/hexutil"
+	"github.com/Venachain/Venachain/crypto/sha3"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 var (
@@ -47,8 +47,8 @@ var (
 const (
 	BlockNonceLen = 81
 )
-type BlockNonce [BlockNonceLen]byte
 
+type BlockNonce [BlockNonceLen]byte
 
 // EncodeNonce converts the given integer to a block nonce.
 func EncodeNonce(i uint64) BlockNonce {
@@ -78,7 +78,6 @@ func (n BlockNonce) MarshalText() ([]byte, error) {
 func (n *BlockNonce) UnmarshalText(input []byte) error {
 	return hexutil.UnmarshalFixedText("BlockNonce", input, n[:])
 }
-
 
 func (n *BlockNonce) DecodeRLP(s *rlp.Stream) error {
 	_, size, err := s.Kind()

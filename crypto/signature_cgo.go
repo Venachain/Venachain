@@ -23,8 +23,8 @@ import (
 	"crypto/elliptic"
 	"fmt"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/secp256k1"
+	"github.com/Venachain/Venachain/common/math"
+	"github.com/Venachain/Venachain/crypto/secp256k1"
 )
 
 // Ecrecover returns the uncompressed public key that created the given signature.

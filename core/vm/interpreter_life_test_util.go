@@ -8,9 +8,9 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/life/utils"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 type ContractRefSelf struct {
@@ -90,7 +90,7 @@ func genSetFixedInput() []byte {
 	input = make([][]byte, 0)
 	input = append(input, utils.Int64ToBytes(1))
 	input = append(input, []byte("Set"))
-	input = append(input, []byte("platone"))
+	input = append(input, []byte("venachain"))
 	input = append(input, utils.Int32ToBytes(11))
 
 	buffer := new(bytes.Buffer)
@@ -106,7 +106,7 @@ func genGetFixedInput() []byte {
 	input = make([][]byte, 0)
 	input = append(input, utils.Int64ToBytes(1))
 	input = append(input, []byte("Get"))
-	input = append(input, []byte("platone"))
+	input = append(input, []byte("venachain"))
 
 	buffer := new(bytes.Buffer)
 	err := rlp.Encode(buffer, input)

@@ -21,10 +21,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul"
-	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/validator"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/consensus/istanbul"
+	"github.com/Venachain/Venachain/consensus/istanbul/validator"
+	"github.com/Venachain/Venachain/crypto"
 )
 
 func TestHandlePrepare(t *testing.T) {

@@ -18,13 +18,14 @@ package fetcher
 
 import (
 	"errors"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/mclock"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"math/big"
 	"math/rand"
 	"testing"
 	"time"
+
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/mclock"
+	"github.com/Venachain/Venachain/core/types"
 )
 
 var (

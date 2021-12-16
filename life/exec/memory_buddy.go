@@ -2,7 +2,8 @@ package exec
 
 import (
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
+
+	"github.com/Venachain/Venachain/log"
 )
 
 type Memory struct {
@@ -79,7 +80,7 @@ func (m *Memory) Realloc(offset int, size int) int {
 		} else {
 			copy(m.Memory[pos:], m.Memory[offset+m.Start:offset+m.Start+nodeSize])
 		}
-		m.Free(offset+m.Start)
+		m.Free(offset + m.Start)
 		return pos
 	}
 }

@@ -23,9 +23,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Venachain/Venachain/p2p/discover"
+	"github.com/Venachain/Venachain/p2p/netutil"
 	"github.com/davecgh/go-spew/spew"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/netutil"
 )
 
 func init() {

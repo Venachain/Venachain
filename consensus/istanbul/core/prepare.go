@@ -19,7 +19,7 @@ package core
 import (
 	"reflect"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul"
+	"github.com/Venachain/Venachain/consensus/istanbul"
 )
 
 func (c *core) sendPrepare() {

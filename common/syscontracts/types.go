@@ -2,7 +2,8 @@ package syscontracts
 
 import (
 	"encoding/json"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
+
+	"github.com/Venachain/Venachain/common"
 )
 
 // the system contract addr  table

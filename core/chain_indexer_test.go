@@ -24,10 +24,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core/rawdb"
+	"github.com/Venachain/Venachain/core/types"
+	"github.com/Venachain/Venachain/ethdb"
 )
 
 // Runs multiple tests with randomized parameters.

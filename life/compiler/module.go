@@ -8,9 +8,10 @@ import (
 	//"fmt"
 	"github.com/go-interpreter/wagon/disasm"
 	"github.com/go-interpreter/wagon/wasm"
+
 	//"github.com/go-interpreter/wagon/validate"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/compiler/opcodes"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
+	"github.com/Venachain/Venachain/life/compiler/opcodes"
+	"github.com/Venachain/Venachain/life/utils"
 	"github.com/go-interpreter/wagon/wasm/leb128"
 )
 

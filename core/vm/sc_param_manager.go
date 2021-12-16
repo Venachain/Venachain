@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/byteutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"math/big"
 	"reflect"
+
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/byteutil"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 var (
@@ -37,7 +38,7 @@ var preDefinedParamKeys = map[string]paramType{
 
 var (
 	errDataTypeInvalid = errors.New("the data type invalid")
-	errUnsupported= errors.New("the operation is unsupported")
+	errUnsupported     = errors.New("the operation is unsupported")
 )
 
 const (
@@ -90,7 +91,6 @@ func (s stringParamType) decodeAndCheck(ctx *ParamManager, b []byte) (interface{
 	return val, nil
 }
 
-
 // ======GasContractName=============================================================================
 type gasContractNameType struct{}
 
@@ -122,13 +122,13 @@ func (c *IsProduceEmptyBlockType) defalutVal() interface{} {
 	return paramFalse
 }
 
-func (c *IsProduceEmptyBlockType) decodeAndCheck(ctx *ParamManager, b []byte) (interface{}, error)  {
+func (c *IsProduceEmptyBlockType) decodeAndCheck(ctx *ParamManager, b []byte) (interface{}, error) {
 	isProduceEmptyBlock := byteutil.BytesToUint32(b)
 	if isProduceEmptyBlock/2 != 0 {
 		ctx.emitNotifyEventInParam(IsProduceEmptyBlockKey, paramInvalid, fmt.Sprintf("param is invalid."))
-		return isProduceEmptyBlock,errParamInvalid
+		return isProduceEmptyBlock, errParamInvalid
 	}
-	return isProduceEmptyBlock,nil
+	return isProduceEmptyBlock, nil
 }
 
 // ======TxGasLimit=============================================================================
@@ -142,18 +142,18 @@ func (c *TxGasLimitType) decodeAndCheck(ctx *ParamManager, b []byte) (interface{
 	txGasLimit := byteutil.BytesToUint64(b)
 	if txGasLimit < TxGasLimitMinValue || txGasLimit > TxGasLimitMaxValue {
 		ctx.emitNotifyEventInParam(TxGasLimitKey, paramInvalid, fmt.Sprintf("param is invalid."))
-		return txGasLimit,errParamInvalid
+		return txGasLimit, errParamInvalid
 	}
 	// 获取区块 gas limit，其值应大于或等于每笔交易 gas limit 参数的值
 	blockGasLimit, err := (&scParamManagerWrapper{ctx}).getBlockGasLimit()
 	if err != nil && err != errEmptyValue {
-		return txGasLimit,err
+		return txGasLimit, err
 	}
 	if txGasLimit > blockGasLimit {
 		ctx.emitNotifyEventInParam(TxGasLimitKey, paramInvalid, fmt.Sprintf("setting value is larger than block gas limit"))
-		return txGasLimit,errParamInvalid
+		return txGasLimit, errParamInvalid
 	}
-	return txGasLimit,nil
+	return txGasLimit, nil
 }
 
 // ======BlockGasLimit=============================================================================
@@ -167,18 +167,18 @@ func (c *BlockGasLimitType) decodeAndCheck(ctx *ParamManager, b []byte) (interfa
 	blockGasLimit := byteutil.BytesToUint64(b)
 	if blockGasLimit < BlockGasLimitMinValue || blockGasLimit > BlockGasLimitMaxValue {
 		ctx.emitNotifyEventInParam(BlockGasLimitKey, paramInvalid, fmt.Sprintf("param is invalid."))
-		return blockGasLimit,errParamInvalid
+		return blockGasLimit, errParamInvalid
 	}
 
 	txGasLimit, err := (&scParamManagerWrapper{ctx}).getTxGasLimit()
 	if err != nil && err != errEmptyValue {
-		return blockGasLimit,err
+		return blockGasLimit, err
 	}
 	if txGasLimit > blockGasLimit {
 		ctx.emitNotifyEventInParam(BlockGasLimitKey, paramInvalid, fmt.Sprintf("setting value is smaller than tx gas limit"))
-		return blockGasLimit,nil
+		return blockGasLimit, nil
 	}
-	return blockGasLimit,nil
+	return blockGasLimit, nil
 }
 
 // ======CheckContractDeployPermission=============================================================================
@@ -188,13 +188,13 @@ func (c *CheckContractDeployPermissionType) defalutVal() interface{} {
 	return paramFalse
 }
 
-func (c *CheckContractDeployPermissionType) decodeAndCheck(ctx *ParamManager, b []byte) (interface{}, error)  {
+func (c *CheckContractDeployPermissionType) decodeAndCheck(ctx *ParamManager, b []byte) (interface{}, error) {
 	permission := byteutil.BytesToUint32(b)
 	if permission/2 != 0 {
 		ctx.emitNotifyEventInParam(IsCheckContractDeployPermissionKey, paramInvalid, fmt.Sprintf("param is invalid."))
-		return permission,errParamInvalid
+		return permission, errParamInvalid
 	}
-	return permission,nil
+	return permission, nil
 }
 
 // ======IsApproveDeployedContract=============================================================================
@@ -208,9 +208,9 @@ func (c *IsApproveDeployedContractype) decodeAndCheck(ctx *ParamManager, b []byt
 	isApproveDeployedContract := byteutil.BytesToUint32(b)
 	if isApproveDeployedContract/2 != 0 {
 		ctx.emitNotifyEventInParam(IsApproveDeployedContractKey, paramInvalid, fmt.Sprintf("param is invalid."))
-		return isApproveDeployedContract,errParamInvalid
+		return isApproveDeployedContract, errParamInvalid
 	}
-	return isApproveDeployedContract,nil
+	return isApproveDeployedContract, nil
 }
 
 // ======IsTxUseGas=============================================================================
@@ -224,9 +224,9 @@ func (c *IsTxUseGastype) decodeAndCheck(ctx *ParamManager, b []byte) (interface{
 	isTxUseGas := byteutil.BytesToUint32(b)
 	if isTxUseGas/2 != 0 {
 		ctx.emitNotifyEventInParam(IsTxUseGasKey, paramInvalid, fmt.Sprintf("param is invalid."))
-		return isTxUseGas,errParamInvalid
+		return isTxUseGas, errParamInvalid
 	}
-	return isTxUseGas,nil
+	return isTxUseGas, nil
 }
 
 // ======VRFParams=============================================================================
@@ -243,14 +243,14 @@ func (c *VRFParamsType) defalutVal() interface{} {
 func (c *VRFParamsType) decodeAndCheck(ctx *ParamManager, b []byte) (interface{}, error) {
 	var params common.VRFParams
 	if err := json.Unmarshal(b, &params); nil != err {
-		return params,err
+		return params, err
 	}
 
 	if params.ValidatorCount < 1 {
 		ctx.emitNotifyEventInParam(VrfParamsKey, paramInvalid, errValidatorCountInvalid.Error())
-		return params,errValidatorCountInvalid
+		return params, errValidatorCountInvalid
 	}
-	return params,nil
+	return params, nil
 }
 
 // ======IsBlockUseTrieHash=============================================================================
@@ -260,13 +260,13 @@ func (c *IsBlockUseTrieHashType) defalutVal() interface{} {
 	return paramTrue
 }
 
-func (c *IsBlockUseTrieHashType) decodeAndCheck(ctx *ParamManager, b []byte) (interface{}, error){
+func (c *IsBlockUseTrieHashType) decodeAndCheck(ctx *ParamManager, b []byte) (interface{}, error) {
 	isBlockUseTrieHash := byteutil.BytesToUint32(b)
 	if isBlockUseTrieHash/2 != 0 {
 		ctx.emitNotifyEventInParam(IsBlockUseTrieHashKey, paramInvalid, fmt.Sprintf("param is invalid."))
-		return isBlockUseTrieHash,errParamInvalid
+		return isBlockUseTrieHash, errParamInvalid
 	}
-	return isBlockUseTrieHash,nil
+	return isBlockUseTrieHash, nil
 }
 
 //===========================================================================
@@ -277,7 +277,7 @@ func (u *ParamManager) setParam(key string, dataInBytes []byte) (int32, error) {
 		paramType = &stringParamType{}
 	}
 
-	data,err := paramType.decodeAndCheck(u,dataInBytes)
+	data, err := paramType.decodeAndCheck(u, dataInBytes)
 	if err != nil {
 		return failFlag, err
 	}

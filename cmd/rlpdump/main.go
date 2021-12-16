@@ -26,7 +26,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 var (

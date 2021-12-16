@@ -2,11 +2,12 @@ package crypto
 
 import (
 	"errors"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/bn256/cloudflare"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"math/big"
 	"sync"
+
+	"github.com/Venachain/Venachain/common/hexutil"
+	"github.com/Venachain/Venachain/crypto/bn256"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 type AggBpStatement struct {
@@ -33,13 +34,14 @@ type AggBulletProof struct {
 }
 
 type IPproofMarshal struct {
-	A *big.Int
-	B *big.Int
+	A  *big.Int
+	B  *big.Int
 	LS []byte
 	RS []byte
 }
+
 //innerproof marshal
-func innerProductProofMarshal(proof *InnerProductProof)([]byte){
+func innerProductProofMarshal(proof *InnerProductProof) []byte {
 	ipM := new(IPproofMarshal)
 	ipM.A = new(big.Int).Set(proof.a)
 	ipM.B = new(big.Int).Set(proof.b)
@@ -52,17 +54,19 @@ func innerProductProofMarshal(proof *InnerProductProof)([]byte){
 	//str := hexutil.Encode(res)
 	return res
 }
+
 //innerproof unmarshal
-func innerProductProofUnMarshal(str []byte) (*InnerProductProof, error){
+func innerProductProofUnMarshal(str []byte) (*InnerProductProof, error) {
 	proof := new(InnerProductProof)
 	ipM := new(IPproofMarshal)
 	rlp.DecodeBytes(str, ipM)
 	proof.a = ipM.A
 	proof.b = ipM.B
-	proof.LS,_ = WdPointUnMarshal(ipM.LS)
-	proof.RS,_ = WdPointUnMarshal(ipM.RS)
+	proof.LS, _ = WdPointUnMarshal(ipM.LS)
+	proof.RS, _ = WdPointUnMarshal(ipM.RS)
 	return proof, nil
 }
+
 //aggproof marshal and unmarshal method
 func AggProofMarshal(proof *AggBulletProof) (string, error) {
 	apM := new(ABProofMarshal)
@@ -75,26 +79,26 @@ func AggProofMarshal(proof *AggBulletProof) (string, error) {
 	apM.Mu = new(big.Int).Set(proof.mu)
 	apM.THat = new(big.Int).Set(proof.tHat)
 	apM.InnerProductProof = innerProductProofMarshal(proof.innerProductProof)
-	res ,_ := rlp.EncodeToBytes(apM)
+	res, _ := rlp.EncodeToBytes(apM)
 	str := hexutil.Encode(res)
 	return str, nil
 
 }
-func AggProofUnMarshal(str string)(*AggBulletProof,error){
+func AggProofUnMarshal(str string) (*AggBulletProof, error) {
 	res, err := hexutil.Decode(str)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	apM := new(ABProofMarshal)
 	proof := new(AggBulletProof)
 	err = rlp.DecodeBytes(res, apM)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	//if apM == nil{
 	//	return err, nil
 	//}
-	proof.V,_ = WdPointUnMarshal(apM.V)
+	proof.V, _ = WdPointUnMarshal(apM.V)
 	proof.A = new(bn256.G1)
 	proof.A.Unmarshal(apM.A)
 	proof.S = new(bn256.G1)
@@ -106,41 +110,44 @@ func AggProofUnMarshal(str string)(*AggBulletProof,error){
 	proof.taux = apM.Taux
 	proof.mu = apM.Mu
 	proof.tHat = apM.THat
-	proof.innerProductProof,_ = innerProductProofUnMarshal(apM.InnerProductProof)
+	proof.innerProductProof, _ = innerProductProofUnMarshal(apM.InnerProductProof)
 	return proof, nil
 }
+
 //aggbulletproof marshal struct
 type ABProofMarshal struct {
 	//a tuple of V[i]=g*v[i] + h*gamma[i]
-	V                 []byte
-	A                 []byte
-	S                 []byte
-	T1                []byte
-	T2                []byte
-	Taux              *big.Int
+	V    []byte
+	A    []byte
+	S    []byte
+	T1   []byte
+	T2   []byte
+	Taux *big.Int
 	//taux              []byte
 	Mu                *big.Int
 	THat              *big.Int
 	InnerProductProof []byte
 }
+
 //generate string proof
-func AggBpProve_s(instance *AggBpStatement, wit []*big.Int)(string, error){
+func AggBpProve_s(instance *AggBpStatement, wit []*big.Int) (string, error) {
 	witness := &AggBpWitness{wit}
 	proof, err := AggBpProve(instance, witness)
-	if err != nil{
+	if err != nil {
 		return "Generate proof error!", err
 	}
-	res,_ := AggProofMarshal(proof)
+	res, _ := AggProofMarshal(proof)
 	return res, nil
 }
+
 //the proof input is string
-func AggBpVerify_s(proof string, instance *AggBpStatement) (bool, error){
+func AggBpVerify_s(proof string, instance *AggBpStatement) (bool, error) {
 	aggproof, err := AggProofUnMarshal(proof)
-	if err != nil{
+	if err != nil {
 		return false, err
 	}
 	res, err := AggBpVerify(aggproof, instance)
-	if err != nil{
+	if err != nil {
 		return false, err
 	}
 	return res, nil
@@ -700,8 +707,7 @@ func GetGenerator(param AggBpStatement) (*bn256.G1, *bn256.G1, []*bn256.G1, []*b
 var aggbpparam AggBpStatement
 var agginitbp sync.Once
 
-
-func GenerateAggBpStatement(m, n int64) *AggBpStatement{
+func GenerateAggBpStatement(m, n int64) *AggBpStatement {
 	aggbpparam = AggBpStatement{}
 	aggbpparam.m = m
 	aggbpparam.bpParam.n = n
@@ -711,8 +717,8 @@ func GenerateAggBpStatement(m, n int64) *AggBpStatement{
 	aggbpparam.bpParam.gVector = make([]*bn256.G1, nm)
 	aggbpparam.bpParam.hVector = make([]*bn256.G1, nm)
 	for i := 0; i < int(nm); i++ {
-		aggbpparam.bpParam.gVector[i] = MapIntoGroup("platone" + "g" + string(rune(i)))
-		aggbpparam.bpParam.hVector[i] = MapIntoGroup("platone" + "h" + string(rune(i)))
+		aggbpparam.bpParam.gVector[i] = MapIntoGroup("venachain" + "g" + string(rune(i)))
+		aggbpparam.bpParam.hVector[i] = MapIntoGroup("venachain" + "h" + string(rune(i)))
 	}
 	return &aggbpparam
 }
@@ -727,8 +733,8 @@ func agginitbpparam() {
 	aggbpparam.bpParam.gVector = make([]*bn256.G1, nm)
 	aggbpparam.bpParam.hVector = make([]*bn256.G1, nm)
 	for i := 0; i < int(nm); i++ {
-		aggbpparam.bpParam.gVector[i] = MapIntoGroup("platone" + "g" + string(rune(i)))
-		aggbpparam.bpParam.hVector[i] = MapIntoGroup("platone" + "h" + string(rune(i)))
+		aggbpparam.bpParam.gVector[i] = MapIntoGroup("venachain" + "g" + string(rune(i)))
+		aggbpparam.bpParam.hVector[i] = MapIntoGroup("venachain" + "h" + string(rune(i)))
 	}
 }
 

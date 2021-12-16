@@ -3,7 +3,7 @@
 function help() {
     echo 
     echo "
-USAGE: platonectl.sh addnode [options] [value]
+USAGE: venachainctl.sh addnode [options] [value]
 
         OPTIONS:
 

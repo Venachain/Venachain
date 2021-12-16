@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/Venachain/Venachain/log"
 )
 
 // manageServers displays a list of servers the user can disconnect from, and an
@@ -174,7 +174,7 @@ func (w *wizard) deployComponent() {
 	fmt.Println(" 1. Ethstats  - Network monitoring tool")
 	fmt.Println(" 2. Bootnode  - Entry point of the network")
 	fmt.Println(" 3. Sealer    - Full node minting new blocks")
-//	fmt.Println(" 4. Explorer  - Chain analysis webservice (ethash only)")
+	//	fmt.Println(" 4. Explorer  - Chain analysis webservice (ethash only)")
 	fmt.Println(" 5. Wallet    - Browser wallet for quick sends")
 	fmt.Println(" 6. Faucet    - Crypto faucet to give away funds")
 	fmt.Println(" 7. Dashboard - Website listing above web-services")
@@ -186,7 +186,7 @@ func (w *wizard) deployComponent() {
 		w.deployNode(true)
 	case "3":
 		w.deployNode(false)
-//	case "4":
+		//	case "4":
 	//	w.deployExplorer()
 	case "5":
 		w.deployWallet()

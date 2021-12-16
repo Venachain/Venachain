@@ -17,8 +17,8 @@
 package les
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/metrics"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
+	"github.com/Venachain/Venachain/metrics"
+	"github.com/Venachain/Venachain/p2p"
 )
 
 var (

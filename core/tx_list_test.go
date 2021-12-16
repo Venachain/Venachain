@@ -20,8 +20,8 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/Venachain/Venachain/core/types"
+	"github.com/Venachain/Venachain/crypto"
 )
 
 // Tests that transactions can be added to strict lists and list contents and

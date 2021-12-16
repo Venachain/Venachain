@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/Venachain/Venachain/log"
 )
 
 // deployWallet creates a new web wallet based on some user input.

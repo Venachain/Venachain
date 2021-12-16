@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/core"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/Venachain/Venachain/cmd/ctool/core"
+	"github.com/Venachain/Venachain/log"
 )
 
 // 判断合约是否成功上链
@@ -103,7 +103,7 @@ func getBlockTxNum(h int64) (num, timestamp int64) {
 	return
 }
 
-func getPerfResults() (interface{}) {
+func getPerfResults() interface{} {
 	var ret interface{}
 	var err error
 	if *stressTest == 1 {

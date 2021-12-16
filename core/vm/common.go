@@ -20,9 +20,9 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
+	"github.com/Venachain/Venachain/accounts/abi"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/math"
 )
 
 // calculates the memory size required for a step

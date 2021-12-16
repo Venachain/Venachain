@@ -18,10 +18,11 @@ package types
 
 import (
 	"bytes"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"reflect"
 	"testing"
+
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/hexutil"
 )
 
 func TestHeaderHash(t *testing.T) {

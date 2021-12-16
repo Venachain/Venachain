@@ -26,8 +26,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common/bitutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/Venachain/Venachain/common/bitutil"
+	"github.com/Venachain/Venachain/crypto"
 )
 
 // bloomIndexes represents the bit indexes inside the bloom filter that belong

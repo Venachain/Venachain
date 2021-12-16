@@ -25,15 +25,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
-	"github.com/PlatONEnetwork/PlatONE-Go/core"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
-	"github.com/PlatONEnetwork/PlatONE-Go/tests"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/hexutil"
+	"github.com/Venachain/Venachain/common/math"
+	"github.com/Venachain/Venachain/core"
+	"github.com/Venachain/Venachain/core/types"
+	"github.com/Venachain/Venachain/core/vm"
+	"github.com/Venachain/Venachain/ethdb"
+	"github.com/Venachain/Venachain/rlp"
+	"github.com/Venachain/Venachain/tests"
 )
 
 // To generate a new callTracer test, copy paste the makeTest method below into

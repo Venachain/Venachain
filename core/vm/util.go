@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"math/big"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/math"
+	"github.com/Venachain/Venachain/life/utils"
 )
 
 func toContractReturnValueIntType(txType int, res int64) []byte {

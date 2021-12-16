@@ -2,13 +2,14 @@ package common
 
 import (
 	"encoding/binary"
-	math2 "github.com/PlatONEnetwork/PlatONE-Go/common/math"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"math"
 	"math/big"
+
+	math2 "github.com/Venachain/Venachain/common/math"
+	"github.com/Venachain/Venachain/rlp"
 )
 
-func GenCallData(funcName string, params []interface{}) ([]byte) {
+func GenCallData(funcName string, params []interface{}) []byte {
 	data := [][]byte{}
 	data = append(data, Int64ToBytes(2)) // tx type, 2 for normal
 	data = append(data, []byte(funcName))

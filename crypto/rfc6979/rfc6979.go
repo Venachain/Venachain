@@ -5,9 +5,10 @@ import (
 	"crypto/ecdsa"
 	"crypto/hmac"
 	"crypto/sha256"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/secp256k1"
 	"hash"
 	"math/big"
+
+	"github.com/Venachain/Venachain/crypto/secp256k1"
 )
 
 const (

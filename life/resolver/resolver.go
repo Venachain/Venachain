@@ -1,7 +1,7 @@
 package resolver
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/life/exec"
+	"github.com/Venachain/Venachain/life/exec"
 )
 
 var (
@@ -30,7 +30,7 @@ func MallocString(vm *exec.VirtualMachine, str string) int64 {
 	return int64(pos)
 }
 
-func Malloc(vm *exec.VirtualMachine,size int) int64 {
+func Malloc(vm *exec.VirtualMachine, size int) int64 {
 	mem := vm.Memory
 	pos := mem.Malloc(size)
 	vm.ExternalParams = append(vm.ExternalParams, int64(pos))

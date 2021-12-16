@@ -22,9 +22,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
-	"github.com/PlatONEnetwork/PlatONE-Go/event"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/Venachain/Venachain/accounts"
+	"github.com/Venachain/Venachain/event"
+	"github.com/Venachain/Venachain/log"
 	"github.com/karalabe/hid"
 )
 

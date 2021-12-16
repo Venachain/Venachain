@@ -4,16 +4,16 @@ import (
 	"encoding/json"
 	"os"
 
-	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/ptransfer/client/utils"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+	utl "github.com/Venachain/Venachain/cmd/ptransfer/client/utils"
+	"github.com/Venachain/Venachain/cmd/utils"
 )
 
 // Config store the values from config.json file
 type Config struct {
-	From     string `json:"from"`     // the address used to send the transaction
-	Contract string `json:"contract"` // the address of the privacy token
-	Url      string `json:"url"`      // the ip address of the remote node
-	Verbosity      int `json:"verbosity"`      // the log level
+	From      string `json:"from"`      // the address used to send the transaction
+	Contract  string `json:"contract"`  // the address of the privacy token
+	Url       string `json:"url"`       // the ip address of the remote node
+	Verbosity int    `json:"verbosity"` // the log level
 }
 
 var config = &Config{}

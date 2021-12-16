@@ -3,7 +3,7 @@ package packet
 import (
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
+	"github.com/Venachain/Venachain/accounts/abi"
 )
 
 func TestEvmStringToEncodeByte(t *testing.T) {

@@ -21,7 +21,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common/mclock"
+	"github.com/Venachain/Venachain/common/mclock"
 )
 
 const rcConst = 1000000

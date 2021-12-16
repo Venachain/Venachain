@@ -21,11 +21,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/Venachain/Venachain/accounts/abi"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core/state"
+	"github.com/Venachain/Venachain/core/vm"
+	"github.com/Venachain/Venachain/ethdb"
 )
 
 func TestDefaults(t *testing.T) {
@@ -71,9 +71,9 @@ func TestEVM(t *testing.T) {
 }
 
 func TestExecute(t *testing.T) {
-	cfg:= new(Config)
+	cfg := new(Config)
 	setDefaults(cfg)
-	cfg.ChainConfig.VMInterpreter="evm"
+	cfg.ChainConfig.VMInterpreter = "evm"
 	ret, _, err := Execute([]byte{
 		byte(vm.PUSH1), 10,
 		byte(vm.PUSH1), 0,
@@ -103,9 +103,9 @@ func TestCall(t *testing.T) {
 		byte(vm.PUSH1), 0,
 		byte(vm.RETURN),
 	})
-	cfg:= new(Config)
+	cfg := new(Config)
 	setDefaults(cfg)
-	cfg.ChainConfig.VMInterpreter="evm"
+	cfg.ChainConfig.VMInterpreter = "evm"
 	cfg.State = state
 	ret, _, err := Call(address, nil, cfg)
 	if err != nil {

@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	cli "github.com/PlatONEnetwork/PlatONE-Go/ethclient"
+	"github.com/Venachain/Venachain/core/types"
+	cli "github.com/Venachain/Venachain/ethclient"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/mem"
 	"github.com/shirou/gopsutil/net"

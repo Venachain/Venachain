@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 func TestParseConfig(t *testing.T) {
@@ -170,7 +171,6 @@ func TestGetFuncParam(t *testing.T) {
 }
 
 func TestAAA(t *testing.T) {
-	//dir := "D:\\resource\\platone\\contract\\PlatONE-contract\\build\\user\\wuwei\\wuwei.cpp.abi.json"
 	//funcName:= "transfer"
 	//funcParams := "transfer(\"0x60ceca9c\",\"0x60ceca\",100)"
 	//encodeParam(dir,funcName,funcParams)

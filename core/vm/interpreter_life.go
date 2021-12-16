@@ -9,16 +9,16 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/lru"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/accounts/abi"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/math"
+	"github.com/Venachain/Venachain/core/lru"
+	"github.com/Venachain/Venachain/life/utils"
+	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/rlp"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/life/exec"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/resolver"
+	"github.com/Venachain/Venachain/life/exec"
+	"github.com/Venachain/Venachain/life/resolver"
 	//gomath "math"
 )
 

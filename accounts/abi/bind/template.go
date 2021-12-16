@@ -16,7 +16,7 @@
 
 package bind
 
-import "github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
+import "github.com/Venachain/Venachain/accounts/abi"
 
 // tmplData is the data structure required to fill the binding template.
 type tmplData struct {

@@ -29,17 +29,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/mclock"
-	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
-	"github.com/PlatONEnetwork/PlatONE-Go/core"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/eth"
-	"github.com/PlatONEnetwork/PlatONE-Go/event"
-	"github.com/PlatONEnetwork/PlatONE-Go/les"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
-	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/mclock"
+	"github.com/Venachain/Venachain/consensus"
+	"github.com/Venachain/Venachain/core"
+	"github.com/Venachain/Venachain/core/types"
+	"github.com/Venachain/Venachain/eth"
+	"github.com/Venachain/Venachain/event"
+	"github.com/Venachain/Venachain/les"
+	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/p2p"
+	"github.com/Venachain/Venachain/rpc"
 	"golang.org/x/net/websocket"
 )
 
@@ -661,7 +661,7 @@ func (s *Service) reportStats(conn *websocket.Conn) error {
 	)
 	if s.eth != nil {
 		mining = s.eth.Miner().Mining()
-	//	hashrate = int(s.eth.Miner().HashRate())
+		//	hashrate = int(s.eth.Miner().HashRate())
 
 		sync := s.eth.Downloader().Progress()
 		syncing = s.eth.BlockChain().CurrentHeader().Number.Uint64() >= sync.HighestBlock

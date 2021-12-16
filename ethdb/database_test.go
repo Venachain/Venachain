@@ -25,7 +25,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/Venachain/Venachain/ethdb"
 )
 
 func newTestLDB() (*ethdb.LDBDatabase, func()) {
@@ -46,12 +46,11 @@ func newTestLDB() (*ethdb.LDBDatabase, func()) {
 
 var test_values = []string{"", "a", "1251", "\x00123\x00"}
 
-
 func OpenTestLDB() (*ethdb.LDBDatabase, func()) {
 
-//	dirname := "D:/data/platone/chaindata"
-//	dirname := "D:/platone-node/data/platone/extdb"
-	dirname := "D:/platone-node/data/platone/extdb"
+	//	dirname := "D:/data/platone/chaindata"
+	//	dirname := "D:/platone-node/data/platone/extdb"
+	dirname := "D:/venachain-node/data/venachain/extdb"
 	db, err := ethdb.NewLDBDatabase(dirname, 0, 0)
 	if err != nil {
 		panic("failed to create test database: " + err.Error())
@@ -74,9 +73,9 @@ func testGetValue(db ethdb.Database, t *testing.T) {
 
 func TestLDB_PutGet(t *testing.T) {
 	/*
-	db, remove := newTestLDB()
-	defer remove()
-	testPutGet(db, t)*/
+		db, remove := newTestLDB()
+		defer remove()
+		testPutGet(db, t)*/
 
 	db, remove := OpenTestLDB()
 	defer remove()

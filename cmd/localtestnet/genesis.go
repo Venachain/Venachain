@@ -3,12 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
 	"math/big"
 	"os"
 	"path/filepath"
+
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core"
+	"github.com/Venachain/Venachain/p2p/discover"
 )
 
 var (
@@ -17,7 +18,7 @@ var (
 )
 
 func initGenesis(conf *startNodeConfig) {
-	RunCmd("./platone", "init", genesisFile, "--datadir", conf.DataDir)
+	RunCmd("./venachain", "init", genesisFile, "--datadir", conf.DataDir)
 }
 
 func setGenesisFilePath() {

@@ -19,9 +19,9 @@ package backend
 import (
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/Venachain/Venachain/common/hexutil"
+	"github.com/Venachain/Venachain/core/types"
+	"github.com/Venachain/Venachain/crypto"
 )
 
 func TestVrfProof_gen(t *testing.T) {

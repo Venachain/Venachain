@@ -22,9 +22,9 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/nat"
-	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
+	"github.com/Venachain/Venachain/p2p"
+	"github.com/Venachain/Venachain/p2p/nat"
+	"github.com/Venachain/Venachain/rpc"
 )
 
 const (
@@ -57,11 +57,11 @@ func DefaultDataDir() string {
 	home := homeDir()
 	if home != "" {
 		if runtime.GOOS == "darwin" {
-			return filepath.Join(home, "Library", "PlatONE")
+			return filepath.Join(home, "Library", "venachain")
 		} else if runtime.GOOS == "windows" {
-			return filepath.Join(home, "AppData", "Roaming", "PlatONE")
+			return filepath.Join(home, "AppData", "Roaming", "venachain")
 		} else {
-			return filepath.Join(home, ".platone")
+			return filepath.Join(home, ".venachain")
 		}
 	}
 	// As we cannot guess a stable location, return empty and handle later

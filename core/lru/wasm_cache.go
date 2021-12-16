@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/compiler"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/life/compiler"
+	"github.com/Venachain/Venachain/log"
 	"github.com/hashicorp/golang-lru/simplelru"
 	"github.com/syndtr/goleveldb/leveldb"
 )

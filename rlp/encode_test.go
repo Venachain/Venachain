@@ -17,7 +17,6 @@
 package rlp
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"bytes"
 	"encoding/binary"
 	"errors"
@@ -28,6 +27,8 @@ import (
 	"reflect"
 	"sync"
 	"testing"
+
+	"github.com/Venachain/Venachain/common/hexutil"
 )
 
 type testEncoder struct {

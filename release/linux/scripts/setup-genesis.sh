@@ -244,7 +244,7 @@ function compile_system_contracts() {
 function help() {
     echo 
     echo "
-USAGE: platonectl.sh setupgen [options]
+USAGE: venachainctl.sh setupgen [options]
 
         OPTIONS:
            --nodeid, -n                 the first node id (default: 0)

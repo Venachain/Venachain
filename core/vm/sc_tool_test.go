@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common/byteutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/common/byteutil"
+	"github.com/Venachain/Venachain/rlp"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -261,7 +261,7 @@ func Test_checkIpFormat1(t *testing.T) {
 			//	return
 			//}
 			if got != tt.want {
-				t.Errorf("checkIpFormat(%s) got = %v, want %v, err %v", tt.args.ip,got, tt.want, err)
+				t.Errorf("checkIpFormat(%s) got = %v, want %v, err %v", tt.args.ip, got, tt.want, err)
 			}
 		})
 	}

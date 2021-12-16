@@ -6,8 +6,8 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/ptransfer/client/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/ptransfer/client/utils"
+	"github.com/Venachain/Venachain/cmd/ptransfer/client/crypto"
+	"github.com/Venachain/Venachain/cmd/ptransfer/client/utils"
 )
 
 func TestStoreAccount(t *testing.T) {

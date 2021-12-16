@@ -23,8 +23,8 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common/mclock"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/Venachain/Venachain/common/mclock"
+	"github.com/Venachain/Venachain/log"
 )
 
 const (

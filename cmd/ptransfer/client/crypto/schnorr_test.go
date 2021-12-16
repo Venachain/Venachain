@@ -2,8 +2,9 @@ package crypto
 
 import (
 	"crypto/rand"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"testing"
+
+	"github.com/Venachain/Venachain/common/hexutil"
 )
 
 func TestGenerateKey(t *testing.T) {

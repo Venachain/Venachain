@@ -3,7 +3,7 @@ package utils
 import (
 	"bytes"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/Venachain/Venachain/common"
 )
 
 // BytesConverter converts the bytes to the specific data type

@@ -26,10 +26,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/eth"
-	"github.com/PlatONEnetwork/PlatONE-Go/internal/jsre"
-	"github.com/PlatONEnetwork/PlatONE-Go/node"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/eth"
+	"github.com/Venachain/Venachain/internal/jsre"
+	"github.com/Venachain/Venachain/node"
 )
 
 const (

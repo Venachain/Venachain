@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common/byteutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
+	"github.com/Venachain/Venachain/common/byteutil"
+	"github.com/Venachain/Venachain/common/syscontracts"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -25,12 +25,12 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/secp256k1"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core"
+	"github.com/Venachain/Venachain/core/rawdb"
+	"github.com/Venachain/Venachain/crypto"
+	"github.com/Venachain/Venachain/crypto/secp256k1"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 // Constants to match up protocol versions and messages
@@ -132,8 +132,8 @@ type announceBlock struct {
 
 // announceData is the network packet for the block announcements.
 type announceData struct {
-	Hash       common.Hash // Hash of one particular block being announced
-	Number     uint64      // Number of one particular block being announced
+	Hash   common.Hash // Hash of one particular block being announced
+	Number uint64      // Number of one particular block being announced
 	//Td         *big.Int    // Total difficulty of one particular block being announced
 	ReorgDepth uint64
 	Update     keyValueList
@@ -152,7 +152,7 @@ func (a *announceData) checkSignature(pubKey *ecdsa.PublicKey) error {
 	if err := a.Update.decode().get("sign", &sig); err != nil {
 		return err
 	}
-	rlp, _ := rlp.EncodeToBytes(announceBlock{a.Hash, a.Number,})
+	rlp, _ := rlp.EncodeToBytes(announceBlock{a.Hash, a.Number})
 	recPubkey, err := secp256k1.RecoverPubkey(crypto.Keccak256(rlp), sig)
 	if err != nil {
 		return err

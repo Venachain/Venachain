@@ -4,14 +4,15 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"errors"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"math/big"
 	"reflect"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
+	"github.com/Venachain/Venachain/log"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/ptransfer/client/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/bn256"
+	"github.com/Venachain/Venachain/common/hexutil"
+
+	"github.com/Venachain/Venachain/cmd/ptransfer/client/crypto"
+	"github.com/Venachain/Venachain/crypto/bn256"
 )
 
 type UserState struct {
@@ -94,14 +95,14 @@ func (a *Account) Unmarshal(b []byte) error {
 
 	// give accountcopy.Keypair to account.Key
 	skBytes, err := hexutil.Decode(accCopy.KeyPair.Sk)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	sk := new(big.Int).SetBytes(skBytes)
 	a.Key.NewPrivateKey(sk)
 
 	pubKeyStr, err := decodePubKey(accCopy.KeyPair.Pk)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	err = a.Key.NewPublicKey(pubKeyStr)
@@ -115,33 +116,33 @@ func (a *Account) Unmarshal(b []byte) error {
 func (a *Account) recover(z *ZCS, epoch int64, l, r *big.Int) (*bn256.G1, *bn256.G1, error) {
 	var err error
 	sk := a.Key.GetPrivateKey()
-	log.Debug("recover private key","sk", sk.String())
+	log.Debug("recover private key", "sk", sk.String())
 	pub, err := a.Key.GetPublicKey()
-	if err != nil{
+	if err != nil {
 		return nil, nil, err
 	}
-	log.Debug("recover public key","pk", pub.String())
+	log.Debug("recover public key", "pk", pub.String())
 	result, err := z.simulateAccount([]*bn256.G1{pub}, epoch)
 	if err != nil {
-		 return nil, nil, err
+		return nil, nil, err
 	}
 	if reflect.ValueOf(result[0]).IsZero() {
 		return nil, nil, errors.New("unknown account")
 	}
 
 	gb := crypto.Dec(&result[0], sk)
-	log.Debug("get gb","value", gb.String())
+	log.Debug("get gb", "value", gb.String())
 	a.State.Balance, err = crypto.ReadBalance(gb, l, r)
 	if err != nil {
 		return nil, nil, err
 	}
-	log.Debug("get balance","value", a.State.Balance)
+	log.Debug("get balance", "value", a.State.Balance)
 	return result[0].C, result[0].D, nil
 }
 
 func (a *Account) update(currentEpoch int64) {
-	log.Debug("update account","value", currentEpoch)
-	log.Debug("update account","state", a.State.LastRollOver)
+	log.Debug("update account", "value", currentEpoch)
+	log.Debug("update account", "state", a.State.LastRollOver)
 	if a.State.LastRollOver < currentEpoch {
 		/// a.State.Balance.Add(a.State.Balance, a.State.Pending)
 		/// a.State.Pending.SetInt64(0)

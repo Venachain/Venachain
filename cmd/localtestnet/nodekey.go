@@ -4,8 +4,9 @@ import (
 	"crypto/ecdsa"
 	"encoding/hex"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"io/ioutil"
+
+	"github.com/Venachain/Venachain/crypto"
 )
 
 var bootnode = ""

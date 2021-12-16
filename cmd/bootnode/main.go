@@ -24,13 +24,13 @@ import (
 	"net"
 	"os"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discv5"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/nat"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/netutil"
+	"github.com/Venachain/Venachain/cmd/utils"
+	"github.com/Venachain/Venachain/crypto"
+	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/p2p/discover"
+	"github.com/Venachain/Venachain/p2p/discv5"
+	"github.com/Venachain/Venachain/p2p/nat"
+	"github.com/Venachain/Venachain/p2p/netutil"
 )
 
 func main() {

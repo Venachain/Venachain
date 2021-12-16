@@ -1,13 +1,14 @@
 package main
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/life/exec"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
+
+	"github.com/Venachain/Venachain/life/exec"
 )
 
 type Resolver struct{}

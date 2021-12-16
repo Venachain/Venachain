@@ -29,7 +29,7 @@ func initStartNodeEnv(conf *startNodeConfig) {
 
 	//create platone error log
 	var err error
-	if conf.errLogFileHandler, err = os.Create(fmt.Sprintf("%s/%s/platone_error.log", conf.DataDir, conf.logsDir)); nil != err {
+	if conf.errLogFileHandler, err = os.Create(fmt.Sprintf("%s/%s/venachain_error.log", conf.DataDir, conf.logsDir)); nil != err {
 		panic(err)
 	}
 }

@@ -3,9 +3,10 @@ package crypto
 import (
 	"errors"
 	//"errors"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/bn256"
 	"math/big"
 	"sync"
+
+	"github.com/Venachain/Venachain/crypto/bn256"
 	//"test"
 )
 
@@ -456,7 +457,7 @@ var initbp sync.Once
 /*
 init params
 */
-func GenerateBpParam(n int64) *BulletProofParams{
+func GenerateBpParam(n int64) *BulletProofParams {
 	bpparam = BulletProofParams{}
 	bpparam.n = n
 	bpparam.g = MapIntoGroup("g")
@@ -464,8 +465,8 @@ func GenerateBpParam(n int64) *BulletProofParams{
 	bpparam.gVector = make([]*bn256.G1, bpparam.n)
 	bpparam.hVector = make([]*bn256.G1, bpparam.n)
 	for i := 0; i < int(bpparam.n); i++ {
-		bpparam.gVector[i] = MapIntoGroup("platone" + "g" + string(rune(i)))
-		bpparam.hVector[i] = MapIntoGroup("platone" + "h" + string(rune(i)))
+		bpparam.gVector[i] = MapIntoGroup("venachain" + "g" + string(rune(i)))
+		bpparam.hVector[i] = MapIntoGroup("venachain" + "h" + string(rune(i)))
 	}
 	return &bpparam
 }
@@ -478,8 +479,8 @@ func initbpparam() {
 	bpparam.gVector = make([]*bn256.G1, bpparam.n)
 	bpparam.hVector = make([]*bn256.G1, bpparam.n)
 	for i := 0; i < int(bpparam.n); i++ {
-		bpparam.gVector[i] = MapIntoGroup("platone" + "g" + string(rune(i)))
-		bpparam.hVector[i] = MapIntoGroup("platone" + "h" + string(rune(i)))
+		bpparam.gVector[i] = MapIntoGroup("venachain" + "g" + string(rune(i)))
+		bpparam.hVector[i] = MapIntoGroup("venachain" + "h" + string(rune(i)))
 	}
 }
 

@@ -23,14 +23,14 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul"
-	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/validator"
-	"github.com/PlatONEnetwork/PlatONE-Go/core"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/consensus/istanbul"
+	"github.com/Venachain/Venachain/consensus/istanbul/validator"
+	"github.com/Venachain/Venachain/core"
+	"github.com/Venachain/Venachain/core/types"
+	"github.com/Venachain/Venachain/core/vm"
+	"github.com/Venachain/Venachain/crypto"
+	"github.com/Venachain/Venachain/ethdb"
 )
 
 type testerVote struct {
@@ -332,7 +332,7 @@ func TestVoting(t *testing.T) {
 		}
 		// Create the genesis block with the initial set of validators
 		genesis := &core.Genesis{
-			Mixhash:    types.IstanbulDigest,
+			Mixhash: types.IstanbulDigest,
 		}
 		b := genesis.ToBlock(nil)
 		extra, _ := prepareExtra(b.Header(), validators)
@@ -352,10 +352,10 @@ func TestVoting(t *testing.T) {
 		headers := make([]*types.Header, len(tt.votes))
 		for j, vote := range tt.votes {
 			headers[j] = &types.Header{
-				Number:     big.NewInt(int64(j) + 1),
-				Time:       big.NewInt(int64(j) * int64(config.BlockPeriod)),
-				Coinbase:   accounts.address(vote.voted),
-				MixDigest:  types.IstanbulDigest,
+				Number:    big.NewInt(int64(j) + 1),
+				Time:      big.NewInt(int64(j) * int64(config.BlockPeriod)),
+				Coinbase:  accounts.address(vote.voted),
+				MixDigest: types.IstanbulDigest,
 			}
 			extra, _ := prepareExtra(headers[j], validators)
 			headers[j].Extra = extra

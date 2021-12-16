@@ -27,10 +27,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Venachain/Venachain/accounts"
+	"github.com/Venachain/Venachain/common"
 	"github.com/cespare/cp"
 	"github.com/davecgh/go-spew/spew"
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
 )
 
 var (

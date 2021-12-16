@@ -22,13 +22,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/mclock"
-	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/light"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/mclock"
+	"github.com/Venachain/Venachain/consensus"
+	"github.com/Venachain/Venachain/core/rawdb"
+	"github.com/Venachain/Venachain/core/types"
+	"github.com/Venachain/Venachain/light"
+	"github.com/Venachain/Venachain/log"
 )
 
 const (
@@ -413,7 +413,7 @@ func (f *lightFetcher) nextRequest() (*distReq, uint64) {
 				if bestBn == nil || n.number > bestBn.Uint64() || amount < bestAmount {
 					bestHash = hash
 					bestAmount = amount
-					bestBn = new (big.Int).SetUint64(n.number)
+					bestBn = new(big.Int).SetUint64(n.number)
 					bestSyncing = fp.bestConfirmed == nil || fp.root == nil || !f.checkKnownNode(p, fp.root)
 				}
 			}
@@ -635,7 +635,7 @@ func (f *lightFetcher) checkSyncedHeaders(p *peer) {
 	n := fp.lastAnnounced
 	//var td *big.Int
 	for n != nil {
-		if n.hash != (common.Hash{}){
+		if n.hash != (common.Hash{}) {
 			break
 		}
 		n = n.parent

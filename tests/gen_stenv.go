@@ -5,18 +5,19 @@ package tests
 import (
 	"encoding/json"
 	"errors"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
+
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/math"
 )
 
 var _ = (*stEnvMarshaling)(nil)
 
 func (s stEnv) MarshalJSON() ([]byte, error) {
 	type stEnv struct {
-		Coinbase   common.UnprefixedAddress `json:"currentCoinbase"   gencodec:"required"`
-		GasLimit   math.HexOrDecimal64      `json:"currentGasLimit"   gencodec:"required"`
-		Number     math.HexOrDecimal64      `json:"currentNumber"     gencodec:"required"`
-		Timestamp  math.HexOrDecimal64      `json:"currentTimestamp"  gencodec:"required"`
+		Coinbase  common.UnprefixedAddress `json:"currentCoinbase"   gencodec:"required"`
+		GasLimit  math.HexOrDecimal64      `json:"currentGasLimit"   gencodec:"required"`
+		Number    math.HexOrDecimal64      `json:"currentNumber"     gencodec:"required"`
+		Timestamp math.HexOrDecimal64      `json:"currentTimestamp"  gencodec:"required"`
 	}
 	var enc stEnv
 	enc.Coinbase = common.UnprefixedAddress(s.Coinbase)
@@ -28,10 +29,10 @@ func (s stEnv) MarshalJSON() ([]byte, error) {
 
 func (s *stEnv) UnmarshalJSON(input []byte) error {
 	type stEnv struct {
-		Coinbase   *common.UnprefixedAddress `json:"currentCoinbase"   gencodec:"required"`
-		GasLimit   *math.HexOrDecimal64      `json:"currentGasLimit"   gencodec:"required"`
-		Number     *math.HexOrDecimal64      `json:"currentNumber"     gencodec:"required"`
-		Timestamp  *math.HexOrDecimal64      `json:"currentTimestamp"  gencodec:"required"`
+		Coinbase  *common.UnprefixedAddress `json:"currentCoinbase"   gencodec:"required"`
+		GasLimit  *math.HexOrDecimal64      `json:"currentGasLimit"   gencodec:"required"`
+		Number    *math.HexOrDecimal64      `json:"currentNumber"     gencodec:"required"`
+		Timestamp *math.HexOrDecimal64      `json:"currentTimestamp"  gencodec:"required"`
 	}
 	var dec stEnv
 	if err := json.Unmarshal(input, &dec); err != nil {

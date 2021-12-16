@@ -25,9 +25,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/event"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/event"
+	"github.com/Venachain/Venachain/p2p/discover"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 // Msg defines the structure of a p2p message.

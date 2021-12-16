@@ -20,9 +20,9 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"github.com/Venachain/Venachain/core/vm"
+	"github.com/Venachain/Venachain/ethdb"
+	"github.com/Venachain/Venachain/params"
 	"github.com/ethereum/go-ethereum/consensus/ethash"
 )
 

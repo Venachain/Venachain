@@ -45,12 +45,12 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/simulations"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/simulations/adapters"
-	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
+	"github.com/Venachain/Venachain/crypto"
+	"github.com/Venachain/Venachain/p2p"
+	"github.com/Venachain/Venachain/p2p/discover"
+	"github.com/Venachain/Venachain/p2p/simulations"
+	"github.com/Venachain/Venachain/p2p/simulations/adapters"
+	"github.com/Venachain/Venachain/rpc"
 	"gopkg.in/urfave/cli.v1"
 )
 

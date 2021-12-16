@@ -9,25 +9,25 @@
 1.1 启动单节点链：
 
    ```shell
-   ./platonectl.sh one
+   ./venachainctl.sh one
    ```
 
 1.2 在一台机器上快速启动四节点区块链:
 
    ```shell
-   ./platonectl.sh four
+   ./venachainctl.sh four
    ```
 
 1.3 查看链的运行状态：
 
 ```shell
-./platonectl.sh status
+./venachainctl.sh status
 ```
 
 1.4 停止某个节点，如停止节点0：
 
 ```shell
-./platonectl.sh stop -n 0
+./venachainctl.sh stop -n 0
 ```
 
 

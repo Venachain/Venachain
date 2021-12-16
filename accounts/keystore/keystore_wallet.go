@@ -19,9 +19,9 @@ package keystore
 import (
 	"math/big"
 
-	ethereum "github.com/PlatONEnetwork/PlatONE-Go"
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	ethereum "github.com/Venachain/Venachain"
+	"github.com/Venachain/Venachain/accounts"
+	"github.com/Venachain/Venachain/core/types"
 )
 
 // keystoreWallet implements the accounts.Wallet interface for the original

@@ -19,7 +19,7 @@ package vm
 import (
 	"fmt"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"github.com/Venachain/Venachain/params"
 )
 
 func makeStackFunc(pop, push int) stackValidationFunc {

@@ -21,7 +21,7 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/Venachain/Venachain/core/types"
 )
 
 // Tests that batched bloom bits are correctly rotated from the input bloom

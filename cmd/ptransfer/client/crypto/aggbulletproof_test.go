@@ -2,9 +2,10 @@ package crypto
 
 import (
 	"fmt"
-	bn256 "github.com/PlatONEnetwork/PlatONE-Go/crypto/bn256/cloudflare"
 	"math/big"
 	"testing"
+
+	bn256 "github.com/Venachain/Venachain/crypto/bn256/cloudflare"
 )
 
 func TestVectorCommitment_Commit(t *testing.T) {

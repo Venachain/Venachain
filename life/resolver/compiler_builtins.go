@@ -17,7 +17,7 @@ import (
 	"math"
 	"unsafe"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/life/exec"
+	"github.com/Venachain/Venachain/life/exec"
 )
 
 type uint128 struct {
@@ -566,15 +566,15 @@ func env__fixunstfsi(vm *exec.VirtualMachine) int64 {
 	f.v[0] = C.uint64_t(frame.Locals[0])
 	f.v[1] = C.uint64_t(frame.Locals[1])
 	/*
-	rounding:
-	Binary value 00: approximate to the nearest even number (default)
-	Binary value 01: downward approximation tends to -∞
-	Binary value 10: Upward approximation tends to +∞
-	Binary value 11: Approximate to 0 (trimming)
+		rounding:
+		Binary value 00: approximate to the nearest even number (default)
+		Binary value 01: downward approximation tends to -∞
+		Binary value 10: Upward approximation tends to +∞
+		Binary value 11: Approximate to 0 (trimming)
 
-	Here rounding is used to use 1 to ensure that (a-b) >= 0 in __subtf3(a,b).
-	According to the debugging result, when rounding is 0, double/long double is converted to a string, it is possible
-	There will be an infinite loop.
+		Here rounding is used to use 1 to ensure that (a-b) >= 0 in __subtf3(a,b).
+		According to the debugging result, when rounding is 0, double/long double is converted to a string, it is possible
+		There will be an infinite loop.
 	*/
 	ret := uint32(C.f128_to_ui32(f, 1, false))
 	return int64(ret)

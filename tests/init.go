@@ -18,12 +18,12 @@ package tests
 
 import (
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
+
+	"github.com/Venachain/Venachain/params"
 )
 
 // Forks table defines supported forks and their chain config.
-var Forks = map[string]*params.ChainConfig{
-}
+var Forks = map[string]*params.ChainConfig{}
 
 // UnsupportedForkError is returned when a test requests a fork that isn't implemented.
 type UnsupportedForkError struct {

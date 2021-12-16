@@ -23,11 +23,11 @@ package ens
 import (
 	"strings"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi/bind"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/contracts/ens/contract"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/Venachain/Venachain/accounts/abi/bind"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/contracts/ens/contract"
+	"github.com/Venachain/Venachain/core/types"
+	"github.com/Venachain/Venachain/crypto"
 )
 
 var (

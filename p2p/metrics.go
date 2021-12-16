@@ -21,7 +21,7 @@ package p2p
 import (
 	"net"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/metrics"
+	"github.com/Venachain/Venachain/metrics"
 )
 
 var (

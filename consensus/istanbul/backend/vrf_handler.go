@@ -5,9 +5,10 @@ import (
 	//"encoding/hex"
 	"errors"
 	"fmt"
+
 	//"math/big"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/vrf"
+	"github.com/Venachain/Venachain/crypto/vrf"
 )
 
 var (

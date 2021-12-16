@@ -2,8 +2,9 @@ package core
 
 import (
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"testing"
+
+	"github.com/Venachain/Venachain/common"
 )
 
 func TestByteConvert(t *testing.T) {

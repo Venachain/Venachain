@@ -3,9 +3,10 @@ package crypto
 import (
 	"crypto/rand"
 	"fmt"
-	bn256 "github.com/PlatONEnetwork/PlatONE-Go/crypto/bn256/cloudflare"
 	"math/big"
 	"testing"
+
+	bn256 "github.com/Venachain/Venachain/crypto/bn256/cloudflare"
 )
 
 func TestVectorAdd(t *testing.T) {
@@ -174,7 +175,7 @@ func TestPolyProduct(t *testing.T) {
 
 func TestMapIntoGroup(t *testing.T) {
 
-	result := MapIntoGroup("platone" + "g" + string(rune(23)))
+	result := MapIntoGroup("venachain" + "g" + string(rune(23)))
 	fmt.Println(result)
 	Bp()
 	x := new(bn256.G1).ScalarMult(bpparam.h, big.NewInt(2))

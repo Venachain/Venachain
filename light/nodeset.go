@@ -20,10 +20,10 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/crypto"
+	"github.com/Venachain/Venachain/ethdb"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 // NodeSet stores a set of trie nodes. It implements trie.Database and can also

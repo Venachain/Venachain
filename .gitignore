@@ -78,9 +78,8 @@ cmd/SysContracts/*.s
 cmd/SysContracts/*.wasm
 cmd/SysContracts/*.wast
 cmd/SysContracts/appContract/*.txt
-#platonecli precompiled system contract bin-data
 
-cmd/platonecli/client/precompiled/bindata.go
+cmd/venachaincli/client/precompiled/bindata.go
 
 release/linux/conf/bak
 release/linux/bin/abigen
@@ -94,7 +93,7 @@ release/linux/bin/faucet
 release/linux/bin/life
 release/linux/bin/p2psim
 release/linux/bin/perf_test
-release/linux/bin/platone
+release/linux/bin/venachain
 release/linux/bin/puppeth
 release/linux/bin/rlpdump
 release/linux/bin/simulations
@@ -110,15 +109,15 @@ release/linux/conf/keyfile.json
 release/linux/data/
 release/linux/bin/cmd
 release/linux/bin/build
-release/linux/bin/platonecli
+release/linux/bin/venachaincli
 
 cmd/data-manager/cmd/cmd
-cmd/platonecli/platonecli
+cmd/venachaincli/venachaincli
 release/linux/bin/build
 release/linux/bin/cmd
 
 cmd/localtestnet/localtestnet
 cmd/localtestnet/localtestnetdata/
 cmd/localtestnet/nohup.out
-cmd/localtestnet/platone
+cmd/localtestnet/venachain
 release/linux/bin/localtestnet

@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/core"
+	"github.com/Venachain/Venachain/cmd/ctool/core"
 )
 
 func Send(params interface{}, action string) (string, error) {

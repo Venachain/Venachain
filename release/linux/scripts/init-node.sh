@@ -117,13 +117,13 @@ function main() {
     fi
     setup_node_datadir
 
-    ${BIN_PATH}/platone --datadir ${NODE_DIR} init  ${CONF_PATH}/genesis.json
+    ${BIN_PATH}/venachain --datadir ${NODE_DIR} init  ${CONF_PATH}/genesis.json
 }
 
 function help() {
     echo 
     echo "
-USAGE: platonectl.sh init [options]
+USAGE: venachainctl.sh init [options]
 
         OPTIONS:
             --nodeid, -n                 set node id (default=0)

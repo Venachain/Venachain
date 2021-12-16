@@ -5,10 +5,10 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/params"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 type CnsInvoke struct {

@@ -20,8 +20,8 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/event"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/event"
 )
 
 // Backend provides application specific functions for Istanbul core

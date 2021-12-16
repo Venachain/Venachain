@@ -20,11 +20,11 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi/bind"
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi/bind/backends"
-	"github.com/PlatONEnetwork/PlatONE-Go/contracts/ens/contract"
-	"github.com/PlatONEnetwork/PlatONE-Go/core"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/Venachain/Venachain/accounts/abi/bind"
+	"github.com/Venachain/Venachain/accounts/abi/bind/backends"
+	"github.com/Venachain/Venachain/contracts/ens/contract"
+	"github.com/Venachain/Venachain/core"
+	"github.com/Venachain/Venachain/crypto"
 )
 
 var (

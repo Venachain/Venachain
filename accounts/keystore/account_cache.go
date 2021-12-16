@@ -27,10 +27,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Venachain/Venachain/accounts"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/log"
 	mapset "github.com/deckarep/golang-set"
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
 )
 
 // Minimum amount of time between cache reloads. This limit applies if the platform does

@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/Venachain/Venachain/common"
 )
 
 func TestUserRoles_setRole(t *testing.T) {

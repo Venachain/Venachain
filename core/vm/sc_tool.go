@@ -7,13 +7,13 @@ import (
 	"reflect"
 	"regexp"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common/bcwasmutil"
+	"github.com/Venachain/Venachain/common/bcwasmutil"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/byteutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/byteutil"
+	"github.com/Venachain/Venachain/crypto"
+	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 const (
@@ -96,9 +96,10 @@ func toContractReturnValueType(txType int, val reflect.Value) []byte {
 		return toContractReturnValueStringType(txType, []byte(val.String()))
 	case reflect.Slice:
 		return toContractReturnValueStringType(txType, val.Bytes())
-	case reflect.Struct:{
-		return toContractReturnValueStructType(txType,val.Interface())
-	}
+	case reflect.Struct:
+		{
+			return toContractReturnValueStructType(txType, val.Interface())
+		}
 		//case reflect.Bool:
 		//case reflect.Float64, reflect.Float32:
 		// case reflect.Array

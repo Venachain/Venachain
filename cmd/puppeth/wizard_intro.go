@@ -26,7 +26,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/Venachain/Venachain/log"
 )
 
 // makeWizard creates and returns a new puppeth wizard.
@@ -46,9 +46,9 @@ func makeWizard(network string) *wizard {
 // setting up a new or managing an existing Ethereum private network.
 func (w *wizard) run() {
 	fmt.Println("+-----------------------------------------------------------+")
-	fmt.Println("| Welcome to puppeth, your PlatONE private network manager |")
+	fmt.Println("| Welcome to puppeth, your venachain private network manager |")
 	fmt.Println("|                                                           |")
-	fmt.Println("| This tool lets you create a new PlatONE network down to   |")
+	fmt.Println("| This tool lets you create a new venachain network down to   |")
 	fmt.Println("| the genesis block, bootnodes and ethstats servers without|")
 	fmt.Println("| the hassle that it would normally entail.                |")
 	fmt.Println("|                                                           |")

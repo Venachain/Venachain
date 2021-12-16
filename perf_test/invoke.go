@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/core"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/cmd/ctool/core"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/hexutil"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 var (

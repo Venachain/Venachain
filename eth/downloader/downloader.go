@@ -25,15 +25,15 @@ import (
 	"sync/atomic"
 	"time"
 
-	ethereum "github.com/PlatONEnetwork/PlatONE-Go"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/event"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/PlatONEnetwork/PlatONE-Go/metrics"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	ethereum "github.com/Venachain/Venachain"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core/rawdb"
+	"github.com/Venachain/Venachain/core/types"
+	"github.com/Venachain/Venachain/ethdb"
+	"github.com/Venachain/Venachain/event"
+	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/metrics"
+	"github.com/Venachain/Venachain/params"
 )
 
 var (
@@ -414,7 +414,7 @@ func (d *Downloader) syncWithPeer(p *peerConnection, hash common.Hash, bn *big.I
 		}
 	}()
 
-	log.Debug("Synchronising with the network", "peer", p.id, "platone", p.version, "head", hash, "bn", bn, "mode", d.mode)
+	log.Debug("Synchronising with the network", "peer", p.id, "venachain", p.version, "head", hash, "bn", bn, "mode", d.mode)
 	defer func(start time.Time) {
 		log.Debug("Synchronisation terminated", "elapsed", time.Since(start))
 	}(time.Now())

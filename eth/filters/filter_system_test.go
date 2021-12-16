@@ -25,16 +25,17 @@ import (
 	"testing"
 	"time"
 
-	ethereum "github.com/PlatONEnetwork/PlatONE-Go"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/bloombits"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/event"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
-	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
+	ethereum "github.com/Venachain/Venachain"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core"
+	"github.com/Venachain/Venachain/core/bloombits"
+	"github.com/Venachain/Venachain/core/rawdb"
+	"github.com/Venachain/Venachain/core/types"
+	"github.com/Venachain/Venachain/ethdb"
+	"github.com/Venachain/Venachain/event"
+	"github.com/Venachain/Venachain/params"
+	"github.com/Venachain/Venachain/rpc"
+	"github.com/ethereum/go-ethereum/consensus/ethash"
 )
 
 type testBackend struct {

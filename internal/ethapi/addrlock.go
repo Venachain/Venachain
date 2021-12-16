@@ -19,7 +19,7 @@ package ethapi
 import (
 	"sync"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/Venachain/Venachain/common"
 )
 
 type AddrLocker struct {

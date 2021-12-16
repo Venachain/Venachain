@@ -17,7 +17,6 @@
 package main
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
 	"bufio"
 	"encoding/json"
 	"fmt"
@@ -31,9 +30,11 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/Venachain/Venachain/p2p/discover"
+
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core"
+	"github.com/Venachain/Venachain/log"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -307,9 +308,9 @@ func (w *wizard) readNodeURL() *discover.Node {
 			log.Error("Invalid url length, please retry")
 			continue
 		}
-		if !strings.Contains(text, "@")||
-			!strings.Contains(text, ":")||
-		    3 != strings.Count(text, "."){
+		if !strings.Contains(text, "@") ||
+			!strings.Contains(text, ":") ||
+			3 != strings.Count(text, ".") {
 			log.Error("Invalid url format, please retry")
 			continue
 		}
@@ -340,7 +341,7 @@ func (w *wizard) readNodeID() discover.NodeID {
 			log.Error("Invalid url length, please retry")
 			continue
 		}
-		node,err := discover.BytesID(common.Hex2Bytes(text))
+		node, err := discover.BytesID(common.Hex2Bytes(text))
 		if err != nil {
 			log.Error("Node ID invalid", "NodeID", text, "err", err)
 		}

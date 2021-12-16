@@ -22,7 +22,7 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/core/asm"
+	"github.com/Venachain/Venachain/core/asm"
 	cli "gopkg.in/urfave/cli.v1"
 )
 
