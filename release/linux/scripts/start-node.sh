@@ -251,11 +251,11 @@ function startCmd() {
     fi
 
     ## generate command segments
-    flag_node=" --identity platone --datadir ${NODE_DIR}"
-    flag_discov=" --nodiscover --port ${P2P_PORT} --nodekey ${NODE_DIR}/node.prikey"
+    flag_node=" --identity platone --datadir ${NODE_DIR} "
+    flag_discov=" --nodiscover --port ${P2P_PORT} --nodekey ${NODE_DIR}/node.prikey "
     flag_bootnodes=" --bootnodes ${BOOTNODES} "
-    flag_rpc=" --rpc --rpcaddr ${RPC_ADDR} --rpcport ${RPC_PORT} --rpcapi ${RPC_API} --rpccorsdomain \"*\" "
-    flag_ws=" --ws --wsaddr ${WS_ADDR} --wsport ${WS_PORT} --wsorigins \"*\" "
+    flag_rpc=" --rpc --rpcaddr ${RPC_ADDR} --rpcport ${RPC_PORT} --rpcapi ${RPC_API} "
+    flag_ws=" --ws --wsaddr ${WS_ADDR} --wsport ${WS_PORT} "
     flag_logs=" --wasmlog  ${LOG_DIR}/wasm_log --wasmlogsize ${LOG_SIZE} "
     flag_ipc=" --ipcpath ${NODE_DIR}/node-${NODE_ID}.ipc "
     flag_gcmode=" --gcmode ${GCMODE} "
@@ -282,8 +282,8 @@ function startCmd() {
         nohup ${BIN_PATH}/platone ${flag_node} 
             ${flag_discov}
             ${flag_bootnodes} 
-            ${flag_rpc}
-            ${flag_ws}
+            ${flag_rpc} --rpccorsdomain \"*\" 
+            ${flag_ws} --wsorigins \"*\" 
             ${flag_logs} 
             ${flag_ipc} ${flag_gcmode} ${flag_dbtype}
             ${flag_tx} ${flag_lightmode} ${flag_pprof}
@@ -294,8 +294,8 @@ function startCmd() {
     nohup ${BIN_PATH}/platone ${flag_node} \
             ${flag_discov} \
             ${flag_bootnodes} \
-            ${flag_rpc} \
-            ${flag_ws} \
+            ${flag_rpc} --rpccorsdomain "*" \
+            ${flag_ws} --wsorigins "*"  \
             ${flag_logs} \
             ${flag_ipc} ${flag_gcmode} ${flag_dbtype} \
             ${flag_tx} ${flag_lightmode} ${flag_pprof} \
