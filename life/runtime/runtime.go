@@ -5,12 +5,12 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core/state"
+	"github.com/Venachain/Venachain/core/vm"
+	"github.com/Venachain/Venachain/crypto"
+	"github.com/Venachain/Venachain/ethdb/memorydb"
+	"github.com/Venachain/Venachain/params"
 )
 
 // Config is a basic type specifying certain configuration flags

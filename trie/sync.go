@@ -20,11 +20,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/ethdb/dbhandle"
+	"github.com/Venachain/Venachain/rlp"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/prque"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/prque"
 )
 
 // ErrNotRequested is returned by the trie sync when it's requested to process a

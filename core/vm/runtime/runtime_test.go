@@ -21,11 +21,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
+	"github.com/Venachain/Venachain/accounts/abi"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core/state"
+	"github.com/Venachain/Venachain/core/vm"
+	"github.com/Venachain/Venachain/ethdb/memorydb"
 )
 
 func TestDefaults(t *testing.T) {

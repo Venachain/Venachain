@@ -1,20 +1,23 @@
 package consensus
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/sha3"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"errors"
-	"github.com/hashicorp/golang-lru"
+
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core/types"
+	"github.com/Venachain/Venachain/crypto"
+	"github.com/Venachain/Venachain/crypto/sha3"
+	"github.com/Venachain/Venachain/rlp"
+	lru "github.com/hashicorp/golang-lru"
 )
+
 var (
 	ExtraSeal = 65 // Fixed number of extra-data suffix bytes reserved for signer seal
 	// ErrMissingSignature is returned if a block's extra-data section doesn't seem
 	// to contain a 65 byte secp256k1 signature.
 	ErrMissingSignature = errors.New("extra-data 65 byte signature suffix missing")
 )
+
 // SigHash returns the hash which is used as input for the proof-of-authority
 // signing. It is the hash of the entire header apart from the 65 byte signature
 // contained at the end of the extra data.

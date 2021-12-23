@@ -17,7 +17,7 @@
 package core
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul"
+	"github.com/Venachain/Venachain/consensus/istanbul"
 )
 
 type backlogEvent struct {

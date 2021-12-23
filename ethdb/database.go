@@ -2,11 +2,12 @@ package ethdb
 
 import (
 	"errors"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/pebbledb"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
+
+	"github.com/Venachain/Venachain/ethdb/dbhandle"
+	"github.com/Venachain/Venachain/ethdb/leveldb"
+	"github.com/Venachain/Venachain/ethdb/pebbledb"
+	"github.com/Venachain/Venachain/ethdb/types"
+	"github.com/Venachain/Venachain/log"
 )
 
 // New news database via the giving db type.
@@ -20,7 +21,7 @@ func New(dbType, file string, cache, handles int) (dbhandle.Database, error) {
 
 	if t := types.GetExistDBType(file); t != types.UnknownDb && t != dbtype {
 		dbtype = t
-		log.Warn("db already exist", "type",types.GetDbName(t))
+		log.Warn("db already exist", "type", types.GetDbName(t))
 	}
 
 	switch dbtype {

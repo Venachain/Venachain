@@ -25,7 +25,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/internal/debug"
 	"io"
 	"io/ioutil"
 	"math/big"
@@ -35,28 +34,30 @@ import (
 	"sync"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
+	"github.com/Venachain/Venachain/internal/debug"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
-	"github.com/PlatONEnetwork/PlatONE-Go/core"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/bloombits"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/eth"
-	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
-	"github.com/PlatONEnetwork/PlatONE-Go/eth/filters"
-	"github.com/PlatONEnetwork/PlatONE-Go/eth/gasprice"
-	"github.com/PlatONEnetwork/PlatONE-Go/event"
-	"github.com/PlatONEnetwork/PlatONE-Go/internal/ethapi"
-	"github.com/PlatONEnetwork/PlatONE-Go/light"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/PlatONEnetwork/PlatONE-Go/node"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discv5"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
-	rpc "github.com/PlatONEnetwork/PlatONE-Go/rpc"
+	"github.com/Venachain/Venachain/p2p/discover"
+
+	"github.com/Venachain/Venachain/accounts"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/hexutil"
+	"github.com/Venachain/Venachain/consensus"
+	"github.com/Venachain/Venachain/core"
+	"github.com/Venachain/Venachain/core/bloombits"
+	"github.com/Venachain/Venachain/core/types"
+	"github.com/Venachain/Venachain/eth"
+	"github.com/Venachain/Venachain/eth/downloader"
+	"github.com/Venachain/Venachain/eth/filters"
+	"github.com/Venachain/Venachain/eth/gasprice"
+	"github.com/Venachain/Venachain/event"
+	"github.com/Venachain/Venachain/internal/ethapi"
+	"github.com/Venachain/Venachain/light"
+	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/node"
+	"github.com/Venachain/Venachain/p2p"
+	"github.com/Venachain/Venachain/p2p/discv5"
+	"github.com/Venachain/Venachain/params"
+	rpc "github.com/Venachain/Venachain/rpc"
 )
 
 type LightEthereum struct {
@@ -92,8 +93,8 @@ type LightEthereum struct {
 }
 
 type Node struct {
-	Addr		string	`json:"addr"`
-	ExpireTime	string	`json:"expiretime"`
+	Addr       string `json:"addr"`
+	ExpireTime string `json:"expiretime"`
 }
 
 func New(ctx *node.ServiceContext, config *eth.Config) (*LightEthereum, error) {
@@ -163,7 +164,7 @@ func New(ctx *node.ServiceContext, config *eth.Config) (*LightEthereum, error) {
 	leth.ApiBackend.gpo = gasprice.NewOracle(leth.ApiBackend, gpoParams)
 
 	if chainConfig.LicenseCheck {
-		log.Info("license","enable", chainConfig.LicenseCheck)
+		log.Info("license", "enable", chainConfig.LicenseCheck)
 		log.Info("Start license check right now.")
 
 		checked, expireTime := licenseCheck(leth.config.Etherbase)
@@ -314,7 +315,7 @@ func licenseCheck(addr common.Address) (bool, int64) {
 	log.Info("Node address: ", "addr", addr.String())
 
 	// load signature file.
-	dir,_ := os.Getwd()
+	dir, _ := os.Getwd()
 	log.Info(dir + "/../data/signature" + addr.String())
 	fi, err := os.Open(dir + "/../data/signature" + addr.String())
 	if err != nil {
@@ -359,7 +360,7 @@ func licenseCheck(addr common.Address) (bool, int64) {
 
 	// following: check signature
 	nodeInfo := Node{
-		Addr: licenseInfoSplit[0],
+		Addr:       licenseInfoSplit[0],
 		ExpireTime: licenseInfoSplit[1],
 	}
 
@@ -394,7 +395,7 @@ QN275TE7TLxctFVF0eY=
 	//defer dstFile.Close()
 	//dstFile.WriteString(publickeyInfo)
 
-	tmpFile, err := ioutil.TempFile(dir + "/../data/", "tmp")
+	tmpFile, err := ioutil.TempFile(dir+"/../data/", "tmp")
 	defer os.Remove(tmpFile.Name())
 	if err != nil {
 		log.Info("Error when creating temp file.", err)

@@ -24,8 +24,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common/mclock"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
+	"github.com/Venachain/Venachain/common/mclock"
+	"github.com/Venachain/Venachain/ethdb/memorydb"
 )
 
 func TestFreeClientPoolL10C100(t *testing.T) {

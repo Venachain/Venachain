@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/rpc"
 )
 
 func TestUnmarshalJSONNewFilterArgs(t *testing.T) {

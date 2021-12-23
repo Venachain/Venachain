@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_curDir(t *testing.T) {
@@ -12,6 +13,6 @@ func Test_curDir(t *testing.T) {
 }
 
 func Test_calcAbsPath(t *testing.T) {
-	abspath := calcAbsPath("platone")
-	assert.Contains(t, abspath, "PlatONE-Go/cmd/localtestnet/platone")
+	abspath := calcAbsPath("venachain")
+	assert.Contains(t, abspath, "Venachain/cmd/localtestnet/venachain")
 }

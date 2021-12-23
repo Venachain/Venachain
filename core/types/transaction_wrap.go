@@ -3,7 +3,7 @@ package types
 import (
 	"io"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 type TransactionWrap struct {

@@ -8,12 +8,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/math"
+	"github.com/Venachain/Venachain/core/state"
+	"github.com/Venachain/Venachain/ethdb/memorydb"
+	"github.com/Venachain/Venachain/life/utils"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 func TestDefaults(t *testing.T) {

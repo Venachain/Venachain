@@ -22,7 +22,7 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
+	"github.com/Venachain/Venachain/rpc"
 )
 
 // In this example, our client whishes to track the latest 'block number'

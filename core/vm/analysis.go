@@ -19,7 +19,7 @@ package vm
 import (
 	"math/big"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/Venachain/Venachain/common"
 )
 
 // destinations stores one map per contract (keyed by hash of code).

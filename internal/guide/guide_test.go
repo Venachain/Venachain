@@ -30,8 +30,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts/keystore"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/Venachain/Venachain/accounts/keystore"
+	"github.com/Venachain/Venachain/core/types"
 )
 
 // Tests that the account management snippets work correctly.

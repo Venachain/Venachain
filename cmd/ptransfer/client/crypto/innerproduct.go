@@ -3,8 +3,9 @@ package crypto
 import (
 	"crypto/sha256"
 	"errors"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/bn256/cloudflare"
 	"math/big"
+
+	"github.com/Venachain/Venachain/crypto/bn256"
 )
 
 type InnerProductStatement struct {

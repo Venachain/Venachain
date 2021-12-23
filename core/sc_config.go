@@ -3,13 +3,13 @@ package core
 import (
 	"encoding/json"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/syscontracts"
+	"github.com/Venachain/Venachain/core/vm"
+	"github.com/Venachain/Venachain/life/utils"
+	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/p2p"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 func UpdateParamSysContractConfig(bc *BlockChain, sysContractConf *common.SystemConfig) {

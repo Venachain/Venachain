@@ -3,8 +3,8 @@ package pebbledb
 import (
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/Venachain/Venachain/ethdb/dbhandle"
+	"github.com/Venachain/Venachain/log"
 	"github.com/cockroachdb/pebble"
 	"github.com/cockroachdb/pebble/bloom"
 )
@@ -44,7 +44,7 @@ func NewPebbleDB(file string, cache int, handles int) (*PebbleDatabase, error) {
 	pebblecache := pebble.NewCache(cacheSize)
 
 	opts := &pebble.Options{
-		Cache:                       pebblecache, // 1GB, 单位B,pebble默认值8MB，platone 默认1024MB
+		Cache:                       pebblecache, // 1GB, 单位B,pebble默认值8MB，venachain 默认1024MB
 		DisableWAL:                  false,
 		FormatMajorVersion:          pebble.FormatNewest,
 		L0CompactionThreshold:       2,
@@ -52,13 +52,13 @@ func NewPebbleDB(file string, cache int, handles int) (*PebbleDatabase, error) {
 		LBaseMaxBytes:               64 << 20, // 64 MB
 		Levels:                      make([]pebble.LevelOptions, 7),
 		MaxConcurrentCompactions:    3,
-		MaxOpenFiles:                handles,  // 16384, pebble默认值1000，platone默认75
-		MemTableSize:                64 << 20, // 64MB, platone 默认 256MB
+		MaxOpenFiles:                handles,  // 16384, pebble默认值1000，venachain 默认75
+		MemTableSize:                64 << 20, // 64MB, venachain 默认 256MB
 		MemTableStopWritesThreshold: 4,
 	}
 	for i := 0; i < len(opts.Levels); i++ {
 		l := &opts.Levels[i]
-		l.BlockSize = 32 << 10       // 32 KB // 单位B，pebble默认值4MB，platone 默认4MB
+		l.BlockSize = 32 << 10       // 32 KB // 单位B，pebble默认值4MB，venachain 默认4MB
 		l.IndexBlockSize = 256 << 10 // 256 KB
 		l.FilterPolicy = bloom.FilterPolicy(10)
 		l.FilterType = pebble.TableFilter

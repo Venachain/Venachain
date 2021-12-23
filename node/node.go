@@ -26,15 +26,15 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
-	"github.com/PlatONEnetwork/PlatONE-Go/event"
-	"github.com/PlatONEnetwork/PlatONE-Go/internal/debug"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
-	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
+	"github.com/Venachain/Venachain/accounts"
+	"github.com/Venachain/Venachain/ethdb"
+	"github.com/Venachain/Venachain/ethdb/dbhandle"
+	"github.com/Venachain/Venachain/ethdb/memorydb"
+	"github.com/Venachain/Venachain/event"
+	"github.com/Venachain/Venachain/internal/debug"
+	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/p2p"
+	"github.com/Venachain/Venachain/rpc"
 	"github.com/prometheus/prometheus/util/flock"
 )
 
@@ -100,7 +100,7 @@ func New(conf *Config) (*Node, error) {
 		return nil, errors.New(`Config.Name cannot end in ".ipc"`)
 	}
 	// Ensure that the AccountManager method works before the node has started.
-	// We rely on this in cmd/platone.
+	// We rely on this in cmd/venachain.
 	am, ephemeralKeystore, err := makeAccountManager(conf)
 	if err != nil {
 		return nil, err

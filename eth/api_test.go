@@ -20,9 +20,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core/state"
+	"github.com/Venachain/Venachain/ethdb/memorydb"
 	"github.com/davecgh/go-spew/spew"
 )
 

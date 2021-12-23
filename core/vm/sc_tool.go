@@ -7,13 +7,13 @@ import (
 	"reflect"
 	"regexp"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common/bcwasmutil"
+	"github.com/Venachain/Venachain/common/bcwasmutil"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/byteutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/byteutil"
+	"github.com/Venachain/Venachain/crypto"
+	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 const (
@@ -54,11 +54,10 @@ var (
 	errValidatorCountInvalid = errors.New("Validator Count Invalid")
 
 	//errAuthenticationFailed = errors.New("Authentication failed !!!")
-	errAlreadySetEvidence   = errors.New("This id Already exsit")
-	errEvidenceNotFound     = errors.New("Evidence Not Found")
-	errBPGetFalseResult     = errors.New("Bullet Proof get result false")
-	errAlreadySetPid   = errors.New("This pid Already exsit")
-
+	errAlreadySetEvidence = errors.New("This id Already exsit")
+	errEvidenceNotFound   = errors.New("Evidence Not Found")
+	errBPGetFalseResult   = errors.New("Bullet Proof get result false")
+	errAlreadySetPid      = errors.New("This pid Already exsit")
 )
 
 var (

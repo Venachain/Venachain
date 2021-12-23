@@ -1,9 +1,10 @@
 package vm
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/Venachain/Venachain/common"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSetEvidence(t *testing.T) {

@@ -5,7 +5,7 @@ COPY sources.list /etc/apt/sources.list
 
 RUN  apt-get update && apt-get install -y --force-yes git perl-base  curl bash cmake openssl make gcc g++ 
 
-# ADD . /PlatONE-Go
+# ADD . /Venachain
 #RUN cd /go-ethereum && make geth
 
 # Pull Geth into a second stage deploy alpine container

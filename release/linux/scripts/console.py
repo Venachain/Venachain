@@ -11,7 +11,7 @@ from cmd import Cmd
 
 class Cli(Cmd):
     prompt =  '[group:0]>'
-    intro = """Welcom to platonecli!
+    intro = """Welcom to venachaincli!
     Usage:
          <command>[sub command] [command options] [arguments...]
     you can type '?' or 'help' for help"""
@@ -286,7 +286,7 @@ class Cli(Cmd):
         """
         try:
             url = GROUPS[str(GROUP_ID)]["url"]
-            cmd = "{0}/platone attach {1}".format(BIN_DIR,url)
+            cmd = "{0}/venachain attach {1}".format(BIN_DIR,url)
             subprocess.call(cmd,shell=True)
             return 0
         except Exception:
@@ -412,7 +412,7 @@ class Cli(Cmd):
         rootDir =  args["rootDir"]
         password = args.get("password","0")
 
-        cmd = "{0}/platone --datadir {1} account new <<EOF\n{2}\n{2}\nEOF".format(BIN_DIR,rootDir,password)
+        cmd = "{0}/venachain --datadir {1} account new <<EOF\n{2}\n{2}\nEOF".format(BIN_DIR,rootDir,password)
         ret = subprocess.check_output(cmd,shell=True).decode('utf-8')
         address = "0x" + ret.split("Address: {")[1].split("}")[0]
         if CONFIG["from"] == "":
@@ -451,11 +451,11 @@ class Cli(Cmd):
         datadir = rootDir
         if groupid != "0":
             datadir = os.path.join(rootDir,'group-' + groupid )
-        if os.path.exists(os.path.join(datadir, 'platone')):
+        if os.path.exists(os.path.join(datadir, 'venachain')):
             print("[INFO]: Data dir found,skip init chain step")
             return False
         
-        subprocess.call("{0}/platone --datadir {1} --keystore {2} init {3}".format(BIN_DIR,datadir, os.path.join(rootDir, 'keystore'),os.path.join(datadir, 'genesis.json')) ,shell=True)
+        subprocess.call("{0}/venachain --datadir {1} --keystore {2} init {3}".format(BIN_DIR,datadir, os.path.join(rootDir, 'keystore'),os.path.join(datadir, 'genesis.json')) ,shell=True)
         print("[INFO]: group " + groupid + " built successfully")
         return True
     
@@ -511,7 +511,7 @@ class Cli(Cmd):
                 genesis = json.loads(genesisData)
                 arrayBootNods = genesis["config"]["istanbul"]["suggestObserverNodes"]
             
-        cmd = "nohup {0}/platone --config {1} --datadir {2} --nodiscover --nodekey {3} --keystore {4} --port {5} --rpc --rpcport {6} --rpccorsdomain \"*\" --ws --wsaddr 0.0.0.0 --wsport {7} --wsorigins \"*\" --dashboard.host {8} --bootnodes {9} --wasmlog  {10} --wasmlogsize {11} --moduleLogParams '{12}' --gcmode  archive  --debug 1>/dev/null 2>{13}/platone_error.log &".format(
+        cmd = "nohup {0}/venachain --config {1} --datadir {2} --nodiscover --nodekey {3} --keystore {4} --port {5} --rpc --rpcport {6} --rpccorsdomain \"*\" --ws --wsaddr 0.0.0.0 --wsport {7} --wsorigins \"*\" --dashboard.host {8} --bootnodes {9} --wasmlog  {10} --wasmlogsize {11} --moduleLogParams '{12}' --gcmode  archive  --debug 1>/dev/null 2>{13}/venachain_error.log &".format(
         BIN_DIR,
         configPath,  
         dataPath,
@@ -524,7 +524,7 @@ class Cli(Cmd):
         ",".join(arrayBootNods),
         os.path.join(logPath,"wasm_log"),
         "67108864",
-        json.dumps({"platone_log":["/"],"__dir__":[logPath],"__size__":["67108864"]}),
+        json.dumps({"venachain_log":["/"],"__dir__":[logPath],"__size__":["67108864"]}),
         logPath)
         print(cmd)
         subprocess.Popen(cmd,shell=True,preexec_fn=os.setpgrp)
@@ -850,8 +850,8 @@ MinimumAcceptedPOW = 2e-01
 RestrictConnectionBetweenLightClients = true
 
 [Node]
-UserIdent = "platone"
-IPCPath = "platone.ipc"
+UserIdent = "venachain"
+IPCPath = "venachain.ipc"
 HTTPHost = "0.0.0.0"
 HTTPVirtualHosts = ["localhost"]
 HTTPModules = ["db", "eth", "net", "web3", "admin", "personal","txpool","istanbul"]

@@ -8,7 +8,7 @@ var (
 	clearCommand = cli.Command{
 		Action:      clearCmd,
 		Name:        "clear",
-		Usage:       "kill platone process and clear data[flags]",
+		Usage:       "kill venachain process and clear data[flags]",
 		Category:    "TESTNET COMMANDS",
 		Description: `clear data`,
 		Flags: []cli.Flag{

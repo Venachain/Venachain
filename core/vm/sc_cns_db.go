@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/rlp"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/Venachain/Venachain/common"
 )
 
 const (

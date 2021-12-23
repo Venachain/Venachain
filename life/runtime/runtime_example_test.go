@@ -3,7 +3,7 @@ package runtime_test
 import (
 	"fmt"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/life/runtime"
+	"github.com/Venachain/Venachain/life/runtime"
 )
 
 func ExampleExecute() {

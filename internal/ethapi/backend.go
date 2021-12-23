@@ -21,17 +21,17 @@ import (
 	"context"
 	"math/big"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
-	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-	"github.com/PlatONEnetwork/PlatONE-Go/event"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
-	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
+	"github.com/Venachain/Venachain/accounts"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core"
+	"github.com/Venachain/Venachain/core/state"
+	"github.com/Venachain/Venachain/core/types"
+	"github.com/Venachain/Venachain/core/vm"
+	"github.com/Venachain/Venachain/eth/downloader"
+	"github.com/Venachain/Venachain/ethdb/dbhandle"
+	"github.com/Venachain/Venachain/event"
+	"github.com/Venachain/Venachain/params"
+	"github.com/Venachain/Venachain/rpc"
 )
 
 // Backend interface provides the common API services (that are provided by
@@ -81,7 +81,7 @@ func GetAPIs(apiBackend Backend) []rpc.API {
 			Service:   NewPublicEthereumAPI(apiBackend),
 			Public:    true,
 		}, {
-			Namespace: "platone",
+			Namespace: "venachain",
 			Version:   "1.0",
 			Service:   NewPublicEthereumAPI(apiBackend),
 			Public:    true,
@@ -91,7 +91,7 @@ func GetAPIs(apiBackend Backend) []rpc.API {
 			Service:   NewPublicBlockChainAPI(apiBackend),
 			Public:    true,
 		}, {
-			Namespace: "platone",
+			Namespace: "venachain",
 			Version:   "1.0",
 			Service:   NewPublicBlockChainAPI(apiBackend),
 			Public:    true,
@@ -101,7 +101,7 @@ func GetAPIs(apiBackend Backend) []rpc.API {
 			Service:   NewPublicTransactionPoolAPI(apiBackend, nonceLock),
 			Public:    true,
 		}, {
-			Namespace: "platone",
+			Namespace: "venachain",
 			Version:   "1.0",
 			Service:   NewPublicTransactionPoolAPI(apiBackend, nonceLock),
 			Public:    true,
@@ -125,7 +125,7 @@ func GetAPIs(apiBackend Backend) []rpc.API {
 			Service:   NewPublicAccountAPI(apiBackend.AccountManager()),
 			Public:    true,
 		}, {
-			Namespace: "platone",
+			Namespace: "venachain",
 			Version:   "1.0",
 			Service:   NewPublicAccountAPI(apiBackend.AccountManager()),
 			Public:    true,

@@ -28,8 +28,8 @@ import (
 	"testing/quick"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/crypto"
 )
 
 func ExampleNewNode() {

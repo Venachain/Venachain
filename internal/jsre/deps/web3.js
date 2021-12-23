@@ -2509,7 +2509,7 @@ module.exports={
 var RequestManager = require('./web3/requestmanager');
 var Iban = require('./web3/iban');
 var Eth = require('./web3/methods/eth');
-var Platone = require('./web3/methods/platone');
+var Venachain = require('./web3/methods/venachain');
 var DB = require('./web3/methods/db');
 var Shh = require('./web3/methods/shh');
 var Net = require('./web3/methods/net');
@@ -2532,7 +2532,7 @@ function Web3 (provider) {
     this._requestManager = new RequestManager(provider);
     this.currentProvider = provider;
     this.eth = new Eth(this);
-    this.platone = new Platone(this);
+    this.venachain = new Venachain(this);
     this.db = new DB(this);
     this.shh = new Shh(this);
     this.net = new Net(this);
@@ -2634,7 +2634,7 @@ Web3.prototype.createBatch = function () {
 module.exports = Web3;
 
 
-},{"./utils/sha3":19,"./utils/utils":20,"./version.json":21,"./web3/batch":24,"./web3/extend":28,"./web3/httpprovider":32,"./web3/iban":33,"./web3/ipcprovider":34,"./web3/methods/db":37,"./web3/methods/eth":38,"./web3/methods/platone":138,"./web3/methods/net":39,"./web3/methods/personal":40,"./web3/methods/shh":41,"./web3/methods/swarm":42,"./web3/property":45,"./web3/requestmanager":46,"./web3/settings":47,"bignumber.js":"bignumber.js"}],23:[function(require,module,exports){
+},{"./utils/sha3":19,"./utils/utils":20,"./version.json":21,"./web3/batch":24,"./web3/extend":28,"./web3/httpprovider":32,"./web3/iban":33,"./web3/ipcprovider":34,"./web3/methods/db":37,"./web3/methods/eth":38,"./web3/methods/venachain":138,"./web3/methods/net":39,"./web3/methods/personal":40,"./web3/methods/shh":41,"./web3/methods/swarm":42,"./web3/property":45,"./web3/requestmanager":46,"./web3/settings":47,"bignumber.js":"bignumber.js"}],23:[function(require,module,exports){
 /*
     This file is part of web3.js.
 
@@ -5187,7 +5187,7 @@ module.exports = DB;
         along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
     */
     /**
-     * @file platone.js
+     * @file venachain.js
      * @author zhangyujian
      * @date 2015
      */
@@ -5208,18 +5208,18 @@ module.exports = DB;
     var transfer = require('../transfer');
 
     var blockCall = function (args) {
-      return (utils.isString(args[0]) && args[0].indexOf('0x') === 0) ? "platone_getBlockByHash" : "platone_getBlockByNumber";
+      return (utils.isString(args[0]) && args[0].indexOf('0x') === 0) ? "venachain_getBlockByHash" : "venachain_getBlockByNumber";
     };
 
     var transactionFromBlockCall = function (args) {
-      return (utils.isString(args[0]) && args[0].indexOf('0x') === 0) ? 'platone_getTransactionByBlockHashAndIndex' : 'platone_getTransactionByBlockNumberAndIndex';
+      return (utils.isString(args[0]) && args[0].indexOf('0x') === 0) ? 'venachain_getTransactionByBlockHashAndIndex' : 'venachain_getTransactionByBlockNumberAndIndex';
     };
 
     var getBlockTransactionCountCall = function (args) {
-      return (utils.isString(args[0]) && args[0].indexOf('0x') === 0) ? 'platone_getBlockTransactionCountByHash' : 'platone_getBlockTransactionCountByNumber';
+      return (utils.isString(args[0]) && args[0].indexOf('0x') === 0) ? 'venachain_getBlockTransactionCountByHash' : 'venachain_getBlockTransactionCountByNumber';
     };
 
-    function Platone(web3) {
+    function Venachain(web3) {
       this._requestManager = web3._requestManager;
 
       var self = this;
@@ -5239,7 +5239,7 @@ module.exports = DB;
       this.sendIBANTransaction = transfer.bind(null, this);
     }
 
-    Object.defineProperty(Platone.prototype, 'defaultBlock', {
+    Object.defineProperty(Venachain.prototype, 'defaultBlock', {
       get: function () {
         return c.defaultBlock;
       },
@@ -5249,7 +5249,7 @@ module.exports = DB;
       }
     });
 
-    Object.defineProperty(Platone.prototype, 'defaultAccount', {
+    Object.defineProperty(Venachain.prototype, 'defaultAccount', {
       get: function () {
         return c.defaultAccount;
       },
@@ -5262,7 +5262,7 @@ module.exports = DB;
     var methods = function () {
       var getBalance = new Method({
         name: 'getBalance',
-        call: 'platone_getBalance',
+        call: 'venachain_getBalance',
         params: 2,
         inputFormatter: [formatters.inputAddressFormatter, formatters.inputDefaultBlockNumberFormatter],
         outputFormatter: formatters.outputBigNumberFormatter
@@ -5270,14 +5270,14 @@ module.exports = DB;
 
       var getStorageAt = new Method({
         name: 'getStorageAt',
-        call: 'platone_getStorageAt',
+        call: 'venachain_getStorageAt',
         params: 3,
         inputFormatter: [null, utils.toHex, formatters.inputDefaultBlockNumberFormatter]
       });
 
       var getCode = new Method({
         name: 'getCode',
-        call: 'platone_getCode',
+        call: 'venachain_getCode',
         params: 2,
         inputFormatter: [formatters.inputAddressFormatter, formatters.inputDefaultBlockNumberFormatter]
       });
@@ -5301,7 +5301,7 @@ module.exports = DB;
 
       var getTransaction = new Method({
         name: 'getTransaction',
-        call: 'platone_getTransactionByHash',
+        call: 'venachain_getTransactionByHash',
         params: 1,
         outputFormatter: formatters.outputTransactionFormatter
       });
@@ -5316,14 +5316,14 @@ module.exports = DB;
 
       var getTransactionReceipt = new Method({
         name: 'getTransactionReceipt',
-        call: 'platone_getTransactionReceipt',
+        call: 'venachain_getTransactionReceipt',
         params: 1,
         outputFormatter: formatters.outputTransactionReceiptFormatter
       });
 
       var getTransactionCount = new Method({
         name: 'getTransactionCount',
-        call: 'platone_getTransactionCount',
+        call: 'venachain_getTransactionCount',
         params: 2,
         inputFormatter: [null, formatters.inputDefaultBlockNumberFormatter],
         outputFormatter: utils.toDecimal
@@ -5331,42 +5331,42 @@ module.exports = DB;
 
       var sendRawTransaction = new Method({
         name: 'sendRawTransaction',
-        call: 'platone_sendRawTransaction',
+        call: 'venachain_sendRawTransaction',
         params: 1,
         inputFormatter: [null]
       });
 
       var sendTransaction = new Method({
         name: 'sendTransaction',
-        call: 'platone_sendTransaction',
+        call: 'venachain_sendTransaction',
         params: 1,
         inputFormatter: [formatters.inputTransactionFormatter]
       });
 
       var signTransaction = new Method({
         name: 'signTransaction',
-        call: 'platone_signTransaction',
+        call: 'venachain_signTransaction',
         params: 1,
         inputFormatter: [formatters.inputTransactionFormatter]
       });
 
       var sign = new Method({
         name: 'sign',
-        call: 'platone_sign',
+        call: 'venachain_sign',
         params: 2,
         inputFormatter: [formatters.inputAddressFormatter, null]
       });
 
       var call = new Method({
         name: 'call',
-        call: 'platone_call',
+        call: 'venachain_call',
         params: 2,
         inputFormatter: [formatters.inputCallFormatter, formatters.inputDefaultBlockNumberFormatter]
       });
 
       var estimateGas = new Method({
         name: 'estimateGas',
-        call: 'platone_estimateGas',
+        call: 'venachain_estimateGas',
         params: 1,
         inputFormatter: [formatters.inputCallFormatter],
         outputFormatter: utils.toDecimal
@@ -5397,60 +5397,60 @@ module.exports = DB;
       return [
         new Property({
           name: 'coinbase',
-          getter: 'platone_coinbase'
+          getter: 'venachain_coinbase'
         }),
         new Property({
           name: 'mining',
-          getter: 'platone_mining'
+          getter: 'venachain_mining'
         }),
         new Property({
           name: 'syncing',
-          getter: 'platone_syncing',
+          getter: 'venachain_syncing',
           outputFormatter: formatters.outputSyncingFormatter
         }),
         new Property({
           name: 'gasPrice',
-          getter: 'platone_gasPrice',
+          getter: 'venachain_gasPrice',
           outputFormatter: formatters.outputBigNumberFormatter
         }),
         new Property({
           name: 'accounts',
-          getter: 'platone_accounts'
+          getter: 'venachain_accounts'
         }),
         new Property({
           name: 'blockNumber',
-          getter: 'platone_blockNumber',
+          getter: 'venachain_blockNumber',
           outputFormatter: utils.toDecimal
         }),
         new Property({
           name: 'protocolVersion',
-          getter: 'platone_protocolVersion'
+          getter: 'venachain_protocolVersion'
         })
       ];
     };
 
-    Platone.prototype.contract = function (abi) {
+    Venachain.prototype.contract = function (abi) {
       var factory = new Contract(this, abi);
       return factory;
     };
 
-    Platone.prototype.filter = function (options, callback, filterCreationErrorCallback) {
-      return new Filter(options, 'platone', this._requestManager, watches.platone(), formatters.outputLogFormatter, callback, filterCreationErrorCallback);
+    Venachain.prototype.filter = function (options, callback, filterCreationErrorCallback) {
+      return new Filter(options, 'venachain', this._requestManager, watches.venachain(), formatters.outputLogFormatter, callback, filterCreationErrorCallback);
     };
 
-    Platone.prototype.namereg = function () {
+    Venachain.prototype.namereg = function () {
       return this.contract(namereg.global.abi).at(namereg.global.address);
     };
 
-    Platone.prototype.icapNamereg = function () {
+    Venachain.prototype.icapNamereg = function () {
       return this.contract(namereg.icap.abi).at(namereg.icap.address);
     };
 
-    Platone.prototype.isSyncing = function (callback) {
+    Venachain.prototype.isSyncing = function (callback) {
       return new IsSyncing(this._requestManager, callback);
     };
 
-    module.exports = Platone;
+    module.exports = Venachain;
 
   },{"../../utils/config":18,"../../utils/utils":20,"../contract":25,"../filter":29,"../formatters":30,"../iban":33,"../method":36,"../namereg":44,"../property":45,"../syncing":48,"../transfer":49,"./watches":43}],38:[function(require,module,exports){
     /*

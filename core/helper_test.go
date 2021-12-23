@@ -19,10 +19,10 @@ package core
 import (
 	"container/list"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
-	"github.com/PlatONEnetwork/PlatONE-Go/event"
+	"github.com/Venachain/Venachain/core/types"
+	"github.com/Venachain/Venachain/ethdb/dbhandle"
+	"github.com/Venachain/Venachain/ethdb/memorydb"
+	"github.com/Venachain/Venachain/event"
 )
 
 // Implement our EthTest Manager

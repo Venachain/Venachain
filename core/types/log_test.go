@@ -22,8 +22,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/hexutil"
 	"github.com/davecgh/go-spew/spew"
 )
 

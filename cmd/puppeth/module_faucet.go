@@ -26,8 +26,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/log"
 )
 
 // faucetDockerfile is the Dockerfile required to build a faucet container to

@@ -21,14 +21,14 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul"
-	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/validator"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
-	"github.com/PlatONEnetwork/PlatONE-Go/event"
-	elog "github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/consensus/istanbul"
+	"github.com/Venachain/Venachain/consensus/istanbul/validator"
+	"github.com/Venachain/Venachain/crypto"
+	"github.com/Venachain/Venachain/ethdb/dbhandle"
+	"github.com/Venachain/Venachain/ethdb/memorydb"
+	"github.com/Venachain/Venachain/event"
+	elog "github.com/Venachain/Venachain/log"
 )
 
 var testLogger = elog.New()

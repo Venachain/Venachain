@@ -4,11 +4,12 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/bn256/cloudflare"
-	"github.com/pkg/errors"
 	"math/big"
+
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/crypto"
+	"github.com/Venachain/Venachain/crypto/bn256"
+	"github.com/pkg/errors"
 )
 
 var errVectorLength = errors.New("Invalid vector length")

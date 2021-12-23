@@ -17,8 +17,8 @@
 package main
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/hexutil"
 )
 
 // cppEthereumGenesisSpec represents the genesis specification format used by the
@@ -26,17 +26,17 @@ import (
 type cppEthereumGenesisSpec struct {
 	SealEngine string `json:"sealEngine"`
 	Params     struct {
-		AccountStartNonce       hexutil.Uint64 `json:"accountStartNonce"`
-		NetworkID               hexutil.Uint64 `json:"networkID"`
-		ChainID                 hexutil.Uint64 `json:"chainID"`
-		MaximumExtraDataSize    hexutil.Uint64 `json:"maximumExtraDataSize"`
-		MinGasLimit             hexutil.Uint64 `json:"minGasLimit"`
-		MaxGasLimit             hexutil.Uint64 `json:"maxGasLimit"`
-		GasLimitBoundDivisor    hexutil.Uint64 `json:"gasLimitBoundDivisor"`
-		MinimumDifficulty       *hexutil.Big   `json:"minimumDifficulty"`
-		DifficultyBoundDivisor  *hexutil.Big   `json:"difficultyBoundDivisor"`
-		DurationLimit           *hexutil.Big   `json:"durationLimit"`
-		BlockReward             *hexutil.Big   `json:"blockReward"`
+		AccountStartNonce      hexutil.Uint64 `json:"accountStartNonce"`
+		NetworkID              hexutil.Uint64 `json:"networkID"`
+		ChainID                hexutil.Uint64 `json:"chainID"`
+		MaximumExtraDataSize   hexutil.Uint64 `json:"maximumExtraDataSize"`
+		MinGasLimit            hexutil.Uint64 `json:"minGasLimit"`
+		MaxGasLimit            hexutil.Uint64 `json:"maxGasLimit"`
+		GasLimitBoundDivisor   hexutil.Uint64 `json:"gasLimitBoundDivisor"`
+		MinimumDifficulty      *hexutil.Big   `json:"minimumDifficulty"`
+		DifficultyBoundDivisor *hexutil.Big   `json:"difficultyBoundDivisor"`
+		DurationLimit          *hexutil.Big   `json:"durationLimit"`
+		BlockReward            *hexutil.Big   `json:"blockReward"`
 	} `json:"params"`
 
 	Genesis struct {

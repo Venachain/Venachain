@@ -21,7 +21,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/event"
+	"github.com/Venachain/Venachain/event"
 )
 
 // Manager is an overarching account manager that can communicate with various

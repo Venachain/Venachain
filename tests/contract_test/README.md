@@ -5,7 +5,7 @@
 通过快速起链脚本 启动测试链：
 
 ```
-./platonectl one
+./venachainctl one
 ```
 
 

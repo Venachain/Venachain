@@ -3,10 +3,11 @@ package crypto
 import (
 	"crypto/rand"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/bn256/cloudflare"
 	"math/big"
 	"testing"
+
+	"github.com/Venachain/Venachain/common/hexutil"
+	"github.com/Venachain/Venachain/crypto/bn256"
 )
 
 func TestWithdrawProve(t *testing.T) {

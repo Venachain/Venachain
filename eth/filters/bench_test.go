@@ -23,17 +23,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/bitutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/bloombits"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
-	types2 "github.com/PlatONEnetwork/PlatONE-Go/ethdb/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/event"
-	"github.com/PlatONEnetwork/PlatONE-Go/node"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/bitutil"
+	"github.com/Venachain/Venachain/core/bloombits"
+	"github.com/Venachain/Venachain/core/rawdb"
+	"github.com/Venachain/Venachain/core/types"
+	"github.com/Venachain/Venachain/ethdb"
+	"github.com/Venachain/Venachain/ethdb/dbhandle"
+	"github.com/Venachain/Venachain/ethdb/leveldb"
+	types2 "github.com/Venachain/Venachain/ethdb/types"
+	"github.com/Venachain/Venachain/event"
+	"github.com/Venachain/Venachain/node"
 )
 
 func BenchmarkBloomBits512(b *testing.B) {
@@ -67,7 +67,7 @@ func BenchmarkBloomBits32k(b *testing.B) {
 const benchFilterCnt = 2000
 
 func benchmarkBloomBits(b *testing.B, sectionSize uint64) {
-	benchDataDir := node.DefaultDataDir() + "/platone/chaindata"
+	benchDataDir := node.DefaultDataDir() + "/venachain/chaindata"
 	fmt.Println("Running bloombits benchmark   section size:", sectionSize)
 
 	db, err := ethdb.New(types2.LevelDbStr, benchDataDir, 128, 1024)
@@ -177,7 +177,7 @@ func clearBloomBits(db dbhandle.Database) {
 }
 
 func BenchmarkNoBloomBits(b *testing.B) {
-	benchDataDir := node.DefaultDataDir() + "/platone/chaindata"
+	benchDataDir := node.DefaultDataDir() + "/venachain/chaindata"
 	fmt.Println("Running benchmark without bloombits")
 	db, err := ethdb.New(types2.LevelDbStr, benchDataDir, 128, 1024)
 	if err != nil {

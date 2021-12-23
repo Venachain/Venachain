@@ -27,12 +27,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/crypto"
 )
 
 func tmpKeyStoreIface(t *testing.T, encrypted bool) (dir string, ks keyStore) {
-	d, err := ioutil.TempDir("", "platone-keystore-test")
+	d, err := ioutil.TempDir("", "venachain-keystore-test")
 	if err != nil {
 		t.Fatal(err)
 	}

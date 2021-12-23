@@ -20,8 +20,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts/keystore"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/Venachain/Venachain/accounts/keystore"
+	"github.com/Venachain/Venachain/log"
 )
 
 // deployFaucet queries the user for various input on deploying a faucet, after

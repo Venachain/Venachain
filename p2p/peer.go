@@ -27,11 +27,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common/mclock"
-	"github.com/PlatONEnetwork/PlatONE-Go/event"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/common/mclock"
+	"github.com/Venachain/Venachain/event"
+	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/p2p/discover"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 var (

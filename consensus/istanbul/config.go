@@ -16,7 +16,7 @@
 
 package istanbul
 
-import "github.com/PlatONEnetwork/PlatONE-Go/params"
+import "github.com/Venachain/Venachain/params"
 
 type ProposerPolicy params.ProposerPolicy
 

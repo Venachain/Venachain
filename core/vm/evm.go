@@ -22,9 +22,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/crypto"
+	"github.com/Venachain/Venachain/params"
 )
 
 // emptyCodeHash is used by create to ensure deployment is disallowed to already
@@ -50,8 +50,8 @@ func run(evm *EVM, contract *Contract, input []byte, readOnly bool) ([]byte, err
 			return RunPrecompiledContract(p, input, contract)
 		}
 
-		if p := PlatONEPrecompiledContracts[*contract.CodeAddr]; nil != p {
-			return RunPlatONEPrecompiledSC(p, input, contract, evm)
+		if p := VenachainPrecompiledContracts[*contract.CodeAddr]; nil != p {
+			return RunVenachainPrecompiledSC(p, input, contract, evm)
 		}
 	}
 

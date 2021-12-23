@@ -4,18 +4,19 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/ptransfer/client/utils"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"math/big"
 	"os"
 	"reflect"
 	"regexp"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/ptransfer/client/crypto"
-	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/bn256"
+	"github.com/Venachain/Venachain/cmd/ptransfer/client/utils"
+	"github.com/Venachain/Venachain/log"
+
+	"github.com/Venachain/Venachain/cmd/ptransfer/client/crypto"
+	utl "github.com/Venachain/Venachain/cmd/utils"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/hexutil"
+	"github.com/Venachain/Venachain/crypto/bn256"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -108,7 +109,7 @@ func register(c *cli.Context) {
 		utl.Fatalf(err.Error())
 	}
 
-	log.Debug("initial registration","param", c.String(OutputFlag.Name))
+	log.Debug("initial registration", "param", c.String(OutputFlag.Name))
 	a.Key = keypair
 	// check file name
 	filePath := c.String(OutputFlag.Name)
@@ -119,12 +120,12 @@ func register(c *cli.Context) {
 	if filePath == "null" {
 		utl.Fatalf(fmt.Sprintf("filename is null.\n"))
 	}
-	if len(filePath) > 256{
+	if len(filePath) > 256 {
 		utl.Fatalf(fmt.Sprintf("filename is too long.\n"))
 	}
 	reg := "^.\\/(\\w+\\/?)+.json$"
-	r, _ := regexp.Match(reg,[]byte(filePath))
-	log.Debug("filename check","result", r)
+	r, _ := regexp.Match(reg, []byte(filePath))
+	log.Debug("filename check", "result", r)
 	if !r {
 		utl.Fatalf(fmt.Sprintf("filename is illegal.\n"))
 	}
@@ -145,14 +146,14 @@ func register(c *cli.Context) {
 
 		utl.Fatalf(fmt.Sprintf("register error: %s", err.Error()))
 	}
-	log.Debug("register: call result","result", res)
+	log.Debug("register: call result", "result", res)
 	fmt.Printf("register success\n")
 }
 
 func Register(z *ZCS, home common.Address, a *Account) ([]interface{}, error) {
 	//compute the Schnorr signature where the message is contract address
 	addrData, _ := hexutil.Decode(z.contract)
-	log.Debug("register: contract address","contract", addrData)
+	log.Debug("register: contract address", "contract", addrData)
 	msg := common.LeftPadBytes(addrData, 32)
 	signature, err := crypto.SchnorrSign(rand.Reader, a.Key, msg)
 	if err != nil {
@@ -169,7 +170,7 @@ func Register(z *ZCS, home common.Address, a *Account) ([]interface{}, error) {
 	}
 
 	funcParams := []string{genPubKeyStr(pubKey), sig1, sig2}
-	log.Debug("register: func params","para", funcParams)
+	log.Debug("register: func params", "para", funcParams)
 	z.setMethod("register", funcParams)
 	return z.Send(home, "", true)
 }
@@ -206,7 +207,7 @@ func Deposit(z *ZCS, home common.Address, acc *Account, value string, l, r *big.
 
 	//get the account balance, now the account state is changed
 	epoch, _, _ := z.currentEpoch()
-	log.Debug("deposit:","epoch", epoch)
+	log.Debug("deposit:", "epoch", epoch)
 	_, _, err := acc.recover(z, epoch, l, r)
 	if err != nil {
 		return nil, err
@@ -216,7 +217,7 @@ func Deposit(z *ZCS, home common.Address, acc *Account, value string, l, r *big.
 }
 
 func transfer(c *cli.Context) {
- 	z, home, account, value, l, r := newZscInfo(c)
+	z, home, account, value, l, r := newZscInfo(c)
 	txPub := c.String(TransferPubFlag.Name)
 	decoyNum := c.Int(DecoyNumFlag.Name)
 
@@ -224,7 +225,7 @@ func transfer(c *cli.Context) {
 		utl.Fatalf("the decoy number should in the range [2,10]")
 	}
 	pubKeyStr, err := decodePubKey(txPub)
-	if err != nil{
+	if err != nil {
 		utl.Fatalf(fmt.Sprintf("transfer error: %s", err.Error()))
 	}
 
@@ -248,8 +249,8 @@ func Transfer(z *ZCS, home common.Address, acc *Account, value string, decoyNum 
 	if err != nil {
 		return err
 	}
-	log.Debug("transfer:","epoch", epoch)
-	log.Debug("transfer:","remain block", remainBlocks)
+	log.Debug("transfer:", "epoch", epoch)
+	log.Debug("transfer:", "remain block", remainBlocks)
 	_, _, err = acc.recover(z, epoch, l, r)
 	if err != nil {
 		return err
@@ -275,7 +276,7 @@ func Transfer(z *ZCS, home common.Address, acc *Account, value string, decoyNum 
 
 	// 1.2 check: you can not transfer to yourself (currently unsupported)
 	pub, err := acc.Key.GetPublicKey()
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	if hexutil.Encode(pub.Marshal()) == txPub {
@@ -340,8 +341,8 @@ func Transfer(z *ZCS, home common.Address, acc *Account, value string, decoyNum 
 	indexSender, indexReceiver := checkIndex(decoy, pub, txPub)
 	l0 := big.NewInt(int64(indexSender))
 	l1 := big.NewInt(int64(indexReceiver))
-	log.Debug("transfer:","l0 index", l0)
-	log.Debug("transfer:","l1 index", l1)
+	log.Debug("transfer:", "l0 index", l0)
+	log.Debug("transfer:", "l1 index", l1)
 	// 3.2 get the instance: AnonPk, CLnNew, CRnNew, CVector, D, NonceU, epoch
 	// AnonPk = decoy,
 	// D = G*r, CVector[l0]=-b*G+r*pk[l0], CVector[l1]=b*G+r*pk[l1], CVector[i]= r*pk[i](i != l0 or l1)
@@ -369,7 +370,7 @@ func Transfer(z *ZCS, home common.Address, acc *Account, value string, decoyNum 
 
 	//compute CLnNew CRnNew
 	CLnOld, CRnOld, err := z.GetAccCipher(decoy, epoch)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
@@ -426,8 +427,8 @@ func Withdraw(z *ZCS, home common.Address, acc *Account, value string, l, r *big
 		return fmt.Errorf("get current epoch failed: %v", err)
 	}
 	currentEpoch := big.NewInt(epoch)
-	log.Debug("transfer:","epoch", epoch)
-	log.Debug("transfer:","remain block", remainBlocks)
+	log.Debug("transfer:", "epoch", epoch)
+	log.Debug("transfer:", "remain block", remainBlocks)
 	cL, cR, err := acc.recover(z, epoch, l, r)
 	if err != nil {
 		return err
@@ -451,7 +452,7 @@ func Withdraw(z *ZCS, home common.Address, acc *Account, value string, l, r *big
 
 	//generate withdrawproof
 	pub, err := acc.Key.GetPublicKey()
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	sk := acc.Key.GetPrivateKey()
@@ -529,16 +530,16 @@ func Query(z *ZCS, acc *Account, l, r *big.Int) (*big.Int, error) {
 }
 
 func genConfig(c *cli.Context) {
-	if c.String(UrlFlag.Name) != ""{
+	if c.String(UrlFlag.Name) != "" {
 		config.Url = c.String(UrlFlag.Name)
 	}
-	if c.String(ContractFlag.Name) != ""{
+	if c.String(ContractFlag.Name) != "" {
 		config.Contract = c.String(ContractFlag.Name)
 	}
-	if c.String(TxSenderFlag.Name) != ""{
+	if c.String(TxSenderFlag.Name) != "" {
 		config.From = c.String(TxSenderFlag.Name)
 	}
-	if c.Int(verbosityFlag.Name) != 0{
+	if c.Int(verbosityFlag.Name) != 0 {
 		config.Verbosity = c.Int(verbosityFlag.Name)
 	}
 

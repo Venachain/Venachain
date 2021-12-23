@@ -3,9 +3,9 @@ package vm
 import (
 	"fmt"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/syscontracts"
+	"github.com/Venachain/Venachain/log"
 )
 
 //system contract export functions
@@ -14,7 +14,7 @@ type (
 	SCExportFns map[string]SCExportFn //map[function name]function pointer
 )
 
-var PlatONEPrecompiledContracts = map[common.Address]PrecompiledContract{
+var VenachainPrecompiledContracts = map[common.Address]PrecompiledContract{
 	syscontracts.UserManagementAddress:        &UserManagement{},
 	syscontracts.NodeManagementAddress:        &scNodeWrapper{},
 	syscontracts.CnsManagementAddress:         &CnsWrapper{},
@@ -26,10 +26,9 @@ var PlatONEPrecompiledContracts = map[common.Address]PrecompiledContract{
 	syscontracts.CnsInvokeAddress:             &CnsInvoke{},
 	syscontracts.EvidenceManagementAddress:    &SCEvidenceWrapper{},
 	syscontracts.BulletProofAddress:           &SCBulletProofWrapper{},
-
 }
 
-func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Contract, evm *EVM) (ret []byte, err error) {
+func RunVenachainPrecompiledSC(p PrecompiledContract, input []byte, contract *Contract, evm *EVM) (ret []byte, err error) {
 	defer func() {
 		if err := recover(); nil != err {
 			log.Error("failed to run precompiled system contract", "err", err)

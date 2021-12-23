@@ -17,10 +17,11 @@
 package istanbul
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"strings"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/Venachain/Venachain/params"
+
+	"github.com/Venachain/Venachain/common"
 )
 
 type Validator interface {

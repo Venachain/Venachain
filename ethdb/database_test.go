@@ -25,9 +25,9 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
+	"github.com/Venachain/Venachain/ethdb/dbhandle"
+	"github.com/Venachain/Venachain/ethdb/leveldb"
+	"github.com/Venachain/Venachain/ethdb/memorydb"
 )
 
 func newTestLDB() (*leveldb.LDBDatabase, func()) {
@@ -50,9 +50,9 @@ var test_values = []string{"", "a", "1251", "\x00123\x00"}
 
 func OpenTestLDB() (*leveldb.LDBDatabase, func()) {
 
-	//	dirname := "D:/data/platone/chaindata"
-	//	dirname := "D:/platone-node/data/platone/extdb"
-	dirname := "D:/platone-node/data/platone/extdb"
+	//	dirname := "D:/data/venachain/chaindata"
+	//	dirname := "D:/venachain-node/data/venachain/extdb"
+	dirname := "D:/venachain-node/data/venachain/extdb"
 	db, err := leveldb.NewLDBDatabase(dirname, 0, 0)
 	if err != nil {
 		panic("failed to create test database: " + err.Error())

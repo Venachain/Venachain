@@ -21,7 +21,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/log"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/Venachain/Venachain/common"
 )
 
 // ContractRef is a reference to the contract's backing object

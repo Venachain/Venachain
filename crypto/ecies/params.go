@@ -42,7 +42,7 @@ import (
 	"fmt"
 	"hash"
 
-	ethcrypto "github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	ethcrypto "github.com/Venachain/Venachain/crypto"
 )
 
 var (

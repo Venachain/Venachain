@@ -5,9 +5,9 @@ import (
 	"os"
 	"sort"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/ptransfer/client/core"
+	"github.com/Venachain/Venachain/cmd/ptransfer/client/core"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+	"github.com/Venachain/Venachain/cmd/utils"
 	"gopkg.in/urfave/cli.v1"
 )
 

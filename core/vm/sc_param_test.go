@@ -1,10 +1,11 @@
 package vm
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"math/big"
 	"testing"
+
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/syscontracts"
 )
 
 //func TestParamManager_get(t *testing.T) {
@@ -202,7 +203,7 @@ func TestParamManager_contractPer(t *testing.T) {
 	t.Logf("%d", ret)
 }
 
-func TestParaManager_getsetParam(t *testing.T){
+func TestParaManager_getsetParam(t *testing.T) {
 	db := newMockStateDB()
 	addr := syscontracts.ParameterManagementAddress
 	addr1 := syscontracts.UserManagementAddress
@@ -211,7 +212,7 @@ func TestParaManager_getsetParam(t *testing.T){
 	um.setSuperAdmin()
 	um.addChainAdminByAddress(caller)
 	p := scParamManagerWrapper{base: &ParamManager{contractAddr: &addr, stateDB: db, caller: caller, blockNumber: big.NewInt(100)}}
-	p.setParam(VrfParamsKey,[]byte("{\"ElectionEpoch\": 1,\"NextElectionBlock\": 5,\"ValidatorCount\": 1}"))
+	p.setParam(VrfParamsKey, []byte("{\"ElectionEpoch\": 1,\"NextElectionBlock\": 5,\"ValidatorCount\": 1}"))
 
 	ret, err := p.getParam(VrfParamsKey)
 	if nil != err {
@@ -221,7 +222,7 @@ func TestParaManager_getsetParam(t *testing.T){
 	t.Logf("%d", ret)
 }
 
-func TestOutCall(t *testing.T){
+func TestOutCall(t *testing.T) {
 
 }
 

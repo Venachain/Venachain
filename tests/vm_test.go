@@ -19,7 +19,7 @@ package tests
 import (
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
+	"github.com/Venachain/Venachain/core/vm"
 )
 
 func TestVM(t *testing.T) {

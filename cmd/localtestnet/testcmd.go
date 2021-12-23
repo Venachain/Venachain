@@ -1,9 +1,10 @@
 package main
 
 import (
-	"gopkg.in/urfave/cli.v1"
 	"path/filepath"
 	"strings"
+
+	"gopkg.in/urfave/cli.v1"
 )
 
 var (
@@ -11,7 +12,7 @@ var (
 		//Action:   utils.MigrateFlags(testnetChain),
 		Action:   startTestnetChain,
 		Name:     "start",
-		Usage:    "start platone testnet [flags]",
+		Usage:    "start venachain testnet [flags]",
 		Category: "TESTNET COMMANDS",
 		Description: `
 testnet will create "v" number of directories and populate each with
@@ -55,8 +56,8 @@ func startNode(conf *startNodeConfig) {
 	args := strings.Split(conf.ToFlag(), " ")
 
 	arg := make([]string, 0, len(args)+1)
-	platoneBin := filepath.Join(curPath, "./platone")
-	arg = append(arg, platoneBin)
+	venachainBin := filepath.Join(curPath, "./venachain")
+	arg = append(arg, venachainBin)
 
 	for _, a := range args {
 		if a != "" {

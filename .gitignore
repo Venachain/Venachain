@@ -78,15 +78,15 @@ cmd/SysContracts/*.s
 cmd/SysContracts/*.wasm
 cmd/SysContracts/*.wast
 cmd/SysContracts/appContract/*.txt
-#platonecli precompiled system contract bin-data
+#venachaincli precompiled system contract bin-data
 
-cmd/platonecli/client/precompiled/bindata.go
-cmd/platonecli/platonecli
+cmd/venachaincli/client/precompiled/bindata.go
+cmd/venachaincli/venachaincli
 cmd/data-manager/cmd/cmd
 cmd/localtestnet/localtestnet
 cmd/localtestnet/localtestnetdata/
 cmd/localtestnet/nohup.out
-cmd/localtestnet/platone
+cmd/localtestnet/venachain
 
 release/deployment_conf
 release/linux/bin

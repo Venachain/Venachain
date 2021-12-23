@@ -4,7 +4,7 @@ import (
 	"math/big"
 	"sync"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common/bcwasmutil"
+	"github.com/Venachain/Venachain/common/bcwasmutil"
 )
 
 var (

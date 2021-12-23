@@ -22,9 +22,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/Venachain/Venachain/common"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 func GenNewBlock() *Block {

@@ -26,19 +26,19 @@ import (
 	"sync"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/core"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
-	"github.com/PlatONEnetwork/PlatONE-Go/eth/tracers"
-	"github.com/PlatONEnetwork/PlatONE-Go/internal/ethapi"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
-	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
-	"github.com/PlatONEnetwork/PlatONE-Go/trie"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/hexutil"
+	"github.com/Venachain/Venachain/core"
+	"github.com/Venachain/Venachain/core/rawdb"
+	"github.com/Venachain/Venachain/core/state"
+	"github.com/Venachain/Venachain/core/types"
+	"github.com/Venachain/Venachain/core/vm"
+	"github.com/Venachain/Venachain/eth/tracers"
+	"github.com/Venachain/Venachain/internal/ethapi"
+	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/rlp"
+	"github.com/Venachain/Venachain/rpc"
+	"github.com/Venachain/Venachain/trie"
 )
 
 const (
@@ -279,7 +279,7 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 				traced += uint64(len(txs))
 			}
 			// Generate the next state snapshot fast without tracing
-			_,_, _, _, err := api.eth.blockchain.Processor().Process(block, statedb, vm.Config{})
+			_, _, _, _, err := api.eth.blockchain.Processor().Process(block, statedb, vm.Config{})
 			if err != nil {
 				failed = err
 				break
@@ -518,7 +518,7 @@ func (api *PrivateDebugAPI) computeStateDB(block *types.Block, reexec uint64) (*
 		if block = api.eth.blockchain.GetBlockByNumber(block.NumberU64() + 1); block == nil {
 			return nil, fmt.Errorf("block #%d not found", block.NumberU64()+1)
 		}
-		_,_, _, _, err := api.eth.blockchain.Processor().Process(block, statedb, vm.Config{})
+		_, _, _, _, err := api.eth.blockchain.Processor().Process(block, statedb, vm.Config{})
 		if err != nil {
 			return nil, err
 		}
@@ -649,7 +649,7 @@ func (api *PrivateDebugAPI) computeTxEnv(blockHash common.Hash, txIndex int, ree
 		}
 		// Not yet the searched for transaction, execute on top of the current state
 		vmenv := vm.NewEVM(context, statedb, api.config, vm.Config{})
-		if _, _, _, _,err := core.ApplyMessage(vmenv, msg, new(core.GasPool).AddGas(tx.Gas())); err != nil {
+		if _, _, _, _, err := core.ApplyMessage(vmenv, msg, new(core.GasPool).AddGas(tx.Gas())); err != nil {
 			return nil, vm.Context{}, nil, fmt.Errorf("tx %x failed: %v", tx.Hash(), err)
 		}
 		// Ensure any modifications are committed to the state

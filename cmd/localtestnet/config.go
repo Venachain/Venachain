@@ -38,12 +38,12 @@ var (
 		wasmlog:     "wasm_log",
 		wasmlogsize: 67108864,
 		nodeKeyFile: "nodekey",
-		ipcpath:     "platone.ipc",
+		ipcpath:     "venachain.ipc",
 		logsDir:     "logs",
 
 		wsorigins:     "*",
 		rpccorsdomain: "*",
-		identity:      "platone",
+		identity:      "venachain",
 		bootnodes:     "",
 		other:         "--nodiscover --debug",
 	}
@@ -65,7 +65,7 @@ func newNodeConfig(nodeNumber int) *startNodeConfig {
 func (this *startNodeConfig) ToFlag() string {
 	flags := fmt.Sprintf(` %s %s %s %s %s`,
 		this.P2PFlag(), this.RPCFlag(), this.WSFlag(), this.GCModeFlag(),
-		fmt.Sprintf(` --identity %s --wsorigins "%s" --rpccorsdomain "%s"  %s %s --nodekey %s/%s --datadir %s --ipcpath %s/%s --wasmlog %s/%s/%s --wasmlogsize %d --moduleLogParams {"platone_log":["/"],"__dir__":["%s/%s"],"__size__":["67108864"]}`,
+		fmt.Sprintf(` --identity %s --wsorigins "%s" --rpccorsdomain "%s"  %s %s --nodekey %s/%s --datadir %s --ipcpath %s/%s --wasmlog %s/%s/%s --wasmlogsize %d --moduleLogParams {"venachain_log":["/"],"__dir__":["%s/%s"],"__size__":["67108864"]}`,
 			this.identity, this.wsorigins, this.rpccorsdomain,
 			this.pprof, this.other,
 			this.DataDir, this.nodeKeyFile,

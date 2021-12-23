@@ -20,8 +20,8 @@ import (
 	"container/list"
 	"sync"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core/types"
 )
 
 // txQueueMap is a txHash -> transaction hash map

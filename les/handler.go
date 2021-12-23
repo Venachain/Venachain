@@ -27,25 +27,25 @@ import (
 	"sync"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/mclock"
-	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
-	"github.com/PlatONEnetwork/PlatONE-Go/core"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/leveldb"
-	"github.com/PlatONEnetwork/PlatONE-Go/event"
-	"github.com/PlatONEnetwork/PlatONE-Go/light"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discv5"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
-	"github.com/PlatONEnetwork/PlatONE-Go/trie"
-	trie2 "github.com/PlatONEnetwork/PlatONE-Go/trie"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/mclock"
+	"github.com/Venachain/Venachain/consensus"
+	"github.com/Venachain/Venachain/core"
+	"github.com/Venachain/Venachain/core/rawdb"
+	"github.com/Venachain/Venachain/core/state"
+	"github.com/Venachain/Venachain/core/types"
+	"github.com/Venachain/Venachain/eth/downloader"
+	"github.com/Venachain/Venachain/ethdb/dbhandle"
+	"github.com/Venachain/Venachain/ethdb/leveldb"
+	"github.com/Venachain/Venachain/event"
+	"github.com/Venachain/Venachain/light"
+	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/p2p"
+	"github.com/Venachain/Venachain/p2p/discv5"
+	"github.com/Venachain/Venachain/params"
+	"github.com/Venachain/Venachain/rlp"
+	"github.com/Venachain/Venachain/trie"
+	trie2 "github.com/Venachain/Venachain/trie"
 )
 
 const (
@@ -818,7 +818,7 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 				trie, _ = statedb.Database().OpenStorageTrie(common.BytesToHash(req.AccKey), account.Root)
 
 				if secureTrie, ok := trie.(*trie2.SecureTrie); ok {
-					// Platone's contract storage only store value key. The value store in disk DB directly.
+					// Venachain's contract storage only store value key. The value store in disk DB directly.
 					enc, _ := secureTrie.TryGet2(req.Key)
 					_, content, _, err := rlp.Split(enc)
 					if err != nil {

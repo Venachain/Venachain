@@ -1,7 +1,7 @@
 package les
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/light"
+	"github.com/Venachain/Venachain/light"
 )
 
 type ProofsResponseData struct {

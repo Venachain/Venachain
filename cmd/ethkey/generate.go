@@ -23,9 +23,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts/keystore"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/Venachain/Venachain/accounts/keystore"
+	"github.com/Venachain/Venachain/cmd/utils"
+	"github.com/Venachain/Venachain/crypto"
 	"github.com/pborman/uuid"
 	"gopkg.in/urfave/cli.v1"
 )

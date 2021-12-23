@@ -1,7 +1,8 @@
 package exec
+
 //
 //import (
-//	"github.com/PlatONEnetwork/PlatONE-Go/life/compiler/opcodes"
+//	"github.com/Venachain/Venachain/life/compiler/opcodes"
 //	"testing"
 //)
 //

@@ -2,12 +2,13 @@ package crypto
 
 import (
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/bn256"
-	"github.com/pkg/errors"
 	"io"
 	"math/big"
 	"os"
 	"time"
+
+	"github.com/Venachain/Venachain/crypto/bn256"
+	"github.com/pkg/errors"
 )
 
 type Ciphertext struct {
@@ -95,12 +96,12 @@ func ReadBalance(m *bn256.G1, a, b *big.Int) (*big.Int, error) {
 		return nil, err
 	}
 
-	d := time.Duration(time.Minute*2)
+	d := time.Duration(time.Minute * 2)
 	t := time.NewTicker(d)
 
-	go func(){
+	go func() {
 		<-t.C
-		fmt.Fprintf(os.Stdout,"query time is more than 2 min.\n")
+		fmt.Fprintf(os.Stdout, "query time is more than 2 min.\n")
 		os.Exit(1)
 	}()
 
@@ -108,7 +109,7 @@ func ReadBalance(m *bn256.G1, a, b *big.Int) (*big.Int, error) {
 	pa := new(bn256.G1).ScalarMult(G, a)
 	bigm := PointToInt(m)
 	//i := new(big.Int).Set(a)
-	for i := a; i.Cmp(b) != 1;{
+	for i := a; i.Cmp(b) != 1; {
 		//pi := new(bn256.G1).ScalarMult(G, i)
 		bigi := PointToInt(pa)
 		if bigi.Cmp(bigm) == 0 {

@@ -6,11 +6,11 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/core"
-	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
-	"github.com/PlatONEnetwork/PlatONE-Go/eth/gasprice"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/hexutil"
+	"github.com/Venachain/Venachain/core"
+	"github.com/Venachain/Venachain/eth/downloader"
+	"github.com/Venachain/Venachain/eth/gasprice"
 )
 
 var _ = (*configMarshaling)(nil)

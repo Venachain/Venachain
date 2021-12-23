@@ -21,8 +21,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/Venachain/Venachain/internal/cmdtest"
 	"github.com/docker/docker/pkg/reexec"
-	"github.com/PlatONEnetwork/PlatONE-Go/internal/cmdtest"
 )
 
 type testEthkey struct {

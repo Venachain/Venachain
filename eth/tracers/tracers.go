@@ -21,7 +21,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/eth/tracers/internal/tracers"
+	"github.com/Venachain/Venachain/eth/tracers/internal/tracers"
 )
 
 // all contains all the built in JavaScript tracers by name.

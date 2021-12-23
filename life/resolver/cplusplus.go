@@ -1,4 +1,5 @@
 package resolver
+
 //#cgo LDFLAGS: -L ./nizkpail/ -lnizkpail -lpthread
 //#include "./nizkpail/nizkpail.h"
 
@@ -12,24 +13,22 @@ package resolver
 #cgo LDFLAGS: -L ./sig/ -lsig -lcrypto -lssl -ldl -lpthread
 #include "./sig/sig.h"
 */
-import "C"
 
 import "C"
-import (
-	cryptoZk "github.com/PlatONEnetwork/PlatONE-Go/cmd/ptransfer/client/crypto"
-	"unsafe"
-)
 import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
 	"math"
 	"math/big"
+	"unsafe"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	inner "github.com/PlatONEnetwork/PlatONE-Go/common/math"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/exec"
+	cryptoZk "github.com/Venachain/Venachain/cmd/ptransfer/client/crypto"
+	"github.com/Venachain/Venachain/common"
+
+	inner "github.com/Venachain/Venachain/common/math"
+	"github.com/Venachain/Venachain/crypto"
+	"github.com/Venachain/Venachain/life/exec"
 )
 
 var (
@@ -225,7 +224,7 @@ func newCfcSet() map[string]map[string]*exec.FunctionImport {
 			//secp256k1
 			"secp256k1SigVerify": &exec.FunctionImport{Execute: envP256k1SigVerify, GasCost: envSMVerifyGasCost},
 			//sm3
-			"sm3":         &exec.FunctionImport{Execute: envSm3, GasCost: envSha3GasCost},
+			"sm3": &exec.FunctionImport{Execute: envSm3, GasCost: envSha3GasCost},
 			//bulletproof
 			"bulletProofVerify": &exec.FunctionImport{Execute: envBulletProofVerify, GasCost: envSMVerifyGasCost},
 			//bind proof to range
@@ -697,13 +696,13 @@ func envSm3(vm *exec.VirtualMachine) int64 {
 	data := vm.Memory.Memory[offset : offset+size]
 	data = append(data, 0)
 
-	dest := vm.Memory.Memory[destOffset : destOffset + destSize]
+	dest := vm.Memory.Memory[destOffset : destOffset+destSize]
 	dest = append(dest, 0)
 	dataPtr := (*C.char)(unsafe.Pointer(&data[0]))
 	destPtr := (*C.char)(unsafe.Pointer(&dest[0]))
 
 	hash := C.sm3_compute(dataPtr, destPtr)
-	if hash == (C.int)(0){
+	if hash == (C.int)(0) {
 		return 0
 	}
 	return 0
@@ -774,7 +773,6 @@ func envSmSigVerify(vm *exec.VirtualMachine) int64 {
 
 	return 0
 }
-
 
 func envSmSecSigVerify(vm *exec.VirtualMachine) int64 {
 	msgOffset := int(int32(vm.GetCurrentFrame().Locals[0]))
@@ -895,7 +893,7 @@ func envBulletProofVerify(vm *exec.VirtualMachine) int64 {
 	resultOffset := int(int32(vm.GetCurrentFrame().Locals[2]))
 	resultSize := int(int32(vm.GetCurrentFrame().Locals[3]))
 
-	proof := vm.Memory.Memory[proofOffset : proofSize + proofOffset]
+	proof := vm.Memory.Memory[proofOffset : proofSize+proofOffset]
 
 	//hexproof := hexutil.Encode(proof)
 	statement := cryptoZk.GenerateAggBpStatement(2, 16)
@@ -903,7 +901,7 @@ func envBulletProofVerify(vm *exec.VirtualMachine) int64 {
 
 	//fmt.Println("result:", result)
 	ret := "1"
-	if err !=nil || !result {
+	if err != nil || !result {
 		ret = "0"
 	}
 	resultBts := []byte(ret)
@@ -917,6 +915,7 @@ func envBulletProofVerify(vm *exec.VirtualMachine) int64 {
 
 	return 0
 }
+
 //bind proof to range
 
 func envBulletProofVerify_range(vm *exec.VirtualMachine) int64 {
@@ -927,8 +926,8 @@ func envBulletProofVerify_range(vm *exec.VirtualMachine) int64 {
 	resultOffset := int(int32(vm.GetCurrentFrame().Locals[4]))
 	resultSize := int(int32(vm.GetCurrentFrame().Locals[5]))
 
-	proof := vm.Memory.Memory[proofOffset : proofSize + proofOffset]
-	range_string := vm.Memory.Memory[rangeOffset : rangeOffset + rangeSize]
+	proof := vm.Memory.Memory[proofOffset : proofSize+proofOffset]
+	range_string := vm.Memory.Memory[rangeOffset : rangeOffset+rangeSize]
 	range_hash := crypto.Keccak256(range_string)
 
 	//hexproof := hexutil.Encode(proof)
@@ -937,7 +936,7 @@ func envBulletProofVerify_range(vm *exec.VirtualMachine) int64 {
 
 	//fmt.Println("result:", result)
 	ret := "1"
-	if err !=nil || !result {
+	if err != nil || !result {
 		ret = "0"
 	}
 	resultBts := []byte(ret)
@@ -1259,7 +1258,7 @@ func envBCWasmCall(vm *exec.VirtualMachine) int64 {
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
 
-	_, err := vm.Context.StateDB.Call(vm.Memory.Memory[addr : addr+20], vm.Memory.Memory[params:params+paramsLen])
+	_, err := vm.Context.StateDB.Call(vm.Memory.Memory[addr:addr+20], vm.Memory.Memory[params:params+paramsLen])
 	if err != nil {
 		common.ErrPrintln("call error: ", err.Error())
 		return 0
@@ -1291,7 +1290,7 @@ func envBCWasmCallInt64(vm *exec.VirtualMachine) int64 {
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
 
-	ret, err := vm.Context.StateDB.Call(vm.Memory.Memory[addr : addr+20], vm.Memory.Memory[params:params+paramsLen])
+	ret, err := vm.Context.StateDB.Call(vm.Memory.Memory[addr:addr+20], vm.Memory.Memory[params:params+paramsLen])
 	if err != nil {
 		common.ErrPrintln("call error: ", err.Error())
 		return 0
@@ -1327,7 +1326,7 @@ func envBCWasmCallString(vm *exec.VirtualMachine) int64 {
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
 
-	ret, err := vm.Context.StateDB.Call(vm.Memory.Memory[addr : addr+20], vm.Memory.Memory[params:params+paramsLen])
+	ret, err := vm.Context.StateDB.Call(vm.Memory.Memory[addr:addr+20], vm.Memory.Memory[params:params+paramsLen])
 	if err != nil {
 		common.ErrPrintln("call error: ", err.Error())
 		return 0

@@ -21,7 +21,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul"
+	"github.com/Venachain/Venachain/consensus/istanbul"
 )
 
 func newTestPreprepare(v *istanbul.View) *istanbul.Preprepare {

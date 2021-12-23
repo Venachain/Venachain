@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/life/exec"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/resolver"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"fmt"
 	"io/ioutil"
 	"time"
+
+	"github.com/Venachain/Venachain/life/exec"
+	"github.com/Venachain/Venachain/life/resolver"
+	"github.com/Venachain/Venachain/log"
 )
 
 func main() {
@@ -27,7 +28,7 @@ func main() {
 	rl := resolver.NewResolver(0x01)
 	// Read WebAssembly *.wasm file.
 	//input, err := ioutil.ReadFile(flag.Arg(0))
-	input, err := ioutil.ReadFile("D:\\repos\\PlatONE-contract\\build\\hello\\hello.wasm")
+	input, err := ioutil.ReadFile("D:\\repos\\Venachain-contract\\build\\hello\\hello.wasm")
 	if err != nil {
 		panic(err)
 	}
@@ -46,7 +47,7 @@ func main() {
 		Addr:     [20]byte{},
 		GasUsed:  0,
 		GasLimit: 20000000,
-		Log: rootLog,
+		Log:      rootLog,
 	}, rl, nil)
 
 	if err != nil {

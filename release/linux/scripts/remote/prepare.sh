@@ -348,7 +348,7 @@ function generateConfFile() {
         if [[ "${os}" == "Darwin" ]]; then
             home="Users"
         fi
-        deploy_path="/${home}/${user_name}/PlatONE/${PROJECT_NAME}"
+        deploy_path="/${home}/${user_name}/Venachain/${PROJECT_NAME}"
 
         cp ${CONF_PATH}/deploy.conf.template ${PROJECT_CONF_PATH}/deploy_node-${node_id}.conf
         saveConf "${node_id}" "deploy_path" "${deploy_path}"

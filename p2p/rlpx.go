@@ -35,12 +35,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/ecies"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/secp256k1"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/sha3"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/crypto"
+	"github.com/Venachain/Venachain/crypto/ecies"
+	"github.com/Venachain/Venachain/crypto/secp256k1"
+	"github.com/Venachain/Venachain/crypto/sha3"
+	"github.com/Venachain/Venachain/p2p/discover"
+	"github.com/Venachain/Venachain/rlp"
 	"github.com/golang/snappy"
 )
 

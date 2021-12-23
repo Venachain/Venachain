@@ -3,9 +3,10 @@ package crypto
 import (
 	"crypto/rand"
 	"crypto/sha256"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/bn256/cloudflare"
 	"math/big"
 	"testing"
+
+	"github.com/Venachain/Venachain/crypto/bn256"
 )
 
 func TestVectorScalarExp(t *testing.T) {

@@ -1,4 +1,5 @@
 package resolver
+
 //
 //// #cgo CFLAGS: -I../softfloat/source/include
 //// #define SOFTFLOAT_FAST_INT64
@@ -18,11 +19,11 @@ package resolver
 //	"math"
 //	"math/big"
 //
-//	"github.com/PlatONEnetwork/PlatONE-Go/common"
-//	inner "github.com/PlatONEnetwork/PlatONE-Go/common/math"
-//	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-//	"github.com/PlatONEnetwork/PlatONE-Go/life/compiler"
-//	"github.com/PlatONEnetwork/PlatONE-Go/life/exec"
+//	"github.com/Venachain/Venachain/common"
+//	inner "github.com/Venachain/Venachain/common/math"
+//	"github.com/Venachain/Venachain/crypto"
+//	"github.com/Venachain/Venachain/life/compiler"
+//	"github.com/Venachain/Venachain/life/exec"
 //)
 //
 //var (

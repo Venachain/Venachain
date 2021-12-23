@@ -3,8 +3,8 @@ package vm
 import (
 	"strings"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/params"
 )
 
 const (
@@ -53,7 +53,7 @@ func (e *SCEvidenceWrapper) saveEvidence(key string, value string) (int, error) 
 			return int(setEvidenceFailed), err
 		}
 	}
-	e.base.emitNotifyEvent(setEvidenceSuccess,"save evidence success")
+	e.base.emitNotifyEvent(setEvidenceSuccess, "save evidence success")
 	return int(setEvidenceSuccess), nil
 }
 
@@ -76,7 +76,7 @@ func (e *SCEvidenceWrapper) setJsonData(key string, hash string) (int, error) {
 			return int(setEvidenceFailed), err
 		}
 	}
-	e.base.emitNotifyEvent(setEvidenceSuccess,"set jsondata success.")
+	e.base.emitNotifyEvent(setEvidenceSuccess, "set jsondata success.")
 	return int(setEvidenceSuccess), nil
 }
 

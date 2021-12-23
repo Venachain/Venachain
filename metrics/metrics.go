@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/Venachain/Venachain/log"
 )
 
 // Enabled is checked by the constructor functions for all of the

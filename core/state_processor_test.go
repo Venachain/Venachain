@@ -7,7 +7,7 @@ import (
 
 	"github.com/panjf2000/ants/v2"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/Venachain/Venachain/core/types"
 )
 
 func TestDependency(t *testing.T) {

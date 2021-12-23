@@ -232,12 +232,12 @@ function addNode() {
     if [[ "${DESC}" != "" ]]; then
         flag_desc="--desc ${DESC}"
     fi
-    ${BIN_PATH}/platonecli node add "${NODE_ID}" "${PUBKEY}" "${IP_ADDR}" "${inter_ip}" "${TYPE}" --p2pPort "${P2P_PORT}" --rpcPort "${RPC_PORT}" ${flag_desc} --keyfile "${KEYFILE}" --url "${FIRSTNODE_IP_ADDR}:${FIRSTNODE_RPC_PORT}" <"${PHRASE}"  
+    ${BIN_PATH}/venachaincli node add "${NODE_ID}" "${PUBKEY}" "${IP_ADDR}" "${inter_ip}" "${TYPE}" --p2pPort "${P2P_PORT}" --rpcPort "${RPC_PORT}" ${flag_desc} --keyfile "${KEYFILE}" --url "${FIRSTNODE_IP_ADDR}:${FIRSTNODE_RPC_PORT}" <"${PHRASE}"  
     
     timer=0
     res_add_node=""
     while [ ${timer} -lt 10 ]; do
-        res_add_node=$("${BIN_PATH}"/platonecli node query --name "${NODE_ID}" --url "${FIRSTNODE_IP_ADDR}:${FIRSTNODE_RPC_PORT}") >/dev/null 2>&1
+        res_add_node=$("${BIN_PATH}"/venachaincli node query --name "${NODE_ID}" --url "${FIRSTNODE_IP_ADDR}:${FIRSTNODE_RPC_PORT}") >/dev/null 2>&1
         if [[ $(echo ${res_add_node} | grep "success") != "" ]]; then
             break
         fi

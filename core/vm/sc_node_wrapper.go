@@ -3,9 +3,9 @@ package vm
 import (
 	"strings"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/syscontracts"
+	"github.com/Venachain/Venachain/params"
 )
 
 const (

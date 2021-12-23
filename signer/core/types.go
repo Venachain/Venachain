@@ -22,10 +22,10 @@ import (
 
 	"math/big"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/Venachain/Venachain/accounts"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/hexutil"
+	"github.com/Venachain/Venachain/core/types"
 )
 
 type Accounts []Account
@@ -68,7 +68,7 @@ type SendTxArgs struct {
 	GasPrice hexutil.Big              `json:"gasPrice"`
 	Value    hexutil.Big              `json:"value"`
 	Nonce    hexutil.Uint64           `json:"nonce"`
-	TxType uint64 					  `json:"txType"`
+	TxType   uint64                   `json:"txType"`
 	// We accept "data" and "input" for backwards-compatibility reasons.
 	Data  *hexutil.Bytes `json:"data"`
 	Input *hexutil.Bytes `json:"input"`

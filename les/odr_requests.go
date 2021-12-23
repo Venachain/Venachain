@@ -24,16 +24,16 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-	"github.com/PlatONEnetwork/PlatONE-Go/light"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
-	"github.com/PlatONEnetwork/PlatONE-Go/trie"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core/rawdb"
+	"github.com/Venachain/Venachain/core/types"
+	"github.com/Venachain/Venachain/core/vm"
+	"github.com/Venachain/Venachain/crypto"
+	"github.com/Venachain/Venachain/ethdb/dbhandle"
+	"github.com/Venachain/Venachain/light"
+	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/rlp"
+	"github.com/Venachain/Venachain/trie"
 )
 
 var (
@@ -267,7 +267,7 @@ func (r *TrieRequest) Validate(db dbhandle.Database, msg *Msg) error {
 }
 
 func accKeyIsPrecompileContract(accKey []byte) bool {
-	for addr := range vm.PlatONEPrecompiledContracts {
+	for addr := range vm.VenachainPrecompiledContracts {
 		addrKey := crypto.Keccak256Hash(addr[:])
 		if bytes.Compare(addrKey[:], accKey) == 0 {
 			return true

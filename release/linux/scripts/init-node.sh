@@ -159,7 +159,7 @@ function main() {
     saveConf "ws_port" "${WS_PORT}"
 
     ./local/generate-key.sh -n ${NODE_ID} ${flag_auto}
-    ${BIN_PATH}/platone --datadir ${DATA_PATH}/node-${NODE_ID} init ${CONF_PATH}/genesis.json
+    ${BIN_PATH}/venachain --datadir ${DATA_PATH}/node-${NODE_ID} init ${CONF_PATH}/genesis.json
     printLog "success" "Init Node-${NODE_ID} succeeded"
 }
 

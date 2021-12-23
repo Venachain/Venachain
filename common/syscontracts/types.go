@@ -2,21 +2,22 @@ package syscontracts
 
 import (
 	"encoding/json"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
+
+	"github.com/Venachain/Venachain/common"
 )
 
 // the system contract addr  table
 var (
-	UserManagementAddress        = common.HexToAddress("0x1000000000000000000000000000000000000001") // The PlatONE Precompiled contract addr for user management
-	NodeManagementAddress        = common.HexToAddress("0x1000000000000000000000000000000000000002") // The PlatONE Precompiled contract addr for node management
-	CnsManagementAddress         = common.HexToAddress("0x0000000000000000000000000000000000000011") // The PlatONE Precompiled contract addr for CNS
-	ParameterManagementAddress   = common.HexToAddress("0x1000000000000000000000000000000000000004") // The PlatONE Precompiled contract addr for parameter management
-	FirewallManagementAddress    = common.HexToAddress("0x1000000000000000000000000000000000000005") // The PlatONE Precompiled contract addr for fire wall management
-	GroupManagementAddress       = common.HexToAddress("0x1000000000000000000000000000000000000006") // The PlatONE Precompiled contract addr for group management
-	ContractDataProcessorAddress = common.HexToAddress("0x1000000000000000000000000000000000000007") // The PlatONE Precompiled contract addr for group management
-	CnsInvokeAddress             = common.HexToAddress("0x0000000000000000000000000000000000000000") // The PlatONE Precompiled contract addr for group management
-	EvidenceManagementAddress    = common.HexToAddress("0x0000000000000000000000000000000000000099") // The PlatONE Precompiled contract addr for evidence management
-	BulletProofAddress 			 = common.HexToAddress("0x0000000000000000000000000000000000000100") // The PlatONE Precompiled contract addr for Bullet proof
+	UserManagementAddress        = common.HexToAddress("0x1000000000000000000000000000000000000001") // The Venachain Precompiled contract addr for user management
+	NodeManagementAddress        = common.HexToAddress("0x1000000000000000000000000000000000000002") // The Venachain Precompiled contract addr for node management
+	CnsManagementAddress         = common.HexToAddress("0x0000000000000000000000000000000000000011") // The Venachain Precompiled contract addr for CNS
+	ParameterManagementAddress   = common.HexToAddress("0x1000000000000000000000000000000000000004") // The Venachain Precompiled contract addr for parameter management
+	FirewallManagementAddress    = common.HexToAddress("0x1000000000000000000000000000000000000005") // The Venachain Precompiled contract addr for fire wall management
+	GroupManagementAddress       = common.HexToAddress("0x1000000000000000000000000000000000000006") // The Venachain Precompiled contract addr for group management
+	ContractDataProcessorAddress = common.HexToAddress("0x1000000000000000000000000000000000000007") // The Venachain Precompiled contract addr for group management
+	CnsInvokeAddress             = common.HexToAddress("0x0000000000000000000000000000000000000000") // The Venachain Precompiled contract addr for group management
+	EvidenceManagementAddress    = common.HexToAddress("0x0000000000000000000000000000000000000099") // The Venachain Precompiled contract addr for evidence management
+	BulletProofAddress           = common.HexToAddress("0x0000000000000000000000000000000000000100") // The Venachain Precompiled contract addr for Bullet proof
 )
 
 type UpdateNode struct {

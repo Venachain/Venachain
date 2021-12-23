@@ -9,10 +9,10 @@ import (
 	"reflect"
 	"sort"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/syscontracts"
+	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 const (
@@ -127,7 +127,7 @@ func checkNodeType(typ uint32) error {
 
 func checkNodeTypeForObserverOrLight(typ uint32) error {
 	if typ != NodeTypeObserver &&
-		typ != NodeTypeLight{
+		typ != NodeTypeLight {
 		return errors.New(
 			fmt.Sprintf("The type of node must be OBSERVER(%d) or LightNode(%d)",
 				NodeTypeObserver,

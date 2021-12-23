@@ -11,19 +11,19 @@
 GOBIN = $(shell pwd)/build/bin
 GO ?= latest
 
-platonecli:
+venachaincli:
 	build/build_deps.sh
-	build/env.sh go run build/ci.go install ./cmd/platonecli
-	@cp $(GOBIN)/platonecli $(shell pwd)/release/linux/bin/
+	build/env.sh go run build/ci.go install ./cmd/venachaincli
+	@cp $(GOBIN)/venachaincli $(shell pwd)/release/linux/bin/
 	@echo "Done building."
-	@echo "Run \"$(GOBIN)/platonecli\" to launch platonecli."
+	@echo "Run \"$(GOBIN)/venachaincli\" to launch venachaincli."
 
-platone:
+venachain:
 	build/build_deps.sh
-	build/env.sh go run build/ci.go install ./cmd/platone
-	@cp $(GOBIN)/platone $(shell pwd)/release/linux/bin/
+	build/env.sh go run build/ci.go install ./cmd/venachain
+	@cp $(GOBIN)/venachain $(shell pwd)/release/linux/bin/
 	@echo "Done building."
-	@echo "Run \"$(GOBIN)/platone\" to launch platone."
+	@echo "Run \"$(GOBIN)/venachain\" to launch venachain."
 
 all:
 	build/build_deps.sh

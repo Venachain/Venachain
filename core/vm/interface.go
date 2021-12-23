@@ -19,9 +19,9 @@ package vm
 import (
 	"math/big"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core/state"
+	"github.com/Venachain/Venachain/core/types"
 )
 
 // StateDB is an EVM database for full state querying.

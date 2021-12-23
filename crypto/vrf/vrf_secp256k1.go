@@ -8,8 +8,8 @@ import (
 	"errors"
 	"math/big"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/rfc6979"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/secp256k1"
+	"github.com/Venachain/Venachain/crypto/rfc6979"
+	"github.com/Venachain/Venachain/crypto/secp256k1"
 )
 
 const (

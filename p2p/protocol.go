@@ -18,9 +18,10 @@ package p2p
 
 import (
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
+	"github.com/Venachain/Venachain/common"
+
+	"github.com/Venachain/Venachain/p2p/discover"
 )
 
 // Protocol represents a P2P subprotocol implementation.

@@ -25,8 +25,8 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/Venachain/Venachain/log"
 	mapset "github.com/deckarep/golang-set"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
 )
 
 const MetadataApi = "rpc"

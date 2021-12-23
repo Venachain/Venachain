@@ -26,9 +26,9 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/sha3"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/common/hexutil"
+	"github.com/Venachain/Venachain/crypto/sha3"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 // Lengths of hashes and addresses in bytes.
@@ -37,7 +37,7 @@ const (
 	HashLength = 32
 
 	// AddressLength is the expected length of the address
-	AddressLength = 20
+	AddressLength          = 20
 	BlockConfirmSignLength = 65
 )
 
@@ -177,6 +177,7 @@ func (h UnprefixedHash) MarshalText() ([]byte, error) {
 
 // Address represents the 20 byte address of an Ethereum account.
 type Address [AddressLength]byte
+
 var NullAddress Address = Address{}
 
 // BytesToAddress returns Address with value b.

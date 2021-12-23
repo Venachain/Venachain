@@ -24,8 +24,8 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
+	"github.com/Venachain/Venachain/crypto"
+	"github.com/Venachain/Venachain/p2p"
 )
 
 // Tests that datadirs can be successfully created, be them manually configured
@@ -73,14 +73,14 @@ func TestIPCPathResolution(t *testing.T) {
 	}{
 		{"", "", false, ""},
 		{"data", "", false, ""},
-		{"", "platone.ipc", false, filepath.Join(os.TempDir(), "platone.ipc")},
-		{"data", "platone.ipc", false, "data/platone.ipc"},
-		{"data", "./platone.ipc", false, "./platone.ipc"},
-		{"data", "/platone.ipc", false, "/platone.ipc"},
+		{"", "venachain.ipc", false, filepath.Join(os.TempDir(), "venachain.ipc")},
+		{"data", "venachain.ipc", false, "data/venachain.ipc"},
+		{"data", "./venachain.ipc", false, "./venachain.ipc"},
+		{"data", "/venachain.ipc", false, "/venachain.ipc"},
 		{"", "", true, ``},
 		{"data", "", true, ``},
-		{"", "platone.ipc", true, `\\.\pipe\geth.ipc`},
-		{"data", "platone.ipc", true, `\\.\pipe\geth.ipc`},
+		{"", "venachain.ipc", true, `\\.\pipe\geth.ipc`},
+		{"data", "venachain.ipc", true, `\\.\pipe\geth.ipc`},
 		{"data", `\\.\pipe\geth.ipc`, true, `\\.\pipe\geth.ipc`},
 	}
 	for i, test := range tests {

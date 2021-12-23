@@ -19,14 +19,14 @@ package les
 import (
 	"fmt"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core"
-	"github.com/PlatONEnetwork/PlatONE-Go/eth"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-	"github.com/PlatONEnetwork/PlatONE-Go/light"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core"
+	"github.com/Venachain/Venachain/eth"
+	"github.com/Venachain/Venachain/ethdb/dbhandle"
+	"github.com/Venachain/Venachain/light"
+	"github.com/Venachain/Venachain/p2p"
+	"github.com/Venachain/Venachain/p2p/discover"
+	"github.com/Venachain/Venachain/params"
 )
 
 // lesCommons contains fields needed by both server and client.

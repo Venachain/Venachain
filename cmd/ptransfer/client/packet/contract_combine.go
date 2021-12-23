@@ -3,9 +3,9 @@ package packet
 import (
 	"fmt"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
+	"github.com/Venachain/Venachain/accounts/abi"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/ptransfer/client/utils"
+	"github.com/Venachain/Venachain/cmd/ptransfer/client/utils"
 )
 
 // RawData, used to store function methods and abi

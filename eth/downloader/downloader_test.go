@@ -26,17 +26,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-	istanbulBackend "github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/backend"
-	"github.com/PlatONEnetwork/PlatONE-Go/core"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
-	"github.com/PlatONEnetwork/PlatONE-Go/event"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
-	"github.com/PlatONEnetwork/PlatONE-Go/trie"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/hexutil"
+	istanbulBackend "github.com/Venachain/Venachain/consensus/istanbul/backend"
+	"github.com/Venachain/Venachain/core"
+	"github.com/Venachain/Venachain/core/types"
+	"github.com/Venachain/Venachain/crypto"
+	"github.com/Venachain/Venachain/ethdb/dbhandle"
+	"github.com/Venachain/Venachain/ethdb/memorydb"
+	"github.com/Venachain/Venachain/event"
+	"github.com/Venachain/Venachain/params"
+	"github.com/Venachain/Venachain/trie"
 )
 
 var (
@@ -77,7 +77,7 @@ type downloadTester struct {
 }
 
 func GenesisBlockForTesting(db dbhandle.Database, addr common.Address, balance *big.Int) *types.Block {
-	buf, err := ioutil.ReadFile("./testdata/platone.json")
+	buf, err := ioutil.ReadFile("./testdata/venachain.json")
 	if err != nil {
 		return nil
 	}

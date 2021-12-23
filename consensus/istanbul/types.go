@@ -21,9 +21,9 @@ import (
 	"io"
 	"math/big"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core/types"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 // Proposal supports retrieving height and serialized block to be used during Istanbul consensus.
@@ -43,7 +43,7 @@ type Proposal interface {
 
 type Request struct {
 	Proposal Proposal
-	Round 	 *big.Int
+	Round    *big.Int
 }
 
 // View includes a round number and a sequence number.

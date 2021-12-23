@@ -19,8 +19,8 @@ package les
 import (
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common/bitutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/light"
+	"github.com/Venachain/Venachain/common/bitutil"
+	"github.com/Venachain/Venachain/light"
 )
 
 const (

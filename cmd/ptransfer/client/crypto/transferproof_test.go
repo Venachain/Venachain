@@ -3,10 +3,11 @@ package crypto
 import (
 	"crypto/rand"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/bn256"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"math/big"
 	"testing"
+
+	"github.com/Venachain/Venachain/crypto/bn256"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 func TestTfStatmentMarshal(t *testing.T) {

@@ -18,9 +18,10 @@ package params
 
 import (
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
 	"math/big"
+
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/p2p/discover"
 )
 
 // Genesis hashes to enforce below configs on.

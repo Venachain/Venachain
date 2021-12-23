@@ -34,8 +34,8 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/core"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/core"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 type allocItem struct{ Addr, Balance *big.Int }

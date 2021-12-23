@@ -1,20 +1,12 @@
 package main
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/compiler"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/exec"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/resolver"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"bytes"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
-	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/syndtr/goleveldb/leveldb"
-	"gopkg.in/urfave/cli.v1"
 	"io/ioutil"
 	"math/big"
 	"os"
@@ -22,9 +14,18 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core/vm"
+	"github.com/Venachain/Venachain/life/compiler"
+	"github.com/Venachain/Venachain/life/exec"
+	"github.com/Venachain/Venachain/life/resolver"
+	"github.com/Venachain/Venachain/log"
+	"github.com/syndtr/goleveldb/leveldb"
+	"gopkg.in/urfave/cli.v1"
 )
 
-// The runner used in the unit test is mainly responsible for testing the PlatONElib c++ library.
+// The runner used in the unit test is mainly responsible for testing the Venachainlib c++ library.
 // The wasm file is executed according to the dir scan directory.
 // The wasm is entered from the main entry.
 // The db is created according to --outdir.
@@ -211,7 +212,6 @@ func runModule(m *compiler.Module, functionCode []compiler.InterpreterCode, db *
 func runTest(code []byte, db *leveldb.DB, logStream *bytes.Buffer) error {
 	context := newContext(logStream)
 
-
 	wasm, err := exec.NewVirtualMachine(code, context, newUnitTestResolver(db, logStream), nil)
 	str := logStream.String()
 	fmt.Print(str)
@@ -241,23 +241,23 @@ func newUnitTestResolver(ldb *leveldb.DB, logStream *bytes.Buffer) *UnitTestReso
 	}
 	resolver.funcs = map[string]map[string]*exec.FunctionImport{
 		"env": {
-			"setState":                 &exec.FunctionImport{Execute: resolver.envSetState, GasCost: constGasFunc},
-			"getState":                 &exec.FunctionImport{Execute: resolver.envGetState, GasCost: constGasFunc},
-			"getStateSize":             &exec.FunctionImport{Execute: resolver.envGetStateSize, GasCost: constGasFunc},
-			"getTestLog":               &exec.FunctionImport{Execute: resolver.envGetTestLog, GasCost: constGasFunc},
-			"getTestLogSize":           &exec.FunctionImport{Execute: resolver.envGetTestLogSize, GasCost: constGasFunc},
-			"clearLog":                 &exec.FunctionImport{Execute: resolver.envClearLog, GasCost: constGasFunc},
-			"setStateDB":               &exec.FunctionImport{Execute: resolver.envSetStateDB, GasCost: constGasFunc},
-			"platoneCallString":         &exec.FunctionImport{Execute: resolver.envPlatONECall, GasCost: constGasFunc},
-			"platoneCallInt64":          &exec.FunctionImport{Execute: resolver.envPlatONECall, GasCost: constGasFunc},
-			"platoneDelegateCallString": &exec.FunctionImport{Execute: resolver.envPlatONECall, GasCost: constGasFunc},
-			"platoneDelegateCallInt64":  &exec.FunctionImport{Execute: resolver.envPlatONECall, GasCost: constGasFunc},
-			"platoneCall":               &exec.FunctionImport{Execute: resolver.envPlatONECall, GasCost: constGasFunc},
-			"platoneDelegateCall":       &exec.FunctionImport{Execute: resolver.envPlatONECall, GasCost: constGasFunc},
-			"emitEvent":                &exec.FunctionImport{Execute: resolver.envEmitEvent, GasCost: constGasFunc},
-			"bigintAdd":                &exec.FunctionImport{Execute: resolver.envBigintAdd, GasCost: constGasFunc},
-			"envMalloc":                &exec.FunctionImport{Execute: resolver.envMalloc, GasCost: constGasFunc},
-			"envFree":                  &exec.FunctionImport{Execute: resolver.envFree, GasCost: constGasFunc},
+			"setState":                    &exec.FunctionImport{Execute: resolver.envSetState, GasCost: constGasFunc},
+			"getState":                    &exec.FunctionImport{Execute: resolver.envGetState, GasCost: constGasFunc},
+			"getStateSize":                &exec.FunctionImport{Execute: resolver.envGetStateSize, GasCost: constGasFunc},
+			"getTestLog":                  &exec.FunctionImport{Execute: resolver.envGetTestLog, GasCost: constGasFunc},
+			"getTestLogSize":              &exec.FunctionImport{Execute: resolver.envGetTestLogSize, GasCost: constGasFunc},
+			"clearLog":                    &exec.FunctionImport{Execute: resolver.envClearLog, GasCost: constGasFunc},
+			"setStateDB":                  &exec.FunctionImport{Execute: resolver.envSetStateDB, GasCost: constGasFunc},
+			"venachainCallString":         &exec.FunctionImport{Execute: resolver.envVenachainCall, GasCost: constGasFunc},
+			"venachainCallInt64":          &exec.FunctionImport{Execute: resolver.envVenachainCall, GasCost: constGasFunc},
+			"venachainDelegateCallString": &exec.FunctionImport{Execute: resolver.envVenachainCall, GasCost: constGasFunc},
+			"venachainDelegateCallInt64":  &exec.FunctionImport{Execute: resolver.envVenachainCall, GasCost: constGasFunc},
+			"venachainCall":               &exec.FunctionImport{Execute: resolver.envVenachainCall, GasCost: constGasFunc},
+			"venachainDelegateCall":       &exec.FunctionImport{Execute: resolver.envVenachainCall, GasCost: constGasFunc},
+			"emitEvent":                   &exec.FunctionImport{Execute: resolver.envEmitEvent, GasCost: constGasFunc},
+			"bigintAdd":                   &exec.FunctionImport{Execute: resolver.envBigintAdd, GasCost: constGasFunc},
+			"envMalloc":                   &exec.FunctionImport{Execute: resolver.envMalloc, GasCost: constGasFunc},
+			"envFree":                     &exec.FunctionImport{Execute: resolver.envFree, GasCost: constGasFunc},
 		},
 	}
 	return resolver
@@ -373,7 +373,7 @@ func (r *UnitTestResolver) envSetStateDB(vm *exec.VirtualMachine) int64 {
 	return 0
 }
 
-func (r *UnitTestResolver) envPlatONECall(vm *exec.VirtualMachine) int64 {
+func (r *UnitTestResolver) envVenachainCall(vm *exec.VirtualMachine) int64 {
 	addr := int(int32(vm.GetCurrentFrame().Locals[0]))
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
@@ -427,7 +427,7 @@ type testState struct {
 	Balance     int64             `json:"balance,omitempty"`
 	Origin      string            `json:"origin,omitempty"`
 	Caller      string            `json:"caller,omitempty"`
-	Owner      string            `json:"caller,omitempty"`
+	Owner       string            `json:"caller,omitempty"`
 	Value       int64             `json:"value,omitempty"`
 	Address     string            `json:"address,omitempty"`
 	CallerNonce int64             `json:"nonce,omitempty"`
@@ -509,7 +509,6 @@ func (s *stateDB) Transfer(addr common.Address, value *big.Int) (ret []byte, lef
 		return nil, 0, errors.New("amount not enough")
 	}
 
-
 	tBalance, ok := s.state.Account[strings.ToLower(addr.Hex())]
 	if !ok {
 		return nil, 0, fmt.Errorf("not found account %s", strings.ToLower(addr.Hex()))
@@ -517,7 +516,7 @@ func (s *stateDB) Transfer(addr common.Address, value *big.Int) (ret []byte, lef
 	tBigBalance := new(big.Int)
 	tBigBalance.SetInt64(tBalance)
 
-	tBigBalance= tBigBalance.Add(tBigBalance, value)
+	tBigBalance = tBigBalance.Add(tBigBalance, value)
 	s.state.Account[strings.ToLower(addr.Hex())] = tBigBalance.Int64()
 
 	fBigBalance = fBigBalance.Sub(fBigBalance, value)
@@ -532,7 +531,6 @@ func (s *stateDB) Call(addr, params []byte) ([]byte, error) {
 func (s *stateDB) DelegateCall(addr, params []byte) ([]byte, error) {
 	return nil, nil
 }
-
 
 //func (s *stateDB) CreateAccount(common.Address){}
 //

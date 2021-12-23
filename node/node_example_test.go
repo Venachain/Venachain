@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/node"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
-	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
+	"github.com/Venachain/Venachain/node"
+	"github.com/Venachain/Venachain/p2p"
+	"github.com/Venachain/Venachain/rpc"
 )
 
 // SampleService is a trivial network service that can be attached to a node for

@@ -1,21 +1,22 @@
 package main
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/lru"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/exec"
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/syndtr/goleveldb/leveldb"
-	"gopkg.in/urfave/cli.v1"
 	"io/ioutil"
 	"os"
 	"runtime/pprof"
 	"time"
+
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core/lru"
+	"github.com/Venachain/Venachain/life/exec"
+	"github.com/syndtr/goleveldb/leveldb"
+	"gopkg.in/urfave/cli.v1"
 )
 
-// The runner used in the unit test is mainly responsible for testing the PlatONElib c++ library.
+// The runner used in the unit test is mainly responsible for testing the Venachainlib c++ library.
 // According to the wasm file in the dir scan directory, the wasm is accessed from the main entry.
 // The db is created according to --outdir. The test tool judges the test result based on the log information.
 

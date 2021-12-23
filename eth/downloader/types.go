@@ -19,7 +19,7 @@ package downloader
 import (
 	"fmt"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/Venachain/Venachain/core/types"
 )
 
 // peerDropFn is a callback type for dropping a peer detected as malicious.

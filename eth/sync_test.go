@@ -21,9 +21,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
+	"github.com/Venachain/Venachain/eth/downloader"
+	"github.com/Venachain/Venachain/p2p"
+	"github.com/Venachain/Venachain/p2p/discover"
 )
 
 // Tests that fast sync gets disabled as soon as a real block is successfully

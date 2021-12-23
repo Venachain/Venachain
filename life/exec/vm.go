@@ -14,11 +14,11 @@ import (
 	"math"
 	"math/bits"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/Venachain/Venachain/log"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/life/compiler"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/compiler/opcodes"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
+	"github.com/Venachain/Venachain/life/compiler"
+	"github.com/Venachain/Venachain/life/compiler/opcodes"
+	"github.com/Venachain/Venachain/life/utils"
 
 	"github.com/go-interpreter/wagon/wasm"
 )
@@ -958,22 +958,22 @@ func (vm *VirtualMachine) Execute() {
 			a := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			b := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
-			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_f32_add(C.float(a),C.float(b)))))
+			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_f32_add(C.float(a), C.float(b)))))
 		case opcodes.F32Sub:
 			a := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			b := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
-			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_f32_sub(C.float(a),C.float(b)))))
+			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_f32_sub(C.float(a), C.float(b)))))
 		case opcodes.F32Mul:
 			a := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			b := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
-			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_f32_mul(C.float(a),C.float(b)))))
+			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_f32_mul(C.float(a), C.float(b)))))
 		case opcodes.F32Div:
 			a := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			b := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
-			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_f32_div(C.float(a),C.float(b)))))
+			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_f32_div(C.float(a), C.float(b)))))
 		case opcodes.F32Sqrt:
 			val := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
@@ -997,7 +997,7 @@ func (vm *VirtualMachine) Execute() {
 			val := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
 			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_f32_floor(C.float(val)))))
-        case opcodes.F32Trunc:
+		case opcodes.F32Trunc:
 			val := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
 			//frame.Regs[valueID] = int64(math.Float32bits(float32(math.Trunc(float64(val)))))
@@ -1025,7 +1025,7 @@ func (vm *VirtualMachine) Execute() {
 			b := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
 			//frame.Regs[valueID] = int64(math.Float32bits(float32(math.Copysign(float64(a), float64(b)))))
-			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_f32_copysign(C.float(a),C.float(b)))))
+			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_f32_copysign(C.float(a), C.float(b)))))
 
 			//-------------------------zbx------------------------------------------
 			//-------------------------zbx------------------------------------------
@@ -1035,7 +1035,7 @@ func (vm *VirtualMachine) Execute() {
 			b := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
 			//if a == b {
-			if C.platone_f32_eq(C.float(a),C.float(b)) {
+			if C.platone_f32_eq(C.float(a), C.float(b)) {
 				frame.Regs[valueID] = 1
 			} else {
 				frame.Regs[valueID] = 0
@@ -1045,7 +1045,7 @@ func (vm *VirtualMachine) Execute() {
 			b := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
 			//if a != b {
-			if C.platone_f32_ne(C.float(a),C.float(b)) {
+			if C.platone_f32_ne(C.float(a), C.float(b)) {
 				frame.Regs[valueID] = 1
 			} else {
 				frame.Regs[valueID] = 0
@@ -1055,7 +1055,7 @@ func (vm *VirtualMachine) Execute() {
 			b := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
 			//if a < b {
-			if C.platone_f32_lt(C.float(a),C.float(b)) {
+			if C.platone_f32_lt(C.float(a), C.float(b)) {
 				frame.Regs[valueID] = 1
 			} else {
 				frame.Regs[valueID] = 0
@@ -1065,7 +1065,7 @@ func (vm *VirtualMachine) Execute() {
 			b := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
 			//if a <= b {
-			if C.platone_f32_le(C.float(a),C.float(b)) {
+			if C.platone_f32_le(C.float(a), C.float(b)) {
 				frame.Regs[valueID] = 1
 			} else {
 				frame.Regs[valueID] = 0
@@ -1075,7 +1075,7 @@ func (vm *VirtualMachine) Execute() {
 			b := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
 			//if a > b {
-			if C.platone_f32_gt(C.float(a),C.float(b)) {
+			if C.platone_f32_gt(C.float(a), C.float(b)) {
 				frame.Regs[valueID] = 1
 			} else {
 				frame.Regs[valueID] = 0
@@ -1085,7 +1085,7 @@ func (vm *VirtualMachine) Execute() {
 			b := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
 			//if a >= b {
-			if C.platone_f32_ge(C.float(a),C.float(b)) {
+			if C.platone_f32_ge(C.float(a), C.float(b)) {
 				frame.Regs[valueID] = 1
 			} else {
 				frame.Regs[valueID] = 0
@@ -1094,22 +1094,22 @@ func (vm *VirtualMachine) Execute() {
 			a := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			b := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
-			frame.Regs[valueID] = int64(math.Float64bits(float64(C.platone_f64_add(C.double(a),C.double(b)))))
+			frame.Regs[valueID] = int64(math.Float64bits(float64(C.platone_f64_add(C.double(a), C.double(b)))))
 		case opcodes.F64Sub:
 			a := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			b := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
-			frame.Regs[valueID] = int64(math.Float64bits(float64(C.platone_f64_sub(C.double(a),C.double(b)))))
+			frame.Regs[valueID] = int64(math.Float64bits(float64(C.platone_f64_sub(C.double(a), C.double(b)))))
 		case opcodes.F64Mul:
 			a := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			b := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
-			frame.Regs[valueID] = int64(math.Float64bits(float64(C.platone_f64_mul(C.double(a),C.double(b)))))
+			frame.Regs[valueID] = int64(math.Float64bits(float64(C.platone_f64_mul(C.double(a), C.double(b)))))
 		case opcodes.F64Div:
 			a := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			b := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
-			frame.Regs[valueID] = int64(math.Float64bits(float64(C.platone_f64_div(C.double(a),C.double(b)))))
+			frame.Regs[valueID] = int64(math.Float64bits(float64(C.platone_f64_div(C.double(a), C.double(b)))))
 		case opcodes.F64Sqrt:
 			val := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
@@ -1166,7 +1166,7 @@ func (vm *VirtualMachine) Execute() {
 			b := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
 			//if a == b {
-			if C.platone_f64_eq(C.double(a),C.double(b)) {
+			if C.platone_f64_eq(C.double(a), C.double(b)) {
 				frame.Regs[valueID] = 1
 			} else {
 				frame.Regs[valueID] = 0
@@ -1176,7 +1176,7 @@ func (vm *VirtualMachine) Execute() {
 			b := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
 			//if a != b {
-			if C.platone_f64_ne(C.double(a),C.double(b)) {
+			if C.platone_f64_ne(C.double(a), C.double(b)) {
 				frame.Regs[valueID] = 1
 			} else {
 				frame.Regs[valueID] = 0
@@ -1186,7 +1186,7 @@ func (vm *VirtualMachine) Execute() {
 			b := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
 			//if a < b {
-			if C.platone_f64_lt(C.double(a),C.double(b)) {
+			if C.platone_f64_lt(C.double(a), C.double(b)) {
 				frame.Regs[valueID] = 1
 			} else {
 				frame.Regs[valueID] = 0
@@ -1196,7 +1196,7 @@ func (vm *VirtualMachine) Execute() {
 			b := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
 			//if a <= b {
-			if C.platone_f64_le(C.double(a),C.double(b)) {
+			if C.platone_f64_le(C.double(a), C.double(b)) {
 				frame.Regs[valueID] = 1
 			} else {
 				frame.Regs[valueID] = 0
@@ -1206,7 +1206,7 @@ func (vm *VirtualMachine) Execute() {
 			b := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
 			//if a > b {
-			if C.platone_f64_gt(C.double(a),C.double(b)) {
+			if C.platone_f64_gt(C.double(a), C.double(b)) {
 				frame.Regs[valueID] = 1
 			} else {
 				frame.Regs[valueID] = 0
@@ -1216,7 +1216,7 @@ func (vm *VirtualMachine) Execute() {
 			b := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
 			//if a >= b {
-			if C.platone_f64_ge(C.double(a),C.double(b)) {
+			if C.platone_f64_ge(C.double(a), C.double(b)) {
 				frame.Regs[valueID] = 1
 			} else {
 				frame.Regs[valueID] = 0
@@ -1238,7 +1238,6 @@ func (vm *VirtualMachine) Execute() {
 			frame.IP += 4
 			frame.Regs[valueID] = int64(int32(C.platone_f32_trunc_i32u(C.float(v))))
 
-
 		case opcodes.I32TruncSF64:
 			v := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
@@ -1256,7 +1255,7 @@ func (vm *VirtualMachine) Execute() {
 			//frame.Regs[valueID] = int64(math.Trunc(float64(v)))
 			frame.Regs[valueID] = int64(C.platone_f32_trunc_i64s(C.float(v)))
 
-			case opcodes.I64TruncUF32:
+		case opcodes.I64TruncUF32:
 			v := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
 			frame.Regs[valueID] = int64(C.platone_f32_trunc_i64u(C.float(v)))

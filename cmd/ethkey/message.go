@@ -21,10 +21,10 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts/keystore"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/Venachain/Venachain/accounts/keystore"
+	"github.com/Venachain/Venachain/cmd/utils"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/crypto"
 	"gopkg.in/urfave/cli.v1"
 )
 

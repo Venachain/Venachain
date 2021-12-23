@@ -18,10 +18,11 @@ package memorydb
 
 import (
 	"errors"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/dbhandle"
 	"sync"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/Venachain/Venachain/ethdb/dbhandle"
+
+	"github.com/Venachain/Venachain/common"
 )
 
 /*

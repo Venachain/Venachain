@@ -19,8 +19,8 @@ package trie
 import (
 	"fmt"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/log"
 )
 
 // SecureTrie wraps a trie with key hashing. In a secure trie, all

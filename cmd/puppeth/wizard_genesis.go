@@ -25,21 +25,20 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core"
+	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/params"
 )
 
 // makeGenesis creates a new genesis struct based on some user input.
 func (w *wizard) makeGenesis() {
 	// Construct a default genesis block
 	genesis := &core.Genesis{
-		Timestamp:  uint64(time.Now().Unix()),
-		GasLimit:   3150000000,
-		Alloc:      make(core.GenesisAlloc),
-		Config: &params.ChainConfig{
-		},
+		Timestamp: uint64(time.Now().Unix()),
+		GasLimit:  3150000000,
+		Alloc:     make(core.GenesisAlloc),
+		Config:    &params.ChainConfig{},
 	}
 	// Figure out which consensus engine to choose
 	fmt.Println()

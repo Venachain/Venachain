@@ -22,8 +22,8 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/Venachain/Venachain/accounts/abi"
+	"github.com/Venachain/Venachain/common"
 
 	"bytes"
 	"os"

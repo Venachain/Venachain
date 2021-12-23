@@ -30,13 +30,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Venachain/Venachain/crypto"
+	"github.com/Venachain/Venachain/crypto/ecies"
+	"github.com/Venachain/Venachain/crypto/sha3"
+	"github.com/Venachain/Venachain/p2p/discover"
+	"github.com/Venachain/Venachain/p2p/simulations/pipes"
+	"github.com/Venachain/Venachain/rlp"
 	"github.com/davecgh/go-spew/spew"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/ecies"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/sha3"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/simulations/pipes"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
 func TestSharedSecret(t *testing.T) {

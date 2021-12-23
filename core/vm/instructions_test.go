@@ -20,8 +20,8 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/params"
 )
 
 type twoOperandTest struct {

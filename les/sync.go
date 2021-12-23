@@ -21,8 +21,8 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
-	"github.com/PlatONEnetwork/PlatONE-Go/light"
+	"github.com/Venachain/Venachain/eth/downloader"
+	"github.com/Venachain/Venachain/light"
 )
 
 var (

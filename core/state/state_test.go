@@ -22,12 +22,12 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/trie"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/crypto"
+	"github.com/Venachain/Venachain/ethdb"
+	"github.com/Venachain/Venachain/ethdb/memorydb"
+	"github.com/Venachain/Venachain/ethdb/types"
+	"github.com/Venachain/Venachain/trie"
 	checker "gopkg.in/check.v1"
 )
 
@@ -252,7 +252,7 @@ func compareStateObjects(so0, so1 *stateObject, t *testing.T) {
 }
 
 func TestEmptyByte(t *testing.T) {
-	db, _ := ethdb.New(types.LevelDbStr, "D:\\resource\\platone\\platone-go\\data1", 0, 0)
+	db, _ := ethdb.New(types.LevelDbStr, "D:\\resource\\venachain\\venachain-go\\data1", 0, 0)
 	state, _ := New(common.Hash{}, NewDatabase(db))
 
 	address := common.HexToAddress("0x823140710bf13990e4500136726d8b55")

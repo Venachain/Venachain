@@ -20,8 +20,8 @@ import (
 	"math/big"
 	"sync"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/consensus/istanbul"
 )
 
 // sendNextRoundChange sends the ROUND CHANGE message with current round + 1
@@ -105,7 +105,7 @@ func (c *core) handleRoundChange(msg *message, src istanbul.Validator) error {
 	} else if cv.Round.Cmp(roundView.Round) < 0 {
 		// Only gossip the message with current round to other validators.
 		// If the (roundView.Round) == (current.Round+1), gossip the message
-		if cv.Round.Cmp(big.NewInt(0).Add(roundView.Round,big.NewInt(-1))) == 0{
+		if cv.Round.Cmp(big.NewInt(0).Add(roundView.Round, big.NewInt(-1))) == 0 {
 			return nil
 		}
 		return errIgnored

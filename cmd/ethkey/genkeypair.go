@@ -1,18 +1,19 @@
 package main
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"crypto/ecdsa"
 	"encoding/hex"
 	"fmt"
+
+	"github.com/Venachain/Venachain/cmd/utils"
+	"github.com/Venachain/Venachain/crypto"
 	"gopkg.in/urfave/cli.v1"
 )
 
 type outputGenkeypair struct {
-	Address      string
-	PrivateKey   string
-	PublicKey 	 string
+	Address    string
+	PrivateKey string
+	PublicKey  string
 }
 
 var commandGenkeypair = cli.Command{
@@ -38,8 +39,8 @@ Generate a new private key pair.
 
 		// Output some information.
 		out := outputGenkeypair{
-			Address: crypto.PubkeyToAddress(privateKey.PublicKey).Hex(),
-			PublicKey: hex.EncodeToString(crypto.FromECDSAPub(&privateKey.PublicKey)[1:]),
+			Address:    crypto.PubkeyToAddress(privateKey.PublicKey).Hex(),
+			PublicKey:  hex.EncodeToString(crypto.FromECDSAPub(&privateKey.PublicKey)[1:]),
 			PrivateKey: hex.EncodeToString(crypto.FromECDSA(privateKey)),
 		}
 		if ctx.Bool(jsonFlag.Name) {

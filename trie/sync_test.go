@@ -20,9 +20,9 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/ethdb/memorydb"
+	"github.com/Venachain/Venachain/ethdb/memorydb"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/Venachain/Venachain/common"
 )
 
 // makeTestTrie create a sample test trie to test node-wise reconstruction.

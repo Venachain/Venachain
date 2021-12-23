@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 func TestParseConfig(t *testing.T) {
@@ -170,7 +171,7 @@ func TestGetFuncParam(t *testing.T) {
 }
 
 func TestAAA(t *testing.T) {
-	//dir := "D:\\resource\\platone\\contract\\PlatONE-contract\\build\\user\\wuwei\\wuwei.cpp.abi.json"
+	//dir := "D:\\resource\\venachain\\contract\\Venachain-contract\\build\\user\\wuwei\\wuwei.cpp.abi.json"
 	//funcName:= "transfer"
 	//funcParams := "transfer(\"0x60ceca9c\",\"0x60ceca\",100)"
 	//encodeParam(dir,funcName,funcParams)
@@ -191,7 +192,7 @@ func TestAAA(t *testing.T) {
 
 }
 func TestBBB(t *testing.T) {
-	dir := "D:\\resource\\platone\\contract\\PlatONE-contract\\temp\\contracta.cpp.abi.json"
+	dir := "D:\\resource\\venachain\\contract\\Venachain-contract\\temp\\contracta.cpp.abi.json"
 	funcName := "atransfer2"
 	funcParams := "atransfer2(\"eeeeeee\",\"ffffff\",3333)"
 	//funcParams := "transfer(\"0x43355c787c50b647c425f594b441d4bd751951c1\")"

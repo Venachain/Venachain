@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/ptransfer/client/utils"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+	utl "github.com/Venachain/Venachain/cmd/ptransfer/client/utils"
+	"github.com/Venachain/Venachain/cmd/utils"
 )
 
 const (

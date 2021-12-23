@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
+	"github.com/Venachain/Venachain/common/syscontracts"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 const (
@@ -23,9 +23,9 @@ const (
 )
 
 var (
-	errUserNameAlreadyExist   = errors.New(" UserName Already Exist ")
-	errAlreadySetUserName     = errors.New("Already Set UserName ")
-	errNoUserInfo             = errors.New("No User Info ")
+	errUserNameAlreadyExist = errors.New(" UserName Already Exist ")
+	errAlreadySetUserName   = errors.New("Already Set UserName ")
+	errNoUserInfo           = errors.New("No User Info ")
 )
 
 type UserInfo = syscontracts.UserInfo
@@ -71,7 +71,7 @@ func updateDescInfo(src *DescInfo, dest *DescInfo) {
 // 管理员操作
 func (u *UserManagement) addUser(info *UserInfo) (int32, error) {
 	topic := "addUser"
-	if info.Address == ZeroAddress{
+	if info.Address == ZeroAddress {
 		return u.returnFail(topic, errors.New("User's Address must be a nonzero address!"))
 	}
 
@@ -105,9 +105,9 @@ func (u *UserManagement) addUser(info *UserInfo) (int32, error) {
 			return u.returnFail(topic, err)
 		}
 
-		if data, err := json.Marshal(descInfo); err != nil{
+		if data, err := json.Marshal(descInfo); err != nil {
 			return u.returnFail(topic, err)
-		}else {
+		} else {
 			info.DescInfo = string(data)
 		}
 	}

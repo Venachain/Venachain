@@ -13,11 +13,11 @@ root="$PWD"
 
 echo "$root" "$workspace"
 
-platonedir="$workspace/src/github.com/PlatONEnetwork"
-if [ ! -L "$platonedir/PlatONE-Go" ]; then
-    mkdir -p "$platonedir"
-    cd "$platonedir"
-    ln -s ../../../../../. PlatONE-Go
+venachaindir="$workspace/src/github.com/Venachain"
+if [ ! -L "$venachaindir/Venachain" ]; then
+    mkdir -p "$venachaindir"
+    cd "$venachaindir"
+    ln -s ../../../../../. Venachain
     echo "ln -s success."
     cd "$root"
 fi
@@ -28,8 +28,8 @@ export GOPATH
 export PATH=$PATH:$GOPATH/bin
 
 # Run the command inside the workspace.
-cd "$platonedir/PlatONE-Go"
-PWD="$platonedir/PlatONE-Go"
+cd "$venachaindir/Venachain"
+PWD="$venachaindir/Venachain"
 
 # Launch the arguments with the configured environment.
 exec "$@"

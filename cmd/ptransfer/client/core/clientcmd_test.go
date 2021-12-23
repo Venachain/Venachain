@@ -6,10 +6,10 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/ptransfer/client/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/bn256"
+	"github.com/Venachain/Venachain/cmd/ptransfer/client/crypto"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/hexutil"
+	"github.com/Venachain/Venachain/crypto/bn256"
 )
 
 func TestNewAcc(t *testing.T) {

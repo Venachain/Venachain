@@ -2,8 +2,8 @@ package exec
 
 import (
 	"errors"
-	
-	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
+
+	"github.com/Venachain/Venachain/life/utils"
 )
 
 var _ ImportResolver = (*NopResolver)(nil)

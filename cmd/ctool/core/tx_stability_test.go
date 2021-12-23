@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	configPath = "D:\\resource\\platone\\PlatONE-Go\\src\\github.com\\PlatONEnetwork\\PlatONE-Go\\cmd\\ctool\\config.json"
+	configPath = "D:\\resource\\venachain\\Venachain\\src\\github.com\\Venachain\\Venachain\\cmd\\ctool\\config.json"
 	pkFilePath = "../test/privateKeys.txt"
 )
 

@@ -3,7 +3,7 @@ package consensus
 import (
 	"sync"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/event"
+	"github.com/Venachain/Venachain/event"
 )
 
 type StatusInfo struct {

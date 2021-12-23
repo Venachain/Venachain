@@ -3,7 +3,7 @@
 ## [1.1.2]
 ### Features
 * [storage] 存储插件化，新增可选存储引擎PebbleDB --曾梦露
-* [other] PlatONE支持节点License，对节点可用性进行控制 --杜代栋
+* [other] Venachain支持节点License，对节点可用性进行控制 --杜代栋
 * [chain] 区块打包交易个数自动控制  --张伟
 * [deploy] 重构部署脚本支持多机一键部署  --吴经文
 * [contract] 预编译合约添加bulletproof合约 --陈炫慧
@@ -28,7 +28,7 @@
 ### Improvements
 * [download] 区块同步优化重复同步 --陈明晶
 * [evm] 合约支持SM3              --李京京
-* [rpc] namespace增加platone   --张玉坚
+* [rpc] namespace增加venachain   --张玉坚
 
 ### Bug Fixes
 * [chain] badBlock问题修复 -- 张玉坚
@@ -76,7 +76,7 @@
 * [other] 删除Rinkeby，Testnet;删除ChainConfig的EmptyBlock设置;删除Clique；删除difficulty；删除dev模式；
 * [other] 删除默认配置,并重写了genesis初始化逻辑。
 * [other] 交易处理生命周期全流程优化  - 张玉坚
-* [p2p]   修改protocol协议为platoneV1，交易广播添加hash广播  - 张玉坚
+* [p2p]   修改protocol协议为venachainV1，交易广播添加hash广播  - 张玉坚
 * [other] 交易结构中删除了txtype字段
 
 
@@ -90,9 +90,9 @@
 ### Features
 * [chain] 添加一链多账本功能（群组预编译化系统合约等等）
 * [chain] 支持VRF共识机制 - 于宗坤
-* [chain] platone命令行工具支持通过replay区块的方式完成非兼容性升级 - 于宗坤
+* [chain] venachain命令行工具支持通过replay区块的方式完成非兼容性升级 - 于宗坤
 * [other] 可视化运维平台
-* [other] 新的链交互工具 platonecli
+* [other] 新的链交互工具 venachaincli
 
 
 ## [0.9.12] 2020-08-25
@@ -108,7 +108,7 @@
 ### Improvements
 ### Features
 * [chain] WASM虚拟机对大浮点数和大整数的支持 --于宗坤
-* [other] PlatONE-CDT
+* [other] Venachain-CDT
 
 ### Bug Fixes
 
@@ -121,7 +121,7 @@
 
 ### Bug Fixes
 * [chain] import功能bug修复。  --葛鑫
-* [chain] 解决PlatONE终端log输出时，日志等级设置失效问题。 --汤勇
+* [chain] 解决Venachain终端log输出时，日志等级设置失效问题。 --汤勇
 
 ## [0.9.9]
 ### Breaking Changes
@@ -176,7 +176,7 @@
 
 ### Improvements
 * [contract] 简化了wasm与solidity兼容调用方式。-- 汤勇
-* [chain] 添加对版本的支持，`./platone  --version`可以打印当前版本。 -- 葛鑫
+* [chain] 添加对版本的支持，`./venachain  --version`可以打印当前版本。 -- 葛鑫
 * [contract] 删除sm密码库的静态库文件，改为用源码编译，方便为以后的跨平台做准备。 -- 潘晨
 * [chain] 暂时注释掉VC（verifiable computation，可验证计算）和nizkpail相关代码为跨平台做准备。-- 杜满想
 

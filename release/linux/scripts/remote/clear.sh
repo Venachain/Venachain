@@ -214,7 +214,7 @@ function deleteNode() {
         return 1
     fi
 
-    delete_node_flag=$(xcmd "${USER_NAME}@${IP_ADDR}" "${BIN_PATH}/platonecli node delete \"${NODE_ID}\" --keyfile ${CONF_PATH}/keyfile.json --url ${FIRSTNODE_IP_ADDR}:${FIRSTNODE_RPC_PORT} <${CONF_PATH}/keyfile.phrase")
+    delete_node_flag=$(xcmd "${USER_NAME}@${IP_ADDR}" "${BIN_PATH}/venachaincli node delete \"${NODE_ID}\" --keyfile ${CONF_PATH}/keyfile.json --url ${FIRSTNODE_IP_ADDR}:${FIRSTNODE_RPC_PORT} <${CONF_PATH}/keyfile.phrase")
     if [[ $(echo "${delete_node_flag}" | grep "success") == "" ]]; then
        printLog "error" "DELETE NODE NODE-${NODE_ID} FAILED, MAY BE IS DOWN"
         return 1

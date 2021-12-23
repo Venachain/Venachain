@@ -21,7 +21,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
+	"github.com/Venachain/Venachain/core/vm"
 )
 
 // Iterator for disassembled EVM instructions

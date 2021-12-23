@@ -3,9 +3,9 @@ package vm
 import (
 	"math/big"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/syscontracts"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 type SCEvidence struct {
@@ -23,9 +23,9 @@ type SCEvidence struct {
 //}
 
 type Evidence struct {
-	Owner        common.Address
-	EvidenceValue  string
-	Timestamp    *big.Int
+	Owner         common.Address
+	EvidenceValue string
+	Timestamp     *big.Int
 }
 
 func NewSCEvidence(db StateDB) *SCEvidence {
@@ -37,10 +37,10 @@ func NewSCEvidence(db StateDB) *SCEvidence {
 }
 func NewEvidence() *Evidence {
 	return &Evidence{
-		Owner:        ZeroAddress,
+		Owner: ZeroAddress,
 		//EvidenceHash: common.Hash{},
-		EvidenceValue:  "",
-		Timestamp:    big.NewInt(0),
+		EvidenceValue: "",
+		Timestamp:     big.NewInt(0),
 	}
 }
 

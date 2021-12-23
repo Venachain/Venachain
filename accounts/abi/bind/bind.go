@@ -28,7 +28,7 @@ import (
 	"text/template"
 	"unicode"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
+	"github.com/Venachain/Venachain/accounts/abi"
 	"golang.org/x/tools/imports"
 )
 

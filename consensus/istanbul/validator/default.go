@@ -17,14 +17,15 @@
 package validator
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"reflect"
 	"sort"
 	"sync"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul"
+	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/params"
+
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/consensus/istanbul"
 )
 
 type defaultValidator struct {
@@ -161,7 +162,7 @@ func stickyProposer(valSet istanbul.ValidatorSet, proposer common.Address, round
 }
 
 func (valSet *defaultSet) AddValidator(address common.Address) bool {
-	log.Info("^^^^^^^^^^^^^^^^^^^^    valSet.AddVallidator()"+address.String())
+	log.Info("^^^^^^^^^^^^^^^^^^^^    valSet.AddVallidator()" + address.String())
 	valSet.validatorMu.Lock()
 	defer valSet.validatorMu.Unlock()
 	for _, v := range valSet.validators {
@@ -202,6 +203,6 @@ func (valSet *defaultSet) Copy() istanbul.ValidatorSet {
 
 //func (valSet *defaultSet) F() int { return int(math.Ceil(float64(valSet.Size())/3)) - 1 }
 
-func (valSet *defaultSet) F() int { return (valSet.Size() -1) / 3 }
+func (valSet *defaultSet) F() int { return (valSet.Size() - 1) / 3 }
 
 func (valSet *defaultSet) Policy() params.ProposerPolicy { return valSet.policy }

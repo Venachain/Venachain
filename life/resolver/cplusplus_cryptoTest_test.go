@@ -1,9 +1,10 @@
 package resolver
+
 //
 //import (
 //	"fmt"
-//	"github.com/PlatONEnetwork/PlatONE-Go/life/exec"
-//	"github.com/PlatONEnetwork/PlatONE-Go/log"
+//	"github.com/Venachain/Venachain/life/exec"
+//	"github.com/Venachain/Venachain/log"
 //	"testing"
 //	"time"
 //)

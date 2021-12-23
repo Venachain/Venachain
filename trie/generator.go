@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"hash"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/sha3"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/crypto/sha3"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 type Generator interface {

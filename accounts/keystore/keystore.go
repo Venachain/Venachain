@@ -33,11 +33,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/event"
+	"github.com/Venachain/Venachain/accounts"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core/types"
+	"github.com/Venachain/Venachain/crypto"
+	"github.com/Venachain/Venachain/event"
 )
 
 var (

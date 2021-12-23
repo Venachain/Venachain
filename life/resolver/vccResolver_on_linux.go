@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"unsafe"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/life/exec"
+	"github.com/Venachain/Venachain/life/exec"
 )
 
 // define: void vc_InitGadgetEnv();

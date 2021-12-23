@@ -41,23 +41,23 @@ import (
 	"sync"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts/keystore"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/eth"
-	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethclient"
-	"github.com/PlatONEnetwork/PlatONE-Go/ethstats"
-	"github.com/PlatONEnetwork/PlatONE-Go/les"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/PlatONEnetwork/PlatONE-Go/node"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discv5"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/nat"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"github.com/Venachain/Venachain/accounts"
+	"github.com/Venachain/Venachain/accounts/keystore"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core"
+	"github.com/Venachain/Venachain/core/types"
+	"github.com/Venachain/Venachain/eth"
+	"github.com/Venachain/Venachain/eth/downloader"
+	"github.com/Venachain/Venachain/ethclient"
+	"github.com/Venachain/Venachain/ethstats"
+	"github.com/Venachain/Venachain/les"
+	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/node"
+	"github.com/Venachain/Venachain/p2p"
+	"github.com/Venachain/Venachain/p2p/discover"
+	"github.com/Venachain/Venachain/p2p/discv5"
+	"github.com/Venachain/Venachain/p2p/nat"
+	"github.com/Venachain/Venachain/params"
 	"golang.org/x/net/websocket"
 )
 
@@ -215,7 +215,7 @@ type faucet struct {
 func newFaucet(genesis *core.Genesis, port int, enodes []*discv5.Node, network uint64, stats string, ks *keystore.KeyStore, index []byte) (*faucet, error) {
 	// Assemble the raw devp2p protocol stack
 	stack, err := node.New(&node.Config{
-		Name:    "platone",
+		Name:    "venachain",
 		Version: params.VersionWithMeta,
 		DataDir: filepath.Join(os.Getenv("HOME"), ".faucet"),
 		P2P: p2p.Config{

@@ -7,7 +7,7 @@ import (
 	"math/big"
 	"sync"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/bn256"
+	"github.com/Venachain/Venachain/crypto/bn256"
 )
 
 type Signature struct {

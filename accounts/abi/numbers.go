@@ -20,8 +20,8 @@ import (
 	"math/big"
 	"reflect"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/common/math"
 )
 
 var (

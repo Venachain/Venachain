@@ -218,14 +218,14 @@ function init() {
 
     ## init genesis
     if [ ! -f "${PROJECT_CONF_PATH}/logs/deploy_log.txt" ] || [[ $(grep $(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g') "${PROJECT_CONF_PATH}/logs/deploy_log.txt" | grep "node-${NODE_ID}" | grep "Init genesis") == "" ]]; then
-        xcmd "${USER_NAME}@${IP_ADDR}" "rm -rf ${data_path}/node-${NODE_ID}/platone/*"
+        xcmd "${USER_NAME}@${IP_ADDR}" "rm -rf ${data_path}/node-${NODE_ID}/venachain/*"
         if [ $? -ne 0 ]; then
             printLog "error" "INIT GENESIS ON NODE_${NODE_ID} FAILED"
             return 1
         fi
         echo "******************************************************************************************************************************************************************************"
-        xcmd "${USER_NAME}@${IP_ADDR}" "${bin_path}/platone --datadir ${data_path}/node-${NODE_ID} init ${conf_path}/genesis.json"
-        xcmd "${USER_NAME}@${IP_ADDR}" "[ -d ${data_path}/node-${NODE_ID}/platone/chaindata -a -d ${data_path}/node-${NODE_ID}/platone/lightchaindata ]"
+        xcmd "${USER_NAME}@${IP_ADDR}" "${bin_path}/venachain --datadir ${data_path}/node-${NODE_ID} init ${conf_path}/genesis.json"
+        xcmd "${USER_NAME}@${IP_ADDR}" "[ -d ${data_path}/node-${NODE_ID}/venachain/chaindata -a -d ${data_path}/node-${NODE_ID}/venachain/lightchaindata ]"
         if [ $? -ne 0 ]; then
             printLog "error" "INIT GENESIS ON NODE_${NODE_ID} FAILED"
             return 1

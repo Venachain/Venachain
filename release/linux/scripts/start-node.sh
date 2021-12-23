@@ -123,7 +123,7 @@ function assignDefault() {
         P2P_PORT=16791
    
         RPC_ADDR=0.0.0.0
-        RPC_API=db,eth,platone,net,web3,admin,personal,txpool,istanbul
+        RPC_API=db,eth,venachain,net,web3,admin,personal,txpool,istanbul
         RPC_PORT=6791
 
         WS_ADDR=0.0.0.0
@@ -251,7 +251,7 @@ function startCmd() {
     fi
 
     ## generate command segments
-    flag_node=" --identity platone --datadir ${NODE_DIR} "
+    flag_node=" --identity venachain --datadir ${NODE_DIR} "
     flag_discov=" --nodiscover --port ${P2P_PORT} --nodekey ${NODE_DIR}/node.prikey "
     flag_bootnodes=" --bootnodes ${BOOTNODES} "
     flag_rpc=" --rpc --rpcaddr ${RPC_ADDR} --rpcport ${RPC_PORT} --rpcapi ${RPC_API} "
@@ -279,7 +279,7 @@ function startCmd() {
     ## execute command
     printLog "info" "Exec command: "
     echo "
-        nohup ${BIN_PATH}/platone ${flag_node} 
+        nohup ${BIN_PATH}/venachain ${flag_node} 
             ${flag_discov}
             ${flag_bootnodes} 
             ${flag_rpc} --rpccorsdomain \"*\" 
@@ -287,11 +287,11 @@ function startCmd() {
             ${flag_logs} 
             ${flag_ipc} ${flag_gcmode} ${flag_dbtype}
             ${flag_tx} ${flag_lightmode} ${flag_pprof}
-             --moduleLogParams '{\"platone_log\": [\"/\"], \"__dir__\": [\"'${LOG_DIR}'\"], \"__size__\": [\"'${LOG_SIZE}'\"]}'
+             --moduleLogParams '{\"venachain_log\": [\"/\"], \"__dir__\": [\"'${LOG_DIR}'\"], \"__size__\": [\"'${LOG_SIZE}'\"]}'
              ${EXTRA_OPTIONS}
-             1>/dev/null 2>${LOG_DIR}/platone_error.log &
+             1>/dev/null 2>${LOG_DIR}/venachain_error.log &
     "
-    nohup ${BIN_PATH}/platone ${flag_node} \
+    nohup ${BIN_PATH}/venachain ${flag_node} \
             ${flag_discov} \
             ${flag_bootnodes} \
             ${flag_rpc} --rpccorsdomain "*" \
@@ -299,9 +299,9 @@ function startCmd() {
             ${flag_logs} \
             ${flag_ipc} ${flag_gcmode} ${flag_dbtype} \
             ${flag_tx} ${flag_lightmode} ${flag_pprof} \
-             --moduleLogParams '{"platone_log": ["/"], "__dir__": ["'${LOG_DIR}'"], "__size__": ["'${LOG_SIZE}'"]}' \
+             --moduleLogParams '{"venachain_log": ["/"], "__dir__": ["'${LOG_DIR}'"], "__size__": ["'${LOG_SIZE}'"]}' \
              ${EXTRA_OPTIONS} \
-             1>/dev/null 2>${LOG_DIR}/platone_error.log &
+             1>/dev/null 2>${LOG_DIR}/venachain_error.log &
 
     timer=0
     res_start=""

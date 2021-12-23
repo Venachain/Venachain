@@ -23,9 +23,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/accounts/usbwallet"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
+	"github.com/Venachain/Venachain/accounts/usbwallet"
+	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/rpc"
 	"github.com/robertkrimen/otto"
 )
 

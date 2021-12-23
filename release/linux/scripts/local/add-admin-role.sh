@@ -135,11 +135,11 @@ function unlockAccount() {
 
 ################################################# Set Super Admin #################################################
 function setSuperAdmin() {
-    ${BIN_PATH}/platonecli role setSuperAdmin --keyfile ${CONF_PATH}/keyfile.json --url ${IP_ADDR}:${RPC_PORT} <${CONF_PATH}/keyfile.phrase
+    ${BIN_PATH}/venachaincli role setSuperAdmin --keyfile ${CONF_PATH}/keyfile.json --url ${IP_ADDR}:${RPC_PORT} <${CONF_PATH}/keyfile.phrase
     timer=0
     super_admin_flag=""
     while [ ${timer} -lt 10 ]; do
-        super_admin_flag=$(${BIN_PATH}/platonecli role hasRole ${ACCOUNT} SUPER_ADMIN --keyfile ${CONF_PATH}/keyfile.json --url ${IP_ADDR}:${RPC_PORT} <${CONF_PATH}/keyfile.phrase)
+        super_admin_flag=$(${BIN_PATH}/venachaincli role hasRole ${ACCOUNT} SUPER_ADMIN --keyfile ${CONF_PATH}/keyfile.json --url ${IP_ADDR}:${RPC_PORT} <${CONF_PATH}/keyfile.phrase)
         if [[ $(echo ${super_admin_flag} | grep "int32=1") != "" ]]; then
             break
         fi
@@ -157,11 +157,11 @@ function setSuperAdmin() {
 
 ################################################# Set Chain Admin #################################################
 function addChainAdmin() {
-    ${BIN_PATH}/platonecli role addChainAdmin ${ACCOUNT} --keyfile ${CONF_PATH}/keyfile.json --url ${IP_ADDR}:${RPC_PORT} <${CONF_PATH}/keyfile.phrase
+    ${BIN_PATH}/venachaincli role addChainAdmin ${ACCOUNT} --keyfile ${CONF_PATH}/keyfile.json --url ${IP_ADDR}:${RPC_PORT} <${CONF_PATH}/keyfile.phrase
     timer=0
     chain_admin_flag=""
     while [ ${timer} -lt 10 ]; do
-        chain_admin_flag=$(${BIN_PATH}/platonecli role hasRole ${ACCOUNT} CHAIN_ADMIN --keyfile ${CONF_PATH}/keyfile.json --url ${IP_ADDR}:${RPC_PORT} <${CONF_PATH}/keyfile.phrase)
+        chain_admin_flag=$(${BIN_PATH}/venachaincli role hasRole ${ACCOUNT} CHAIN_ADMIN --keyfile ${CONF_PATH}/keyfile.json --url ${IP_ADDR}:${RPC_PORT} <${CONF_PATH}/keyfile.phrase)
         if [[ $(echo ${chain_admin_flag} | grep "int32=1") != "" ]]; then
             break
         fi

@@ -23,10 +23,11 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"math"
 	"math/big"
 	"strings"
+
+	"github.com/Venachain/Venachain/rlp"
 )
 
 // ToHex returns the hex representation of b, prefixed with '0x'.
@@ -363,7 +364,7 @@ func IsBytesEmpty(input []byte) bool {
 	}
 }
 
-func GenerateWasmData(txType int64, funcName string, params []interface{}) ([]byte, error){
+func GenerateWasmData(txType int64, funcName string, params []interface{}) ([]byte, error) {
 	paramArr := [][]byte{
 		Int64ToBytes(txType),
 		[]byte(funcName),
@@ -373,16 +374,15 @@ func GenerateWasmData(txType int64, funcName string, params []interface{}) ([]by
 		p, e := ToBytes(v)
 		if e != nil {
 			err := fmt.Errorf("convert %v to string failed", v)
-			return nil,  err
+			return nil, err
 		}
 		paramArr = append(paramArr, p)
 	}
 
 	paramBytes, err := rlp.EncodeToBytes(paramArr)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
 	return paramBytes, nil
 }
-

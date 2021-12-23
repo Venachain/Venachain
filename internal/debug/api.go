@@ -34,7 +34,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/Venachain/Venachain/log"
 )
 
 // Handler is the global debugging handler.

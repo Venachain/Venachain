@@ -7,9 +7,9 @@ import (
 	"math/big"
 	"math/bits"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/bn256"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/common/hexutil"
+	"github.com/Venachain/Venachain/crypto/bn256"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 type TransferStatement struct {

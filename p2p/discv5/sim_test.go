@@ -28,7 +28,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/Venachain/Venachain/common"
 )
 
 // In this test, nodes try to randomly resolve each other.

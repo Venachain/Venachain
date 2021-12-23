@@ -9,13 +9,16 @@ package main
 
 import (
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/syndtr/goleveldb/leveldb"
-	"github.com/syndtr/goleveldb/leveldb/opt"
 	"os"
 	"strings"
+
+	"github.com/Venachain/Venachain/common"
+	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/syndtr/goleveldb/leveldb/opt"
 )
+
 var toAddr = common.BytesToAddress
+
 //args: dbPath, dbName, update/query, address, value
 func main() {
 	args := os.Args
@@ -43,7 +46,7 @@ func main() {
 	key := []byte(keyName)
 	//key := []byte(keystr)
 	//fmt.Printf("address %s, keystr %s, key %v\n", address, key, key)
-	fmt.Printf("keystr %s, key %v\n",  key, key)
+	fmt.Printf("keystr %s, key %v\n", key, key)
 	beforeValue, err := db.Get(key, nil)
 	if err != nil && err != leveldb.ErrNotFound {
 		panic(fmt.Sprintf("Error getting key: %s", err))
@@ -53,7 +56,7 @@ func main() {
 	//	return
 	//}
 	if action == "query" {
-		fmt.Printf("the value of is %v\n",beforeValue)
+		fmt.Printf("the value of is %v\n", beforeValue)
 		return
 	}
 	fmt.Printf("Before modified, the value of  is %v\n", beforeValue)
@@ -65,7 +68,7 @@ func main() {
 	if err != nil {
 		panic(fmt.Sprintf("Error getting key %s: %s", key, err))
 	}
-	fmt.Printf("After modified, the value is %v\n",  afterValue)
+	fmt.Printf("After modified, the value is %v\n", afterValue)
 }
 
 //func GetKeyTrie(address common.Address, key []byte) string {

@@ -25,10 +25,10 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/secp256k1"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/crypto"
+	"github.com/Venachain/Venachain/crypto/secp256k1"
+	"github.com/Venachain/Venachain/rlp"
 )
 
 // Constants to match up protocol versions and messages
