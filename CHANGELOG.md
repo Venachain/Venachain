@@ -92,7 +92,7 @@
 * [chain] 支持VRF共识机制 - 于宗坤
 * [chain] venachain命令行工具支持通过replay区块的方式完成非兼容性升级 - 于宗坤
 * [other] 可视化运维平台
-* [other] 新的链交互工具 venachaincli
+* [other] 新的链交互工具 vcl
 
 
 ## [0.9.12] 2020-08-25

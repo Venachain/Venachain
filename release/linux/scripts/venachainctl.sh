@@ -656,7 +656,7 @@ function getAllNodes() {
     fi
     firstnode_ip_addr=$(cat ${CONF_PATH}/firstnode.info | grep "ip_addr=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
     firstnode_rpc_port=$(cat ${CONF_PATH}/firstnode.info | grep "rpc_port=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
-    ${BIN_PATH}/venachaincli node query --all --keyfile ${CONF_PATH}/keyfile.json --url ${firstnode_ip_addr}:${firstnode_rpc_port}
+    ${BIN_PATH}/vcl node query --all --keyfile ${CONF_PATH}/keyfile.json --url ${firstnode_ip_addr}:${firstnode_rpc_port}
 }
 
 function showVersion() {

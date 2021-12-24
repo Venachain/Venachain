@@ -13,8 +13,8 @@ package resolver
 #cgo LDFLAGS: -L ./sig/ -lsig -lcrypto -lssl -ldl -lpthread
 #include "./sig/sig.h"
 */
-
 import "C"
+
 import (
 	"bytes"
 	"encoding/binary"
