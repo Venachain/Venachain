@@ -45,9 +45,9 @@
 ### Features
 * [chain] 添加一链多账本功能（群组预编译化系统合约等等）
 * [chain] 支持VRF共识机制 - 于宗坤
-* [chain] VenaChain命令行工具支持通过replay区块的方式完成非兼容性升级 - 于宗坤
+* [chain] Venachain命令行工具支持通过replay区块的方式完成非兼容性升级 - 于宗坤
 * [other] 可视化运维平台
-* [other] 新的链交互工具 venachaincli
+* [other] 新的链交互工具 vcl
 
 
 ## [0.9.12] 2020-08-25
@@ -63,7 +63,7 @@
 ### Improvements
 ### Features
 * [chain] WASM虚拟机对大浮点数和大整数的支持 --于宗坤
-* [other] VenaChain-CDT
+* [other] Venachain-CDT
 
 ### Bug Fixes
 
@@ -76,7 +76,7 @@
 
 ### Bug Fixes
 * [chain] import功能bug修复。  --葛鑫
-* [chain] 解决VenaChain终端log输出时，日志等级设置失效问题。 --汤勇
+* [chain] 解决Venachain终端log输出时，日志等级设置失效问题。 --汤勇
 
 ## [0.9.9]
 ### Breaking Changes
