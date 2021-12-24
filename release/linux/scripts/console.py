@@ -11,7 +11,7 @@ from cmd import Cmd
 
 class Cli(Cmd):
     prompt =  '[group:0]>'
-    intro = """Welcom to venachaincli!
+    intro = """Welcom to vcl!
     Usage:
          <command>[sub command] [command options] [arguments...]
     you can type '?' or 'help' for help"""

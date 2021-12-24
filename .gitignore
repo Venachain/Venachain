@@ -78,10 +78,10 @@ cmd/SysContracts/*.s
 cmd/SysContracts/*.wasm
 cmd/SysContracts/*.wast
 cmd/SysContracts/appContract/*.txt
-#venachaincli precompiled system contract bin-data
+#vcl precompiled system contract bin-data
 
-cmd/venachaincli/client/precompiled/bindata.go
-cmd/venachaincli/venachaincli
+cmd/vcl/client/precompiled/bindata.go
+cmd/vcl/vcl
 cmd/data-manager/cmd/cmd
 cmd/localtestnet/localtestnet
 cmd/localtestnet/localtestnetdata/

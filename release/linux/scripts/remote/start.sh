@@ -221,10 +221,10 @@ function addNode() {
         res_add_node=""
         if [[ "${FIRSTNODE_ID}" == "${NODE_ID}" ]]; then
             xcmd "${USER_NAME}@${IP_ADDR}" "${DEPLOY_PATH}/scripts/add-node.sh -n ${NODE_ID}"
-            res_add_node=$(xcmd "${USER_NAME}@${IP_ADDR}" "${DEPLOY_PATH}/bin/venachaincli node query --name ${NODE_ID} --url ${IP_ADDR}:${RPC_PORT}") >/dev/null 2>&1
+            res_add_node=$(xcmd "${USER_NAME}@${IP_ADDR}" "${DEPLOY_PATH}/bin/vcl node query --name ${NODE_ID} --url ${IP_ADDR}:${RPC_PORT}") >/dev/null 2>&1
         else
             xcmd "${FIRSTNODE_USERNAME}@${FIRSTNODE_IP_ADDR}" "${FIRSTNODE_DEPLOY_PATH}/scripts/add-node.sh -n ${NODE_ID}" 
-            res_add_node=$(xcmd "${USER_NAME}@${IP_ADDR}" "${DEPLOY_PATH}/bin/venachaincli node query --name ${NODE_ID} --url ${FIRSTNODE_IP_ADDR}:${FIRSTNODE_RPC_PORT}") >/dev/null 2>&1
+            res_add_node=$(xcmd "${USER_NAME}@${IP_ADDR}" "${DEPLOY_PATH}/bin/vcl node query --name ${NODE_ID} --url ${FIRSTNODE_IP_ADDR}:${FIRSTNODE_RPC_PORT}") >/dev/null 2>&1
         fi
         if [[ $(echo ${res_add_node} | grep "success") == "" ]]; then
             printLog "error" "ADD NODE NODE-${NODE_ID} FAILED"
@@ -241,10 +241,10 @@ function updateNodeToConsensus() {
         res_update_node=""
         if [[ "${FIRSTNODE_ID}" == "${NODE_ID}" ]]; then
             xcmd "${USER_NAME}@${IP_ADDR}" "${SCRIPT_PATH}/update_to_consensus_node.sh -n ${NODE_ID}"
-            res_update_node=$(xcmd "${USER_NAME}@${IP_ADDR}" "${DEPLOY_PATH}/bin/venachaincli node query --type consensus --name ${NODE_ID} --url ${IP_ADDR}:${RPC_PORT}") >/dev/null 2>&1
+            res_update_node=$(xcmd "${USER_NAME}@${IP_ADDR}" "${DEPLOY_PATH}/bin/vcl node query --type consensus --name ${NODE_ID} --url ${IP_ADDR}:${RPC_PORT}") >/dev/null 2>&1
         else
             xcmd "${FIRSTNODE_USERNAME}@${FIRSTNODE_IP_ADDR}" "${FIRSTNODE_DEPLOY_PATH}/scripts/update_to_consensus_node.sh -n ${NODE_ID}" 
-            res_update_node=$(xcmd "${USER_NAME}@${IP_ADDR}" "${DEPLOY_PATH}/bin/venachaincli node query --type consensus --name ${NODE_ID} --url ${FIRSTNODE_IP_ADDR}:${FIRSTNODE_RPC_PORT}") >/dev/null 2>&1
+            res_update_node=$(xcmd "${USER_NAME}@${IP_ADDR}" "${DEPLOY_PATH}/bin/vcl node query --type consensus --name ${NODE_ID} --url ${FIRSTNODE_IP_ADDR}:${FIRSTNODE_RPC_PORT}") >/dev/null 2>&1
         fi
         if [[ $(echo ${res_update_node} | grep "success") == "" ]]; then
             printLog "error" "UPDATE NODE NODE-${NODE_ID} TO CONSENSUS NODE FAILED"

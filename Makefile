@@ -11,12 +11,12 @@
 GOBIN = $(shell pwd)/build/bin
 GO ?= latest
 
-venachaincli:
+vcl:
 	build/build_deps.sh
-	build/env.sh go run build/ci.go install ./cmd/venachaincli
-	@cp $(GOBIN)/venachaincli $(shell pwd)/release/linux/bin/
+	build/env.sh go run build/ci.go install ./cmd/vcl
+	@cp $(GOBIN)/vcl $(shell pwd)/release/linux/bin/
 	@echo "Done building."
-	@echo "Run \"$(GOBIN)/venachaincli\" to launch venachaincli."
+	@echo "Run \"$(GOBIN)/vcl\" to launch vcl."
 
 venachain:
 	build/build_deps.sh

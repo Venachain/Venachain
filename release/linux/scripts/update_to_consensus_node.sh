@@ -124,10 +124,10 @@ function readFile() {
 function updateToConsensusNode() {
     res_update_node=""
 
-    ${BIN_PATH}/venachaincli node update "${NODE_ID}" --type "${NODE_TYPE}" --keyfile "${KEYFILE}" --url "${FIRSTNODE_IP_ADDR}:${FIRSTNODE_RPC_PORT}" <"${PHRASE}"
+    ${BIN_PATH}/vcl node update "${NODE_ID}" --type "${NODE_TYPE}" --keyfile "${KEYFILE}" --url "${FIRSTNODE_IP_ADDR}:${FIRSTNODE_RPC_PORT}" <"${PHRASE}"
     timer=0
     while [ ${timer} -lt 10 ]; do
-        res_update_node=$(${BIN_PATH}/venachaincli node query --type ${NODE_TYPE} --name ${NODE_ID} --url "${FIRSTNODE_IP_ADDR}:${FIRSTNODE_RPC_PORT}") >/dev/null 2>&1
+        res_update_node=$(${BIN_PATH}/vcl node query --type ${NODE_TYPE} --name ${NODE_ID} --url "${FIRSTNODE_IP_ADDR}:${FIRSTNODE_RPC_PORT}") >/dev/null 2>&1
         if [[ $(echo ${res_update_node} | grep "success") != "" ]]; then
             break
         fi
