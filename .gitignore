@@ -79,7 +79,7 @@ cmd/SysContracts/*.wasm
 cmd/SysContracts/*.wast
 cmd/SysContracts/appContract/*.txt
 
-cmd/venachaincli/client/precompiled/bindata.go
+cmd/vcl/client/precompiled/bindata.go
 
 release/linux/conf/bak
 release/linux/bin/abigen
@@ -109,10 +109,10 @@ release/linux/conf/keyfile.json
 release/linux/data/
 release/linux/bin/cmd
 release/linux/bin/build
-release/linux/bin/venachaincli
+release/linux/bin/vcl
 
 cmd/data-manager/cmd/cmd
-cmd/venachaincli/venachaincli
+cmd/vcl/vcl
 release/linux/bin/build
 release/linux/bin/cmd
 
