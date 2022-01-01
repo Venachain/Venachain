@@ -57,7 +57,7 @@ const (
 	DoingPending = 1
 
 	// Define the size of the transaction.
-	TxSize = 1024*1024
+	TxSize = 1024 * 1024
 )
 
 var (
@@ -186,7 +186,7 @@ var DefaultTxPoolConfig = TxPoolConfig{
 
 	RequestTimeoutRatioFloor: 0.3,
 	RequestTimeoutRatioCeil:  0.6,
-	IsAutoAdjustTxCount:      true,
+	IsAutoAdjustTxCount:      false,
 }
 
 // sanitize checks the provided user configurations and changes anything that's

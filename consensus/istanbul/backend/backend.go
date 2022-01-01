@@ -244,12 +244,14 @@ func (sb *backend) writeCommitedBlockWithState(block *types.Block) error {
 	return nil
 }
 
-//calConsensusTimeRatio catch timeout event or commit event,
+//calConsensusTime catch timeout event or commit event,
 //return timeout signal or ration(=consensusCostTime/CurrentRequestTimeout)
-func (sb *backend) calConsensusTimeRatio() {
-	sb.statusInfo.Lock()
-	event := sb.statusInfo.Event
-	sb.statusInfo.Unlock()
+func (sb *backend) calConsensusTime() {
+	event, err := sb.statusInfo.LoadEvent()
+	if err != nil {
+		sb.logger.Error("calConsensusTime ", "loadEvent", err)
+		return
+	}
 	if event == nil {
 		return
 	}
@@ -264,14 +266,20 @@ func (sb *backend) calConsensusTimeRatio() {
 			case istanbul.CommittedEvent:
 				committedTime := time.Now().UnixNano() / int64(time.Millisecond)
 				consensusCostTime := uint64(committedTime) - ev.HeadTime
-				sb.statusInfo.Lock()
-				sb.statusInfo.CurrentBlockTxCount = ev.TxCount
-				sb.statusInfo.Ratio = float64(consensusCostTime) / float64(sb.statusInfo.CurrentRequestTimeout)
-				sb.statusInfo.Unlock()
+				costInfo := &consensus.CostInfo{
+					BlockNum:            ev.BlockNum,
+					ConsensusCostTime:   consensusCostTime,
+					CurrentBlockTxCount: ev.TxCount,
+					IsTimeout:           false,
+					IsUsed:              false,
+				}
+				sb.statusInfo.StoreCostInfo(costInfo)
 			case istanbulCore.TimeoutEvent:
-				sb.statusInfo.Lock()
-				sb.statusInfo.IsTimeout = true
-				sb.statusInfo.Unlock()
+				costInfo := &consensus.CostInfo{
+					IsTimeout: false,
+					IsUsed:    false,
+				}
+				sb.statusInfo.StoreCostInfo(costInfo)
 			}
 		}
 	}
@@ -301,6 +309,7 @@ func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 	if !isEmpty || isProduceEmptyBlock {
 		//post commit event
 		sb.EventMux().Post(istanbul.CommittedEvent{
+			BlockNum:      h.Number.Uint64(),
 			HeadTime:      h.Time.Uint64(),
 			TxCount:       uint64(block.Transactions().Len()),
 			CommittedTime: uint64(time.Now().UnixNano() / int64(time.Millisecond)),
@@ -377,19 +386,11 @@ func (sb *backend) MsgFeed() *event.Feed {
 }
 
 func (sb *backend) SetConsensusTypeMuxSub(event *event.TypeMuxSubscription) {
-	sb.statusInfo.Lock()
-	sb.statusInfo.Unlock()
-	sb.statusInfo.Event = event
+	sb.statusInfo.StoreEvent(event)
 }
 
-func (sb *backend) GetConsensusTypeMuxSub() *event.TypeMuxSubscription {
-	return sb.statusInfo.Event
-}
-
-func (sb *backend) SetCurrentRequestTimeout(timeout uint64) {
-	sb.statusInfo.Lock()
-	defer sb.statusInfo.Unlock()
-	sb.statusInfo.CurrentRequestTimeout = timeout
+func (sb *backend) GetConsensusTypeMuxSub() (*event.TypeMuxSubscription, error) {
+	return sb.statusInfo.LoadEvent()
 }
 
 // makeCurrent creates a new environment for the current cycle.
