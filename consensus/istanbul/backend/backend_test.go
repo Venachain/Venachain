@@ -191,17 +191,17 @@ func TestGetProposer(t *testing.T) {
 
 func TestCalConsensusTimeRatio(t *testing.T) {
 	sb := &backend{
-		statusInfo: &consensus.StatusInfo{
-			CurrentRequestTimeout: uint64(time.Now().UnixNano() / int64(time.Millisecond)),
-		},
+		statusInfo: &consensus.StatusInfo{},
 	}
 	event := sb.EventMux().Subscribe(
 		istanbulCore.TimeoutEvent{},
 		istanbul.CommittedEvent{},
 	)
-	sb.statusInfo.Event = event
-
-	go sb.calConsensusTimeRatio()
+	sb.statusInfo.StoreEvent(event)
+	sb.statusInfo.StoreCostInfo(&consensus.CostInfo{
+		IsTimeout: false,
+	})
+	go sb.calConsensusTime()
 
 	go func() {
 		sb.EventMux().Post(istanbulCore.TimeoutEvent{})
@@ -209,7 +209,12 @@ func TestCalConsensusTimeRatio(t *testing.T) {
 	}()
 	timer := time.NewTimer(500 * time.Millisecond)
 	<-timer.C
-	if !sb.statusInfo.IsTimeout || sb.statusInfo.Ratio == 0 {
+	costInfo, err := sb.statusInfo.LoadCostInfo()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	if costInfo.IsTimeout {
 		t.Errorf("timeout should be true,ratio shoule be 0")
 	}
 }

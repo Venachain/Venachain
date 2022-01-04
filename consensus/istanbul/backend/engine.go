@@ -516,7 +516,7 @@ func (sb *backend) Start(chain consensus.ChainReader, currentBlock func() *types
 		return err
 	}
 
-	go sb.calConsensusTimeRatio()
+	go sb.calConsensusTime()
 	sb.coreStarted = true
 	return nil
 }
