@@ -23,6 +23,8 @@ import (
 	"sync"
 	"time"
 
+	uberAtomic "go.uber.org/atomic"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul"
@@ -127,7 +129,8 @@ type backend struct {
 	recentMessages *lru.ARCCache // the cache of peer's messages
 	knownMessages  *lru.ARCCache // the cache of self messages
 
-	statusInfo *consensus.StatusInfo
+	statusInfo         *consensus.StatusInfo
+	consensusStartTime uberAtomic.Uint64
 }
 
 func (sb *backend) GetStatusInfo() *consensus.StatusInfo {
@@ -265,7 +268,7 @@ func (sb *backend) calConsensusTime() {
 			switch ev := eventVal.Data.(type) {
 			case istanbul.CommittedEvent:
 				committedTime := time.Now().UnixNano() / int64(time.Millisecond)
-				consensusCostTime := uint64(committedTime) - ev.HeadTime
+				consensusCostTime := uint64(committedTime) - ev.ConsensusStartTime
 				costInfo := &consensus.CostInfo{
 					BlockNum:            ev.BlockNum,
 					ConsensusCostTime:   consensusCostTime,
@@ -309,10 +312,10 @@ func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 	if !isEmpty || isProduceEmptyBlock {
 		//post commit event
 		sb.EventMux().Post(istanbul.CommittedEvent{
-			BlockNum:      h.Number.Uint64(),
-			HeadTime:      h.Time.Uint64(),
-			TxCount:       uint64(block.Transactions().Len()),
-			CommittedTime: uint64(time.Now().UnixNano() / int64(time.Millisecond)),
+			BlockNum:           h.Number.Uint64(),
+			ConsensusStartTime: sb.GetConsensusStartTime(),
+			TxCount:            uint64(block.Transactions().Len()),
+			CommittedTime:      uint64(time.Now().UnixNano() / int64(time.Millisecond)),
 		})
 		sb.logger.Info("Committed", "address", sb.Address(), "hash", proposal.Hash(), "number", proposal.Number().Uint64())
 	}
@@ -391,6 +394,13 @@ func (sb *backend) SetConsensusTypeMuxSub(event *event.TypeMuxSubscription) {
 
 func (sb *backend) GetConsensusTypeMuxSub() (*event.TypeMuxSubscription, error) {
 	return sb.statusInfo.LoadEvent()
+}
+func (sb *backend) SetConsensusStartTime(time uint64) {
+	sb.consensusStartTime.Store(time)
+}
+
+func (sb *backend) GetConsensusStartTime() uint64 {
+	return sb.consensusStartTime.Load()
 }
 
 // makeCurrent creates a new environment for the current cycle.

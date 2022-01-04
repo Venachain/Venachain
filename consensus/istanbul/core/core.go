@@ -456,6 +456,7 @@ func (c *core) newRoundChangeTimerWhenEmpty() {
 	round := c.current.Round().Uint64()
 	c.lastResetRound = round
 	log.Debug("newRoundChangeTimer", "round", round, "lastResetRound", c.lastResetRound, "timeout", timeout)
+	c.backend.SetConsensusStartTime(uint64(time.Now().UnixNano() / 1e6))
 	c.roundChangeTimer = time.AfterFunc(timeout, func() {
 		c.sendEvent(TimeoutEvent{})
 	})
@@ -479,6 +480,7 @@ func (c *core) newRoundChangeTimer() {
 	}
 
 	log.Debug("newRoundChangeTimer", "round", round, "lastResetRound", c.lastResetRound, "timeout", timeout)
+	c.backend.SetConsensusStartTime(uint64(time.Now().UnixNano() / 1e6))
 	c.roundChangeTimer = time.AfterFunc(timeout, func() {
 		c.sendEvent(TimeoutEvent{})
 	})

@@ -17,14 +17,14 @@
 package core
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
-	"github.com/pkg/errors"
 	"math/big"
 	"time"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/pkg/errors"
 )
 
 func (c *core) sendPreprepare(request *istanbul.Request) {
@@ -45,7 +45,7 @@ func (c *core) sendPreprepare(request *istanbul.Request) {
 			preprepare.LockedHash = c.current.lockedHash
 			preprepare.LockedPrepares = c.current.lockedPrepares
 		}
-		logger.Debug("sendPreprepare", "proposal", preprepare.Proposal.Hash(),"view",preprepare.View.String())
+		logger.Debug("sendPreprepare", "proposal", preprepare.Proposal.Hash(), "view", preprepare.View.String())
 
 		encodedPreprepare, err := Encode(preprepare)
 		if err != nil {
@@ -96,7 +96,7 @@ func (c *core) handlePreprepare(msg *message, src istanbul.Validator) error {
 
 	// Verify the proposal we received
 	// c.roundChangeTimer.Reset(time.Millisecond * time.Duration(c.config.RequestTimeout))
-	if duration, err := c.backend.Verify(preprepare.Proposal , c.valSet.IsProposer(c.address)); err != nil {
+	if duration, err := c.backend.Verify(preprepare.Proposal, c.valSet.IsProposer(c.address)); err != nil {
 		logger.Warn("Failed to verify proposal", "err", err, "duration", duration)
 		// if it's a future block, we will handle it again after the duration
 		if err == consensus.ErrFutureBlock {
@@ -135,7 +135,7 @@ func (c *core) handlePreprepare(msg *message, src istanbul.Validator) error {
 			// Either
 			//   1. the locked proposal and the received proposal match
 			//   2. we have no locked proposal
-			c.logger.Debug("received preprepare,","preprepar",preprepare)
+			c.logger.Debug("received preprepare,", "preprepar", preprepare)
 			c.acceptPreprepare(preprepare)
 			c.setState(StatePreprepared)
 			c.sendPrepare()
@@ -166,13 +166,13 @@ func (c *core) handlePOLPreprepare(src istanbul.Validator, preprepare *istanbul.
 	valPrepares := prepares.Values()
 	for _, m := range valPrepares {
 		err := m.Validate(c.validateFn)
-		if nil != err{
-			logger.Error("Failed to validate msg","err",err)
-			return  err
+		if nil != err {
+			logger.Error("Failed to validate msg", "err", err)
+			return err
 		}
 	}
-	
-	if prepares.Size() < c.valSet.Size()-c.valSet.F(){
+
+	if prepares.Size() < c.valSet.Size()-c.valSet.F() {
 		logger.Error("POLPrePrepare is invalid, lockedprepares vote -2/3")
 		return errors.New("POLPrePrepare is invalid, lockedprepares vote -2/3")
 	}

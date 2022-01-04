@@ -396,7 +396,6 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 			if eng, ok := w.engine.(consensus.Istanbul); ok {
 				if eng.ShouldSeal() {
 					log.Debug("ShouldSeal() -> true")
-					timestamp = time.Now().UnixNano() / 1e6
 					commit(commitInterruptResubmit, nil)
 					timer.Reset(500 * time.Millisecond)
 				} else {
