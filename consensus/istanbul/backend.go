@@ -74,4 +74,9 @@ type Backend interface {
 	SetConsensusTypeMuxSub(event *event.TypeMuxSubscription)
 
 	GetConsensusTypeMuxSub() (*event.TypeMuxSubscription, error)
+	//SetConsensusStartTime set consensus start time
+	SetConsensusStartTime(time uint64)
+
+	//GetConsensusStartTime get consensus start time
+	GetConsensusStartTime() uint64
 }

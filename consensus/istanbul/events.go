@@ -35,8 +35,8 @@ type FinalCommittedEvent struct {
 }
 
 type CommittedEvent struct {
-	BlockNum      uint64
-	HeadTime      uint64
-	CommittedTime uint64
-	TxCount       uint64
+	BlockNum           uint64
+	ConsensusStartTime uint64
+	CommittedTime      uint64
+	TxCount            uint64
 }
