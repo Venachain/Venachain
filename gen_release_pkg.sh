@@ -24,7 +24,7 @@ function create_release_note() {
 cat <<EOF
 链部署指南
 
-[Venachain快速搭链教程](https://git-c.i.wxblockchain.com/PlatONE/doc/Venachain_WIKI/blob/v0.9.0/zh-cn/basics/Installation/%5BChinese-Simplified%5D-%E5%BF%AB%E9%80%9F%E9%83%A8%E7%BD%B2.md)
+[Venachain快速搭链教程](https://venachain-docs.readthedocs.io/zh/latest/documents/quick/env.html)
 
 Asset
 
@@ -32,7 +32,7 @@ Asset
 
 WASM合约开发库
 
-[Venachain合约指导文档](https://git-c.i.wxblockchain.com/PlatONE/doc/Venachain_WIKI/blob/v0.9.0/zh-cn/WASMContract/%5BChinese-Simplified%5D-%E5%90%88%E7%BA%A6%E6%95%99%E7%A8%8B.md)
+[Venachain合约指导文档](https://venachain-docs.readthedocs.io/zh/latest/documents/develop/smart_contract.html)
 
 Asset
 
@@ -57,7 +57,7 @@ function env() {
     if [[ -d ${Venachain_Project_name} ]]; then
         echo "${Venachain_Project_name} already exists."
     else
-        git clone --recursive https://git-c.i.wxblockchain.com/PlatONE/src/node/venachain.git
+        git clone --recursive https://github.com/Venachain/Venachain.git
     fi
 
     if [[ -d ${Java_Project_name} ]]; then
