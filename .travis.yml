@@ -71,7 +71,7 @@ matrix:
             - dput
             - fakeroot
       script:
-        - go run build/ci.go debsrc -signer "Go VenaChain Linux Builder" -upload ppa:ethereum/ethereum
+        - go run build/ci.go debsrc -signer "Go Venachain Linux Builder" -upload ppa:ethereum/ethereum
 
     # This builder does the Linux Azure uploads
     - os: linux

@@ -15,7 +15,6 @@ package resolver
 */
 import "C"
 
-import "C"
 import (
 	"bytes"
 	"encoding/binary"

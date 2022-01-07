@@ -234,7 +234,7 @@ func (c *Config) NodeName() string {
 	name := c.name()
 	// Backwards compatibility: previous versions used title-cased "Geth", keep that.
 	if name == "venachain" || name == "venachain-testnet" {
-		name = "VenaChain"
+		name = "Venachain"
 	}
 	if c.UserIdent != "" {
 		name += "/" + c.UserIdent
