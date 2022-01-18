@@ -3,7 +3,7 @@ package consensus
 import (
 	"testing"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/event"
+	"github.com/Venachain/Venachain/event"
 )
 
 func TestStoreCostInfo(t *testing.T) {
