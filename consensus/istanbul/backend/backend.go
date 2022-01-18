@@ -39,6 +39,7 @@ import (
 	"github.com/Venachain/Venachain/p2p"
 	"github.com/Venachain/Venachain/params"
 	lru "github.com/hashicorp/golang-lru"
+	uberAtomic "go.uber.org/atomic"
 )
 
 const (
@@ -127,7 +128,8 @@ type backend struct {
 	recentMessages *lru.ARCCache // the cache of peer's messages
 	knownMessages  *lru.ARCCache // the cache of self messages
 
-	statusInfo *consensus.StatusInfo
+	statusInfo         *consensus.StatusInfo
+	consensusStartTime uberAtomic.Uint64
 }
 
 func (sb *backend) GetStatusInfo() *consensus.StatusInfo {
@@ -244,12 +246,14 @@ func (sb *backend) writeCommitedBlockWithState(block *types.Block) error {
 	return nil
 }
 
-//calConsensusTimeRatio catch timeout event or commit event,
+//calConsensusTime catch timeout event or commit event,
 //return timeout signal or ration(=consensusCostTime/CurrentRequestTimeout)
-func (sb *backend) calConsensusTimeRatio() {
-	sb.statusInfo.Lock()
-	event := sb.statusInfo.Event
-	sb.statusInfo.Unlock()
+func (sb *backend) calConsensusTime() {
+	event, err := sb.statusInfo.LoadEvent()
+	if err != nil {
+		sb.logger.Error("calConsensusTime ", "loadEvent", err)
+		return
+	}
 	if event == nil {
 		return
 	}
@@ -263,15 +267,21 @@ func (sb *backend) calConsensusTimeRatio() {
 			switch ev := eventVal.Data.(type) {
 			case istanbul.CommittedEvent:
 				committedTime := time.Now().UnixNano() / int64(time.Millisecond)
-				consensusCostTime := uint64(committedTime) - ev.HeadTime
-				sb.statusInfo.Lock()
-				sb.statusInfo.CurrentBlockTxCount = ev.TxCount
-				sb.statusInfo.Ratio = float64(consensusCostTime) / float64(sb.statusInfo.CurrentRequestTimeout)
-				sb.statusInfo.Unlock()
+				consensusCostTime := uint64(committedTime) - ev.ConsensusStartTime
+				costInfo := &consensus.CostInfo{
+					BlockNum:            ev.BlockNum,
+					ConsensusCostTime:   consensusCostTime,
+					CurrentBlockTxCount: ev.TxCount,
+					IsTimeout:           false,
+					IsUsed:              false,
+				}
+				sb.statusInfo.StoreCostInfo(costInfo)
 			case istanbulCore.TimeoutEvent:
-				sb.statusInfo.Lock()
-				sb.statusInfo.IsTimeout = true
-				sb.statusInfo.Unlock()
+				costInfo := &consensus.CostInfo{
+					IsTimeout: false,
+					IsUsed:    false,
+				}
+				sb.statusInfo.StoreCostInfo(costInfo)
 			}
 		}
 	}
@@ -301,9 +311,10 @@ func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 	if !isEmpty || isProduceEmptyBlock {
 		//post commit event
 		sb.EventMux().Post(istanbul.CommittedEvent{
-			HeadTime:      h.Time.Uint64(),
-			TxCount:       uint64(block.Transactions().Len()),
-			CommittedTime: uint64(time.Now().UnixNano() / int64(time.Millisecond)),
+			BlockNum:           h.Number.Uint64(),
+			ConsensusStartTime: sb.GetConsensusStartTime(),
+			TxCount:            uint64(block.Transactions().Len()),
+			CommittedTime:      uint64(time.Now().UnixNano() / int64(time.Millisecond)),
 		})
 		sb.logger.Info("Committed", "address", sb.Address(), "hash", proposal.Hash(), "number", proposal.Number().Uint64())
 	}
@@ -377,19 +388,18 @@ func (sb *backend) MsgFeed() *event.Feed {
 }
 
 func (sb *backend) SetConsensusTypeMuxSub(event *event.TypeMuxSubscription) {
-	sb.statusInfo.Lock()
-	sb.statusInfo.Unlock()
-	sb.statusInfo.Event = event
+	sb.statusInfo.StoreEvent(event)
 }
 
-func (sb *backend) GetConsensusTypeMuxSub() *event.TypeMuxSubscription {
-	return sb.statusInfo.Event
+func (sb *backend) GetConsensusTypeMuxSub() (*event.TypeMuxSubscription, error) {
+	return sb.statusInfo.LoadEvent()
+}
+func (sb *backend) SetConsensusStartTime(time uint64) {
+	sb.consensusStartTime.Store(time)
 }
 
-func (sb *backend) SetCurrentRequestTimeout(timeout uint64) {
-	sb.statusInfo.Lock()
-	defer sb.statusInfo.Unlock()
-	sb.statusInfo.CurrentRequestTimeout = timeout
+func (sb *backend) GetConsensusStartTime() uint64 {
+	return sb.consensusStartTime.Load()
 }
 
 // makeCurrent creates a new environment for the current cycle.

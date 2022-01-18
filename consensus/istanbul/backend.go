@@ -73,7 +73,10 @@ type Backend interface {
 	// SetConsensusTypeMuxSub set TypeMuxSubscription
 	SetConsensusTypeMuxSub(event *event.TypeMuxSubscription)
 
-	GetConsensusTypeMuxSub() *event.TypeMuxSubscription
-	//SetCurrentRequestTimeout update request timeout
-	SetCurrentRequestTimeout(timeout uint64)
+	GetConsensusTypeMuxSub() (*event.TypeMuxSubscription, error)
+	//SetConsensusStartTime set consensus start time
+	SetConsensusStartTime(time uint64)
+
+	//GetConsensusStartTime get consensus start time
+	GetConsensusStartTime() uint64
 }

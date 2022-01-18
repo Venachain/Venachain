@@ -20,12 +20,11 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/Venachain/Venachain/rlp"
-	"github.com/pkg/errors"
-
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/consensus"
 	"github.com/Venachain/Venachain/consensus/istanbul"
+	"github.com/Venachain/Venachain/rlp"
+	"github.com/pkg/errors"
 )
 
 func (c *core) sendPreprepare(request *istanbul.Request) {
