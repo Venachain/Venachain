@@ -181,11 +181,12 @@ type worker struct {
 	// External functions
 	isLocalBlock func(block *types.Block) bool // Function used to determine whether the specified block is mined by local miner.
 
-	blockChainCache  *core.BlockChainCache
-	commitWorkEnv    *commitWorkEnv
-	recommit         time.Duration
-	commitDuration   int64 //in Millisecond
-	lastBlockTxCount uint64
+	blockChainCache     *core.BlockChainCache
+	commitWorkEnv       *commitWorkEnv
+	recommit            time.Duration
+	commitDuration      int64 //in Millisecond
+	lastBlockTxCount    uint64
+	consensusTimeoutCnt int
 	// Test hooks
 	newTaskHook  func(*task)                        // Method to call upon receiving a new sealing task.
 	skipSealHook func(*task) bool                   // Method to decide whether skipping the sealing.
@@ -970,10 +971,7 @@ func isContainsCreateContract(pending []*types.Transaction) bool {
 }
 
 func (w *worker) adjustGlobalTxCount() uint64 {
-	ratioCeil := w.eth.TxPool().GetTxPoolConfig().RequestTimeoutRatioCeil
-	ratioFloor := w.eth.TxPool().GetTxPoolConfig().RequestTimeoutRatioFloor
 	originTxCount := w.eth.TxPool().GetTxPoolConfig().GlobalTxCount.Load()
-
 	if !w.eth.TxPool().GetTxPoolConfig().IsAutoAdjustTxCount {
 		return originTxCount
 	}
@@ -981,12 +979,28 @@ func (w *worker) adjustGlobalTxCount() uint64 {
 		return originTxCount
 	}
 
-	statusInfo := w.engine.GetStatusInfo()
-	statusInfo.Lock()
-	defer statusInfo.Unlock()
+	ratioFloorTime := w.eth.TxPool().GetTxPoolConfig().RequestTimeoutRatioFloor * float64(w.config.Istanbul.RequestTimeout)
+	ratioCeilTime := w.eth.TxPool().GetTxPoolConfig().RequestTimeoutRatioCeil * float64(w.config.Istanbul.RequestTimeout)
+	statusInfo, err := w.engine.GetStatusInfo().LoadCostInfo()
+	if err != nil {
+		log.Debug("adjustGlobalTxCount", "LoadCostInfo", err)
+		return originTxCount
+	}
+	// status info whether used
+	if statusInfo.IsUsed {
+		return originTxCount
+	}
+	statusInfo.IsUsed = true
 
+	res := originTxCount
 	if statusInfo.IsTimeout {
-		var res uint64
+		if w.consensusTimeoutCnt <= 3 {
+			w.consensusTimeoutCnt++
+			log.Debug("consensus timeout1.", "BlockNum", statusInfo.BlockNum, "blockTxCnt", statusInfo.CurrentBlockTxCount, "last globalTxCount:", originTxCount, "current globalTxCount:", res)
+			return originTxCount
+		}
+		w.consensusTimeoutCnt = 0
+
 		//first consensus timeout
 		if w.lastBlockTxCount == 0 && originTxCount >= 2 {
 			res = originTxCount >> 1
@@ -994,32 +1008,33 @@ func (w *worker) adjustGlobalTxCount() uint64 {
 			res = w.lastBlockTxCount >> 1
 		}
 		//make sure at least txCount=1
-		if res == 0 {
+		if res <= 0 {
 			res = 1
 		}
 		w.eth.TxPool().GetTxPoolConfig().GlobalTxCount.Store(res)
 		//clear timeout flag
 		statusInfo.IsTimeout = false
-		log.Debug("consensus timeout.", "last globalTxCount:", originTxCount, "current globalTxCount:", res)
+		log.Debug("consensus timeout2.", "BlockNum", statusInfo.BlockNum, "blockTxCnt", statusInfo.CurrentBlockTxCount, "last globalTxCount:", originTxCount, "current globalTxCount:", res)
 		return res
 	}
 
-	res := originTxCount
-	if statusInfo.Ratio < ratioFloor {
+	w.lastBlockTxCount = statusInfo.CurrentBlockTxCount
+	if float64(statusInfo.ConsensusCostTime) < ratioFloorTime {
 		if w.lastBlockTxCount == 0 || w.lastBlockTxCount < originTxCount {
-			w.lastBlockTxCount = statusInfo.CurrentBlockTxCount
+			log.Debug("ConsensusCostTime out of expected range1", "BlockNum", statusInfo.BlockNum, "blockTxCnt", statusInfo.CurrentBlockTxCount, "current ConsensusCostTime:", statusInfo.ConsensusCostTime, "last globalTxCount:", originTxCount, "current globalTxCount:", res)
 			return originTxCount
 		}
-		res = uint64(ratioFloor * float64(originTxCount) / statusInfo.Ratio)
-	} else if statusInfo.Ratio > ratioCeil {
-		res = uint64(ratioCeil * float64(originTxCount) / statusInfo.Ratio)
+		res = uint64(ratioFloorTime * float64(originTxCount) / float64(statusInfo.ConsensusCostTime))
+	} else if float64(statusInfo.ConsensusCostTime) > ratioCeilTime {
+		res = uint64(ratioCeilTime * float64(originTxCount) / float64(statusInfo.ConsensusCostTime))
+	} else {
+		return originTxCount
 	}
 	//make sure at least txCount=1
-	if res == 0 {
+	if res <= 0 {
 		res = 1
 	}
 	w.eth.TxPool().GetTxPoolConfig().GlobalTxCount.Store(res)
-	w.lastBlockTxCount = statusInfo.CurrentBlockTxCount
-	log.Debug("ratio out of expected range", "current ratio:", statusInfo.Ratio, "last globalTxCount:", originTxCount, "current globalTxCount:", res)
+	log.Debug("ConsensusCostTime out of expected range2", "BlockNum", statusInfo.BlockNum, "blockTxCnt", statusInfo.CurrentBlockTxCount, "current ConsensusCostTime:", statusInfo.ConsensusCostTime, "last globalTxCount:", originTxCount, "current globalTxCount:", res)
 	return res
 }

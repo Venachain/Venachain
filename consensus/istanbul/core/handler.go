@@ -80,7 +80,11 @@ func (c *core) unsubscribeEvents() {
 	c.timeoutSub.Unsubscribe()
 	c.finalCommittedSub.Unsubscribe()
 	c.msgFeedSub.Unsubscribe()
-	c.backend.GetConsensusTypeMuxSub().Unsubscribe()
+	event, err := c.backend.GetConsensusTypeMuxSub()
+	if err != nil {
+		c.logger.Error("unsubscribeEvents", "GetConsensusTypeMuxSub", err)
+	}
+	event.Unsubscribe()
 }
 
 func (c *core) handleEvents() {
