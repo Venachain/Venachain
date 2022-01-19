@@ -1024,9 +1024,9 @@ func (w *worker) adjustGlobalTxCount() uint64 {
 			log.Debug("ConsensusCostTime out of expected range1", "BlockNum", statusInfo.BlockNum, "blockTxCnt", statusInfo.CurrentBlockTxCount, "current ConsensusCostTime:", statusInfo.ConsensusCostTime, "last globalTxCount:", originTxCount, "current globalTxCount:", res)
 			return originTxCount
 		}
-		res = uint64(ratioFloorTime * float64(originTxCount) / float64(statusInfo.ConsensusCostTime))
+		res = uint64(ratioFloorTime * float64(w.lastBlockTxCount) / float64(statusInfo.ConsensusCostTime))
 	} else if float64(statusInfo.ConsensusCostTime) > ratioCeilTime {
-		res = uint64(ratioCeilTime * float64(originTxCount) / float64(statusInfo.ConsensusCostTime))
+		res = uint64(ratioCeilTime * float64(w.lastBlockTxCount) / float64(statusInfo.ConsensusCostTime))
 	} else {
 		return originTxCount
 	}
