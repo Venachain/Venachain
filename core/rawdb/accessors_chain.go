@@ -20,44 +20,42 @@ import (
 	"bytes"
 	"encoding/binary"
 	"math/big"
-	"sync"
 
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/log"
 	"github.com/Venachain/Venachain/rlp"
+	lru "github.com/hashicorp/golang-lru"
+)
+
+const (
+	blockReceiptsCacheLimit = 32
 )
 
 var (
-	blockReceiptsCache = &receiptCache{}
+	receiptCache, _      = lru.New(blockReceiptsCacheLimit)
+	counterpartyCache, _ = lru.New(blockReceiptsCacheLimit)
 )
 
-type receiptCache struct {
-	lock     sync.RWMutex
-	number   uint64
-	hash     common.Hash
-	receipts types.Receipts
-}
-
-func (r *receiptCache) setCache(number uint64, hash common.Hash, receipts types.Receipts) {
-	r.lock.Lock()
-	defer r.lock.Unlock()
-	r.number = number
-	r.hash = hash
-	r.receipts = receipts
-}
-
-func (r *receiptCache) getCache(number uint64, hash common.Hash) types.Receipts {
-	r.lock.RLock()
-	defer r.lock.RUnlock()
-	if number == r.number && hash == r.hash {
-		return r.receipts
+func SetCounterpartyCache(block *types.Block) {
+	data := make([]types.Counterparty, len(block.Transactions()))
+	for i, tx := range block.Transactions() {
+		data[i].From = tx.From()
+		data[i].To = tx.To()
 	}
-	return nil
+	counterpartyCache.Add(block.NumberU64(), &data)
+}
+
+func GetCounterpartyCache(number uint64) []types.Counterparty {
+	if cache, ok := counterpartyCache.Get(number); ok {
+		data := cache.(*[]types.Counterparty)
+		return *data
+	}
+	return []types.Counterparty{}
 }
 
 func SetBlockReceiptsCache(number uint64, hash common.Hash, receipts types.Receipts) {
-	blockReceiptsCache.setCache(number, hash, receipts)
+	receiptCache.Add(number, &receipts)
 }
 
 // ReadCanonicalHash retrieves the hash assigned to a canonical block number.
@@ -275,8 +273,9 @@ func DeleteBody(db DatabaseDeleter, hash common.Hash, number uint64) {
 // ReadReceipts retrieves all the transaction receipts belonging to a block.
 func ReadReceipts(db DatabaseReader, hash common.Hash, number uint64) types.Receipts {
 
-	if c := blockReceiptsCache.getCache(number, hash); c != nil {
-		return c
+	if cached, ok := receiptCache.Get(number); ok {
+		receipts := cached.(*types.Receipts)
+		return *receipts
 	}
 	// Retrieve the flattened receipt slice
 	data, _ := db.Get(blockReceiptsKey(number, hash))
