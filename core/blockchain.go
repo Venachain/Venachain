@@ -1005,12 +1005,12 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 
 func (bc *BlockChain) cacheData(block *types.Block, receipts []*types.Receipt) {
 	bc.insertData(block, receipts)
-	rawdb.SetBlockReceiptsCache(block.NumberU64(), block.Hash(), receipts)
+	rawdb.SetBlockReceiptsCache(block.NumberU64(), receipts)
 	rawdb.SetTxLookupEntryCache(block)
 }
 
 // store block txs from and to
-func (bc *BlockChain) cacheCounterparty(block *types.Block){
+func (bc *BlockChain) cacheCounterparty(block *types.Block) {
 	rawdb.SetCounterpartyCache(block)
 }
 

@@ -22,10 +22,10 @@ import (
 	"math/big"
 
 	"github.com/Venachain/Venachain/common"
+	"github.com/Venachain/Venachain/core/fifo"
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/log"
 	"github.com/Venachain/Venachain/rlp"
-	lru "github.com/hashicorp/golang-lru"
 )
 
 const (
@@ -33,8 +33,8 @@ const (
 )
 
 var (
-	receiptCache, _      = lru.New(blockReceiptsCacheLimit)
-	counterpartyCache, _ = lru.New(blockReceiptsCacheLimit)
+	receiptCache, _      = fifo.NewCache(blockReceiptsCacheLimit)
+	counterpartyCache, _ = fifo.NewCache(blockReceiptsCacheLimit)
 )
 
 func SetCounterpartyCache(block *types.Block) {
@@ -54,7 +54,7 @@ func GetCounterpartyCache(number uint64) []types.Counterparty {
 	return []types.Counterparty{}
 }
 
-func SetBlockReceiptsCache(number uint64, hash common.Hash, receipts types.Receipts) {
+func SetBlockReceiptsCache(number uint64, receipts types.Receipts) {
 	receiptCache.Add(number, &receipts)
 }
 
