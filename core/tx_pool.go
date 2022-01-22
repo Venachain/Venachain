@@ -168,6 +168,7 @@ type TxPoolConfig struct {
 
 	RequestTimeoutRatioFloor float64
 	RequestTimeoutRatioCeil  float64
+	RequestTimeoutCnt        int
 	IsAutoAdjustTxCount      bool
 }
 
@@ -184,8 +185,9 @@ var DefaultTxPoolConfig = TxPoolConfig{
 	GlobalSlots:   40960,
 	GlobalTxCount: uberAtomic.NewUint64(10000),
 
-	RequestTimeoutRatioFloor: 0.3,
-	RequestTimeoutRatioCeil:  0.6,
+	RequestTimeoutRatioFloor: 0.1,
+	RequestTimeoutRatioCeil:  0.3,
+	RequestTimeoutCnt:        1,
 	IsAutoAdjustTxCount:      false,
 }
 

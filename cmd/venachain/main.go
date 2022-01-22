@@ -80,6 +80,7 @@ var (
 		utils.TxPoolIsAutoAdjustTxCountFlag,
 		utils.TxPoolRequestTimeoutRatioFloorFlag,
 		utils.TxPoolRequestTimeoutRatioCeilFlag,
+		utils.TxPoolRequestTimeoutCntFlag,
 
 		utils.SyncModeFlag,
 		utils.GCModeFlag,

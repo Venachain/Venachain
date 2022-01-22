@@ -252,6 +252,12 @@ var (
 		Usage: "ratio=consensusRequestTimeCost/maxConsensuRequestTime,the max ratio",
 		Value: eth.DefaultConfig.TxPool.RequestTimeoutRatioCeil,
 	}
+	TxPoolRequestTimeoutCntFlag = cli.IntFlag{
+		Name:  "txpool.requestTimeoutCnt",
+		Usage: "after requestTimeoutCnt consensusTimeout, half block txCount",
+		Value: eth.DefaultConfig.TxPool.RequestTimeoutCnt,
+	}
+
 	// Performance tuning settings
 	CacheFlag = cli.IntFlag{
 		Name:  "cache",
@@ -980,6 +986,9 @@ func setTxPool(ctx *cli.Context, cfg *core.TxPoolConfig) {
 	}
 	if ctx.GlobalIsSet(TxPoolRequestTimeoutRatioCeilFlag.Name) {
 		cfg.RequestTimeoutRatioCeil = ctx.GlobalFloat64(TxPoolRequestTimeoutRatioCeilFlag.Name)
+	}
+	if ctx.GlobalIsSet(TxPoolRequestTimeoutCntFlag.Name) {
+		cfg.RequestTimeoutCnt = ctx.GlobalInt(TxPoolRequestTimeoutCntFlag.Name)
 	}
 }
 
