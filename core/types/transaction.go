@@ -80,6 +80,12 @@ type txdataMarshaling struct {
 	S *hexutil.Big
 }
 
+// 交易对手方信息
+type Counterparty struct {
+	From *common.Address
+	To   *common.Address
+}
+
 func NewTransaction(nonce uint64, to common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte) *Transaction {
 	return newTransaction(nonce, &to, amount, gasLimit, gasPrice, data)
 }
@@ -194,6 +200,15 @@ func (tx *Transaction) GasPrice() *big.Int { return new(big.Int).Set(tx.data.Pri
 func (tx *Transaction) Value() *big.Int    { return new(big.Int).Set(tx.data.Amount) }
 func (tx *Transaction) Nonce() uint64      { return tx.data.AccountNonce }
 func (tx *Transaction) CheckNonce() bool   { return true }
+
+func (tx *Transaction) From() *common.Address {
+	var signer Signer = FrontierSigner{}
+	if tx.Protected() {
+		signer = NewEIP155Signer(tx.ChainId())
+	}
+	from, _ := Sender(signer, tx)
+	return &from
+}
 
 // To returns the recipient address of the transaction.
 // It returns nil if the transaction is a contract creation.

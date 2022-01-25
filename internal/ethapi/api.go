@@ -1079,15 +1079,78 @@ func (s *PublicTransactionPoolAPI) GetRawTransactionByHash(ctx context.Context, 
 	return rlp.EncodeToBytes(tx)
 }
 
-// GetTransactionReceipt returns the transaction receipt for the given transaction hash.
-func (s *PublicTransactionPoolAPI) GetTransactionReceipt(ctx context.Context, hash common.Hash) (map[string]interface{}, error) {
-	tx, blockHash, blockNumber, index, err := s.b.GetTransaction(ctx, hash)
-	if err != nil {
-		return nil, err
-	}
-	if tx == nil {
+type ReceiptRes struct {
+	BlockHash         common.Hash    `json:"blockHash"`
+	BlockNumber       hexutil.Uint64 `json:"blockNumber"`
+	TransactionHash   common.Hash    `json:"transactionHash"`
+	TransactionIndex  hexutil.Uint64 `json:"transactionIndex"`
+	From              common.Address `json:"from"`
+	To                common.Address `json:"to"`
+	GasUsed           hexutil.Uint64 `json:"gasUsed"`
+	CumulativeGasUsed hexutil.Uint64 `json:"cumulativeGasUsed"`
+	ContractAddress   common.Address `json:"contractAddress"`
+	LogsBloom         types.Bloom    `json:"logsBloom"`
+	Logs              []*types.Log   `json:"logs"`
+	Status            hexutil.Uint   `json:"status"`
+	Root              hexutil.Bytes  `json:"root"`
+}
+
+// GetBlockReceipts returns the block receipts for the given block number.
+func (s *PublicTransactionPoolAPI) GetBlockReceipts(ctx context.Context, blockNr rpc.BlockNumber) ([]*ReceiptRes, error) {
+	blockHash := rawdb.ReadCanonicalHash(s.b.ChainDb(), uint64(blockNr))
+	if blockHash == (common.Hash{}) {
 		return nil, nil
 	}
+	receipts := rawdb.ReadReceipts(s.b.ChainDb(), blockHash, uint64(blockNr))
+	resReceipts := make([]*ReceiptRes, len(receipts))
+	for i, rec := range receipts {
+		r := &ReceiptRes{
+			BlockHash:         blockHash,
+			BlockNumber:       hexutil.Uint64(blockNr),
+			TransactionHash:   rec.TxHash,
+			TransactionIndex:  hexutil.Uint64(i),
+			GasUsed:           hexutil.Uint64(rec.GasUsed),
+			CumulativeGasUsed: hexutil.Uint64(rec.CumulativeGasUsed),
+			LogsBloom:         rec.Bloom,
+			Logs:              rec.Logs,
+		}
+		// Assign receipt status or post state.
+		if len(rec.PostState) > 0 {
+			r.Root = hexutil.Bytes(rec.PostState)
+		} else {
+			r.Status = hexutil.Uint(rec.Status)
+		}
+		// If the ContractAddress is 20 0x0 bytes, assume it is not a contract creation
+		if rec.ContractAddress != (common.Address{}) {
+			r.ContractAddress = rec.ContractAddress
+		}
+		resReceipts[i] = r
+	}
+	if counterparties := rawdb.GetCounterpartyCache(uint64(blockNr)); len(counterparties) == len(resReceipts) {
+		for i, cp := range counterparties {
+			resReceipts[i].From = *cp.From
+			resReceipts[i].To = *cp.To
+		}
+	} else {
+		var signer types.Signer = types.NewEIP155Signer(s.b.ChainConfig().ChainID)
+		body := rawdb.ReadBody(s.b.ChainDb(), blockHash, uint64(blockNr))
+		for i, tx := range body.Transactions {
+			from, _ := types.Sender(signer, tx)
+			resReceipts[i].From = from
+			resReceipts[i].To = *tx.To()
+		}
+	}
+
+	return resReceipts, nil
+}
+
+// GetTransactionReceipt returns the transaction receipt for the given transaction hash.
+func (s *PublicTransactionPoolAPI) GetTransactionReceipt(ctx context.Context, hash common.Hash) (map[string]interface{}, error) {
+	blockHash, blockNumber, index := rawdb.ReadTxLookupEntry(s.b.ChainDb(), hash)
+	if blockHash == (common.Hash{}) {
+		return nil, nil
+	}
+
 	receipts, err := s.b.GetReceipts(ctx, blockHash)
 	if err != nil {
 		return nil, err
@@ -1097,19 +1160,27 @@ func (s *PublicTransactionPoolAPI) GetTransactionReceipt(ctx context.Context, ha
 	}
 	receipt := receipts[index]
 
-	var signer types.Signer = types.FrontierSigner{}
-	if tx.Protected() {
-		signer = types.NewEIP155Signer(tx.ChainId())
+	counterparties := rawdb.GetCounterpartyCache(blockNumber)
+	var from, to *common.Address
+	if uint64(len(counterparties)) > index {
+		from, to = counterparties[index].From, counterparties[index].To
 	}
-	from, _ := types.Sender(signer, tx)
+	if from == nil || to == nil {
+		tx, _, _, _ := rawdb.ReadTransaction(s.b.ChainDb(), hash)
+		if tx == nil {
+			return nil, nil
+		}
+		from = tx.From()
+		to = tx.To()
+	}
 
 	fields := map[string]interface{}{
 		"blockHash":         blockHash,
 		"blockNumber":       hexutil.Uint64(blockNumber),
 		"transactionHash":   hash,
 		"transactionIndex":  hexutil.Uint64(index),
-		"from":              from,
-		"to":                tx.To(),
+		"from":              *from,
+		"to":                to,
 		"gasUsed":           hexutil.Uint64(receipt.GasUsed),
 		"cumulativeGasUsed": hexutil.Uint64(receipt.CumulativeGasUsed),
 		"contractAddress":   nil,
