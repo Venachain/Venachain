@@ -248,8 +248,17 @@ func ReadBody(db DatabaseReader, hash common.Hash, number uint64) *types.Body {
 	}
 	body := new(types.Body)
 	if err := rlp.Decode(bytes.NewReader(data), body); err != nil {
-		log.Error("Invalid block body RLP", "hash", hash, "err", err)
-		return nil
+		if err.Error() == "rlp: too few elements for types.Body" {
+			bodyOld := new(types.BodyOld)
+			if err := rlp.Decode(bytes.NewReader(data), bodyOld); err != nil {
+				log.Error("Invalid block body RLP", "hash", hash, "err", err)
+				return nil
+			}
+			return &types.Body{Transactions: bodyOld.Transactions, Dag: nil}
+		} else {
+			log.Error("Invalid block body RLP", "hash", hash, "err", err)
+			return nil
+		}
 	}
 	return body
 }
