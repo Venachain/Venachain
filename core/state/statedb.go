@@ -694,6 +694,11 @@ func (self *StateDB) Copy() *StateDB {
 		logSize:           self.logSize,
 		preimages:         make(map[common.Hash][]byte),
 		journal:           newJournal(),
+		readMap:           make(map[string]*ReadOp),
+		writeMap:          make(map[string]*WriteOp),
+		balanceMap:        make(map[common.Address]*BalanceOp),
+		nonce:             make(map[common.Address]int),
+		oc:                make(map[common.Address]ObjectChange),
 	}
 	// Copy the dirty states, logs, and preimages
 	for addr := range self.journal.dirties {
