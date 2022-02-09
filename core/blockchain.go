@@ -18,7 +18,6 @@
 package core
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"math/big"
@@ -181,7 +180,6 @@ func NewBlockChain(db dbhandle.Database, extdb dbhandle.Database, cacheConfig *C
 	if err != nil {
 		return nil, nil, err
 	}
-	bc.CheckAndUpdateBody()
 	bc.genesisBlock = bc.GetBlockByNumber(0)
 	if bc.genesisBlock == nil {
 		return nil, nil, ErrNoGenesis
@@ -1557,40 +1555,6 @@ func (bc *BlockChain) RunInterpreterDirectly(caller common.Address, contractAddr
 	contract := vm.NewContract(vm.AccountRef(caller), vm.AccountRef(contractAddr), big.NewInt(0), uint64(0xffffffffff))
 	contract.SetCallCode(&contractAddr, evm.StateDB.GetCodeHash(contractAddr), evm.StateDB.GetCode(contractAddr))
 	return bc.runInterpreter(evm, contract, input)
-}
-
-func (bc *BlockChain) CheckAndUpdateBody() {
-	if bc.CheckBodyOld() {
-		log.Info("Body is old , need update to new body ,please wait")
-		headHash := rawdb.ReadHeadBlockHash(bc.db)
-		number := bc.hc.GetBlockNumber(headHash)
-		var i uint64
-		for i = 0; i <= *number; i++ {
-			hash := rawdb.ReadCanonicalHash(bc.db, i)
-			rlpData := rawdb.ReadBodyRLP(bc.db, hash, i)
-			oldBody := new(types.BodyOld)
-			if err := rlp.Decode(bytes.NewReader(rlpData), oldBody); err != nil {
-				log.Error("Invalid block body RLP", "hash", hash, "err", err)
-				return
-			}
-			body := &types.Body{Transactions: oldBody.Transactions}
-			rawdb.WriteBody(bc.db, hash, i, body)
-		}
-	}
-}
-
-func (bc *BlockChain) CheckBodyOld() bool {
-	hash := rawdb.ReadCanonicalHash(bc.db, 0)
-	rlpData := rawdb.ReadBodyRLP(bc.db, hash, 0)
-
-	body := new(types.Body)
-	if err := rlp.Decode(bytes.NewReader(rlpData), body); err != nil {
-		if err.Error() == "rlp: too few elements for types.Body" {
-			return true
-		}
-	}
-
-	return false
 }
 
 func (bc *BlockChain) IsLightNode() bool {
