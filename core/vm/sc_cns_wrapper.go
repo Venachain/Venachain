@@ -56,7 +56,7 @@ func (cns *CnsWrapper) Run(input []byte) ([]byte, error) {
 			return MakeReturnBytes([]byte(newInternalErrorResult(err).String())), err
 		}
 
-		if strings.ContainsAny(fnName, "ifRegistered") {
+		if strings.Contains(fnName, "ifRegistered") {
 			return common.Int32ToBytes(int32(cnsInvalidArgument)), err
 		}
 	}
@@ -156,7 +156,7 @@ func (cns *CnsWrapper) cnsRedirect(name, version string) (int32, error) {
 func (cns *CnsWrapper) getContractAddress(name, version string) (string, error) {
 	addr, err := cns.base.getContractAddress(name, version)
 	if err != nil {
-		return "", err
+		return "", nil
 	}
 
 	return addr.String(), nil
