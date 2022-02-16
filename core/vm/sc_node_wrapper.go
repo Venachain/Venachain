@@ -94,10 +94,10 @@ func (n *scNodeWrapper) isPublicKeyExist(pub string) (int, error) {
 	err := n.base.checkPublicKeyExist(pub)
 	if err != nil {
 		if errPublicKeyExist == err {
-			return publicKeyExist, err
+			return publicKeyExist, nil
 		}
 
-		return 0, err
+		return 0, nil
 	}
 
 	return publicKeyNotExist, nil
