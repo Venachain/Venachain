@@ -514,7 +514,10 @@ func (n *SCNode) importOldNodesData(data string) error {
 		//if n.isNameExist(names, nodes[index].Name) {
 		//	n.update(nodes[index].Name, &nodes[index])
 		//}
-		n.add(&nodes[index])
+		err = n.add(&nodes[index])
+		if err != nil {
+			return err
+		}
 	}
 	if err != nil {
 		return err
