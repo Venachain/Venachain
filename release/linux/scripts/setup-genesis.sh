@@ -92,13 +92,13 @@ function create_genesis() {
     NODE_ADDRESS=`cat ${NODE_DIR}/node.address`
     default_enode="enode://${NODE_KEY}@${1}:${2}"
     if [[ $VALIDATOR_NODES != "" ]]; then
-         replaceList "__VALIDATOR__" $VALIDATOR_NODES
+        sed -i "s#__VALIDATOR__#\"${VALIDATOR_NODES}\"#g" ${CONF_PATH}/genesis.json
     else
-         replaceList "__VALIDATOR__" $default_enode
+        sed -i "s#__VALIDATOR__#\"${default_enode}\"#g" ${CONF_PATH}/genesis.json
     fi
 
-     ${BIN_PATH}/repstr ${CONF_PATH}/genesis.json "DEFAULT-ACCOUNT" ${NODE_ADDRESS}
-     ${BIN_PATH}/repstr ${CONF_PATH}/genesis.json "__INTERPRETER__" ${INTERPRETER}
+    sed -i "s#DEFAULT-ACCOUNT#${NODE_ADDRESS}#g" ${CONF_PATH}/genesis.json
+    sed -i "s#__INTERPRETER__#${INTERPRETER}#g" ${CONF_PATH}/genesis.json
 
 #    ${BIN_PATH}/ctool codegen --abi ${CONF_PATH}/contracts/cnsProxy.cpp.abi.json --code ${CONF_PATH}/contracts/cnsProxy.wasm > ${CONF_PATH}/cns-code.hex
 
@@ -107,7 +107,7 @@ function create_genesis() {
 
     now=`date +%s`
 
-    ${BIN_PATH}/repstr ${CONF_PATH}/genesis.json "TIMESTAMP" $now
+    sed -i "s#TIMESTAMP#${now}#g" ${CONF_PATH}/genesis.json
 
     echo "[INFO]: Create genesis succ. File: ${CONF_PATH}/genesis.json"
 }
