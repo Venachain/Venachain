@@ -479,7 +479,7 @@ func testDAOChallenge(t *testing.T, localForked, remoteForked bool, timeout bool
 	defer pm.Stop()
 
 	// Connect a new peer and check that we receive the DAO challenge
-	peer, _ := newTestPeer("peer", platoneV1, pm, true)
+	peer, _ := newTestPeer("peer", venachainV1, pm, true)
 	defer peer.close()
 
 	challenge := &getBlockHeadersData{

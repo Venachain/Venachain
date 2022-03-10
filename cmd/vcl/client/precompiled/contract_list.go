@@ -3,14 +3,14 @@ package precompile
 import "github.com/Venachain/Venachain/common/syscontracts"
 
 var (
-	UserManagementAddress        = syscontracts.UserManagementAddress.String()        // The PlatONE Precompiled contract addr for user management
-	NodeManagementAddress        = syscontracts.NodeManagementAddress.String()        // The PlatONE Precompiled contract addr for node management
-	CnsManagementAddress         = syscontracts.CnsManagementAddress.String()         // The PlatONE Precompiled contract addr for CNS
-	ParameterManagementAddress   = syscontracts.ParameterManagementAddress.String()   // The PlatONE Precompiled contract addr for parameter management
-	FirewallManagementAddress    = syscontracts.FirewallManagementAddress.String()    // The PlatONE Precompiled contract addr for fire wall management
-	GroupManagementAddress       = syscontracts.GroupManagementAddress.String()       // The PlatONE Precompiled contract addr for group management
-	ContractDataProcessorAddress = syscontracts.ContractDataProcessorAddress.String() // The PlatONE Precompiled contract addr for group management
-	CnsInvokeAddress             = syscontracts.CnsInvokeAddress.String()             // The PlatONE Precompiled contract addr for group management
+	UserManagementAddress        = syscontracts.UserManagementAddress.String()        // The Venachain Precompiled contract addr for user management
+	NodeManagementAddress        = syscontracts.NodeManagementAddress.String()        // The Venachain Precompiled contract addr for node management
+	CnsManagementAddress         = syscontracts.CnsManagementAddress.String()         // The Venachain Precompiled contract addr for CNS
+	ParameterManagementAddress   = syscontracts.ParameterManagementAddress.String()   // The Venachain Precompiled contract addr for parameter management
+	FirewallManagementAddress    = syscontracts.FirewallManagementAddress.String()    // The Venachain Precompiled contract addr for fire wall management
+	GroupManagementAddress       = syscontracts.GroupManagementAddress.String()       // The Venachain Precompiled contract addr for group management
+	ContractDataProcessorAddress = syscontracts.ContractDataProcessorAddress.String() // The Venachain Precompiled contract addr for group management
+	CnsInvokeAddress             = syscontracts.CnsInvokeAddress.String()             // The Venachain Precompiled contract addr for group management
 )
 
 const (

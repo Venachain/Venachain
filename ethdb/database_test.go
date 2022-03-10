@@ -48,8 +48,6 @@ var test_values = []string{"", "a", "1251", "\x00123\x00"}
 
 func OpenTestLDB() (*ethdb.LDBDatabase, func()) {
 
-	//	dirname := "D:/data/platone/chaindata"
-	//	dirname := "D:/platone-node/data/platone/extdb"
 	dirname := "D:/venachain-node/data/venachain/extdb"
 	db, err := ethdb.NewLDBDatabase(dirname, 0, 0)
 	if err != nil {

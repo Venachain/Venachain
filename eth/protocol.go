@@ -31,7 +31,7 @@ import (
 
 // Constants to match up protocol versions and messages
 const (
-	platoneV1 = 1
+	venachainV1 = 1
 )
 
 // ProtocolName is the official short name of the protocol used during capability negotiation.
@@ -39,7 +39,7 @@ const (
 var ProtocolNameArr = []string{"vena"}
 
 // ProtocolVersions are the upported versions of the eth protocol (first is primary).
-var ProtocolVersions = []uint{platoneV1}
+var ProtocolVersions = []uint{venachainV1}
 
 // ProtocolLengths are the number of implemented message corresponding to different protocol versions.
 //var ProtocolLengths = []uint64{17, 8}

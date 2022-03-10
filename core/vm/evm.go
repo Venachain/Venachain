@@ -50,8 +50,8 @@ func run(evm *EVM, contract *Contract, input []byte, readOnly bool) ([]byte, err
 			return RunPrecompiledContract(p, input, contract)
 		}
 
-		if p := PlatONEPrecompiledContracts[*contract.CodeAddr]; nil != p {
-			return RunPlatONEPrecompiledSC(p, input, contract, evm)
+		if p := VenachainPrecompiledContracts[*contract.CodeAddr]; nil != p {
+			return RunVenachainPrecompiledSC(p, input, contract, evm)
 		}
 	}
 

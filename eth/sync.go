@@ -216,7 +216,7 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 		log.Info("boot nodes is unnormal nodes: ", "local", "at sync")
 	}
 	pHead, pBn := peer.Head()
-	//modified by platone
+	//modified by Venachain
 	//diff := new(big.Int).Sub(pBn, bn)
 	//if diff.Cmp(big.NewInt(5)) <= 0 {
 	//	return

@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with go-ethereum. If not, see <http://www.gnu.org/licenses/>.
 
-// platone is the official command-line client for Ethereum.
+// venachain is the official command-line client for Ethereum.
 package main
 
 import (
@@ -243,7 +243,7 @@ func main() {
 	}
 }
 
-// platone is the main entry point into the system if no special subcommand is ran.
+// venachain is the main entry point into the system if no special subcommand is ran.
 // It creates a default node based on the command line arguments and runs it in
 // blocking mode, waiting for it to be shut down.
 func geth(ctx *cli.Context) error {

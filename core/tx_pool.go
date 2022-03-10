@@ -214,7 +214,7 @@ type TxPool struct {
 	gasPrice    *big.Int
 	txFeed      event.Feed
 	scope       event.SubscriptionScope
-	// modified by PlatONE
+	// modified by Venachain
 	chainHeadCh      chan *types.Block
 	chainHeadEventCh chan ChainHeadEvent
 	chainHeadSub     event.Subscription
@@ -270,7 +270,7 @@ func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoo
 		//queue:       make(map[common.Address]*txQueuedMap),
 		all: newTxLookup(),
 		db:  db,
-		// modified by PlatONE
+		// modified by Venachain
 		chainHeadEventCh: make(chan ChainHeadEvent, chainHeadChanSize),
 		chainHeadCh:      make(chan *types.Block, chainHeadChanSize),
 		exitCh:           make(chan struct{}),
@@ -302,7 +302,7 @@ func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoo
 		}
 	}
 	// Subscribe events from blockchain
-	// modified by PlatONE
+	// modified by Venachain
 	if pool.chainconfig.Istanbul != nil {
 		pool.chainHeadSub = pool.chain.SubscribeChainHeadEvent(pool.chainHeadEventCh)
 	}
