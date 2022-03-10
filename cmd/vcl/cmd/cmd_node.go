@@ -30,7 +30,7 @@ var (
 	NodeAddCmd = cli.Command{
 		Name:      "add",
 		Usage:     "Add a node to the node list",
-		ArgsUsage: "<name> <publicKey> <externalIP> <internalIP> <status>",
+		ArgsUsage: "<name> <publicKey> <externalIP> <internalIP> <type>",
 		Action:    nodeAdd,
 		Flags:     nodeAddCmdFlags,
 		Description: `
