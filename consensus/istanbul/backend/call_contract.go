@@ -67,7 +67,7 @@ func getVRFParamsAtNumber(chain consensus.ChainReader, sb *backend, number uint6
 	if vrf != nil {
 		return vrf.(*common.VRFParams)
 	}
-	return nil
+	return &common.VRFParams{}
 }
 
 func getVrfConsensusNodesAtNumber(chain consensus.ChainReader, sb *backend, number uint64) []common.NodeInfo {
