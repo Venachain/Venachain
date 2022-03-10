@@ -28,7 +28,7 @@ import (
 	"github.com/Venachain/Venachain/consensus/istanbul/validator"
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/crypto"
-	"github.com/Venachain/Venachain/ethdb"
+	"github.com/Venachain/Venachain/venadb"
 )
 
 const (
@@ -77,7 +77,7 @@ func newSnapshot(number uint64, hash common.Hash, valSet istanbul.ValidatorSet) 
 }
 
 // loadSnapshot loads an existing snapshot from the database.
-func loadSnapshot(db ethdb.Database, hash common.Hash) (*Snapshot, error) {
+func loadSnapshot(db venadb.Database, hash common.Hash) (*Snapshot, error) {
 	blob, err := db.Get(append([]byte(dbKeySnapshotPrefix), hash[:]...))
 	if err != nil {
 		return nil, err
@@ -92,7 +92,7 @@ func loadSnapshot(db ethdb.Database, hash common.Hash) (*Snapshot, error) {
 }
 
 // store inserts the snapshot into the database.
-func (s *Snapshot) store(db ethdb.Database) error {
+func (s *Snapshot) store(db venadb.Database) error {
 	blob, err := json.Marshal(s)
 	if err != nil {
 		return err

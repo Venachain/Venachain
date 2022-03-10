@@ -20,21 +20,21 @@ import (
 	"context"
 
 	"github.com/Venachain/Venachain/core"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/light"
 	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/venadb"
 )
 
 // LesOdr implements light.OdrBackend
 type LesOdr struct {
-	db                                         ethdb.Database
+	db                                         venadb.Database
 	indexerConfig                              *light.IndexerConfig
 	chtIndexer, bloomTrieIndexer, bloomIndexer *core.ChainIndexer
 	retriever                                  *retrieveManager
 	stop                                       chan struct{}
 }
 
-func NewLesOdr(db ethdb.Database, config *light.IndexerConfig, retriever *retrieveManager) *LesOdr {
+func NewLesOdr(db venadb.Database, config *light.IndexerConfig, retriever *retrieveManager) *LesOdr {
 	return &LesOdr{
 		db:            db,
 		indexerConfig: config,
@@ -49,7 +49,7 @@ func (odr *LesOdr) Stop() {
 }
 
 // Database returns the backing database
-func (odr *LesOdr) Database() ethdb.Database {
+func (odr *LesOdr) Database() venadb.Database {
 	return odr.db
 }
 

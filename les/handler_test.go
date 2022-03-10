@@ -27,12 +27,12 @@ import (
 	"github.com/Venachain/Venachain/core/rawdb"
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/crypto"
-	"github.com/Venachain/Venachain/eth/downloader"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/light"
 	"github.com/Venachain/Venachain/p2p"
 	"github.com/Venachain/Venachain/rlp"
 	"github.com/Venachain/Venachain/trie"
+	"github.com/Venachain/Venachain/vena/downloader"
+	"github.com/Venachain/Venachain/venadb"
 )
 
 func expectResponse(r p2p.MsgReader, msgcode, reqID, bv uint64, data interface{}) error {
@@ -402,7 +402,7 @@ func testGetCHTProofs(t *testing.T, protocol int) {
 	switch protocol {
 	case 1:
 		root := light.GetChtRoot(server.db, 0, bc.GetHeaderByNumber(frequency-1).Hash())
-		trie, _ := trie.New(root, trie.NewDatabase(ethdb.NewTable(server.db, light.ChtTablePrefix)))
+		trie, _ := trie.New(root, trie.NewDatabase(venadb.NewTable(server.db, light.ChtTablePrefix)))
 
 		var proof light.NodeList
 		trie.Prove(key, 0, &proof)
@@ -410,7 +410,7 @@ func testGetCHTProofs(t *testing.T, protocol int) {
 
 	case 2:
 		root := light.GetChtRoot(server.db, (frequency/config.ChtSize)-1, bc.GetHeaderByNumber(frequency-1).Hash())
-		trie, _ := trie.New(root, trie.NewDatabase(ethdb.NewTable(server.db, light.ChtTablePrefix)))
+		trie, _ := trie.New(root, trie.NewDatabase(venadb.NewTable(server.db, light.ChtTablePrefix)))
 		trie.Prove(key, 0, &proofsV2.Proofs)
 	}
 	// Assemble the requests for the different protocols
@@ -477,7 +477,7 @@ func TestGetBloombitsProofs(t *testing.T) {
 		var proofs HelperTrieResps
 
 		root := light.GetBloomTrieRoot(server.db, 0, bc.GetHeaderByNumber(config.BloomTrieSize-1).Hash())
-		trie, _ := trie.New(root, trie.NewDatabase(ethdb.NewTable(server.db, light.BloomTrieTablePrefix)))
+		trie, _ := trie.New(root, trie.NewDatabase(venadb.NewTable(server.db, light.BloomTrieTablePrefix)))
 		trie.Prove(key, 0, &proofs.Proofs)
 
 		// Send the proof request and verify the response

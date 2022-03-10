@@ -49,7 +49,7 @@ const (
 // all registered services.
 type Config struct {
 	// Name sets the instance name of the node. It must not contain the / character and is
-	// used in the devp2p node identifier. The instance name of platone is "platone". If no
+	// used in the devp2p node identifier. The instance name of venachain is "venachain". If no
 	// value is specified, the basename of the current executable is used.
 	Name string `toml:"-"`
 
@@ -258,7 +258,7 @@ func (c *Config) name() string {
 	return c.Name
 }
 
-// These resources are resolved differently for "platone" instances.
+// These resources are resolved differently for "venachain" instances.
 var isOldGethResource = map[string]bool{
 	"chaindata":          true,
 	"nodes":              true,
@@ -276,7 +276,7 @@ func (c *Config) ResolvePath(path string) string {
 		return ""
 	}
 	// Backwards-compatibility: ensure that data directory files created
-	// by platone 1.4 are used if they exist.
+	// by venachain 1.4 are used if they exist.
 	if c.name() == "venachain" && isOldGethResource[path] {
 		oldpath := ""
 		if c.Name == "venachain" {

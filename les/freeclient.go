@@ -25,9 +25,9 @@ import (
 
 	"github.com/Venachain/Venachain/common/mclock"
 	"github.com/Venachain/Venachain/common/prque"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/log"
 	"github.com/Venachain/Venachain/rlp"
+	"github.com/Venachain/Venachain/venadb"
 )
 
 // freeClientPool implements a client database that limits the connection time
@@ -44,7 +44,7 @@ import (
 // value for the client. Currently the LES protocol manager uses IP addresses
 // (without port address) to identify clients.
 type freeClientPool struct {
-	db     ethdb.Database
+	db     venadb.Database
 	lock   sync.Mutex
 	clock  mclock.Clock
 	closed bool
@@ -64,7 +64,7 @@ const (
 )
 
 // newFreeClientPool creates a new free client pool
-func newFreeClientPool(db ethdb.Database, connectedLimit, totalLimit int, clock mclock.Clock) *freeClientPool {
+func newFreeClientPool(db venadb.Database, connectedLimit, totalLimit int, clock mclock.Clock) *freeClientPool {
 	pool := &freeClientPool{
 		db:             db,
 		clock:          clock,

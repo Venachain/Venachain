@@ -26,12 +26,12 @@ import (
 
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/crypto"
-	"github.com/Venachain/Venachain/ethdb"
+	"github.com/Venachain/Venachain/venadb"
 	checker "gopkg.in/check.v1"
 )
 
 type StateSuite struct {
-	db    *ethdb.MemDatabase
+	db    *venadb.MemDatabase
 	state *StateDB
 }
 
@@ -90,7 +90,7 @@ func (s *StateSuite) TestDump(c *checker.C) {
 }
 
 func (s *StateSuite) SetUpTest(c *checker.C) {
-	s.db = ethdb.NewMemDatabase()
+	s.db = venadb.NewMemDatabase()
 	s.state, _ = New(common.Hash{}, NewDatabase(s.db))
 }
 
@@ -146,7 +146,7 @@ func (s *StateSuite) TestSnapshotEmpty(c *checker.C) {
 // use testing instead of checker because checker does not support
 // printing/logging in tests (-check.vv does not work)
 func TestSnapshot2(t *testing.T) {
-	state, _ := New(common.Hash{}, NewDatabase(ethdb.NewMemDatabase()))
+	state, _ := New(common.Hash{}, NewDatabase(venadb.NewMemDatabase()))
 
 	stateobjaddr0 := toAddr([]byte("so0"))
 	stateobjaddr1 := toAddr([]byte("so1"))
@@ -251,7 +251,7 @@ func compareStateObjects(so0, so1 *stateObject, t *testing.T) {
 }
 
 func TestEmptyByte(t *testing.T) {
-	db, _ := ethdb.NewLDBDatabase("D:\\resource\\venachain\\venachain-go\\data1", 0, 0)
+	db, _ := venadb.NewLDBDatabase("D:\\resource\\venachain\\venachain-go\\data1", 0, 0)
 	state, _ := New(common.Hash{}, NewDatabase(db))
 
 	address := common.HexToAddress("0x823140710bf13990e4500136726d8b55")

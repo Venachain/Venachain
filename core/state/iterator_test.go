@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/Venachain/Venachain/common"
-	"github.com/Venachain/Venachain/ethdb"
+	"github.com/Venachain/Venachain/venadb"
 )
 
 // Tests that the node iterator indeed walks over the entire database contents.
@@ -51,7 +51,7 @@ func TestNodeIteratorCoverage(t *testing.T) {
 			t.Errorf("state entry not reported %x", hash)
 		}
 	}
-	for _, key := range db.TrieDB().DiskDB().(*ethdb.MemDatabase).Keys() {
+	for _, key := range db.TrieDB().DiskDB().(*venadb.MemDatabase).Keys() {
 		if bytes.HasPrefix(key, []byte("secure-key-")) {
 			continue
 		}

@@ -32,9 +32,9 @@ import (
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/core/vm"
 	"github.com/Venachain/Venachain/crypto"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/params"
 	"github.com/Venachain/Venachain/rlp"
+	"github.com/Venachain/Venachain/venadb"
 )
 
 // in this test, we can set n to 1, and it means we can process Istanbul and commit a
@@ -42,7 +42,7 @@ import (
 // other fake events to process Istanbul.
 func newBlockChain(n int) (*core.BlockChain, *backend) {
 	genesis, nodeKeys := getGenesisAndKeys(n)
-	memDB := ethdb.NewMemDatabase()
+	memDB := venadb.NewMemDatabase()
 	config := istanbul.DefaultConfig
 	// Use the first key as private key
 	b, _ := New(config, nodeKeys[0], memDB).(*backend)

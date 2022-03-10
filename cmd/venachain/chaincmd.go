@@ -33,11 +33,11 @@ import (
 	"github.com/Venachain/Venachain/core"
 	"github.com/Venachain/Venachain/core/state"
 	"github.com/Venachain/Venachain/core/types"
-	"github.com/Venachain/Venachain/eth/downloader"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/event"
 	"github.com/Venachain/Venachain/log"
 	"github.com/Venachain/Venachain/trie"
+	"github.com/Venachain/Venachain/vena/downloader"
+	"github.com/Venachain/Venachain/venadb"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"gopkg.in/urfave/cli.v1"
 )
@@ -248,7 +248,7 @@ func importChain(ctx *cli.Context) error {
 	fmt.Printf("Import done in %v.\n\n", time.Since(start))
 
 	// Output pre-compaction stats mostly to see the import trashing
-	db := chainDb.(*ethdb.LDBDatabase)
+	db := chainDb.(*venadb.LDBDatabase)
 
 	stats, err := db.LDB().GetProperty("leveldb.stats")
 	if err != nil {
@@ -345,7 +345,7 @@ func importPreimages(ctx *cli.Context) error {
 		utils.Fatalf("This command requires an argument.")
 	}
 	stack := makeFullNode(ctx)
-	diskdb := utils.MakeChainDatabase(ctx, stack).(*ethdb.LDBDatabase)
+	diskdb := utils.MakeChainDatabase(ctx, stack).(*venadb.LDBDatabase)
 
 	start := time.Now()
 	if err := utils.ImportPreimages(diskdb, ctx.Args().First()); err != nil {
@@ -361,7 +361,7 @@ func exportPreimages(ctx *cli.Context) error {
 		utils.Fatalf("This command requires an argument.")
 	}
 	stack := makeFullNode(ctx)
-	diskdb := utils.MakeChainDatabase(ctx, stack).(*ethdb.LDBDatabase)
+	diskdb := utils.MakeChainDatabase(ctx, stack).(*venadb.LDBDatabase)
 
 	start := time.Now()
 	if err := utils.ExportPreimages(diskdb, ctx.Args().First()); err != nil {
@@ -384,7 +384,7 @@ func copyDb(ctx *cli.Context) error {
 	dl := downloader.New(syncmode, chainDb, new(event.TypeMux), chain, nil, nil)
 
 	// Create a source peer to satisfy downloader requests from
-	db, err := ethdb.NewLDBDatabase(ctx.Args().First(), ctx.GlobalInt(utils.CacheFlag.Name), 256)
+	db, err := venadb.NewLDBDatabase(ctx.Args().First(), ctx.GlobalInt(utils.CacheFlag.Name), 256)
 	if err != nil {
 		return err
 	}
@@ -411,7 +411,7 @@ func copyDb(ctx *cli.Context) error {
 	// Compact the entire database to remove any sync overhead
 	start = time.Now()
 	fmt.Println("Compacting entire database...")
-	if err = chainDb.(*ethdb.LDBDatabase).LDB().CompactRange(util.Range{}); err != nil {
+	if err = chainDb.(*venadb.LDBDatabase).LDB().CompactRange(util.Range{}); err != nil {
 		utils.Fatalf("Compaction failed: %v", err)
 	}
 	fmt.Printf("Compaction done in %v.\n\n", time.Since(start))

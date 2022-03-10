@@ -23,8 +23,8 @@ import (
 
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/crypto"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/trie"
+	"github.com/Venachain/Venachain/venadb"
 )
 
 // testAccount is the data associated with an account used by the state tests.
@@ -38,7 +38,7 @@ type testAccount struct {
 // makeTestState create a sample test state to test node-wise reconstruction.
 func makeTestState() (Database, common.Hash, []*testAccount) {
 	// Create an empty state
-	db := NewDatabase(ethdb.NewMemDatabase())
+	db := NewDatabase(venadb.NewMemDatabase())
 	state, _ := New(common.Hash{}, db)
 
 	// Fill it with some arbitrary data
@@ -68,7 +68,7 @@ func makeTestState() (Database, common.Hash, []*testAccount) {
 
 // checkStateAccounts cross references a reconstructed state with an expected
 // account array.
-func checkStateAccounts(t *testing.T, db ethdb.Database, root common.Hash, accounts []*testAccount) {
+func checkStateAccounts(t *testing.T, db venadb.Database, root common.Hash, accounts []*testAccount) {
 	// Check root availability and state contents
 	state, err := New(root, NewDatabase(db))
 	if err != nil {
@@ -91,7 +91,7 @@ func checkStateAccounts(t *testing.T, db ethdb.Database, root common.Hash, accou
 }
 
 // checkTrieConsistency checks that all nodes in a (sub-)trie are indeed present.
-func checkTrieConsistency(db ethdb.Database, root common.Hash) error {
+func checkTrieConsistency(db venadb.Database, root common.Hash) error {
 	if v, _ := db.Get(root[:]); v == nil {
 		return nil // Consider a non existent state consistent.
 	}
@@ -106,7 +106,7 @@ func checkTrieConsistency(db ethdb.Database, root common.Hash) error {
 }
 
 // checkStateConsistency checks that all data of a state root is present.
-func checkStateConsistency(db ethdb.Database, root common.Hash) error {
+func checkStateConsistency(db venadb.Database, root common.Hash) error {
 	// Create and iterate a state trie rooted in a sub-node
 	if _, err := db.Get(root.Bytes()); err != nil {
 		return nil // Consider a non existent state consistent.
@@ -124,7 +124,7 @@ func checkStateConsistency(db ethdb.Database, root common.Hash) error {
 // Tests that an empty state is not scheduled for syncing.
 func TestEmptyStateSync(t *testing.T) {
 	empty := common.HexToHash("56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421")
-	if req := NewStateSync(empty, ethdb.NewMemDatabase()).Missing(1); len(req) != 0 {
+	if req := NewStateSync(empty, venadb.NewMemDatabase()).Missing(1); len(req) != 0 {
 		t.Errorf("content requested for empty state: %v", req)
 	}
 }
@@ -139,7 +139,7 @@ func testIterativeStateSync(t *testing.T, batch int) {
 	srcDb, srcRoot, srcAccounts := makeTestState()
 
 	// Create a destination state and sync with the scheduler
-	dstDb := ethdb.NewMemDatabase()
+	dstDb := venadb.NewMemDatabase()
 	sched := NewStateSync(srcRoot, dstDb)
 
 	queue := append([]common.Hash{}, sched.Missing(batch)...)
@@ -171,7 +171,7 @@ func TestIterativeDelayedStateSync(t *testing.T) {
 	srcDb, srcRoot, srcAccounts := makeTestState()
 
 	// Create a destination state and sync with the scheduler
-	dstDb := ethdb.NewMemDatabase()
+	dstDb := venadb.NewMemDatabase()
 	sched := NewStateSync(srcRoot, dstDb)
 
 	queue := append([]common.Hash{}, sched.Missing(0)...)
@@ -208,7 +208,7 @@ func testIterativeRandomStateSync(t *testing.T, batch int) {
 	srcDb, srcRoot, srcAccounts := makeTestState()
 
 	// Create a destination state and sync with the scheduler
-	dstDb := ethdb.NewMemDatabase()
+	dstDb := venadb.NewMemDatabase()
 	sched := NewStateSync(srcRoot, dstDb)
 
 	queue := make(map[common.Hash]struct{})
@@ -248,7 +248,7 @@ func TestIterativeRandomDelayedStateSync(t *testing.T) {
 	srcDb, srcRoot, srcAccounts := makeTestState()
 
 	// Create a destination state and sync with the scheduler
-	dstDb := ethdb.NewMemDatabase()
+	dstDb := venadb.NewMemDatabase()
 	sched := NewStateSync(srcRoot, dstDb)
 
 	queue := make(map[common.Hash]struct{})
@@ -292,10 +292,10 @@ func TestIncompleteStateSync(t *testing.T) {
 	// Create a random state to copy
 	srcDb, srcRoot, srcAccounts := makeTestState()
 
-	checkTrieConsistency(srcDb.TrieDB().DiskDB().(ethdb.Database), srcRoot)
+	checkTrieConsistency(srcDb.TrieDB().DiskDB().(venadb.Database), srcRoot)
 
 	// Create a destination state and sync with the scheduler
-	dstDb := ethdb.NewMemDatabase()
+	dstDb := venadb.NewMemDatabase()
 	sched := NewStateSync(srcRoot, dstDb)
 
 	added := []common.Hash{}

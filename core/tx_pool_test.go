@@ -31,9 +31,9 @@ import (
 	"github.com/Venachain/Venachain/core/state"
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/crypto"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/event"
 	"github.com/Venachain/Venachain/params"
+	"github.com/Venachain/Venachain/venadb"
 )
 
 // testTxPoolConfig is a transaction pool configuration without stateful disk
@@ -96,9 +96,9 @@ func pricedTransaction(nonce uint64, gaslimit uint64, gasprice *big.Int, key *ec
 
 func setupTxPool() (*TxPool, *ecdsa.PrivateKey) {
 
-	statedb, _ := state.New(common.Hash{}, state.NewDatabase(ethdb.NewMemDatabase()))
+	statedb, _ := state.New(common.Hash{}, state.NewDatabase(venadb.NewMemDatabase()))
 	blockchain := &testBlockChain{statedb, 1000000, new(event.Feed)}
-	db := ethdb.NewMemDatabase()
+	db := venadb.NewMemDatabase()
 	key, _ := crypto.GenerateKey()
 	pool := NewTxPool(testTxPoolConfig, &TestChainConfig, blockchain, db, nil, key)
 
@@ -184,7 +184,7 @@ func (c *testChain) State() (*state.StateDB, error) {
 	// a state change between those fetches.
 	stdb := c.statedb
 	if *c.trigger {
-		c.statedb, _ = state.New(common.Hash{}, state.NewDatabase(ethdb.NewMemDatabase()))
+		c.statedb, _ = state.New(common.Hash{}, state.NewDatabase(venadb.NewMemDatabase()))
 		// simulate that the new head block included tx0 and tx1
 		c.statedb.SetNonce(c.address, 2)
 		c.statedb.SetBalance(c.address, new(big.Int).SetUint64(params.Ether))
@@ -194,7 +194,7 @@ func (c *testChain) State() (*state.StateDB, error) {
 }
 
 type countingDB struct {
-	ethdb.Database
+	venadb.Database
 	gets map[string]int
 }
 
@@ -207,7 +207,7 @@ func TestStateChangeDuringTransactionPoolReset(t *testing.T) {
 	var (
 		key, _     = crypto.GenerateKey()
 		address    = crypto.PubkeyToAddress(key.PublicKey)
-		statedb, _ = state.New(common.Hash{}, state.NewDatabase(ethdb.NewMemDatabase()))
+		statedb, _ = state.New(common.Hash{}, state.NewDatabase(venadb.NewMemDatabase()))
 		trigger    = false
 	)
 	// setup pool with 2 transaction in it
@@ -219,7 +219,7 @@ func TestStateChangeDuringTransactionPoolReset(t *testing.T) {
 
 	//pool := NewTxPool(testTxPoolConfig, params.TestChainConfig, blockchain)
 
-	db := ethdb.NewMemDatabase()
+	db := venadb.NewMemDatabase()
 
 	pool := NewTxPool(testTxPoolConfig, &TestChainConfig, blockchain, db, nil, key)
 
@@ -388,7 +388,7 @@ func TestTransactionChainFork(t *testing.T) {
 
 	addr := crypto.PubkeyToAddress(key.PublicKey)
 	resetState := func() {
-		statedb, _ := state.New(common.Hash{}, state.NewDatabase(ethdb.NewMemDatabase()))
+		statedb, _ := state.New(common.Hash{}, state.NewDatabase(venadb.NewMemDatabase()))
 		statedb.AddBalance(addr, big.NewInt(100000000000000))
 
 		pool.chain = &testBlockChain{statedb, 1000000, new(event.Feed)}
@@ -418,7 +418,7 @@ func TestDuplicateTx(t *testing.T) {
 
 	addr := crypto.PubkeyToAddress(key.PublicKey)
 	resetState := func() {
-		statedb, _ := state.New(common.Hash{}, state.NewDatabase(ethdb.NewMemDatabase()))
+		statedb, _ := state.New(common.Hash{}, state.NewDatabase(venadb.NewMemDatabase()))
 		statedb.AddBalance(addr, big.NewInt(100000000000000))
 
 		pool.chain = &testBlockChain{statedb, 1000000, new(event.Feed)}
@@ -1702,9 +1702,9 @@ func testTransactionJournaling(t *testing.T, nolocals bool) {
 
 	pool.Stop()
 	//
-	statedb, _ := state.New(common.Hash{}, state.NewDatabase(ethdb.NewMemDatabase()))
+	statedb, _ := state.New(common.Hash{}, state.NewDatabase(venadb.NewMemDatabase()))
 	blockchain := &testBlockChain{statedb, 1000000, new(event.Feed)}
-	db := ethdb.NewMemDatabase()
+	db := venadb.NewMemDatabase()
 	key, _ := crypto.GenerateKey()
 	pool = NewTxPool(testTxPoolConfig, &TestChainConfig, blockchain, db, nil, key)
 	statedb.SetNonce(crypto.PubkeyToAddress(local.PublicKey), 1)
@@ -1732,9 +1732,9 @@ func testTransactionJournaling(t *testing.T, nolocals bool) {
 	time.Sleep(2 * config.Rejournal)
 	pool.Stop()
 
-	statedb, _ = state.New(common.Hash{}, state.NewDatabase(ethdb.NewMemDatabase()))
+	statedb, _ = state.New(common.Hash{}, state.NewDatabase(venadb.NewMemDatabase()))
 	blockchain = &testBlockChain{statedb, 1000000, new(event.Feed)}
-	db = ethdb.NewMemDatabase()
+	db = venadb.NewMemDatabase()
 	key, _ = crypto.GenerateKey()
 	pool = NewTxPool(testTxPoolConfig, &TestChainConfig, blockchain, db, nil, key)
 

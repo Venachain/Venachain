@@ -27,9 +27,9 @@ import (
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/core/vm"
 	"github.com/Venachain/Venachain/crypto"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/event"
 	"github.com/Venachain/Venachain/params"
+	"github.com/Venachain/Venachain/venadb"
 	"github.com/ethereum/go-ethereum/consensus/clique"
 )
 
@@ -61,7 +61,7 @@ func init() {
 
 // testWorkerBackend implements worker.Backend interfaces and wraps all information needed during the testing.
 type testWorkerBackend struct {
-	db         ethdb.Database
+	db         venadb.Database
 	txPool     *core.TxPool
 	chain      *core.BlockChain
 	testTxFeed event.Feed
@@ -69,7 +69,7 @@ type testWorkerBackend struct {
 
 func newTestWorkerBackend(t *testing.T, chainConfig *params.ChainConfig, engine consensus.Engine, n int) *testWorkerBackend {
 	var (
-		db    = ethdb.NewMemDatabase()
+		db    = venadb.NewMemDatabase()
 		gspec = core.Genesis{
 			Config: chainConfig,
 			Alloc:  core.GenesisAlloc{testBankAddress: {Balance: testBankFunds}},

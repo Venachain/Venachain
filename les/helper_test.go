@@ -28,13 +28,13 @@ import (
 	"github.com/Venachain/Venachain/core"
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/crypto"
-	"github.com/Venachain/Venachain/eth"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/les/flowcontrol"
 	"github.com/Venachain/Venachain/light"
 	"github.com/Venachain/Venachain/p2p"
 	"github.com/Venachain/Venachain/p2p/discover"
 	"github.com/Venachain/Venachain/params"
+	"github.com/Venachain/Venachain/vena"
+	"github.com/Venachain/Venachain/venadb"
 )
 
 var (
@@ -118,9 +118,9 @@ func testChainGen(i int, block *core.BlockGen) {
 }
 
 // testIndexers creates a set of indexers with specified params for testing purpose.
-func testIndexers(db ethdb.Database, odr light.OdrBackend, iConfig *light.IndexerConfig) (*core.ChainIndexer, *core.ChainIndexer, *core.ChainIndexer) {
+func testIndexers(db venadb.Database, odr light.OdrBackend, iConfig *light.IndexerConfig) (*core.ChainIndexer, *core.ChainIndexer, *core.ChainIndexer) {
 	chtIndexer := light.NewChtIndexer(db, odr, iConfig.ChtSize, iConfig.ChtConfirms)
-	bloomIndexer := eth.NewBloomIndexer(db, iConfig.BloomSize, iConfig.BloomConfirms)
+	bloomIndexer := vena.NewBloomIndexer(db, iConfig.BloomSize, iConfig.BloomConfirms)
 	bloomTrieIndexer := light.NewBloomTrieIndexer(db, odr, iConfig.BloomSize, iConfig.BloomTrieSize)
 	bloomIndexer.AddChildIndexer(bloomTrieIndexer)
 	return chtIndexer, bloomIndexer, bloomTrieIndexer
@@ -254,7 +254,7 @@ func (p *testPeer) close() {
 
 // TestEntity represents a network entity for testing with necessary auxiliary fields.
 type TestEntity struct {
-	db    ethdb.Database
+	db    venadb.Database
 	rPeer *peer
 	tPeer *testPeer
 	peers *peerSet

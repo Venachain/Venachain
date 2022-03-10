@@ -30,7 +30,7 @@ import (
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/core/vm"
 	"github.com/Venachain/Venachain/crypto"
-	"github.com/Venachain/Venachain/ethdb"
+	"github.com/Venachain/Venachain/venadb"
 )
 
 type testerVote struct {
@@ -338,7 +338,7 @@ func TestVoting(t *testing.T) {
 		extra, _ := prepareExtra(b.Header(), validators)
 		genesis.ExtraData = extra
 		// Create a pristine blockchain with the genesis injected
-		db := ethdb.NewMemDatabase()
+		db := venadb.NewMemDatabase()
 		genesis.Commit(db)
 
 		config := istanbul.DefaultConfig
@@ -425,7 +425,7 @@ func TestSaveAndLoad(t *testing.T) {
 			common.StringToAddress("1234567895"),
 		}, istanbul.RoundRobin),
 	}
-	db := ethdb.NewMemDatabase()
+	db := venadb.NewMemDatabase()
 	err := snap.store(db)
 	if err != nil {
 		t.Errorf("store snapshot failed: %v", err)
