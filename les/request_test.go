@@ -24,8 +24,8 @@ import (
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/core/rawdb"
 	"github.com/Venachain/Venachain/crypto"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/light"
+	"github.com/Venachain/Venachain/venadb"
 )
 
 var testBankSecureTrieKey = secAddr(testBankAddress)
@@ -34,13 +34,13 @@ func secAddr(addr common.Address) []byte {
 	return crypto.Keccak256(addr[:])
 }
 
-type accessTestFn func(db ethdb.Database, bhash common.Hash, number uint64) light.OdrRequest
+type accessTestFn func(db venadb.Database, bhash common.Hash, number uint64) light.OdrRequest
 
 func TestBlockAccessLes1(t *testing.T) { testAccess(t, 1, tfBlockAccess) }
 
 func TestBlockAccessLes2(t *testing.T) { testAccess(t, 2, tfBlockAccess) }
 
-func tfBlockAccess(db ethdb.Database, bhash common.Hash, number uint64) light.OdrRequest {
+func tfBlockAccess(db venadb.Database, bhash common.Hash, number uint64) light.OdrRequest {
 	return &light.BlockRequest{Hash: bhash, Number: number}
 }
 
@@ -48,7 +48,7 @@ func TestReceiptsAccessLes1(t *testing.T) { testAccess(t, 1, tfReceiptsAccess) }
 
 func TestReceiptsAccessLes2(t *testing.T) { testAccess(t, 2, tfReceiptsAccess) }
 
-func tfReceiptsAccess(db ethdb.Database, bhash common.Hash, number uint64) light.OdrRequest {
+func tfReceiptsAccess(db venadb.Database, bhash common.Hash, number uint64) light.OdrRequest {
 	return &light.ReceiptsRequest{Hash: bhash, Number: number}
 }
 
@@ -56,7 +56,7 @@ func TestTrieEntryAccessLes1(t *testing.T) { testAccess(t, 1, tfTrieEntryAccess)
 
 func TestTrieEntryAccessLes2(t *testing.T) { testAccess(t, 2, tfTrieEntryAccess) }
 
-func tfTrieEntryAccess(db ethdb.Database, bhash common.Hash, number uint64) light.OdrRequest {
+func tfTrieEntryAccess(db venadb.Database, bhash common.Hash, number uint64) light.OdrRequest {
 	if number := rawdb.ReadHeaderNumber(db, bhash); number != nil {
 		return &light.TrieRequest{Id: light.StateTrieID(rawdb.ReadHeader(db, bhash, *number)), Key: testBankSecureTrieKey}
 	}
@@ -67,7 +67,7 @@ func TestCodeAccessLes1(t *testing.T) { testAccess(t, 1, tfCodeAccess) }
 
 func TestCodeAccessLes2(t *testing.T) { testAccess(t, 2, tfCodeAccess) }
 
-func tfCodeAccess(db ethdb.Database, bhash common.Hash, num uint64) light.OdrRequest {
+func tfCodeAccess(db venadb.Database, bhash common.Hash, num uint64) light.OdrRequest {
 	number := rawdb.ReadHeaderNumber(db, bhash)
 	if number != nil {
 		return nil

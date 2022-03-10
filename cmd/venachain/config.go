@@ -29,9 +29,9 @@ import (
 
 	"github.com/Venachain/Venachain/cmd/utils"
 	"github.com/Venachain/Venachain/dashboard"
-	"github.com/Venachain/Venachain/eth"
 	"github.com/Venachain/Venachain/node"
 	"github.com/Venachain/Venachain/params"
+	"github.com/Venachain/Venachain/vena"
 	"github.com/naoina/toml"
 )
 
@@ -74,7 +74,7 @@ type ethstatsConfig struct {
 }
 
 type gethConfig struct {
-	Eth       eth.Config
+	Eth       vena.Config
 	Node      node.Config
 	Ethstats  ethstatsConfig
 	Dashboard dashboard.Config
@@ -109,7 +109,7 @@ func makeConfigNode(ctx *cli.Context) (*node.Node, gethConfig) {
 
 	// Load defaults.
 	cfg := gethConfig{
-		Eth:       eth.DefaultConfig,
+		Eth:       vena.DefaultConfig,
 		Node:      defaultNodeConfig(),
 		Dashboard: dashboard.DefaultConfig,
 	}

@@ -27,12 +27,12 @@ import (
 	"sync"
 
 	"github.com/Venachain/Venachain/accounts"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/event"
 	"github.com/Venachain/Venachain/internal/debug"
 	"github.com/Venachain/Venachain/log"
 	"github.com/Venachain/Venachain/p2p"
 	"github.com/Venachain/Venachain/rpc"
+	"github.com/Venachain/Venachain/venadb"
 	"github.com/prometheus/prometheus/util/flock"
 )
 
@@ -573,11 +573,11 @@ func (n *Node) EventMux() *event.TypeMux {
 // OpenDatabase opens an existing database with the given name (or creates one if no
 // previous can be found) from within the node's instance directory. If the node is
 // ephemeral, a memory database is returned.
-func (n *Node) OpenDatabase(name string, cache, handles int) (ethdb.Database, error) {
+func (n *Node) OpenDatabase(name string, cache, handles int) (venadb.Database, error) {
 	if n.config.DataDir == "" {
-		return ethdb.NewMemDatabase(), nil
+		return venadb.NewMemDatabase(), nil
 	}
-	return ethdb.NewLDBDatabase(n.config.ResolvePath(name), cache, handles)
+	return venadb.NewLDBDatabase(n.config.ResolvePath(name), cache, handles)
 }
 
 // ResolvePath returns the absolute path of a resource in the instance directory.

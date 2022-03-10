@@ -25,8 +25,8 @@ import (
 	"github.com/Venachain/Venachain/core/state"
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/crypto"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/trie"
+	"github.com/Venachain/Venachain/venadb"
 )
 
 func NewState(ctx context.Context, head *types.Header, odr OdrBackend) *state.StateDB {
@@ -160,7 +160,7 @@ func (t *odrTrie) GetKey(sha []byte) []byte {
 	return nil
 }
 
-func (t *odrTrie) Prove(key []byte, fromLevel uint, proofDb ethdb.Putter) error {
+func (t *odrTrie) Prove(key []byte, fromLevel uint, proofDb venadb.Putter) error {
 	return errors.New("not implemented, needs client/server interface split")
 }
 

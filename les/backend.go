@@ -29,10 +29,6 @@ import (
 	"github.com/Venachain/Venachain/core"
 	"github.com/Venachain/Venachain/core/bloombits"
 	"github.com/Venachain/Venachain/core/types"
-	"github.com/Venachain/Venachain/eth"
-	"github.com/Venachain/Venachain/eth/downloader"
-	"github.com/Venachain/Venachain/eth/filters"
-	"github.com/Venachain/Venachain/eth/gasprice"
 	"github.com/Venachain/Venachain/event"
 	"github.com/Venachain/Venachain/internal/ethapi"
 	"github.com/Venachain/Venachain/light"
@@ -42,6 +38,10 @@ import (
 	"github.com/Venachain/Venachain/p2p/discv5"
 	"github.com/Venachain/Venachain/params"
 	rpc "github.com/Venachain/Venachain/rpc"
+	"github.com/Venachain/Venachain/vena"
+	"github.com/Venachain/Venachain/vena/downloader"
+	"github.com/Venachain/Venachain/vena/filters"
+	"github.com/Venachain/Venachain/vena/gasprice"
 )
 
 type LightEthereum struct {
@@ -76,13 +76,13 @@ type LightEthereum struct {
 	wg sync.WaitGroup
 }
 
-func New(ctx *node.ServiceContext, config *eth.Config) (*LightEthereum, error) {
-	chainDb, err := eth.CreateDB(ctx, config, "lightchaindata")
+func New(ctx *node.ServiceContext, config *vena.Config) (*LightEthereum, error) {
+	chainDb, err := vena.CreateDB(ctx, config, "lightchaindata")
 	if err != nil {
 		return nil, err
 	}
 
-	extDb, err := eth.CreateExtDB(ctx, config, "extdb")
+	extDb, err := vena.CreateExtDB(ctx, config, "extdb")
 
 	chainConfig, _, genesisErr := core.SetupGenesisBlock(chainDb, config.Genesis)
 	if genesisErr != nil {
@@ -104,11 +104,11 @@ func New(ctx *node.ServiceContext, config *eth.Config) (*LightEthereum, error) {
 		peers:          peers,
 		reqDist:        newRequestDistributor(peers, quitSync),
 		accountManager: ctx.AccountManager,
-		engine:         eth.CreateConsensusEngine(ctx, chainConfig, chainDb),
+		engine:         vena.CreateConsensusEngine(ctx, chainConfig, chainDb),
 		shutdownChan:   make(chan bool),
 		networkId:      config.NetworkId,
 		bloomRequests:  make(chan chan *bloombits.Retrieval),
-		bloomIndexer:   eth.NewBloomIndexer(chainDb, params.BloomBitsBlocksClient, params.HelperTrieConfirmations),
+		bloomIndexer:   vena.NewBloomIndexer(chainDb, params.BloomBitsBlocksClient, params.HelperTrieConfirmations),
 	}
 
 	leth.relay = NewLesTxRelay(peers, leth.reqDist)

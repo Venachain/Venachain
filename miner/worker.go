@@ -31,11 +31,11 @@ import (
 	"github.com/Venachain/Venachain/core/state"
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/core/vm"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/event"
 	"github.com/Venachain/Venachain/log"
 	"github.com/Venachain/Venachain/params"
 	"github.com/Venachain/Venachain/rpc"
+	"github.com/Venachain/Venachain/venadb"
 )
 
 const (
@@ -134,7 +134,7 @@ func (e *commitWorkEnv) getHighestLogicalBlock() *types.Block {
 // worker is the main object which takes care of submitting new work to consensus engine
 // and gathering the sealing result.
 type worker struct {
-	extdb  ethdb.Database
+	extdb  venadb.Database
 	config *params.ChainConfig
 	engine consensus.Engine
 	eth    Backend

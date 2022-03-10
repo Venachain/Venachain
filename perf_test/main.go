@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/Venachain/Venachain/core/types"
-	cli "github.com/Venachain/Venachain/ethclient"
+	cli "github.com/Venachain/Venachain/venaclient"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/mem"
 	"github.com/shirou/gopsutil/net"

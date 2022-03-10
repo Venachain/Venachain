@@ -32,9 +32,9 @@ import (
 	"github.com/Venachain/Venachain/core/vm"
 	"github.com/Venachain/Venachain/crypto"
 	"github.com/Venachain/Venachain/crypto/sha3"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/params"
 	"github.com/Venachain/Venachain/rlp"
+	"github.com/Venachain/Venachain/venadb"
 )
 
 // StateTest checks transaction processing without block context.
@@ -126,7 +126,7 @@ func (t *StateTest) Run(subtest StateSubtest, vmconfig vm.Config) (*state.StateD
 		return nil, UnsupportedForkError{subtest.Fork}
 	}
 	block := t.genesis(config).ToBlock(nil)
-	statedb := MakePreState(ethdb.NewMemDatabase(), t.json.Pre)
+	statedb := MakePreState(venadb.NewMemDatabase(), t.json.Pre)
 
 	post := t.json.Post[subtest.Fork][subtest.Index]
 	msg, err := t.json.Tx.toMessage(post)
@@ -168,7 +168,7 @@ func (t *StateTest) gasLimit(subtest StateSubtest) uint64 {
 	return t.json.Tx.GasLimit[t.json.Post[subtest.Fork][subtest.Index].Indexes.Gas]
 }
 
-func MakePreState(db ethdb.Database, accounts core.GenesisAlloc) *state.StateDB {
+func MakePreState(db venadb.Database, accounts core.GenesisAlloc) *state.StateDB {
 	sdb := state.NewDatabase(db)
 	statedb, _ := state.New(common.Hash{}, sdb)
 	for addr, a := range accounts {

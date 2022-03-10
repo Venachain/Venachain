@@ -21,20 +21,20 @@ import (
 
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/core"
-	"github.com/Venachain/Venachain/eth"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/light"
 	"github.com/Venachain/Venachain/p2p"
 	"github.com/Venachain/Venachain/p2p/discover"
 	"github.com/Venachain/Venachain/params"
+	"github.com/Venachain/Venachain/vena"
+	"github.com/Venachain/Venachain/venadb"
 )
 
 // lesCommons contains fields needed by both server and client.
 type lesCommons struct {
-	config                       *eth.Config
+	config                       *vena.Config
 	iConfig                      *light.IndexerConfig
-	chainDb                      ethdb.Database
-	extDb                        ethdb.Database
+	chainDb                      venadb.Database
+	extDb                        venadb.Database
 	protocolManager              *ProtocolManager
 	chtIndexer, bloomTrieIndexer *core.ChainIndexer
 }

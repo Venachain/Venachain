@@ -36,9 +36,9 @@ import (
 	"github.com/Venachain/Venachain/core"
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/crypto"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/event"
 	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/venadb"
 	lru "github.com/hashicorp/golang-lru"
 )
 
@@ -48,7 +48,7 @@ const (
 )
 
 // New creates an Ethereum backend for Istanbul core engine.
-func New(config *params.IstanbulConfig, privateKey *ecdsa.PrivateKey, db ethdb.Database) consensus.Istanbul {
+func New(config *params.IstanbulConfig, privateKey *ecdsa.PrivateKey, db venadb.Database) consensus.Istanbul {
 	// Allocate the snapshot caches and create the engine
 	recents, _ := lru.NewARC(inmemorySnapshots)
 	recentMessages, _ := lru.NewARC(inmemoryPeers)
@@ -102,7 +102,7 @@ type backend struct {
 	address          common.Address
 	core             istanbulCore.Engine
 	logger           log.Logger
-	db               ethdb.Database
+	db               venadb.Database
 	chain            consensus.ChainReader
 	currentBlock     func() *types.Block
 	current          *environment

@@ -29,11 +29,11 @@ import (
 	"github.com/Venachain/Venachain/core/rawdb"
 	"github.com/Venachain/Venachain/core/state"
 	"github.com/Venachain/Venachain/core/types"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/event"
 	"github.com/Venachain/Venachain/log"
 	"github.com/Venachain/Venachain/params"
 	"github.com/Venachain/Venachain/rlp"
+	"github.com/Venachain/Venachain/venadb"
 	lru "github.com/hashicorp/golang-lru"
 )
 
@@ -48,7 +48,7 @@ var (
 type LightChain struct {
 	hc            *core.HeaderChain
 	indexerConfig *IndexerConfig
-	chainDb       ethdb.Database
+	chainDb       venadb.Database
 	odr           OdrBackend
 	chainFeed     event.Feed
 	chainSideFeed event.Feed

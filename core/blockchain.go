@@ -35,13 +35,13 @@ import (
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/core/vm"
 	"github.com/Venachain/Venachain/crypto"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/event"
 	"github.com/Venachain/Venachain/log"
 	"github.com/Venachain/Venachain/metrics"
 	"github.com/Venachain/Venachain/params"
 	"github.com/Venachain/Venachain/rlp"
 	"github.com/Venachain/Venachain/trie"
+	"github.com/Venachain/Venachain/venadb"
 	lru "github.com/hashicorp/golang-lru"
 )
 
@@ -94,8 +94,8 @@ type BlockChain struct {
 	chainConfig *params.ChainConfig // Chain & network configuration
 	cacheConfig *CacheConfig        // Cache configuration for pruning
 
-	db     ethdb.Database // Low level persistent database to store final content in
-	extdb  ethdb.Database
+	db     venadb.Database // Low level persistent database to store final content in
+	extdb  venadb.Database
 	triegc *prque.Prque  // Priority queue mapping block numbers to tries to gc
 	gcproc time.Duration // Accumulates canonical block processing for trie dumping
 
@@ -140,7 +140,7 @@ type BlockChain struct {
 // NewBlockChain returns a fully initialised block chain using information
 // available in the database. It initialises the default Ethereum Validator and
 // Processor.
-func NewBlockChain(db ethdb.Database, extdb ethdb.Database, cacheConfig *CacheConfig, chainConfig *params.ChainConfig, engine consensus.Engine, vmConfig vm.Config, shouldPreserve func(block *types.Block) bool) (*BlockChain, types.Blocks, error) {
+func NewBlockChain(db venadb.Database, extdb venadb.Database, cacheConfig *CacheConfig, chainConfig *params.ChainConfig, engine consensus.Engine, vmConfig vm.Config, shouldPreserve func(block *types.Block) bool) (*BlockChain, types.Blocks, error) {
 	if cacheConfig == nil {
 		cacheConfig = &CacheConfig{
 			TrieNodeLimit: 256 * 1024 * 1024,
@@ -834,7 +834,7 @@ func (bc *BlockChain) InsertReceiptChain(blockChain types.Blocks, receiptChain [
 
 		stats.processed++
 
-		if batch.ValueSize() >= ethdb.IdealBatchSize {
+		if batch.ValueSize() >= venadb.IdealBatchSize {
 			if err := batch.Write(); err != nil {
 				return 0, err
 			}
@@ -958,7 +958,7 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 				limit       = common.StorageSize(bc.cacheConfig.TrieNodeLimit) * 1024 * 1024
 			)
 			if nodes > limit || imgs > 4*1024*1024 {
-				triedb.Cap(limit - ethdb.IdealBatchSize)
+				triedb.Cap(limit - venadb.IdealBatchSize)
 			}
 			// Find the next state trie we need to commit
 			header := bc.GetHeaderByNumber(current - triesInMemory)

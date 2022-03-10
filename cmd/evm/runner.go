@@ -34,9 +34,9 @@ import (
 	"github.com/Venachain/Venachain/core/state"
 	"github.com/Venachain/Venachain/core/vm"
 	"github.com/Venachain/Venachain/core/vm/runtime"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/log"
 	"github.com/Venachain/Venachain/params"
+	"github.com/Venachain/Venachain/venadb"
 	cli "gopkg.in/urfave/cli.v1"
 )
 
@@ -99,12 +99,12 @@ func runCmd(ctx *cli.Context) error {
 	if ctx.GlobalString(GenesisFlag.Name) != "" {
 		gen := readGenesis(ctx.GlobalString(GenesisFlag.Name))
 		genesisConfig = gen
-		db := ethdb.NewMemDatabase()
+		db := venadb.NewMemDatabase()
 		genesis := gen.ToBlock(db)
 		statedb, _ = state.New(genesis.Root(), state.NewDatabase(db))
 		chainConfig = gen.Config
 	} else {
-		statedb, _ = state.New(common.Hash{}, state.NewDatabase(ethdb.NewMemDatabase()))
+		statedb, _ = state.New(common.Hash{}, state.NewDatabase(venadb.NewMemDatabase()))
 		genesisConfig = new(core.Genesis)
 	}
 	if ctx.GlobalString(SenderFlag.Name) != "" {

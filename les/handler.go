@@ -33,8 +33,6 @@ import (
 	"github.com/Venachain/Venachain/core/rawdb"
 	"github.com/Venachain/Venachain/core/state"
 	"github.com/Venachain/Venachain/core/types"
-	"github.com/Venachain/Venachain/eth/downloader"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/event"
 	"github.com/Venachain/Venachain/light"
 	"github.com/Venachain/Venachain/log"
@@ -43,6 +41,8 @@ import (
 	"github.com/Venachain/Venachain/params"
 	"github.com/Venachain/Venachain/rlp"
 	"github.com/Venachain/Venachain/trie"
+	"github.com/Venachain/Venachain/vena/downloader"
+	"github.com/Venachain/Venachain/venadb"
 )
 
 const (
@@ -95,8 +95,8 @@ type ProtocolManager struct {
 	chainConfig *params.ChainConfig
 	iConfig     *light.IndexerConfig
 	blockchain  BlockChain
-	chainDb     ethdb.Database
-	extDb       ethdb.Database
+	chainDb     venadb.Database
+	extDb       venadb.Database
 	odr         *LesOdr
 	server      *LesServer
 	serverPool  *serverPool
@@ -124,7 +124,7 @@ type ProtocolManager struct {
 
 // NewProtocolManager returns a new ethereum sub protocol manager. The Ethereum sub protocol manages peers capable
 // with the ethereum network.
-func NewProtocolManager(chainConfig *params.ChainConfig, indexerConfig *light.IndexerConfig, lightSync bool, networkId uint64, mux *event.TypeMux, engine consensus.Engine, peers *peerSet, blockchain BlockChain, txpool txPool, chainDb ethdb.Database, extDb ethdb.Database, odr *LesOdr, txrelay *LesTxRelay, serverPool *serverPool, quitSync chan struct{}, wg *sync.WaitGroup) (*ProtocolManager, error) {
+func NewProtocolManager(chainConfig *params.ChainConfig, indexerConfig *light.IndexerConfig, lightSync bool, networkId uint64, mux *event.TypeMux, engine consensus.Engine, peers *peerSet, blockchain BlockChain, txpool txPool, chainDb venadb.Database, extDb venadb.Database, odr *LesOdr, txrelay *LesTxRelay, serverPool *serverPool, quitSync chan struct{}, wg *sync.WaitGroup) (*ProtocolManager, error) {
 	// Create the protocol manager with the base fields
 	manager := &ProtocolManager{
 		lightSync:   lightSync,
@@ -881,7 +881,7 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		if reject(uint64(reqCnt), MaxHelperTrieProofsFetch) {
 			return errResp(ErrRequestRejected, "")
 		}
-		trieDb := trie.NewDatabase(ethdb.NewTable(pm.chainDb, light.ChtTablePrefix))
+		trieDb := trie.NewDatabase(venadb.NewTable(pm.chainDb, light.ChtTablePrefix))
 		for _, req := range req.Reqs {
 			if header := pm.blockchain.GetHeaderByNumber(req.BlockNum); header != nil {
 				sectionHead := rawdb.ReadCanonicalHash(pm.chainDb, req.ChtNum*pm.iConfig.ChtSize-1)
@@ -940,7 +940,7 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 
 				var prefix string
 				if root, prefix = pm.getHelperTrie(req.Type, req.TrieIdx); root != (common.Hash{}) {
-					auxTrie, _ = trie.New(root, trie.NewDatabase(ethdb.NewTable(pm.chainDb, prefix)))
+					auxTrie, _ = trie.New(root, trie.NewDatabase(venadb.NewTable(pm.chainDb, prefix)))
 				}
 			}
 			if req.AuxReq == auxRoot {

@@ -31,9 +31,9 @@ import (
 	"github.com/Venachain/Venachain/core/state"
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/core/vm"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/params"
 	"github.com/Venachain/Venachain/rlp"
+	"github.com/Venachain/Venachain/venadb"
 )
 
 // A BlockTest checks handling of entire blocks.
@@ -98,7 +98,7 @@ func (t *BlockTest) Run() error {
 	}
 
 	// import pre accounts & construct test genesis block & state root
-	db := ethdb.NewMemDatabase()
+	db := venadb.NewMemDatabase()
 	gblock, err := t.genesis(config).Commit(db)
 	if err != nil {
 		return err

@@ -25,9 +25,9 @@ import (
 	"github.com/Venachain/Venachain/consensus/istanbul"
 	"github.com/Venachain/Venachain/consensus/istanbul/validator"
 	"github.com/Venachain/Venachain/crypto"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/event"
 	elog "github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/venadb"
 )
 
 var testLogger = elog.New()
@@ -44,7 +44,7 @@ type testSystemBackend struct {
 	sentMsgs      [][]byte // store the message when Send is called by core
 
 	address common.Address
-	db      ethdb.Database
+	db      venadb.Database
 }
 
 type testCommittedMsgs struct {
@@ -265,7 +265,7 @@ func (t *testSystem) stop(core bool) {
 
 func (t *testSystem) NewBackend(id uint64) *testSystemBackend {
 	// assume always success
-	ethDB := ethdb.NewMemDatabase()
+	ethDB := venadb.NewMemDatabase()
 	backend := &testSystemBackend{
 		id:     id,
 		sys:    t,
