@@ -21,7 +21,7 @@ function shiftOption2() {
 }
 
 function create_node_key() {
-    keyinfo=`${BIN_PATH}/ethkey genkeypair | sed s/[[:space:]]//g`
+    keyinfo=`${BIN_PATH}/venakey genkeypair | sed s/[[:space:]]//g`
     address=${keyinfo:10:40}
     prikey=${keyinfo:62:64}
     pubkey=${keyinfo:137:128}
