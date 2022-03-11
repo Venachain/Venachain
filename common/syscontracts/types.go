@@ -20,7 +20,7 @@ var (
 
 type UpdateNode struct {
 	Desc *string `json:"desc,omitempty"`
-	Typ  *uint32 `json:"type,omitempty"` // 0:观察者节点；1:共识节点
+	Typ  *uint32 `json:"type,omitempty"` // 1:共识节点；2:观察者节点
 	// status 1为正常节点, 2为删除节点
 	Status *uint32 `json:"status,omitempty,required"`
 	// delay set validatorSet
@@ -44,7 +44,7 @@ type NodeInfo struct {
 	Name  string `json:"name,omitempty,required"` //全网唯一，不能重复。所有接口均以此为主键。 这个名称意义是？
 	Owner string `json:"owner"`
 	Desc  string `json:"desc"`
-	Typ   uint32 `json:"type"` // 0:观察者节点；1:共识节点
+	Typ   uint32 `json:"type"` // 1:共识节点；2:观察者节点
 	// status 1为正常节点, 2为删除节点
 	Status     uint32 `json:"status,required"`
 	ExternalIP string `json:"externalIP,required"`

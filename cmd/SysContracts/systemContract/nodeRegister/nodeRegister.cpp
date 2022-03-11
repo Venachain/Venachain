@@ -28,7 +28,7 @@ struct RegisterInfo
     std::string name;      //节点名称
     std::string owner;     //申请者的地址
     std::string desc;      //节点描述,长度限制1000
-    int type;              //1:共识节点；0:观察者节点
+    int type;              //1:共识节点；2:观察者节点
     std::string publicKey; //公钥
     std::string externalIP;
     std::string internalIP;
