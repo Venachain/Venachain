@@ -7,7 +7,7 @@ Welcome to the System Contract source code repository! It's based on BCWasm.
 ## Building the source
 * Building system contracts for the first time requires you to do the following steps:
 ```shell
-git clone https://180.167.100.189:20443/PlatONE/src/node/SysContracts.git
+git clone https://180.167.100.189:20443/Venachain/src/node/SysContracts.git
 rm -rf ./build
 ./script/autoproject.sh .
 ```
