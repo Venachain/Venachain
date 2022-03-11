@@ -31,7 +31,7 @@ var Modules = map[string]string{
 	"swarmfs":    SWARMFS_JS,
 	"txpool":     TxPool_JS,
 	"istanbul":   Istanbul_JS,
-	"platone":    Platone_JS,
+	"venachain":  Venachain_JS,
 }
 
 const Chequebook_JS = `
@@ -472,7 +472,7 @@ web3._extend({
 });
 `
 
-const Platone_JS = `
+const Venachain_JS = `
 web3._extend({
 	property: 'platone',
 	methods: [

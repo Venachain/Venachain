@@ -283,7 +283,7 @@ func (s *Ethereum) APIs() []rpc.API {
 			Service:   NewPublicEthereumAPI(s),
 			Public:    true,
 		}, {
-			Namespace: "platone",
+			Namespace: "venachain",
 			Version:   "1.0",
 			Service:   NewPublicEthereumAPI(s),
 			Public:    true,
@@ -293,7 +293,7 @@ func (s *Ethereum) APIs() []rpc.API {
 			Service:   NewPublicMinerAPI(s),
 			Public:    true,
 		}, {
-			Namespace: "platone",
+			Namespace: "venachain",
 			Version:   "1.0",
 			Service:   NewPublicMinerAPI(s),
 			Public:    true,
@@ -303,7 +303,7 @@ func (s *Ethereum) APIs() []rpc.API {
 			Service:   downloader.NewPublicDownloaderAPI(s.protocolManager.downloader, s.eventMux),
 			Public:    true,
 		}, {
-			Namespace: "platone",
+			Namespace: "venachain",
 			Version:   "1.0",
 			Service:   downloader.NewPublicDownloaderAPI(s.protocolManager.downloader, s.eventMux),
 			Public:    true,
@@ -318,7 +318,7 @@ func (s *Ethereum) APIs() []rpc.API {
 			Service:   filters.NewPublicFilterAPI(s.APIBackend, false),
 			Public:    true,
 		}, {
-			Namespace: "platone",
+			Namespace: "venachain",
 			Version:   "1.0",
 			Service:   filters.NewPublicFilterAPI(s.APIBackend, false),
 			Public:    true,

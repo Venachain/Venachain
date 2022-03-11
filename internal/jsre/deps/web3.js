@@ -2509,7 +2509,7 @@ module.exports={
 var RequestManager = require('./web3/requestmanager');
 var Iban = require('./web3/iban');
 var Eth = require('./web3/methods/eth');
-var Platone = require('./web3/methods/platone');
+var Venachain = require('./web3/methods/venachain');
 var DB = require('./web3/methods/db');
 var Shh = require('./web3/methods/shh');
 var Net = require('./web3/methods/net');
@@ -2532,7 +2532,7 @@ function Web3 (provider) {
     this._requestManager = new RequestManager(provider);
     this.currentProvider = provider;
     this.eth = new Eth(this);
-    this.platone = new Platone(this);
+    this.platone = new Venachain(this);
     this.db = new DB(this);
     this.shh = new Shh(this);
     this.net = new Net(this);
