@@ -30,7 +30,7 @@ var Modules = map[string]string{
 	"shh":        Shh_JS,
 	"swarmfs":    SWARMFS_JS,
 	"txpool":     TxPool_JS,
-	"istanbul":   Iris_JS,
+	"iris":       Iris_JS,
 	"venachain":  Venachain_JS,
 }
 
@@ -474,52 +474,52 @@ web3._extend({
 
 const Venachain_JS = `
 web3._extend({
-	property: 'platone',
+	property: 'venachain',
 	methods: [
 		new web3._extend.Method({
 			name: 'setActor',
-			call: 'platone_setActor',
+			call: 'venachain_setActor',
 			params: 1,
 			inputFormatter: [web3._extend.formatters.inputAddressFormatter]
 		}),
 		new web3._extend.Method({
 			name: 'monitor',
-			call: 'platone_monitor',
+			call: 'venachain_monitor',
 			params: 2
 		}),
 		new web3._extend.Method({
 			name: 'sign',
-			call: 'platone_sign',
+			call: 'venachain_sign',
 			params: 2,
 			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null]
 		}),
 		new web3._extend.Method({
 			name: 'resend',
-			call: 'platone_resend',
+			call: 'venachain_resend',
 			params: 3,
 			inputFormatter: [web3._extend.formatters.inputTransactionFormatter, web3._extend.utils.fromDecimal, web3._extend.utils.fromDecimal]
 		}),
 		new web3._extend.Method({
 			name: 'signTransaction',
-			call: 'platone_signTransaction',
+			call: 'venachain_signTransaction',
 			params: 1,
 			inputFormatter: [web3._extend.formatters.inputTransactionFormatter]
 		}),
 		new web3._extend.Method({
 			name: 'submitTransaction',
-			call: 'platone_submitTransaction',
+			call: 'venachain_submitTransaction',
 			params: 1,
 			inputFormatter: [web3._extend.formatters.inputTransactionFormatter]
 		}),
 		new web3._extend.Method({
 			name: 'getRawTransaction',
-			call: 'platone_getRawTransactionByHash',
+			call: 'venachain_getRawTransactionByHash',
 			params: 1
 		}),
 		new web3._extend.Method({
 			name: 'getRawTransactionFromBlock',
 			call: function(args) {
-				return (web3._extend.utils.isString(args[0]) && args[0].indexOf('0x') === 0) ? 'platone_getRawTransactionByBlockHashAndIndex' : 'platone_getRawTransactionByBlockNumberAndIndex';
+				return (web3._extend.utils.isString(args[0]) && args[0].indexOf('0x') === 0) ? 'venachain_getRawTransactionByBlockHashAndIndex' : 'venachain_getRawTransactionByBlockNumberAndIndex';
 			},
 			params: 2,
 			inputFormatter: [web3._extend.formatters.inputBlockNumberFormatter, web3._extend.utils.toHex]
@@ -528,7 +528,7 @@ web3._extend({
 	properties: [
 		new web3._extend.Property({
 			name: 'pendingTransactions',
-			getter: 'platone_pendingTransactions',
+			getter: 'venachain_pendingTransactions',
 			outputFormatter: function(txs) {
 				var formatted = [];
 				for (var i = 0; i < txs.length; i++) {
@@ -736,12 +736,12 @@ web3._extend({
 	methods: [
 		new web3._extend.Method({
 			name: 'getValidators',
-			call: 'istanbul_getValidators',
+			call: 'iris_getValidators',
 			params: 0
 		}),
 		new web3._extend.Method({
 			name: 'getCandidates',
-			call: 'istanbul_candidates',
+			call: 'iris_candidates',
 			params: 0
 		}),
 	],
