@@ -31,7 +31,7 @@ import (
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/consensus"
 	"github.com/Venachain/Venachain/consensus/iris"
-	istanbulCore "github.com/Venachain/Venachain/consensus/iris/core"
+	irisCore "github.com/Venachain/Venachain/consensus/iris/core"
 	"github.com/Venachain/Venachain/consensus/iris/validator"
 	"github.com/Venachain/Venachain/core"
 	"github.com/Venachain/Venachain/core/types"
@@ -43,12 +43,12 @@ import (
 )
 
 const (
-	// fetcherID is the ID indicates the block is from Istanbul engine
+	// fetcherID is the ID indicates the block is from Iris engine
 	fetcherID = "iris"
 )
 
-// New creates an Ethereum backend for Istanbul core engine.
-func New(config *params.IstanbulConfig, privateKey *ecdsa.PrivateKey, db venadb.Database) consensus.Istanbul {
+// New creates an Ethereum backend for Iris core engine.
+func New(config *params.IstanbulConfig, privateKey *ecdsa.PrivateKey, db venadb.Database) consensus.Iris {
 	// Allocate the snapshot caches and create the engine
 	recents, _ := lru.NewARC(inmemorySnapshots)
 	recentMessages, _ := lru.NewARC(inmemoryPeers)
@@ -75,7 +75,7 @@ func New(config *params.IstanbulConfig, privateKey *ecdsa.PrivateKey, db venadb.
 		recentMessages:   recentMessages,
 		knownMessages:    knownMessages,
 	}
-	backend.core = istanbulCore.New(backend, backend.config)
+	backend.core = irisCore.New(backend, backend.config)
 	return backend
 }
 
@@ -100,7 +100,7 @@ type backend struct {
 	msgFeed          *event.Feed
 	privateKey       *ecdsa.PrivateKey
 	address          common.Address
-	core             istanbulCore.Engine
+	core             irisCore.Engine
 	logger           log.Logger
 	db               venadb.Database
 	chain            consensus.ChainReader
@@ -272,24 +272,24 @@ func (sb *backend) Commit(proposal iris.Proposal, seals [][]byte) error {
 		sb.proposedBlockHash = common.Hash{}
 		if err := sb.CheckFirstNodeCommitAtWrongTime(); err != nil {
 			sb.commitCh <- nil
-			return istanbulCore.ErrFirstCommitAtWrongTime
+			return irisCore.ErrFirstCommitAtWrongTime
 		}
 		// feed block hash to Seal() and wait the Seal() result
 		if isEmpty && !isProduceEmptyBlock {
 			sb.commitCh <- nil
-			return istanbulCore.ErrEmpty
+			return irisCore.ErrEmpty
 		}
 		sb.commitCh <- block
 		return nil
 	}
 
 	if err := sb.CheckFirstNodeCommitAtWrongTime(); err != nil {
-		return istanbulCore.ErrFirstCommitAtWrongTime
+		return irisCore.ErrFirstCommitAtWrongTime
 	}
 
 	if sb.current != nil && sb.current.block != nil && sb.current.block.Hash() == block.Hash() {
 		if isEmpty && !isProduceEmptyBlock {
-			return istanbulCore.ErrEmpty
+			return irisCore.ErrEmpty
 		}
 
 		if err := sb.writeCommitedBlockWithState(block); err != nil {
@@ -298,7 +298,7 @@ func (sb *backend) Commit(proposal iris.Proposal, seals [][]byte) error {
 		}
 	} else {
 		if isEmpty && !isProduceEmptyBlock {
-			return istanbulCore.ErrEmpty
+			return irisCore.ErrEmpty
 		}
 
 		if sb.broadcaster != nil {
@@ -555,7 +555,7 @@ func (sb *backend) CheckFirstNodeCommitAtWrongTime() error {
 	// 	  and if it is not specified itself, no block generation is performed.
 	if p2p.IsSelfServerNode(nodeId) &&
 		len(p2p.GetBootNodes()) != 0 && !p2p.IsNodeInBootNodes(nodeId) {
-		return istanbulCore.ErrFirstCommitAtWrongTime
+		return irisCore.ErrFirstCommitAtWrongTime
 	}
 	return nil
 }

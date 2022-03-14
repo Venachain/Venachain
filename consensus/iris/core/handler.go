@@ -53,8 +53,6 @@ func (c *core) subscribeEvents() {
 		// external events
 		iris.RequestEvent{},
 		iris.SingleCommittedEvent{},
-		// istanbul.MessageEvent{},
-		// internal events
 		backlogEvent{},
 	)
 	c.timeoutSub = c.backend.EventMux().Subscribe(

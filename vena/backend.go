@@ -29,7 +29,7 @@ import (
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/common/hexutil"
 	"github.com/Venachain/Venachain/consensus"
-	istanbulBackend "github.com/Venachain/Venachain/consensus/iris/backend"
+	irisBackend "github.com/Venachain/Venachain/consensus/iris/backend"
 	"github.com/Venachain/Venachain/core"
 	"github.com/Venachain/Venachain/core/bloombits"
 	"github.com/Venachain/Venachain/core/rawdb"
@@ -261,7 +261,7 @@ func CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *params.ChainCo
 		return nil
 	}
 	if chainConfig.Istanbul != nil {
-		return istanbulBackend.New(chainConfig.Istanbul, ctx.NodeKey(), db)
+		return irisBackend.New(chainConfig.Istanbul, ctx.NodeKey(), db)
 	}
 	return nil
 }
@@ -527,7 +527,7 @@ func (s *Ethereum) Start(srvr *p2p.Server) error {
 	// Start the networking layer and the light server if requested
 	s.protocolManager.Start(maxPeers)
 
-	if _, ok := s.engine.(consensus.Istanbul); ok {
+	if _, ok := s.engine.(consensus.Iris); ok {
 		for _, n := range p2p.GetBootNodes() {
 			srvr.AddPeer(discover.NewNode(n.ID, n.IP, n.UDP, n.TCP))
 		}

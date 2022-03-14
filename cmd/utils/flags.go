@@ -31,7 +31,7 @@ import (
 	"github.com/Venachain/Venachain/accounts/keystore"
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/common/fdlimit"
-	istanbulBackend "github.com/Venachain/Venachain/consensus/iris/backend"
+	iris "github.com/Venachain/Venachain/consensus/iris/backend"
 
 	"github.com/Venachain/Venachain/core"
 	"github.com/Venachain/Venachain/core/state"
@@ -1200,7 +1200,7 @@ func MakeChain(ctx *cli.Context, stack *node.Node) (chain *core.BlockChain, chai
 	if err != nil {
 		Fatalf("%v", err)
 	}
-	engine := istanbulBackend.New(config.Istanbul, nil, chainDb)
+	engine := iris.New(config.Istanbul, nil, chainDb)
 	if gcmode := ctx.GlobalString(GCModeFlag.Name); gcmode != "full" && gcmode != "archive" {
 		Fatalf("--%s must be either 'full' or 'archive'", GCModeFlag.Name)
 	}

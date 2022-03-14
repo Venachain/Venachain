@@ -25,7 +25,7 @@ import (
 	"github.com/Venachain/Venachain/rpc"
 )
 
-// API is a user facing RPC API to dump Istanbul state
+// API is a user facing RPC API to dump Iris state
 type API struct {
 	chain consensus.ChainReader
 	iris  *backend
