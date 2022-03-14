@@ -30,7 +30,7 @@ var Modules = map[string]string{
 	"shh":        Shh_JS,
 	"swarmfs":    SWARMFS_JS,
 	"txpool":     TxPool_JS,
-	"istanbul":   Istanbul_JS,
+	"istanbul":   Iris_JS,
 	"venachain":  Venachain_JS,
 }
 
@@ -730,9 +730,9 @@ web3._extend({
 });
 `
 
-const Istanbul_JS = `
+const Iris_JS = `
 web3._extend({
-	property: 'istanbul',
+	property: 'iris',
 	methods: [
 		new web3._extend.Method({
 			name: 'getValidators',
