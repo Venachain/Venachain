@@ -29,7 +29,7 @@ import (
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/common/hexutil"
 	"github.com/Venachain/Venachain/consensus"
-	istanbulBackend "github.com/Venachain/Venachain/consensus/istanbul/backend"
+	irisBackend "github.com/Venachain/Venachain/consensus/iris/backend"
 	"github.com/Venachain/Venachain/core"
 	"github.com/Venachain/Venachain/core/bloombits"
 	"github.com/Venachain/Venachain/core/rawdb"
@@ -261,7 +261,7 @@ func CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *params.ChainCo
 		return nil
 	}
 	if chainConfig.Istanbul != nil {
-		return istanbulBackend.New(chainConfig.Istanbul, ctx.NodeKey(), db)
+		return irisBackend.New(chainConfig.Istanbul, ctx.NodeKey(), db)
 	}
 	return nil
 }
@@ -269,6 +269,7 @@ func CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *params.ChainCo
 // APIs return the collection of RPC services the ethereum package offers.
 // NOTE, some of these services probably need to be moved to somewhere else.
 func (s *Ethereum) APIs() []rpc.API {
+
 	apis := ethapi.GetAPIs(s.APIBackend)
 
 	// Append any APIs exposed explicitly by the consensus engine
@@ -282,12 +283,27 @@ func (s *Ethereum) APIs() []rpc.API {
 			Service:   NewPublicEthereumAPI(s),
 			Public:    true,
 		}, {
+			Namespace: "venachain",
+			Version:   "1.0",
+			Service:   NewPublicEthereumAPI(s),
+			Public:    true,
+		}, {
 			Namespace: "eth",
 			Version:   "1.0",
 			Service:   NewPublicMinerAPI(s),
 			Public:    true,
 		}, {
+			Namespace: "venachain",
+			Version:   "1.0",
+			Service:   NewPublicMinerAPI(s),
+			Public:    true,
+		}, {
 			Namespace: "eth",
+			Version:   "1.0",
+			Service:   downloader.NewPublicDownloaderAPI(s.protocolManager.downloader, s.eventMux),
+			Public:    true,
+		}, {
+			Namespace: "venachain",
 			Version:   "1.0",
 			Service:   downloader.NewPublicDownloaderAPI(s.protocolManager.downloader, s.eventMux),
 			Public:    true,
@@ -298,6 +314,11 @@ func (s *Ethereum) APIs() []rpc.API {
 			Public:    false,
 		}, {
 			Namespace: "eth",
+			Version:   "1.0",
+			Service:   filters.NewPublicFilterAPI(s.APIBackend, false),
+			Public:    true,
+		}, {
+			Namespace: "venachain",
 			Version:   "1.0",
 			Service:   filters.NewPublicFilterAPI(s.APIBackend, false),
 			Public:    true,
@@ -506,7 +527,7 @@ func (s *Ethereum) Start(srvr *p2p.Server) error {
 	// Start the networking layer and the light server if requested
 	s.protocolManager.Start(maxPeers)
 
-	if _, ok := s.engine.(consensus.Istanbul); ok {
+	if _, ok := s.engine.(consensus.Iris); ok {
 		for _, n := range p2p.GetBootNodes() {
 			srvr.AddPeer(discover.NewNode(n.ID, n.IP, n.UDP, n.TCP))
 		}

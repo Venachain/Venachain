@@ -24,9 +24,8 @@ import (
 	"math/big"
 	"math/rand"
 	"strconv"
-	"time"
-
 	"strings"
+	"time"
 
 	"github.com/Venachain/Venachain/accounts"
 	"github.com/Venachain/Venachain/accounts/keystore"

@@ -138,7 +138,7 @@ func (h *Header) Hash() common.Hash {
 	// specific hash calculation.
 	if h.MixDigest == IstanbulDigest {
 		// Seal is reserved in extra-data. To prove block is signed by the proposer.
-		if istanbulHeader := IstanbulFilteredHeader(h, true); istanbulHeader != nil {
+		if istanbulHeader := IrisFilteredHeader(h, true); istanbulHeader != nil {
 			return rlpHash(istanbulHeader)
 		}
 	}

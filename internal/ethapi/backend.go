@@ -80,12 +80,27 @@ func GetAPIs(apiBackend Backend) []rpc.API {
 			Service:   NewPublicEthereumAPI(apiBackend),
 			Public:    true,
 		}, {
+			Namespace: "venachain",
+			Version:   "1.0",
+			Service:   NewPublicEthereumAPI(apiBackend),
+			Public:    true,
+		}, {
 			Namespace: "eth",
 			Version:   "1.0",
 			Service:   NewPublicBlockChainAPI(apiBackend),
 			Public:    true,
 		}, {
+			Namespace: "venachain",
+			Version:   "1.0",
+			Service:   NewPublicBlockChainAPI(apiBackend),
+			Public:    true,
+		}, {
 			Namespace: "eth",
+			Version:   "1.0",
+			Service:   NewPublicTransactionPoolAPI(apiBackend, nonceLock),
+			Public:    true,
+		}, {
+			Namespace: "venachain",
 			Version:   "1.0",
 			Service:   NewPublicTransactionPoolAPI(apiBackend, nonceLock),
 			Public:    true,
@@ -105,6 +120,11 @@ func GetAPIs(apiBackend Backend) []rpc.API {
 			Service:   NewPrivateDebugAPI(apiBackend),
 		}, {
 			Namespace: "eth",
+			Version:   "1.0",
+			Service:   NewPublicAccountAPI(apiBackend.AccountManager()),
+			Public:    true,
+		}, {
+			Namespace: "venachain",
 			Version:   "1.0",
 			Service:   NewPublicAccountAPI(apiBackend.AccountManager()),
 			Public:    true,

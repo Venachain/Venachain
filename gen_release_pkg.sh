@@ -41,7 +41,7 @@ Asset
 
 SDK工具
 
-[SDK使用说明](https://git-c.i.wxblockchain.com/PlatONE/doc/Venachain_WIKI/blob/v0.9.0/zh-cn/SDK/%5BChinese-Simplified%5D-SDK%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E.md)
+[SDK使用说明](https://git-c.i.wxblockchain.com/Venachain/doc/Venachain_WIKI/blob/v0.9.0/zh-cn/SDK/%5BChinese-Simplified%5D-SDK%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E.md)
 
 Asset
 
@@ -49,7 +49,7 @@ Asset
 
 Release Change Log
 
-[change_log文档](https://git-c.i.wxblockchain.com/PlatONE/src/node/venachain/blob/develop/CHANGELOG.md)
+[change_log文档](https://git-c.i.wxblockchain.com/Venachain/src/node/venachain/blob/develop/CHANGELOG.md)
 EOF
 }
 

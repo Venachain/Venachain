@@ -110,8 +110,8 @@ type Handler interface {
 	SetBroadcaster(Broadcaster)
 }
 
-// Istanbul is a consensus engine to avoid byzantine failure
-type Istanbul interface {
+// Iris is a consensus engine to avoid byzantine failure
+type Iris interface {
 	Engine
 
 	ShouldSeal() bool

@@ -24,7 +24,7 @@ import (
 	"testing"
 	"time"
 
-	istanbulBackend "github.com/Venachain/Venachain/consensus/istanbul/backend"
+	irisBackend "github.com/Venachain/Venachain/consensus/iris/backend"
 
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/core"
@@ -47,7 +47,7 @@ var (
 // contains a transaction and every 5th an uncle to allow testing correct block
 // reassembly.
 func makeChain(n int, seed byte, parent *types.Block) ([]common.Hash, map[common.Hash]*types.Block) {
-	blocks, _ := core.GenerateChain(params.TestChainConfig, parent, istanbulBackend.New(nil, nil, testdb), testdb, n, func(i int, block *core.BlockGen) {
+	blocks, _ := core.GenerateChain(params.TestChainConfig, parent, irisBackend.New(nil, nil, testdb), testdb, n, func(i int, block *core.BlockGen) {
 		block.SetCoinbase(common.Address{seed})
 
 		// If the block number is multiple of 3, send a bonus transaction to the miner
