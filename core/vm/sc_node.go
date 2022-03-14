@@ -122,6 +122,17 @@ func checkNodeType(typ uint32) error {
 	return nil
 }
 
+func checkNodeTypeForObserver(typ uint32) error {
+	if typ != NodeTypeObserver {
+		return errors.New(
+			fmt.Sprintf("The type of node must be OBSERVER(%d)",
+				NodeTypeObserver,
+			))
+	}
+
+	return nil
+}
+
 func checkNodeDescLen(desc string) error {
 	if len(bytes.Runes([]byte(desc))) > nodeDescMaxLenInCharacter {
 		return errors.New(fmt.Sprintf("The length of node name must be less than %d", nodeDescMaxLenInCharacter))
@@ -180,7 +191,7 @@ func (n *SCNode) checkParamsOfAddNode(node *syscontracts.NodeInfo) error {
 		return err
 	}
 
-	if err := checkNodeType(node.Typ); err != nil {
+	if err := checkNodeTypeForObserver(node.Typ); err != nil {
 		return err
 	}
 
