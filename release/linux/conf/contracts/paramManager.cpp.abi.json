@@ -264,7 +264,15 @@
         "type":"event"
     },
     {
-        "name":"setIsCheckContractDeployPermission",
+        "name":"IsCheckContractDeployPermission",
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"",
         "inputs":[
             {"type":"uint32"},
             {"type":"string"}

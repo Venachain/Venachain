@@ -427,8 +427,8 @@ const tmplSourceJava = `
 
 package {{.Package}};
 
-import org.platone.*;
-import org.platone.internal.*;
+import org.venachain.*;
+import org.venachain.internal.*;
 
 {{range $contract := .Contracts}}
 	public class {{.Type}} {

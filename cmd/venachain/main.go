@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with go-ethereum. If not, see <http://www.gnu.org/licenses/>.
 
-// platone is the official command-line client for Ethereum.
+// venachain is the official command-line client for Ethereum.
 package main
 
 import (
@@ -32,12 +32,12 @@ import (
 	"github.com/Venachain/Venachain/accounts/keystore"
 	"github.com/Venachain/Venachain/cmd/utils"
 	"github.com/Venachain/Venachain/console"
-	"github.com/Venachain/Venachain/eth"
-	"github.com/Venachain/Venachain/ethclient"
 	"github.com/Venachain/Venachain/internal/debug"
 	"github.com/Venachain/Venachain/log"
 	"github.com/Venachain/Venachain/metrics"
 	"github.com/Venachain/Venachain/node"
+	"github.com/Venachain/Venachain/vena"
+	"github.com/Venachain/Venachain/venaclient"
 	"github.com/elastic/gosigar"
 	"gopkg.in/urfave/cli.v1"
 )
@@ -243,7 +243,7 @@ func main() {
 	}
 }
 
-// platone is the main entry point into the system if no special subcommand is ran.
+// venachain is the main entry point into the system if no special subcommand is ran.
 // It creates a default node based on the command line arguments and runs it in
 // blocking mode, waiting for it to be shut down.
 func geth(ctx *cli.Context) error {
@@ -286,7 +286,7 @@ func startNode(ctx *cli.Context, stack *node.Node) {
 		if err != nil {
 			utils.Fatalf("Failed to attach to self: %v", err)
 		}
-		stateReader := ethclient.NewClient(rpcClient)
+		stateReader := venaclient.NewClient(rpcClient)
 
 		// Open any wallets already attached
 		for _, wallet := range stack.AccountManager().Wallets() {
@@ -324,7 +324,7 @@ func startNode(ctx *cli.Context, stack *node.Node) {
 		if ctx.GlobalString(utils.SyncModeFlag.Name) == "light" {
 			utils.Fatalf("Light clients do not support mining")
 		}
-		var ethereum *eth.Ethereum
+		var ethereum *vena.Ethereum
 		if err := stack.Service(&ethereum); err != nil {
 			utils.Fatalf("Ethereum service not running: %v", err)
 		}

@@ -8,7 +8,7 @@ struct NodeInfo
     string name;       // 节点名字, 全网唯一，不能重复。所有接口均以此为主键。
     address owner;     // 申请者的地址
     string desc;       // 节点描述
-    int type;          // 0:观察者节点；1:共识节点
+    int type;          // 1:共识节点；2:观察者节点
     string publicKey;  // 节点公钥，全网唯一，不能重复
     string externalIP; // 外网 IP
     string internalIP; // 内网 IP

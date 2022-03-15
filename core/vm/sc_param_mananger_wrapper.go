@@ -35,7 +35,7 @@ func (u *scParamManagerWrapper) Run(input []byte) ([]byte, error) {
 		}
 		u.base.emitNotifyEventInParam(fnName, operateFail, err.Error())
 	}
-	return ret, nil
+	return ret, err
 }
 
 // Deprecated: Use setParam() instead

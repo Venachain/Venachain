@@ -72,7 +72,8 @@ func execSC(input []byte, fns SCExportFns) (string, []byte, error) {
 	//first result type is: primitive type, second result type: error
 	result := reflect.ValueOf(fn).Call(params)
 	if err, ok := result[1].Interface().(error); ok {
-		log.Error("execute system contract failed.", "error", err)
+		log.Error("execute system contract failed.", "funcName", fnName, "error", err)
+		return fnName, MakeReturnBytes([]byte(newInternalErrorResult(err).String())), err
 	}
 
 	//vm run successfully, so return nil

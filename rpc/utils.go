@@ -31,7 +31,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/Venachain/Venachain/ethdb"
+	"github.com/Venachain/Venachain/venadb"
 )
 
 var (
@@ -53,7 +53,7 @@ const (
 	BlockPrimay                 = 104
 )
 
-func MonitorWriteData(monitorType int, key string, value string, db ethdb.Database) error {
+func MonitorWriteData(monitorType int, key string, value string, db venadb.Database) error {
 
 	key = key + strconv.FormatInt(int64(monitorType), 10)
 	if len(value) == 0 {
@@ -76,7 +76,7 @@ func MonitorWriteData(monitorType int, key string, value string, db ethdb.Databa
 	return nil
 }
 
-func MonitorReadData(monitorType int, key string, db ethdb.Database) string {
+func MonitorReadData(monitorType int, key string, db venadb.Database) string {
 	key = key + strconv.FormatInt(int64(monitorType), 10)
 
 	data, err := db.Get([]byte(key))

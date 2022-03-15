@@ -32,7 +32,7 @@ package main
 ////	rl := resolver.NewResolver(0x01)
 ////	// Read WebAssembly *.wasm file.
 ////	//input, err := ioutil.ReadFile(flag.Arg(0))
-////	input, err := ioutil.ReadFile("D:\\repos\\PlatONE-contract\\build\\hello\\hello.wasm")
+////	input, err := ioutil.ReadFile("D:\\repos\\Venachain-contract\\build\\hello\\hello.wasm")
 ////	//fmt.Println(common.ToHex(input))
 ////	if err != nil {
 ////		panic(err)

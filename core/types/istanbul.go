@@ -36,14 +36,14 @@ var (
 	ErrInvalidIstanbulHeaderExtra = errors.New("invalid istanbul header extra-data")
 )
 
-type IstanbulExtra struct {
+type Iris struct {
 	Validators    []common.Address
 	Seal          []byte
 	CommittedSeal [][]byte
 }
 
 // EncodeRLP serializes ist into the Ethereum RLP format.
-func (ist *IstanbulExtra) EncodeRLP(w io.Writer) error {
+func (ist *Iris) EncodeRLP(w io.Writer) error {
 	return rlp.Encode(w, []interface{}{
 		ist.Validators,
 		ist.Seal,
@@ -52,51 +52,51 @@ func (ist *IstanbulExtra) EncodeRLP(w io.Writer) error {
 }
 
 // DecodeRLP implements rlp.Decoder, and load the istanbul fields from a RLP stream.
-func (ist *IstanbulExtra) DecodeRLP(s *rlp.Stream) error {
-	var istanbulExtra struct {
+func (ist *Iris) DecodeRLP(s *rlp.Stream) error {
+	var irisExtra struct {
 		Validators    []common.Address
 		Seal          []byte
 		CommittedSeal [][]byte
 	}
-	if err := s.Decode(&istanbulExtra); err != nil {
+	if err := s.Decode(&irisExtra); err != nil {
 		return err
 	}
-	ist.Validators, ist.Seal, ist.CommittedSeal = istanbulExtra.Validators, istanbulExtra.Seal, istanbulExtra.CommittedSeal
+	ist.Validators, ist.Seal, ist.CommittedSeal = irisExtra.Validators, irisExtra.Seal, irisExtra.CommittedSeal
 	return nil
 }
 
-// ExtractIstanbulExtra extracts all values of the IstanbulExtra from the header. It returns an
+// ExtractIrisExtra extracts all values of the Iris from the header. It returns an
 // error if the length of the given extra-data is less than 32 bytes or the extra-data can not
 // be decoded.
-func ExtractIstanbulExtra(h *Header) (*IstanbulExtra, error) {
+func ExtractIrisExtra(h *Header) (*Iris, error) {
 	if len(h.Extra) < IstanbulExtraVanity {
 		return nil, ErrInvalidIstanbulHeaderExtra
 	}
 
-	var istanbulExtra *IstanbulExtra
-	err := rlp.DecodeBytes(h.Extra[IstanbulExtraVanity:], &istanbulExtra)
+	var irisExtra *Iris
+	err := rlp.DecodeBytes(h.Extra[IstanbulExtraVanity:], &irisExtra)
 	if err != nil {
 		return nil, err
 	}
-	return istanbulExtra, nil
+	return irisExtra, nil
 }
 
-// IstanbulFilteredHeader returns a filtered header which some information (like seal, committed seals)
+// IrisFilteredHeader returns a filtered header which some information (like seal, committed seals)
 // are clean to fulfill the Istanbul hash rules. It returns nil if the extra-data cannot be
 // decoded/encoded by rlp.
-func IstanbulFilteredHeader(h *Header, keepSeal bool) *Header {
+func IrisFilteredHeader(h *Header, keepSeal bool) *Header {
 	newHeader := CopyHeader(h)
-	istanbulExtra, err := ExtractIstanbulExtra(newHeader)
+	irisExtra, err := ExtractIrisExtra(newHeader)
 	if err != nil {
 		return nil
 	}
 
 	if !keepSeal {
-		istanbulExtra.Seal = []byte{}
+		irisExtra.Seal = []byte{}
 	}
-	istanbulExtra.CommittedSeal = [][]byte{}
+	irisExtra.CommittedSeal = [][]byte{}
 
-	payload, err := rlp.EncodeToBytes(&istanbulExtra)
+	payload, err := rlp.EncodeToBytes(&irisExtra)
 	if err != nil {
 		return nil
 	}

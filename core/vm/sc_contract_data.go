@@ -36,7 +36,7 @@ func (d *ContractDataProcessor) Run(input []byte) ([]byte, error) {
 		d.emitEvent(fnName, operateFail, err.Error())
 	}
 
-	return ret, nil
+	return ret, err
 }
 
 func (d *ContractDataProcessor) setState(key, value []byte) {

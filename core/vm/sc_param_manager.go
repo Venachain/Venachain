@@ -176,7 +176,7 @@ func (c *BlockGasLimitType) decodeAndCheck(ctx *ParamManager, b []byte) (interfa
 	}
 	if txGasLimit > blockGasLimit {
 		ctx.emitNotifyEventInParam(BlockGasLimitKey, paramInvalid, fmt.Sprintf("setting value is smaller than tx gas limit"))
-		return blockGasLimit, nil
+		return blockGasLimit, errParamInvalid
 	}
 	return blockGasLimit, nil
 }

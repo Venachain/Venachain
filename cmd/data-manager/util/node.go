@@ -8,7 +8,7 @@ import (
 
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/core/types"
-	"github.com/Venachain/Venachain/ethclient"
+	"github.com/Venachain/Venachain/venaclient"
 	"github.com/sirupsen/logrus"
 )
 
@@ -47,11 +47,11 @@ func (this *node) CodeAt(address common.Address) ([]byte, error) {
 	return newNode().Client().CodeAt(ctx, address, nil)
 }
 
-func (this *node) Client() *ethclient.Client {
+func (this *node) Client() *venaclient.Client {
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
 
 	rawurl := config.Config.SyncConf.RandomURL()
-	cli, err := ethclient.DialContext(ctx, rawurl)
+	cli, err := venaclient.DialContext(ctx, rawurl)
 	if nil != err {
 		logrus.Panicln("dial eth failed")
 	}

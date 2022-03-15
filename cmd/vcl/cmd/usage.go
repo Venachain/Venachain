@@ -1,4 +1,4 @@
-// This is referenced from ./platone/usage.go with tiny modification (line: 198)
+// This is referenced from ./venachain/usage.go with tiny modification (line: 198)
 package cmd
 
 import (

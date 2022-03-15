@@ -253,7 +253,7 @@ type WasmInput struct {
 func (c *WasmInput) NewContractTypeFromJson(input []byte) error {
 	var err error
 	if err = json.Unmarshal(input, c); err != nil {
-		common.ErrPrintln("GenerateInputData sol json unmarshal error: ", err)
+		common.ErrPrintln("GenerateInputData wasm json unmarshal error: ", err)
 		return err
 	}
 	return err

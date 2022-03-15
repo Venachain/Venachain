@@ -40,7 +40,7 @@ func (n *scNodeWrapper) Run(input []byte) ([]byte, error) {
 			return MakeReturnBytes([]byte(newInternalErrorResult(err).String())), err
 		}
 	}
-	return ret, nil
+	return ret, err
 }
 
 func (n *scNodeWrapper) add(node *syscontracts.NodeInfo) (int, error) {
@@ -74,7 +74,7 @@ func (n *scNodeWrapper) update(name string, node *syscontracts.UpdateNode) (int,
 func (n *scNodeWrapper) getAllNodes() (string, error) {
 	nodes, err := n.base.GetAllNodes()
 	if err != nil && err != errNodeNotFound {
-		return "", err
+		return err.Error(), nil
 	} else if errNodeNotFound == err {
 		nodes = []*syscontracts.NodeInfo{}
 	}
@@ -94,10 +94,10 @@ func (n *scNodeWrapper) isPublicKeyExist(pub string) (int, error) {
 	err := n.base.checkPublicKeyExist(pub)
 	if err != nil {
 		if errPublicKeyExist == err {
-			return publicKeyExist, err
+			return publicKeyExist, nil
 		}
 
-		return 0, err
+		return 0, nil
 	}
 
 	return publicKeyNotExist, nil

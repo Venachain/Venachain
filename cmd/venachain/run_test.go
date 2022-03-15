@@ -43,7 +43,7 @@ type testgeth struct {
 }
 
 func init() {
-	// Run the app if we've been exec'd as "platone-test" in runGeth.
+	// Run the app if we've been exec'd as "venachain-test" in runGeth.
 	reexec.Register("venachain-test", func() {
 		if err := app.Run(os.Args); err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -61,7 +61,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-// spawns platone with the given command line args. If the args don't set --datadir, the
+// spawns venachain with the given command line args. If the args don't set --datadir, the
 // child g gets a temporary data directory.
 func runGeth(t *testing.T, args ...string) *testgeth {
 	tt := &testgeth{}
@@ -90,7 +90,7 @@ func runGeth(t *testing.T, args ...string) *testgeth {
 		}()
 	}
 
-	// Boot "platone". This actually runs the test binary but the TestMain
+	// Boot "venachain". This actually runs the test binary but the TestMain
 	// function will prevent any tests from running.
 	tt.Run("venachain-test", args...)
 

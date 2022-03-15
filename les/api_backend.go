@@ -29,13 +29,13 @@ import (
 	"github.com/Venachain/Venachain/core/state"
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/core/vm"
-	"github.com/Venachain/Venachain/eth/downloader"
-	"github.com/Venachain/Venachain/eth/gasprice"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/event"
 	"github.com/Venachain/Venachain/light"
 	"github.com/Venachain/Venachain/params"
 	"github.com/Venachain/Venachain/rpc"
+	"github.com/Venachain/Venachain/vena/downloader"
+	"github.com/Venachain/Venachain/vena/gasprice"
+	"github.com/Venachain/Venachain/venadb"
 )
 
 type LesApiBackend struct {
@@ -171,11 +171,11 @@ func (b *LesApiBackend) SuggestPrice(ctx context.Context) (*big.Int, error) {
 	return b.gpo.SuggestPrice(ctx)
 }
 
-func (b *LesApiBackend) ExtendedDb() ethdb.Database {
+func (b *LesApiBackend) ExtendedDb() venadb.Database {
 	return b.eth.extDb
 }
 
-func (b *LesApiBackend) ChainDb() ethdb.Database {
+func (b *LesApiBackend) ChainDb() venadb.Database {
 	return b.eth.chainDb
 }
 

@@ -27,7 +27,7 @@ func initStartNodeEnv(conf *startNodeConfig) {
 
 	genNodeKeyFile(fmt.Sprintf("%s/%s", conf.DataDir, conf.nodeKeyFile))
 
-	//create platone error log
+	//create venachain error log
 	var err error
 	if conf.errLogFileHandler, err = os.Create(fmt.Sprintf("%s/%s/venachain_error.log", conf.DataDir, conf.logsDir)); nil != err {
 		panic(err)

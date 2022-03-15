@@ -32,11 +32,11 @@ import (
 	"github.com/Venachain/Venachain/core/rawdb"
 	"github.com/Venachain/Venachain/core/state"
 	"github.com/Venachain/Venachain/core/types"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/event"
 	"github.com/Venachain/Venachain/log"
 	"github.com/Venachain/Venachain/metrics"
 	"github.com/Venachain/Venachain/params"
+	"github.com/Venachain/Venachain/venadb"
 )
 
 const (
@@ -209,12 +209,12 @@ func (config *TxPoolConfig) sanitize() TxPoolConfig {
 type TxPool struct {
 	config      TxPoolConfig
 	chainconfig *params.ChainConfig
-	extDb       ethdb.Database
+	extDb       venadb.Database
 	chain       txPoolBlockChain
 	gasPrice    *big.Int
 	txFeed      event.Feed
 	scope       event.SubscriptionScope
-	// modified by PlatONE
+	// modified by Venachain
 	chainHeadCh      chan *types.Block
 	chainHeadEventCh chan ChainHeadEvent
 	chainHeadSub     event.Subscription
@@ -224,7 +224,7 @@ type TxPool struct {
 
 	currentState  *state.StateDB      // Current state in the blockchain head
 	pendingState  *state.ManagedState // Pending state tracking virtual nonces
-	db            ethdb.Database
+	db            venadb.Database
 	currentMaxGas uint64 // Current gas limit for transaction caps
 
 	locals  *accountSet // Set of local transaction to exempt from eviction rules
@@ -255,7 +255,7 @@ type txExt struct {
 // NewTxPool creates a new transaction pool to gather, sort and filter inbound
 // transactions from the network.
 //func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain blockChain) *TxPool {
-func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoolBlockChain, db ethdb.Database, extDb ethdb.Database, key *ecdsa.PrivateKey) *TxPool {
+func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoolBlockChain, db venadb.Database, extDb venadb.Database, key *ecdsa.PrivateKey) *TxPool {
 	// Sanitize the input to ensure no vulnerable gas prices are set
 	config = (&config).sanitize()
 
@@ -270,7 +270,7 @@ func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoo
 		//queue:       make(map[common.Address]*txQueuedMap),
 		all: newTxLookup(),
 		db:  db,
-		// modified by PlatONE
+		// modified by Venachain
 		chainHeadEventCh: make(chan ChainHeadEvent, chainHeadChanSize),
 		chainHeadCh:      make(chan *types.Block, chainHeadChanSize),
 		exitCh:           make(chan struct{}),
@@ -302,7 +302,7 @@ func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoo
 		}
 	}
 	// Subscribe events from blockchain
-	// modified by PlatONE
+	// modified by Venachain
 	if pool.chainconfig.Istanbul != nil {
 		pool.chainHeadSub = pool.chain.SubscribeChainHeadEvent(pool.chainHeadEventCh)
 	}
@@ -927,7 +927,7 @@ func (pool *TxPool) AddLocals(txs []*types.Transaction) []error {
 }
 
 // get ext db
-func (pool *TxPool) ExtendedDb() ethdb.Database {
+func (pool *TxPool) ExtendedDb() venadb.Database {
 	return pool.extDb
 }
 

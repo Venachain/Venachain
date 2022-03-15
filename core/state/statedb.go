@@ -926,8 +926,13 @@ func (s *StateDB) FwImport(addr common.Address, data []byte) error {
 	if err != nil {
 		return errors.New("Firewall import failed")
 	}
-	s.FwAdd(addr, reject, status.RejectedList)
-	s.FwAdd(addr, accept, status.AcceptedList)
+	if checkFuncNameValid(status) {
+		s.FwAdd(addr, reject, status.RejectedList)
+		s.FwAdd(addr, accept, status.AcceptedList)
+	} else {
+		return errors.New("funcName parameter error")
+	}
+
 	//s.SetFwStatus(addr, status)
 	return nil
 }
@@ -956,4 +961,18 @@ func (s *StateDB) CloseFirewall(addr common.Address) {
 func (s *StateDB) IsFwOpened(addr common.Address) bool {
 	stateObject := s.GetOrNewStateObject(addr)
 	return stateObject.FwActive()
+}
+
+func checkFuncNameValid(status FwStatus) bool {
+	for _, fwElem := range status.RejectedList {
+		if strings.Contains(fwElem.FuncName, ":") {
+			return false
+		}
+	}
+	for _, fwElem := range status.AcceptedList {
+		if strings.Contains(fwElem.FuncName, ":") {
+			return false
+		}
+	}
+	return true
 }

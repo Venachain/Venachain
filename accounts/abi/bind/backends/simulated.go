@@ -34,11 +34,11 @@ import (
 	"github.com/Venachain/Venachain/core/state"
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/core/vm"
-	"github.com/Venachain/Venachain/eth/filters"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/event"
 	"github.com/Venachain/Venachain/params"
 	"github.com/Venachain/Venachain/rpc"
+	"github.com/Venachain/Venachain/vena/filters"
+	"github.com/Venachain/Venachain/venadb"
 )
 
 // This nil assignment ensures compile time that SimulatedBackend implements bind.ContractBackend.
@@ -50,7 +50,7 @@ var errGasEstimationFailed = errors.New("gas required exceeds allowance or alway
 // SimulatedBackend implements bind.ContractBackend, simulating a blockchain in
 // the background. Its main purpose is to allow easily testing contract bindings.
 type SimulatedBackend struct {
-	database   ethdb.Database   // In memory database to store our testing data
+	database   venadb.Database  // In memory database to store our testing data
 	blockchain *core.BlockChain // Ethereum blockchain to handle the consensus
 
 	mu           sync.Mutex
@@ -65,7 +65,7 @@ type SimulatedBackend struct {
 // NewSimulatedBackend creates a new binding backend using a simulated blockchain
 // for testing purposes.
 func NewSimulatedBackend(alloc core.GenesisAlloc, gasLimit uint64) *SimulatedBackend {
-	database := ethdb.NewMemDatabase()
+	database := venadb.NewMemDatabase()
 	simConfig := &params.ChainConfig{big.NewInt(1337), nil, ""}
 	genesis := core.Genesis{Config: simConfig, GasLimit: gasLimit, Alloc: alloc}
 	genesis.MustCommit(database)
@@ -428,13 +428,13 @@ func (m callmsg) SetNonce(n uint64)       {}
 // filterBackend implements filters.Backend to support filtering for logs without
 // taking bloom-bits acceleration structures into account.
 type filterBackend struct {
-	db ethdb.Database
+	db venadb.Database
 	bc *core.BlockChain
 }
 
-func (fb *filterBackend) ExtendedDb() ethdb.Database { return nil }
-func (fb *filterBackend) ChainDb() ethdb.Database    { return fb.db }
-func (fb *filterBackend) EventMux() *event.TypeMux   { panic("not supported") }
+func (fb *filterBackend) ExtendedDb() venadb.Database { return nil }
+func (fb *filterBackend) ChainDb() venadb.Database    { return fb.db }
+func (fb *filterBackend) EventMux() *event.TypeMux    { panic("not supported") }
 
 func (fb *filterBackend) HeaderByNumber(ctx context.Context, block rpc.BlockNumber) (*types.Header, error) {
 	if block == rpc.LatestBlockNumber {

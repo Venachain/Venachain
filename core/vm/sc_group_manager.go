@@ -56,7 +56,7 @@ func (g *GroupManagement) Run(input []byte) ([]byte, error) {
 		}
 		g.emitEvent(fnName, operateFail, err.Error())
 	}
-	return ret, nil
+	return ret, err
 }
 
 func (g *GroupManagement) setState(key, value []byte) {

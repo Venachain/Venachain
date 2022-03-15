@@ -26,8 +26,6 @@ import (
 	"github.com/Venachain/Venachain/core"
 	"github.com/Venachain/Venachain/core/rawdb"
 	"github.com/Venachain/Venachain/core/types"
-	"github.com/Venachain/Venachain/eth"
-	"github.com/Venachain/Venachain/ethdb"
 	"github.com/Venachain/Venachain/les/flowcontrol"
 	"github.com/Venachain/Venachain/light"
 	"github.com/Venachain/Venachain/log"
@@ -35,6 +33,8 @@ import (
 	"github.com/Venachain/Venachain/p2p/discv5"
 	"github.com/Venachain/Venachain/params"
 	"github.com/Venachain/Venachain/rlp"
+	"github.com/Venachain/Venachain/vena"
+	"github.com/Venachain/Venachain/venadb"
 )
 
 type LesServer struct {
@@ -48,7 +48,7 @@ type LesServer struct {
 	quitSync    chan struct{}
 }
 
-func NewLesServer(eth *eth.Ethereum, config *eth.Config) (*LesServer, error) {
+func NewLesServer(eth *vena.Ethereum, config *vena.Config) (*LesServer, error) {
 	quitSync := make(chan struct{})
 	pm, err := NewProtocolManager(eth.BlockChain().Config(), light.DefaultServerIndexerConfig, false, config.NetworkId, eth.EventMux(), eth.Engine(), newPeerSet(), eth.BlockChain(), eth.TxPool(), eth.ChainDb(), eth.ExtendedDb(), nil, nil, nil, quitSync, new(sync.WaitGroup))
 	if err != nil {
@@ -229,7 +229,7 @@ func linRegFromBytes(data []byte) *linReg {
 
 type requestCostStats struct {
 	lock  sync.RWMutex
-	db    ethdb.Database
+	db    venadb.Database
 	stats map[uint64]*linReg
 }
 
@@ -240,7 +240,7 @@ type requestCostStatsRlp []struct {
 
 var rcStatsKey = []byte("_requestCostStats")
 
-func newCostStats(db ethdb.Database) *requestCostStats {
+func newCostStats(db venadb.Database) *requestCostStats {
 	stats := make(map[uint64]*linReg)
 	for _, code := range reqList {
 		stats[code] = &linReg{cnt: 100}

@@ -161,9 +161,13 @@ func (u *FireWall) fwImport(contractAddr common.Address, data []byte) error {
 	}
 
 	err := u.stateDB.FwImport(contractAddr, data)
+	if err != nil {
+		u.emitNotifyEvent(fwInvalidArgument, err.Error())
+		return err
+	}
 
 	u.emitNotifyEvent(fwOpSuccess, "fw import success")
-	return err
+	return nil
 }
 
 func (u *FireWall) getFwStatus(contractAddr common.Address) (*state.FwStatus, error) {

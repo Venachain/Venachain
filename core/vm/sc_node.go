@@ -25,7 +25,7 @@ const (
 )
 
 const (
-	NodeTypeObserver  = uint32(0)
+	NodeTypeObserver  = uint32(2)
 	NodeTypeValidator = uint32(1)
 )
 
@@ -122,6 +122,17 @@ func checkNodeType(typ uint32) error {
 	return nil
 }
 
+func checkNodeTypeForObserver(typ uint32) error {
+	if typ != NodeTypeObserver {
+		return errors.New(
+			fmt.Sprintf("The type of node must be OBSERVER(%d)",
+				NodeTypeObserver,
+			))
+	}
+
+	return nil
+}
+
 func checkNodeDescLen(desc string) error {
 	if len(bytes.Runes([]byte(desc))) > nodeDescMaxLenInCharacter {
 		return errors.New(fmt.Sprintf("The length of node name must be less than %d", nodeDescMaxLenInCharacter))
@@ -180,7 +191,7 @@ func (n *SCNode) checkParamsOfAddNode(node *syscontracts.NodeInfo) error {
 		return err
 	}
 
-	if err := checkNodeType(node.Typ); err != nil {
+	if err := checkNodeTypeForObserver(node.Typ); err != nil {
 		return err
 	}
 
@@ -514,7 +525,10 @@ func (n *SCNode) importOldNodesData(data string) error {
 		//if n.isNameExist(names, nodes[index].Name) {
 		//	n.update(nodes[index].Name, &nodes[index])
 		//}
-		n.add(&nodes[index])
+		err = n.add(&nodes[index])
+		if err != nil {
+			return err
+		}
 	}
 	if err != nil {
 		return err

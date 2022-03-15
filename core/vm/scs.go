@@ -14,7 +14,7 @@ type (
 	SCExportFns map[string]SCExportFn //map[function name]function pointer
 )
 
-var PlatONEPrecompiledContracts = map[common.Address]PrecompiledContract{
+var VenachainPrecompiledContracts = map[common.Address]PrecompiledContract{
 	syscontracts.UserManagementAddress:        &UserManagement{},
 	syscontracts.NodeManagementAddress:        &scNodeWrapper{},
 	syscontracts.CnsManagementAddress:         &CnsWrapper{},
@@ -26,7 +26,7 @@ var PlatONEPrecompiledContracts = map[common.Address]PrecompiledContract{
 	syscontracts.CnsInvokeAddress:             &CnsInvoke{},
 }
 
-func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Contract, evm *EVM) (ret []byte, err error) {
+func RunVenachainPrecompiledSC(p PrecompiledContract, input []byte, contract *Contract, evm *EVM) (ret []byte, err error) {
 	defer func() {
 		if err := recover(); nil != err {
 			log.Error("failed to run precompiled system contract", "err", err)

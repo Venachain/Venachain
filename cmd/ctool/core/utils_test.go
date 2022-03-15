@@ -191,7 +191,7 @@ func TestAAA(t *testing.T) {
 
 }
 func TestBBB(t *testing.T) {
-	dir := "D:\\resource\\platone\\contract\\PlatONE-contract\\temp\\contracta.cpp.abi.json"
+	dir := "D:\\resource\\venachain\\contract\\venachain-contract\\temp\\contracta.cpp.abi.json"
 	funcName := "atransfer2"
 	funcParams := "atransfer2(\"eeeeeee\",\"ffffff\",3333)"
 	//funcParams := "transfer(\"0x43355c787c50b647c425f594b441d4bd751951c1\")"

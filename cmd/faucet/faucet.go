@@ -46,10 +46,6 @@ import (
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/core"
 	"github.com/Venachain/Venachain/core/types"
-	"github.com/Venachain/Venachain/eth"
-	"github.com/Venachain/Venachain/eth/downloader"
-	"github.com/Venachain/Venachain/ethclient"
-	"github.com/Venachain/Venachain/ethstats"
 	"github.com/Venachain/Venachain/les"
 	"github.com/Venachain/Venachain/log"
 	"github.com/Venachain/Venachain/node"
@@ -58,6 +54,10 @@ import (
 	"github.com/Venachain/Venachain/p2p/discv5"
 	"github.com/Venachain/Venachain/p2p/nat"
 	"github.com/Venachain/Venachain/params"
+	"github.com/Venachain/Venachain/vena"
+	"github.com/Venachain/Venachain/vena/downloader"
+	"github.com/Venachain/Venachain/venaclient"
+	"github.com/Venachain/Venachain/venastats"
 	"golang.org/x/net/websocket"
 )
 
@@ -194,7 +194,7 @@ type request struct {
 type faucet struct {
 	config *params.ChainConfig // Chain configurations for signing
 	stack  *node.Node          // Ethereum protocol stack
-	client *ethclient.Client   // Client connection to the Ethereum chain
+	client *venaclient.Client  // Client connection to the Ethereum chain
 	index  []byte              // Index page to serve up on the web
 
 	keystore *keystore.KeyStore // Keystore containing the single signer
@@ -232,7 +232,7 @@ func newFaucet(genesis *core.Genesis, port int, enodes []*discv5.Node, network u
 	}
 	// Assemble the Ethereum light client protocol
 	if err := stack.Register(func(ctx *node.ServiceContext) (node.Service, error) {
-		cfg := eth.DefaultConfig
+		cfg := vena.DefaultConfig
 		cfg.SyncMode = downloader.LightSync
 		cfg.NetworkId = network
 		cfg.Genesis = genesis
@@ -245,7 +245,7 @@ func newFaucet(genesis *core.Genesis, port int, enodes []*discv5.Node, network u
 		if err := stack.Register(func(ctx *node.ServiceContext) (node.Service, error) {
 			var serv *les.LightEthereum
 			ctx.Service(&serv)
-			return ethstats.New(stats, nil, serv)
+			return venastats.New(stats, nil, serv)
 		}); err != nil {
 			return nil, err
 		}
@@ -264,7 +264,7 @@ func newFaucet(genesis *core.Genesis, port int, enodes []*discv5.Node, network u
 		stack.Stop()
 		return nil, err
 	}
-	client := ethclient.NewClient(api)
+	client := venaclient.NewClient(api)
 
 	return &faucet{
 		config:   genesis.Config,

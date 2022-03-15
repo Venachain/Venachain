@@ -61,13 +61,13 @@ import (
 )
 
 var (
-	// Files that end up in the platone*.zip archive.
+	// Files that end up in the venachain*.zip archive.
 	gethArchiveFiles = []string{
 		"COPYING",
 		executablePath("venachain"),
 	}
 
-	// Files that end up in the platone-alltools*.zip archive.
+	// Files that end up in the venachain-alltools*.zip archive.
 	allToolsArchiveFiles = []string{
 		"COPYING",
 		executablePath("abigen"),
@@ -145,7 +145,7 @@ func executablePath(name string) string {
 }
 
 func main() {
-	// go run build/ci.go install ./cmd/platone
+	// go run build/ci.go install ./cmd/venachain
 	log.SetFlags(log.Lshortfile)
 
 	if _, err := os.Stat(filepath.Join("build", "ci.go")); os.IsNotExist(err) {
@@ -183,7 +183,7 @@ func main() {
 // Compiling
 
 func doInstall(cmdline []string) {
-	// ./cmd/platone
+	// ./cmd/venachain
 	var (
 		arch = flag.String("arch", "", "Architecture to cross build for")
 		cc   = flag.String("cc", "", "C compiler to cross build with")
@@ -683,7 +683,7 @@ func doWindowsInstaller(cmdline []string) {
 	}
 
 	// Render NSIS scripts: Installer NSIS contains two installer sections,
-	// first section contains the platone binary, second section holds the dev tools.
+	// first section contains the venachain binary, second section holds the dev tools.
 	templateData := map[string]interface{}{
 		"License":  "COPYING",
 		"Geth":     gethTool,

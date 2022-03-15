@@ -25,7 +25,7 @@ import (
 	"gopkg.in/urfave/cli.v1"
 )
 
-// The runner used in the unit test is mainly responsible for testing the PlatONElib c++ library.
+// The runner used in the unit test is mainly responsible for testing the Venachainlib c++ library.
 // The wasm file is executed according to the dir scan directory.
 // The wasm is entered from the main entry.
 // The db is created according to --outdir.
@@ -241,23 +241,23 @@ func newUnitTestResolver(ldb *leveldb.DB, logStream *bytes.Buffer) *UnitTestReso
 	}
 	resolver.funcs = map[string]map[string]*exec.FunctionImport{
 		"env": {
-			"setState":                  &exec.FunctionImport{Execute: resolver.envSetState, GasCost: constGasFunc},
-			"getState":                  &exec.FunctionImport{Execute: resolver.envGetState, GasCost: constGasFunc},
-			"getStateSize":              &exec.FunctionImport{Execute: resolver.envGetStateSize, GasCost: constGasFunc},
-			"getTestLog":                &exec.FunctionImport{Execute: resolver.envGetTestLog, GasCost: constGasFunc},
-			"getTestLogSize":            &exec.FunctionImport{Execute: resolver.envGetTestLogSize, GasCost: constGasFunc},
-			"clearLog":                  &exec.FunctionImport{Execute: resolver.envClearLog, GasCost: constGasFunc},
-			"setStateDB":                &exec.FunctionImport{Execute: resolver.envSetStateDB, GasCost: constGasFunc},
-			"platoneCallString":         &exec.FunctionImport{Execute: resolver.envPlatONECall, GasCost: constGasFunc},
-			"platoneCallInt64":          &exec.FunctionImport{Execute: resolver.envPlatONECall, GasCost: constGasFunc},
-			"platoneDelegateCallString": &exec.FunctionImport{Execute: resolver.envPlatONECall, GasCost: constGasFunc},
-			"platoneDelegateCallInt64":  &exec.FunctionImport{Execute: resolver.envPlatONECall, GasCost: constGasFunc},
-			"platoneCall":               &exec.FunctionImport{Execute: resolver.envPlatONECall, GasCost: constGasFunc},
-			"platoneDelegateCall":       &exec.FunctionImport{Execute: resolver.envPlatONECall, GasCost: constGasFunc},
-			"emitEvent":                 &exec.FunctionImport{Execute: resolver.envEmitEvent, GasCost: constGasFunc},
-			"bigintAdd":                 &exec.FunctionImport{Execute: resolver.envBigintAdd, GasCost: constGasFunc},
-			"envMalloc":                 &exec.FunctionImport{Execute: resolver.envMalloc, GasCost: constGasFunc},
-			"envFree":                   &exec.FunctionImport{Execute: resolver.envFree, GasCost: constGasFunc},
+			"setState":                    &exec.FunctionImport{Execute: resolver.envSetState, GasCost: constGasFunc},
+			"getState":                    &exec.FunctionImport{Execute: resolver.envGetState, GasCost: constGasFunc},
+			"getStateSize":                &exec.FunctionImport{Execute: resolver.envGetStateSize, GasCost: constGasFunc},
+			"getTestLog":                  &exec.FunctionImport{Execute: resolver.envGetTestLog, GasCost: constGasFunc},
+			"getTestLogSize":              &exec.FunctionImport{Execute: resolver.envGetTestLogSize, GasCost: constGasFunc},
+			"clearLog":                    &exec.FunctionImport{Execute: resolver.envClearLog, GasCost: constGasFunc},
+			"setStateDB":                  &exec.FunctionImport{Execute: resolver.envSetStateDB, GasCost: constGasFunc},
+			"venachainCallString":         &exec.FunctionImport{Execute: resolver.envVenachainCall, GasCost: constGasFunc},
+			"venachainCallInt64":          &exec.FunctionImport{Execute: resolver.envVenachainCall, GasCost: constGasFunc},
+			"venachainDelegateCallString": &exec.FunctionImport{Execute: resolver.envVenachainCall, GasCost: constGasFunc},
+			"venachainDelegateCallInt64":  &exec.FunctionImport{Execute: resolver.envVenachainCall, GasCost: constGasFunc},
+			"venachainCall":               &exec.FunctionImport{Execute: resolver.envVenachainCall, GasCost: constGasFunc},
+			"venachainDelegateCall":       &exec.FunctionImport{Execute: resolver.envVenachainCall, GasCost: constGasFunc},
+			"emitEvent":                   &exec.FunctionImport{Execute: resolver.envEmitEvent, GasCost: constGasFunc},
+			"bigintAdd":                   &exec.FunctionImport{Execute: resolver.envBigintAdd, GasCost: constGasFunc},
+			"envMalloc":                   &exec.FunctionImport{Execute: resolver.envMalloc, GasCost: constGasFunc},
+			"envFree":                     &exec.FunctionImport{Execute: resolver.envFree, GasCost: constGasFunc},
 		},
 	}
 	return resolver
@@ -373,7 +373,7 @@ func (r *UnitTestResolver) envSetStateDB(vm *exec.VirtualMachine) int64 {
 	return 0
 }
 
-func (r *UnitTestResolver) envPlatONECall(vm *exec.VirtualMachine) int64 {
+func (r *UnitTestResolver) envVenachainCall(vm *exec.VirtualMachine) int64 {
 	addr := int(int32(vm.GetCurrentFrame().Locals[0]))
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
