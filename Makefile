@@ -14,6 +14,7 @@ GO ?= latest
 vcl:
 	build/build_deps.sh
 	build/env.sh go run build/ci.go install ./cmd/vcl
+	@mkdir -p $(shell pwd)/release/linux/bin/
 	@cp $(GOBIN)/vcl $(shell pwd)/release/linux/bin/
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/vcl\" to launch vcl."
@@ -21,6 +22,7 @@ vcl:
 venachain:
 	build/build_deps.sh
 	build/env.sh go run build/ci.go install ./cmd/venachain
+	@mkdir -p $(shell pwd)/release/linux/bin/
 	@cp $(GOBIN)/venachain $(shell pwd)/release/linux/bin/
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/venachain\" to launch venachain."
@@ -28,6 +30,7 @@ venachain:
 all:
 	build/build_deps.sh
 	build/env.sh go run build/ci.go install
+	@mkdir -p $(shell pwd)/release/linux/bin/
 	build/move_bin_to_release.sh
 
 android:
