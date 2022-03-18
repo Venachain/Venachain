@@ -223,7 +223,7 @@ func (s *Snapshot) validators() []common.Address {
 }
 
 type snapshotJSON struct {
-	Epoch  uint64                   `json:"epoch"`
+	// Epoch  uint64                   `json:"epoch"`
 	Number uint64                   `json:"number"`
 	Hash   common.Hash              `json:"hash"`
 	Votes  []*Vote                  `json:"votes"`
