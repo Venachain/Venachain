@@ -37,6 +37,9 @@ rm -rf build
 
 # Build crypto lib
 cd $root/sig/openssl
-$MAKE clean
+
+if [ -f "$root/sig/openssl/Makefile" ]; then
+    $MAKE clean
+fi
 cd ..; rm -f *.a
 cd sig; rm -f *.o
