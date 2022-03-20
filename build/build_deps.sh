@@ -60,7 +60,7 @@ cd $rroot/sig
 if [ ! -f ./libcrypto.a ];then 
     cd $rroot/sig/openssl
     ./config
-    make
+    $MAKE
     cp ./libcrypto.a ../
     cp ./libssl.a ../
 fi
