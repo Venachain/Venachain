@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/Venachain/Venachain/common"
-	istanbulBackend "github.com/Venachain/Venachain/consensus/istanbul/backend"
+	istanbulBackend "github.com/Venachain/Venachain/consensus/iris/backend"
 	"github.com/Venachain/Venachain/core"
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/crypto"

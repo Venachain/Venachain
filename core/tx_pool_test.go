@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/Venachain/Venachain/common"
-	"github.com/Venachain/Venachain/consensus/istanbul"
+	"github.com/Venachain/Venachain/consensus/iris"
 	"github.com/Venachain/Venachain/core/state"
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/crypto"
@@ -42,7 +42,7 @@ var testTxPoolConfig TxPoolConfig
 var DefaultConfig = &params.IstanbulConfig{
 	RequestTimeout: 10000,
 	BlockPeriod:    1,
-	ProposerPolicy: istanbul.RoundRobin,
+	ProposerPolicy: iris.RoundRobin,
 }
 
 var TestChainConfig = params.ChainConfig{

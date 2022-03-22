@@ -282,7 +282,7 @@ func (s *LightEthereum) Start(srvr *p2p.Server) error {
 	s.serverPool.start(srvr, lesTopic(s.blockchain.Genesis().Hash(), protocolVersion))
 	s.protocolManager.Start(s.config.LightPeers)
 
-	if _, ok := s.engine.(consensus.Istanbul); ok {
+	if _, ok := s.engine.(consensus.Iris); ok {
 		for _, n := range p2p.GetBootNodes() {
 			srvr.AddPeer(discover.NewNode(n.ID, n.IP, n.UDP, n.TCP))
 		}
