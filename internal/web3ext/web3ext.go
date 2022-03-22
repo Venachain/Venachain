@@ -407,6 +407,11 @@ web3._extend({
 	property: 'eth',
 	methods: [
 		new web3._extend.Method({
+			name: 'chainId',
+			call: 'eth_chainId',
+			params: 0
+		}),
+		new web3._extend.Method({
 			name: 'setActor',
 			call: 'eth_setActor',
 			params: 1,
@@ -476,6 +481,11 @@ const Venachain_JS = `
 web3._extend({
 	property: 'venachain',
 	methods: [
+		new web3._extend.Method({
+			name: 'chainId',
+			call: 'eth_chainId',
+			params: 0
+		}),
 		new web3._extend.Method({
 			name: 'setActor',
 			call: 'venachain_setActor',
