@@ -29,11 +29,11 @@ var (
 	// to identify whether the block is from Istanbul consensus engine
 	IrisDigest = common.HexToHash("0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365")
 
-	IrisExtraVanity   = 32 // Fixed number of extra-data bytes reserved for validator vanity
-	IstanbulExtraSeal = 65 // Fixed number of extra-data bytes reserved for validator seal
+	IrisExtraVanity = 32 // Fixed number of extra-data bytes reserved for validator vanity
+	IrisExtraSeal   = 65 // Fixed number of extra-data bytes reserved for validator seal
 
 	// ErrInvalidIrisHeaderExtra is returned if the length of extra-data is less than 32 bytes
-	ErrInvalidIrisHeaderExtra = errors.New("invalid istanbul header extra-data")
+	ErrInvalidIrisHeaderExtra = errors.New("invalid iris header extra-data")
 )
 
 type IrisExtra struct {
@@ -81,22 +81,22 @@ func ExtractIrisExtra(h *Header) (*IrisExtra, error) {
 	return irisExtra, nil
 }
 
-// IstanbulFilteredHeader returns a filtered header which some information (like seal, committed seals)
+// IrisFilteredHeader returns a filtered header which some information (like seal, committed seals)
 // are clean to fulfill the Istanbul hash rules. It returns nil if the extra-data cannot be
 // decoded/encoded by rlp.
-func IstanbulFilteredHeader(h *Header, keepSeal bool) *Header {
+func IrisFilteredHeader(h *Header, keepSeal bool) *Header {
 	newHeader := CopyHeader(h)
-	istanbulExtra, err := ExtractIrisExtra(newHeader)
+	irisExtra, err := ExtractIrisExtra(newHeader)
 	if err != nil {
 		return nil
 	}
 
 	if !keepSeal {
-		istanbulExtra.Seal = []byte{}
+		irisExtra.Seal = []byte{}
 	}
-	istanbulExtra.CommittedSeal = [][]byte{}
+	irisExtra.CommittedSeal = [][]byte{}
 
-	payload, err := rlp.EncodeToBytes(&istanbulExtra)
+	payload, err := rlp.EncodeToBytes(&irisExtra)
 	if err != nil {
 		return nil
 	}

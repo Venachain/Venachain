@@ -58,9 +58,9 @@ func New(backend iris.Backend, config *params.IstanbulConfig) Engine {
 		consensusTimer:     metrics.NewTimer(),
 	}
 
-	r.Register("consensus/istanbul/core/round", c.roundMeter)
-	r.Register("consensus/istanbul/core/sequence", c.sequenceMeter)
-	r.Register("consensus/istanbul/core/consensus", c.consensusTimer)
+	r.Register("consensus/iris/core/round", c.roundMeter)
+	r.Register("consensus/iris/core/sequence", c.sequenceMeter)
+	r.Register("consensus/iris/core/consensus", c.consensusTimer)
 
 	c.validateFn = c.checkValidatorSignature
 	// initialize lastView
@@ -228,7 +228,7 @@ func (c *core) commit() {
 	if proposal != nil {
 		committedSeals := make([][]byte, c.current.Commits.Size())
 		for i, v := range c.current.Commits.Values() {
-			committedSeals[i] = make([]byte, types.IstanbulExtraSeal)
+			committedSeals[i] = make([]byte, types.IrisExtraSeal)
 			copy(committedSeals[i][:], v.CommittedSeal[:])
 		}
 

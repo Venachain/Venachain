@@ -647,7 +647,7 @@ func sigHash(header *types.Header) (hash common.Hash) {
 	hasher := sha3.NewKeccak256()
 
 	// Clean seal is required for calculating proposer seal.
-	rlp.Encode(hasher, types.IstanbulFilteredHeader(header, false))
+	rlp.Encode(hasher, types.IrisFilteredHeader(header, false))
 	hasher.Sum(hash[:0])
 	return hash
 }
@@ -721,7 +721,7 @@ func prepareExtra(header *types.Header, vals []common.Address) ([]byte, error) {
 // writeSeal writes the extra-data field of the given header with the given seals.
 // suggest to rename to writeSeal.
 func writeSeal(h *types.Header, seal []byte) error {
-	if len(seal)%types.IstanbulExtraSeal != 0 {
+	if len(seal)%types.IrisExtraSeal != 0 {
 		return errInvalidSignature
 	}
 
@@ -747,7 +747,7 @@ func writeCommittedSeals(h *types.Header, committedSeals [][]byte) error {
 	}
 
 	for _, seal := range committedSeals {
-		if len(seal) != types.IstanbulExtraSeal {
+		if len(seal) != types.IrisExtraSeal {
 			return errInvalidCommittedSeals
 		}
 	}
