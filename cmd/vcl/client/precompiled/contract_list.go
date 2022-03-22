@@ -11,6 +11,8 @@ var (
 	GroupManagementAddress       = syscontracts.GroupManagementAddress.String()       // The Venachain Precompiled contract addr for group management
 	ContractDataProcessorAddress = syscontracts.ContractDataProcessorAddress.String() // The Venachain Precompiled contract addr for group management
 	CnsInvokeAddress             = syscontracts.CnsInvokeAddress.String()             // The Venachain Precompiled contract addr for group management
+	PaillierAddress              = syscontracts.PaillierAddress.String()              // The Venachain Precompiled contract addr for group management
+
 )
 
 const (
@@ -28,6 +30,7 @@ var List = map[string]string{
 	FirewallManagementAddress:    "../../release/linux/conf/contracts/fireWall.abi.json",
 	GroupManagementAddress:       "../../release/linux/conf/contracts/groupManager.cpp.abi.json",
 	ContractDataProcessorAddress: "../../release/linux/conf/contracts/contractData.cpp.abi.json",
+	PaillierAddress:              "../../release/linux/conf/contracts/paillier.cpp.abi.json",
 
 	CnsInitRegEvent: "../../release/linux/conf/contracts/cnsInitRegEvent.json",
 	CnsInvokeEvent:  "../../release/linux/conf/contracts/cnsInvokeEvent.json",

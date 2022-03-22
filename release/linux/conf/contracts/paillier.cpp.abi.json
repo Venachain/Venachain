@@ -1,0 +1,73 @@
+[
+  {
+    "name": "paillierWeightAdd",
+    "inputs": [
+      {
+        "name": "args",
+        "type": "string"
+      },
+      {
+        "name": "arr",
+        "type": "uint64[]"
+      },
+      {
+        "name": "pubKey",
+        "type": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "constant": "true",
+    "type": "function"
+  },
+  {
+    "name": "paillierAdd",
+    "inputs": [
+      {
+        "name": "args",
+        "type": "string"
+      },
+      {
+        "name": "pubKey",
+        "type": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "constant": "true",
+    "type": "function"
+  },
+  {
+    "name": "paillierMul",
+    "inputs": [
+      {
+        "name": "args",
+        "type": "string"
+      },
+      {
+        "name": "scalar",
+        "type": "uint"
+      },
+      {
+        "name": "pubKey",
+        "type": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "constant": "true",
+    "type": "function"
+  }
+]

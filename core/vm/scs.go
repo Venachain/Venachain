@@ -26,6 +26,7 @@ var VenachainPrecompiledContracts = map[common.Address]PrecompiledContract{
 	syscontracts.CnsInvokeAddress:             &CnsInvoke{},
 	syscontracts.EvidenceManagementAddress:    &SCEvidenceWrapper{},
 	syscontracts.BulletProofAddress:           &SCBulletProofWrapper{},
+	syscontracts.PaillierAddress:              &SCPaillierWrapper{},
 }
 
 func RunVenachainPrecompiledSC(p PrecompiledContract, input []byte, contract *Contract, evm *EVM) (ret []byte, err error) {
@@ -113,6 +114,12 @@ func RunVenachainPrecompiledSC(p PrecompiledContract, input []byte, contract *Co
 			bpw.base.blockNumber = evm.BlockNumber
 			bpw.base.contractAddr = *contract.CodeAddr
 			return bpw.Run(input)
+		case *SCPaillierWrapper:
+			plw := NewPLWrapper(evm.StateDB)
+			plw.base.caller = evm.Context.Origin
+			plw.base.blockNumber = evm.BlockNumber
+			plw.base.contractAddr = *contract.CodeAddr
+			return plw.Run(input)
 		default:
 			panic("system contract handler not found")
 		}
