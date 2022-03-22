@@ -123,7 +123,7 @@ function assignDefault() {
         P2P_PORT=16791
    
         RPC_ADDR=0.0.0.0
-        RPC_API=db,eth,venachain,net,web3,admin,personal,txpool,istanbul
+        RPC_API=db,eth,venachain,net,web3,admin,personal,txpool,iris
         RPC_PORT=6791
 
         WS_ADDR=0.0.0.0

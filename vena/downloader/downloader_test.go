@@ -28,7 +28,7 @@ import (
 
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/common/hexutil"
-	istanbulBackend "github.com/Venachain/Venachain/consensus/iris/backend"
+	irisBackend "github.com/Venachain/Venachain/consensus/iris/backend"
 	"github.com/Venachain/Venachain/core"
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/crypto"
@@ -138,7 +138,7 @@ func newTester() *downloadTester {
 // reassembly.
 func (dl *downloadTester) makeChain(n int, seed byte, parent *types.Block, parentReceipts types.Receipts, heavy bool) ([]common.Hash, map[common.Hash]*types.Header, map[common.Hash]*types.Block, map[common.Hash]types.Receipts) {
 	// Generate the block chain
-	blocks, receipts := core.GenerateChain(params.TestChainConfig, parent, istanbulBackend.New(nil, nil, nil), dl.peerDb, n, func(i int, block *core.BlockGen) {
+	blocks, receipts := core.GenerateChain(params.TestChainConfig, parent, irisBackend.New(nil, nil, nil), dl.peerDb, n, func(i int, block *core.BlockGen) {
 		block.SetCoinbase(common.Address{seed})
 
 		// If a heavy chain is requested, delay blocks to raise difficulty

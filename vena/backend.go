@@ -41,7 +41,7 @@ import (
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/common/hexutil"
 	"github.com/Venachain/Venachain/consensus"
-	istanbulBackend "github.com/Venachain/Venachain/consensus/iris/backend"
+	irisBackend "github.com/Venachain/Venachain/consensus/iris/backend"
 	"github.com/Venachain/Venachain/core"
 	"github.com/Venachain/Venachain/core/bloombits"
 	"github.com/Venachain/Venachain/core/rawdb"
@@ -310,7 +310,7 @@ func CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *params.ChainCo
 		return nil
 	}
 	if chainConfig.Istanbul != nil {
-		return istanbulBackend.New(chainConfig.Istanbul, ctx.NodeKey(), db)
+		return irisBackend.New(chainConfig.Istanbul, ctx.NodeKey(), db)
 	}
 	return nil
 }
