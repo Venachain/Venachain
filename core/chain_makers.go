@@ -25,8 +25,8 @@ import (
 	"github.com/Venachain/Venachain/core/state"
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/core/vm"
-	"github.com/Venachain/Venachain/ethdb/dbhandle"
 	"github.com/Venachain/Venachain/params"
+	"github.com/Venachain/Venachain/venadb/dbhandle"
 )
 
 // BlockGen creates blocks for testing.

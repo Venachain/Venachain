@@ -28,12 +28,12 @@ import (
 	"github.com/Venachain/Venachain/core"
 	"github.com/Venachain/Venachain/core/rawdb"
 	"github.com/Venachain/Venachain/core/types"
-	"github.com/Venachain/Venachain/ethdb/dbhandle"
-	"github.com/Venachain/Venachain/ethdb/leveldb"
 	"github.com/Venachain/Venachain/log"
 	"github.com/Venachain/Venachain/params"
 	"github.com/Venachain/Venachain/rlp"
 	"github.com/Venachain/Venachain/trie"
+	"github.com/Venachain/Venachain/venadb/dbhandle"
+	"github.com/Venachain/Venachain/venadb/leveldb"
 )
 
 // IndexerConfig includes a set of configs for chain indexers.

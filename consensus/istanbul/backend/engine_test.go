@@ -32,9 +32,9 @@ import (
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/core/vm"
 	"github.com/Venachain/Venachain/crypto"
-	"github.com/Venachain/Venachain/ethdb/memorydb"
 	"github.com/Venachain/Venachain/params"
 	"github.com/Venachain/Venachain/rlp"
+	"github.com/Venachain/Venachain/venadb/memorydb"
 )
 
 // in this test, we can set n to 1, and it means we can process Istanbul and commit a

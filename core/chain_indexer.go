@@ -27,9 +27,9 @@ import (
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/core/rawdb"
 	"github.com/Venachain/Venachain/core/types"
-	"github.com/Venachain/Venachain/ethdb/dbhandle"
 	"github.com/Venachain/Venachain/event"
 	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/venadb/dbhandle"
 )
 
 // ChainIndexerBackend defines the methods needed to process chain segments in

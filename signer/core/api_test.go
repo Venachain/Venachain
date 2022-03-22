@@ -32,7 +32,7 @@ import (
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/common/hexutil"
 	"github.com/Venachain/Venachain/core/types"
-	"github.com/Venachain/Venachain/internal/ethapi"
+	"github.com/Venachain/Venachain/internal/venaapi"
 	"github.com/Venachain/Venachain/rlp"
 )
 
@@ -44,7 +44,7 @@ type HeadlessUI struct {
 func (ui *HeadlessUI) OnSignerStartup(info StartupInfo) {
 }
 
-func (ui *HeadlessUI) OnApprovedTx(tx ethapi.SignTransactionResult) {
+func (ui *HeadlessUI) OnApprovedTx(tx venaapi.SignTransactionResult) {
 	fmt.Printf("OnApproved called")
 }
 
@@ -276,7 +276,7 @@ func TestSignTx(t *testing.T) {
 
 	var (
 		list      Accounts
-		res, res2 *ethapi.SignTransactionResult
+		res, res2 *venaapi.SignTransactionResult
 		err       error
 	)
 

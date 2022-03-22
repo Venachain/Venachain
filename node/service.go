@@ -21,12 +21,12 @@ import (
 	"reflect"
 
 	"github.com/Venachain/Venachain/accounts"
-	"github.com/Venachain/Venachain/ethdb"
-	"github.com/Venachain/Venachain/ethdb/dbhandle"
-	"github.com/Venachain/Venachain/ethdb/memorydb"
 	"github.com/Venachain/Venachain/event"
 	"github.com/Venachain/Venachain/p2p"
 	"github.com/Venachain/Venachain/rpc"
+	"github.com/Venachain/Venachain/venadb"
+	"github.com/Venachain/Venachain/venadb/dbhandle"
+	"github.com/Venachain/Venachain/venadb/memorydb"
 )
 
 // ServiceContext is a collection of service independent options inherited from
@@ -46,7 +46,7 @@ func (ctx *ServiceContext) OpenDatabase(name string, cache int, handles int) (db
 	if ctx.config.DataDir == "" {
 		return memorydb.NewMemDatabase(), nil
 	}
-	db, err := ethdb.New(ctx.config.DBType, ctx.config.ResolvePath(name), cache, handles)
+	db, err := venadb.New(ctx.config.DBType, ctx.config.ResolvePath(name), cache, handles)
 	if err != nil {
 		return nil, err
 	}

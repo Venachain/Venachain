@@ -31,7 +31,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/Venachain/Venachain/ethdb/dbhandle"
+	"github.com/Venachain/Venachain/venadb/dbhandle"
 )
 
 var (

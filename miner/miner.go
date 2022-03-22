@@ -27,11 +27,11 @@ import (
 	"github.com/Venachain/Venachain/core"
 	"github.com/Venachain/Venachain/core/state"
 	"github.com/Venachain/Venachain/core/types"
-	"github.com/Venachain/Venachain/eth/downloader"
-	"github.com/Venachain/Venachain/ethdb/dbhandle"
 	"github.com/Venachain/Venachain/event"
 	"github.com/Venachain/Venachain/log"
 	"github.com/Venachain/Venachain/params"
+	"github.com/Venachain/Venachain/vena/downloader"
+	"github.com/Venachain/Venachain/venadb/dbhandle"
 )
 
 // Backend wraps all methods required for mining.

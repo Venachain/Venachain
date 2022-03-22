@@ -25,7 +25,7 @@ import (
 	"sync"
 
 	"github.com/Venachain/Venachain/common"
-	"github.com/Venachain/Venachain/internal/ethapi"
+	"github.com/Venachain/Venachain/internal/venaapi"
 	"github.com/Venachain/Venachain/log"
 	"github.com/davecgh/go-spew/spew"
 	"golang.org/x/crypto/ssh/terminal"
@@ -234,7 +234,7 @@ func (ui *CommandlineUI) ShowInfo(message string) {
 	fmt.Printf("Info: %v\n", message)
 }
 
-func (ui *CommandlineUI) OnApprovedTx(tx ethapi.SignTransactionResult) {
+func (ui *CommandlineUI) OnApprovedTx(tx venaapi.SignTransactionResult) {
 	fmt.Printf("Transaction signed:\n ")
 	spew.Dump(tx.Tx)
 }

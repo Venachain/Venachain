@@ -28,13 +28,13 @@ import (
 	"github.com/Venachain/Venachain/core"
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/crypto"
-	"github.com/Venachain/Venachain/eth"
-	"github.com/Venachain/Venachain/ethdb/dbhandle"
 	"github.com/Venachain/Venachain/les/flowcontrol"
 	"github.com/Venachain/Venachain/light"
 	"github.com/Venachain/Venachain/p2p"
 	"github.com/Venachain/Venachain/p2p/discover"
 	"github.com/Venachain/Venachain/params"
+	"github.com/Venachain/Venachain/vena"
+	"github.com/Venachain/Venachain/venadb/dbhandle"
 )
 
 var (
@@ -120,7 +120,7 @@ func testChainGen(i int, block *core.BlockGen) {
 // testIndexers creates a set of indexers with specified params for testing purpose.
 func testIndexers(db dbhandle.Database, odr light.OdrBackend, iConfig *light.IndexerConfig) (*core.ChainIndexer, *core.ChainIndexer, *core.ChainIndexer) {
 	chtIndexer := light.NewChtIndexer(db, odr, iConfig.ChtSize, iConfig.ChtConfirms)
-	bloomIndexer := eth.NewBloomIndexer(db, iConfig.BloomSize, iConfig.BloomConfirms)
+	bloomIndexer := vena.NewBloomIndexer(db, iConfig.BloomSize, iConfig.BloomConfirms)
 	bloomTrieIndexer := light.NewBloomTrieIndexer(db, odr, iConfig.BloomSize, iConfig.BloomTrieSize)
 	bloomIndexer.AddChildIndexer(bloomTrieIndexer)
 	return chtIndexer, bloomIndexer, bloomTrieIndexer

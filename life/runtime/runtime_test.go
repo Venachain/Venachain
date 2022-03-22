@@ -11,9 +11,9 @@ import (
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/common/math"
 	"github.com/Venachain/Venachain/core/state"
-	"github.com/Venachain/Venachain/ethdb/memorydb"
 	"github.com/Venachain/Venachain/life/utils"
 	"github.com/Venachain/Venachain/rlp"
+	"github.com/Venachain/Venachain/venadb/memorydb"
 )
 
 func TestDefaults(t *testing.T) {

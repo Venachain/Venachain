@@ -31,13 +31,13 @@ import (
 	"github.com/Venachain/Venachain/core"
 	"github.com/Venachain/Venachain/core/state"
 	"github.com/Venachain/Venachain/core/types"
-	"github.com/Venachain/Venachain/eth/downloader"
-	"github.com/Venachain/Venachain/ethdb"
-	"github.com/Venachain/Venachain/ethdb/leveldb"
 	"github.com/Venachain/Venachain/event"
 	"github.com/Venachain/Venachain/log"
 	"github.com/Venachain/Venachain/params"
 	"github.com/Venachain/Venachain/trie"
+	"github.com/Venachain/Venachain/vena/downloader"
+	"github.com/Venachain/Venachain/venadb"
+	"github.com/Venachain/Venachain/venadb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"gopkg.in/urfave/cli.v1"
 )
@@ -392,7 +392,7 @@ func copyDb(ctx *cli.Context) error {
 	dl := downloader.New(syncmode, chainDb, new(event.TypeMux), chain, nil, nil)
 
 	// Create a source peer to satisfy downloader requests from
-	db, err := ethdb.New(ctx.String(utils.DbTypeFlag.Name), ctx.Args().First(), ctx.GlobalInt(utils.CacheFlag.Name), 256)
+	db, err := venadb.New(ctx.String(utils.DbTypeFlag.Name), ctx.Args().First(), ctx.GlobalInt(utils.CacheFlag.Name), 256)
 	if err != nil {
 		return err
 	}

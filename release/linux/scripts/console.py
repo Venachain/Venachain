@@ -398,7 +398,7 @@ class Cli(Cmd):
             prikey = readAllFromFile(os.path.join(rootDir,"node.prikey"))
             pubkey = readAllFromFile(os.path.join(rootDir,"node.pubkey"))
             return [prikey,pubkey,address]
-        keyinfo= subprocess.check_output(BIN_DIR + '/ethkey genkeypair | sed s/[[:space:]]//g',shell=True).decode('utf-8')
+        keyinfo= subprocess.check_output(BIN_DIR + '/venakey genkeypair | sed s/[[:space:]]//g',shell=True).decode('utf-8')
         address = keyinfo[10:50]
         prikey = keyinfo[62:126]
         pubkey = keyinfo[137:265]

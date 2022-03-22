@@ -32,12 +32,12 @@ import (
 	"github.com/Venachain/Venachain/accounts/keystore"
 	"github.com/Venachain/Venachain/cmd/utils"
 	"github.com/Venachain/Venachain/console"
-	"github.com/Venachain/Venachain/eth"
-	"github.com/Venachain/Venachain/ethclient"
 	"github.com/Venachain/Venachain/internal/debug"
 	"github.com/Venachain/Venachain/log"
 	"github.com/Venachain/Venachain/metrics"
 	"github.com/Venachain/Venachain/node"
+	"github.com/Venachain/Venachain/vena"
+	"github.com/Venachain/Venachain/venaclient"
 	"github.com/elastic/gosigar"
 	"gopkg.in/urfave/cli.v1"
 )
@@ -291,7 +291,7 @@ func startNode(ctx *cli.Context, stack *node.Node) {
 		if err != nil {
 			utils.Fatalf("Failed to attach to self: %v", err)
 		}
-		stateReader := ethclient.NewClient(rpcClient)
+		stateReader := venaclient.NewClient(rpcClient)
 
 		// Open any wallets already attached
 		for _, wallet := range stack.AccountManager().Wallets() {
@@ -329,7 +329,7 @@ func startNode(ctx *cli.Context, stack *node.Node) {
 		if ctx.GlobalString(utils.SyncModeFlag.Name) == "light" {
 			utils.Fatalf("Light clients do not support mining")
 		}
-		var ethereum *eth.Ethereum
+		var ethereum *vena.Ethereum
 		if err := stack.Service(&ethereum); err != nil {
 			utils.Fatalf("Ethereum service not running: %v", err)
 		}

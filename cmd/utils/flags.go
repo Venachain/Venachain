@@ -37,12 +37,6 @@ import (
 	"github.com/Venachain/Venachain/core/vm"
 	"github.com/Venachain/Venachain/crypto"
 	"github.com/Venachain/Venachain/dashboard"
-	"github.com/Venachain/Venachain/eth"
-	"github.com/Venachain/Venachain/eth/downloader"
-	"github.com/Venachain/Venachain/eth/gasprice"
-	"github.com/Venachain/Venachain/ethdb/dbhandle"
-	types2 "github.com/Venachain/Venachain/ethdb/types"
-	"github.com/Venachain/Venachain/ethstats"
 	"github.com/Venachain/Venachain/les"
 	"github.com/Venachain/Venachain/log"
 	"github.com/Venachain/Venachain/metrics"
@@ -54,6 +48,12 @@ import (
 	"github.com/Venachain/Venachain/p2p/nat"
 	"github.com/Venachain/Venachain/p2p/netutil"
 	"github.com/Venachain/Venachain/params"
+	"github.com/Venachain/Venachain/vena"
+	"github.com/Venachain/Venachain/vena/downloader"
+	"github.com/Venachain/Venachain/vena/gasprice"
+	"github.com/Venachain/Venachain/venadb/dbhandle"
+	types2 "github.com/Venachain/Venachain/venadb/types"
+	"github.com/Venachain/Venachain/venastats"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -132,7 +132,7 @@ var (
 	NetworkIdFlag = cli.Uint64Flag{
 		Name:  "networkid",
 		Usage: "Network identifier (integer, 1=Frontier, 2=Morden (disused), 3=Ropsten, 4=Rinkeby)",
-		Value: eth.DefaultConfig.NetworkId,
+		Value: vena.DefaultConfig.NetworkId,
 	}
 
 	IdentityFlag = cli.StringFlag{
@@ -144,7 +144,7 @@ var (
 		Usage: "Document Root for HTTPClient file scheme",
 		Value: DirectoryString{homeDir()},
 	}
-	defaultSyncMode = eth.DefaultConfig.SyncMode
+	defaultSyncMode = vena.DefaultConfig.SyncMode
 	SyncModeFlag    = TextMarshalerFlag{
 		Name:  "syncmode",
 		Usage: `Blockchain sync mode ("fast", "full", or "light")`,
@@ -168,7 +168,7 @@ var (
 	LightPeersFlag = cli.IntFlag{
 		Name:  "lightpeers",
 		Usage: "Maximum number of LES client peers",
-		Value: eth.DefaultConfig.LightPeers,
+		Value: vena.DefaultConfig.LightPeers,
 	}
 	LightKDFFlag = cli.BoolFlag{
 		Name:  "lightkdf",
@@ -216,27 +216,27 @@ var (
 	TxPoolPriceLimitFlag = cli.Uint64Flag{
 		Name:  "txpool.pricelimit",
 		Usage: "Minimum gas price limit to enforce for acceptance into the pool",
-		Value: eth.DefaultConfig.TxPool.PriceLimit,
+		Value: vena.DefaultConfig.TxPool.PriceLimit,
 	}
 	TxPoolPriceBumpFlag = cli.Uint64Flag{
 		Name:  "txpool.pricebump",
 		Usage: "Price bump percentage to replace an already existing transaction",
-		Value: eth.DefaultConfig.TxPool.PriceBump,
+		Value: vena.DefaultConfig.TxPool.PriceBump,
 	}
 	TxPoolAccountSlotsFlag = cli.Uint64Flag{
 		Name:  "txpool.accountslots",
 		Usage: "Minimum number of executable transaction slots guaranteed per account",
-		Value: eth.DefaultConfig.TxPool.AccountSlots,
+		Value: vena.DefaultConfig.TxPool.AccountSlots,
 	}
 	TxPoolGlobalSlotsFlag = cli.Uint64Flag{
 		Name:  "txpool.globalslots",
 		Usage: "Maximum number of executable transaction slots for all accounts",
-		Value: eth.DefaultConfig.TxPool.GlobalSlots,
+		Value: vena.DefaultConfig.TxPool.GlobalSlots,
 	}
 	TxPoolGlobalTxCountFlag = cli.Uint64Flag{
 		Name:  "txpool.globaltxcount",
 		Usage: "Maximum number of transactions for package",
-		Value: eth.DefaultConfig.TxPool.GlobalTxCount.Load(),
+		Value: vena.DefaultConfig.TxPool.GlobalTxCount.Load(),
 	}
 	TxPoolIsAutoAdjustTxCountFlag = cli.BoolFlag{
 		Name:  "txpool.isautoadjusttxcount",
@@ -245,17 +245,17 @@ var (
 	TxPoolRequestTimeoutRatioFloorFlag = cli.Float64Flag{
 		Name:  "txpool.requesttimeoutratiofloor",
 		Usage: "ratio=consensusRequestTimeCost/maxConsensuRequestTime,the min ratio",
-		Value: eth.DefaultConfig.TxPool.RequestTimeoutRatioFloor,
+		Value: vena.DefaultConfig.TxPool.RequestTimeoutRatioFloor,
 	}
 	TxPoolRequestTimeoutRatioCeilFlag = cli.Float64Flag{
 		Name:  "txpool.requesttimeoutratioceil",
 		Usage: "ratio=consensusRequestTimeCost/maxConsensuRequestTime,the max ratio",
-		Value: eth.DefaultConfig.TxPool.RequestTimeoutRatioCeil,
+		Value: vena.DefaultConfig.TxPool.RequestTimeoutRatioCeil,
 	}
 	TxPoolRequestTimeoutCntFlag = cli.IntFlag{
 		Name:  "txpool.requestTimeoutCnt",
 		Usage: "after requestTimeoutCnt consensusTimeout, half block txCount",
-		Value: eth.DefaultConfig.TxPool.RequestTimeoutCnt,
+		Value: vena.DefaultConfig.TxPool.RequestTimeoutCnt,
 	}
 
 	// Performance tuning settings
@@ -301,27 +301,27 @@ var (
 	MinerGasTargetFlag = cli.Uint64Flag{
 		Name:  "miner.gastarget",
 		Usage: "Target gas floor for mined blocks",
-		Value: eth.DefaultConfig.MinerGasFloor,
+		Value: vena.DefaultConfig.MinerGasFloor,
 	}
 	MinerLegacyGasTargetFlag = cli.Uint64Flag{
 		Name:  "targetgaslimit",
 		Usage: "Target gas floor for mined blocks (deprecated, use --miner.gastarget)",
-		Value: eth.DefaultConfig.MinerGasFloor,
+		Value: vena.DefaultConfig.MinerGasFloor,
 	}
 	MinerGasLimitFlag = cli.Uint64Flag{
 		Name:  "miner.gaslimit",
 		Usage: "Target gas ceiling for mined blocks",
-		Value: eth.DefaultConfig.MinerGasCeil,
+		Value: vena.DefaultConfig.MinerGasCeil,
 	}
 	MinerGasPriceFlag = BigFlag{
 		Name:  "miner.gasprice",
 		Usage: "Minimum gas price for mining a transaction",
-		Value: eth.DefaultConfig.MinerGasPrice,
+		Value: vena.DefaultConfig.MinerGasPrice,
 	}
 	MinerLegacyGasPriceFlag = BigFlag{
 		Name:  "gasprice",
 		Usage: "Minimum gas price for mining a transaction (deprecated, use --miner.gasprice)",
-		Value: eth.DefaultConfig.MinerGasPrice,
+		Value: vena.DefaultConfig.MinerGasPrice,
 	}
 	MinerEtherbaseFlag = cli.StringFlag{
 		Name:  "miner.etherbase",
@@ -344,7 +344,7 @@ var (
 	MinerRecommitIntervalFlag = cli.DurationFlag{
 		Name:  "miner.recommit",
 		Usage: "Time interval to recreate the block being mined",
-		Value: eth.DefaultConfig.MinerRecommit,
+		Value: vena.DefaultConfig.MinerRecommit,
 	}
 	MinerNoVerfiyFlag = cli.BoolFlag{
 		Name:  "miner.noverify",
@@ -518,12 +518,12 @@ var (
 	GpoBlocksFlag = cli.IntFlag{
 		Name:  "gpoblocks",
 		Usage: "Number of recent blocks to check for gas prices",
-		Value: eth.DefaultConfig.GPO.Blocks,
+		Value: vena.DefaultConfig.GPO.Blocks,
 	}
 	GpoPercentileFlag = cli.IntFlag{
 		Name:  "gpopercentile",
 		Usage: "Suggested gas price is the given percentile of a set of recent transaction gas prices",
-		Value: eth.DefaultConfig.GPO.Percentile,
+		Value: vena.DefaultConfig.GPO.Percentile,
 	}
 
 	// Metrics flags
@@ -810,7 +810,7 @@ func MakeAddress(ks *keystore.KeyStore, account string) (accounts.Account, error
 
 // setEtherbase retrieves the etherbase either from the directly specified
 // command line flags or from the keystore if CLI indexed.
-func setEtherbase(ctx *cli.Context, ks *keystore.KeyStore, cfg *eth.Config) {
+func setEtherbase(ctx *cli.Context, ks *keystore.KeyStore, cfg *vena.Config) {
 	// Extract the current etherbase, new flag overriding legacy one
 	var etherbase string
 	if ctx.GlobalIsSet(MinerLegacyEtherbaseFlag.Name) {
@@ -1032,7 +1032,7 @@ func checkExclusive(ctx *cli.Context, args ...interface{}) {
 }
 
 // SetEthConfig applies eth-related command line flags to the config.
-func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *eth.Config) {
+func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *vena.Config) {
 	// Avoid conflicting network flags
 	checkExclusive(ctx, LightServFlag, SyncModeFlag, "light")
 
@@ -1131,7 +1131,7 @@ func SetDashboardConfig(ctx *cli.Context, cfg *dashboard.Config) {
 }
 
 // RegisterEthService adds an Ethereum client to the stack.
-func RegisterEthService(stack *node.Node, cfg *eth.Config) {
+func RegisterEthService(stack *node.Node, cfg *vena.Config) {
 	var err error
 	if cfg.SyncMode == downloader.LightSync {
 		err = stack.Register(func(ctx *node.ServiceContext) (node.Service, error) {
@@ -1139,7 +1139,7 @@ func RegisterEthService(stack *node.Node, cfg *eth.Config) {
 		})
 	} else {
 		err = stack.Register(func(ctx *node.ServiceContext) (node.Service, error) {
-			fullNode, err := eth.New(ctx, cfg)
+			fullNode, err := vena.New(ctx, cfg)
 			if fullNode != nil && cfg.LightServ > 0 {
 				ls, _ := les.NewLesServer(fullNode, cfg)
 				fullNode.AddLesServer(ls)
@@ -1165,13 +1165,13 @@ func RegisterDashboardService(stack *node.Node, cfg *dashboard.Config, commit st
 func RegisterEthStatsService(stack *node.Node, url string) {
 	if err := stack.Register(func(ctx *node.ServiceContext) (node.Service, error) {
 		// Retrieve both eth and les services
-		var ethServ *eth.Ethereum
+		var ethServ *vena.Ethereum
 		ctx.Service(&ethServ)
 
 		var lesServ *les.LightEthereum
 		ctx.Service(&lesServ)
 
-		return ethstats.New(url, ethServ, lesServ)
+		return venastats.New(url, ethServ, lesServ)
 	}); err != nil {
 		Fatalf("Failed to register the Ethereum Stats service: %v", err)
 	}
@@ -1234,8 +1234,8 @@ func MakeChain(ctx *cli.Context, stack *node.Node) (chain *core.BlockChain, chai
 	}
 	cache := &core.CacheConfig{
 		Disabled:      ctx.GlobalString(GCModeFlag.Name) == "archive",
-		TrieNodeLimit: eth.DefaultConfig.TrieCache,
-		TrieTimeLimit: eth.DefaultConfig.TrieTimeout,
+		TrieNodeLimit: vena.DefaultConfig.TrieCache,
+		TrieTimeLimit: vena.DefaultConfig.TrieTimeout,
 	}
 	if ctx.GlobalIsSet(CacheFlag.Name) || ctx.GlobalIsSet(CacheGCFlag.Name) {
 		cache.TrieNodeLimit = ctx.GlobalInt(CacheFlag.Name) * ctx.GlobalInt(CacheGCFlag.Name) / 100

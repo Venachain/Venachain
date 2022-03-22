@@ -23,9 +23,9 @@ import (
 
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/crypto"
-	"github.com/Venachain/Venachain/ethdb/dbhandle"
-	"github.com/Venachain/Venachain/ethdb/memorydb"
 	"github.com/Venachain/Venachain/trie"
+	"github.com/Venachain/Venachain/venadb/dbhandle"
+	"github.com/Venachain/Venachain/venadb/memorydb"
 )
 
 // testAccount is the data associated with an account used by the state tests.

@@ -29,13 +29,13 @@ import (
 	"github.com/Venachain/Venachain/core/state"
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/core/vm"
-	"github.com/Venachain/Venachain/eth/downloader"
-	"github.com/Venachain/Venachain/eth/gasprice"
-	"github.com/Venachain/Venachain/ethdb/dbhandle"
 	"github.com/Venachain/Venachain/event"
 	"github.com/Venachain/Venachain/light"
 	"github.com/Venachain/Venachain/params"
 	"github.com/Venachain/Venachain/rpc"
+	"github.com/Venachain/Venachain/vena/downloader"
+	"github.com/Venachain/Venachain/vena/gasprice"
+	"github.com/Venachain/Venachain/venadb/dbhandle"
 )
 
 type LesApiBackend struct {

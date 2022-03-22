@@ -25,9 +25,9 @@ import (
 
 	"github.com/Venachain/Venachain/common/mclock"
 	"github.com/Venachain/Venachain/common/prque"
-	"github.com/Venachain/Venachain/ethdb/dbhandle"
 	"github.com/Venachain/Venachain/log"
 	"github.com/Venachain/Venachain/rlp"
+	"github.com/Venachain/Venachain/venadb/dbhandle"
 )
 
 // freeClientPool implements a client database that limits the connection time

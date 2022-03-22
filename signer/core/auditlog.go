@@ -24,7 +24,7 @@ import (
 	"github.com/Venachain/Venachain/accounts"
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/common/hexutil"
-	"github.com/Venachain/Venachain/internal/ethapi"
+	"github.com/Venachain/Venachain/internal/venaapi"
 	"github.com/Venachain/Venachain/log"
 )
 
@@ -46,7 +46,7 @@ func (l *AuditLogger) New(ctx context.Context) (accounts.Account, error) {
 	return l.api.New(ctx)
 }
 
-func (l *AuditLogger) SignTransaction(ctx context.Context, args SendTxArgs, methodSelector *string) (*ethapi.SignTransactionResult, error) {
+func (l *AuditLogger) SignTransaction(ctx context.Context, args SendTxArgs, methodSelector *string) (*venaapi.SignTransactionResult, error) {
 	sel := "<nil>"
 	if methodSelector != nil {
 		sel = *methodSelector

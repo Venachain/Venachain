@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/Venachain/Venachain/common"
-	"github.com/Venachain/Venachain/ethdb/memorydb"
+	"github.com/Venachain/Venachain/venadb/memorydb"
 )
 
 // Tests that the node iterator indeed walks over the entire database contents.

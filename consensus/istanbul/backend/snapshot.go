@@ -26,8 +26,8 @@ import (
 	"github.com/Venachain/Venachain/consensus/istanbul/validator"
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/crypto"
-	"github.com/Venachain/Venachain/ethdb/dbhandle"
 	"github.com/Venachain/Venachain/params"
+	"github.com/Venachain/Venachain/venadb/dbhandle"
 )
 
 const (

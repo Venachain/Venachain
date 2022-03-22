@@ -27,8 +27,8 @@ import (
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/core/rawdb"
 	"github.com/Venachain/Venachain/core/types"
-	"github.com/Venachain/Venachain/ethdb/leveldb"
-	"github.com/Venachain/Venachain/ethdb/memorydb"
+	"github.com/Venachain/Venachain/venadb/leveldb"
+	"github.com/Venachain/Venachain/venadb/memorydb"
 )
 
 // Runs multiple tests with randomized parameters.

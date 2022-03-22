@@ -15,9 +15,9 @@ import (
 	"github.com/Venachain/Venachain/core/state"
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/crypto"
-	"github.com/Venachain/Venachain/ethdb"
-	types2 "github.com/Venachain/Venachain/ethdb/types"
 	"github.com/Venachain/Venachain/rlp"
+	"github.com/Venachain/Venachain/venadb"
+	types2 "github.com/Venachain/Venachain/venadb/types"
 )
 
 var abi_ = `{
@@ -85,7 +85,7 @@ func Int64ToBytes(n int64) []byte {
 }
 
 func BenchmarkWasmInterpreter_SetState(bench *testing.B) {
-	db, _ := ethdb.New(types2.LevelDbStr, "./data.getsettest", 0, 0)
+	db, _ := venadb.New(types2.LevelDbStr, "./data.getsettest", 0, 0)
 
 	statedb, err := state.New(common.Hash{}, state.NewDatabase(db))
 	if nil != err {
@@ -96,7 +96,7 @@ func BenchmarkWasmInterpreter_SetState(bench *testing.B) {
 }
 
 func BenchmarkWasmInterpreter_GetState(bench *testing.B) {
-	db, _ := ethdb.New(types2.LevelDbStr, "./data.getsettest", 0, 0)
+	db, _ := venadb.New(types2.LevelDbStr, "./data.getsettest", 0, 0)
 
 	statedb, err := state.New(common.Hash{}, state.NewDatabase(db))
 	if nil != err {
@@ -115,7 +115,7 @@ func BenchmarkWasmInterpreter_SetState_MockStateDB(bench *testing.B) {
 }
 
 func BenchmarkWasmInterpreter_GetState_FixedInput(bench *testing.B) {
-	db, _ := ethdb.New(types2.LevelDbStr, "./data.getsettest", 0, 0)
+	db, _ := venadb.New(types2.LevelDbStr, "./data.getsettest", 0, 0)
 
 	statedb, err := state.New(common.Hash{}, state.NewDatabase(db))
 	if nil != err {
@@ -126,7 +126,7 @@ func BenchmarkWasmInterpreter_GetState_FixedInput(bench *testing.B) {
 }
 
 func BenchmarkWasmInterpreter_SetState_FixedInput(bench *testing.B) {
-	db, _ := ethdb.New(types2.LevelDbStr, "./data.getsettest", 0, 0)
+	db, _ := venadb.New(types2.LevelDbStr, "./data.getsettest", 0, 0)
 
 	statedb, err := state.New(common.Hash{}, state.NewDatabase(db))
 	if nil != err {
@@ -137,7 +137,7 @@ func BenchmarkWasmInterpreter_SetState_FixedInput(bench *testing.B) {
 }
 
 func BenchmarkWasmInterpreter_Deploy(bench *testing.B) {
-	db, _ := ethdb.New(types2.LevelDbStr, "./data.getsettest", 0, 0)
+	db, _ := venadb.New(types2.LevelDbStr, "./data.getsettest", 0, 0)
 
 	statedb, err := state.New(common.Hash{}, state.NewDatabase(db))
 	if nil != err {
