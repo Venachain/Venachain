@@ -27,12 +27,12 @@ import (
 	"github.com/Venachain/Venachain/core/rawdb"
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/crypto"
-	"github.com/Venachain/Venachain/eth/downloader"
-	"github.com/Venachain/Venachain/ethdb/leveldb"
 	"github.com/Venachain/Venachain/light"
 	"github.com/Venachain/Venachain/p2p"
 	"github.com/Venachain/Venachain/rlp"
 	"github.com/Venachain/Venachain/trie"
+	"github.com/Venachain/Venachain/vena/downloader"
+	"github.com/Venachain/Venachain/venadb/leveldb"
 )
 
 func expectResponse(r p2p.MsgReader, msgcode, reqID, bv uint64, data interface{}) error {

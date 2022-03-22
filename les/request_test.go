@@ -24,8 +24,8 @@ import (
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/core/rawdb"
 	"github.com/Venachain/Venachain/crypto"
-	"github.com/Venachain/Venachain/ethdb/dbhandle"
 	"github.com/Venachain/Venachain/light"
+	"github.com/Venachain/Venachain/venadb/dbhandle"
 )
 
 var testBankSecureTrieKey = secAddr(testBankAddress)

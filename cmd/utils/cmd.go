@@ -33,13 +33,13 @@ import (
 	"github.com/Venachain/Venachain/core/rawdb"
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/crypto"
-	"github.com/Venachain/Venachain/ethdb/dbhandle"
-	"github.com/Venachain/Venachain/ethdb/leveldb"
-	"github.com/Venachain/Venachain/ethdb/pebbledb"
 	"github.com/Venachain/Venachain/internal/debug"
 	"github.com/Venachain/Venachain/log"
 	"github.com/Venachain/Venachain/node"
 	"github.com/Venachain/Venachain/rlp"
+	"github.com/Venachain/Venachain/venadb/dbhandle"
+	"github.com/Venachain/Venachain/venadb/leveldb"
+	"github.com/Venachain/Venachain/venadb/pebbledb"
 )
 
 const (

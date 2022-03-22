@@ -24,8 +24,8 @@ import (
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/crypto/sha3"
-	"github.com/Venachain/Venachain/ethdb/memorydb"
 	"github.com/Venachain/Venachain/rlp"
+	"github.com/Venachain/Venachain/venadb/memorydb"
 )
 
 // Tests block header storage and retrieval operations.

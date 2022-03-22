@@ -34,12 +34,12 @@ import (
 	"github.com/Venachain/Venachain/core/state"
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/core/vm"
-	"github.com/Venachain/Venachain/eth/filters"
-	"github.com/Venachain/Venachain/ethdb/dbhandle"
-	"github.com/Venachain/Venachain/ethdb/memorydb"
 	"github.com/Venachain/Venachain/event"
 	"github.com/Venachain/Venachain/params"
 	"github.com/Venachain/Venachain/rpc"
+	"github.com/Venachain/Venachain/vena/filters"
+	"github.com/Venachain/Venachain/venadb/dbhandle"
+	"github.com/Venachain/Venachain/venadb/memorydb"
 )
 
 // This nil assignment ensures compile time that SimulatedBackend implements bind.ContractBackend.

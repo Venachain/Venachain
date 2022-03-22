@@ -30,7 +30,7 @@ var Modules = map[string]string{
 	"shh":        Shh_JS,
 	"swarmfs":    SWARMFS_JS,
 	"txpool":     TxPool_JS,
-	"istanbul":   Istanbul_JS,
+	"iris":       Iris_JS,
 	"venachain":  Venachain_JS,
 }
 
@@ -407,6 +407,11 @@ web3._extend({
 	property: 'eth',
 	methods: [
 		new web3._extend.Method({
+			name: 'chainId',
+			call: 'eth_chainId',
+			params: 0
+		}),
+		new web3._extend.Method({
 			name: 'setActor',
 			call: 'eth_setActor',
 			params: 1,
@@ -476,6 +481,11 @@ const Venachain_JS = `
 web3._extend({
 	property: 'venachain',
 	methods: [
+		new web3._extend.Method({
+			name: 'chainId',
+			call: 'eth_chainId',
+			params: 0
+		}),
 		new web3._extend.Method({
 			name: 'setActor',
 			call: 'venachain_setActor',
@@ -730,18 +740,18 @@ web3._extend({
 });
 `
 
-const Istanbul_JS = `
+const Iris_JS = `
 web3._extend({
-	property: 'istanbul',
+	property: 'iris',
 	methods: [
 		new web3._extend.Method({
 			name: 'getValidators',
-			call: 'istanbul_getValidators',
+			call: 'iris_getValidators',
 			params: 0
 		}),
 		new web3._extend.Method({
 			name: 'getCandidates',
-			call: 'istanbul_candidates',
+			call: 'iris_candidates',
 			params: 0
 		}),
 	],

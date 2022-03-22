@@ -22,8 +22,8 @@ import (
 
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/crypto"
-	"github.com/Venachain/Venachain/ethdb/dbhandle"
 	"github.com/Venachain/Venachain/rlp"
+	"github.com/Venachain/Venachain/venadb/dbhandle"
 )
 
 // NodeSet stores a set of trie nodes. It implements trie.Database and can also

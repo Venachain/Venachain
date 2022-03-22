@@ -45,12 +45,8 @@ import (
 	"github.com/Venachain/Venachain/core"
 	"github.com/Venachain/Venachain/core/bloombits"
 	"github.com/Venachain/Venachain/core/types"
-	"github.com/Venachain/Venachain/eth"
-	"github.com/Venachain/Venachain/eth/downloader"
-	"github.com/Venachain/Venachain/eth/filters"
-	"github.com/Venachain/Venachain/eth/gasprice"
 	"github.com/Venachain/Venachain/event"
-	"github.com/Venachain/Venachain/internal/ethapi"
+	"github.com/Venachain/Venachain/internal/venaapi"
 	"github.com/Venachain/Venachain/light"
 	"github.com/Venachain/Venachain/log"
 	"github.com/Venachain/Venachain/node"
@@ -58,6 +54,10 @@ import (
 	"github.com/Venachain/Venachain/p2p/discv5"
 	"github.com/Venachain/Venachain/params"
 	rpc "github.com/Venachain/Venachain/rpc"
+	"github.com/Venachain/Venachain/vena"
+	"github.com/Venachain/Venachain/vena/downloader"
+	"github.com/Venachain/Venachain/vena/filters"
+	"github.com/Venachain/Venachain/vena/gasprice"
 )
 
 type LightEthereum struct {
@@ -87,7 +87,7 @@ type LightEthereum struct {
 	accountManager *accounts.Manager
 
 	networkId     uint64
-	netRPCService *ethapi.PublicNetAPI
+	netRPCService *venaapi.PublicNetAPI
 
 	wg sync.WaitGroup
 }
@@ -97,13 +97,13 @@ type Node struct {
 	ExpireTime string `json:"expiretime"`
 }
 
-func New(ctx *node.ServiceContext, config *eth.Config) (*LightEthereum, error) {
-	chainDb, err := eth.CreateDB(ctx, config, "lightchaindata")
+func New(ctx *node.ServiceContext, config *vena.Config) (*LightEthereum, error) {
+	chainDb, err := vena.CreateDB(ctx, config, "lightchaindata")
 	if err != nil {
 		return nil, err
 	}
 
-	extDb, err := eth.CreateExtDB(ctx, config, "extdb")
+	extDb, err := vena.CreateExtDB(ctx, config, "extdb")
 
 	chainConfig, _, genesisErr := core.SetupGenesisBlock(chainDb, config.Genesis)
 
@@ -126,11 +126,11 @@ func New(ctx *node.ServiceContext, config *eth.Config) (*LightEthereum, error) {
 		peers:          peers,
 		reqDist:        newRequestDistributor(peers, quitSync),
 		accountManager: ctx.AccountManager,
-		engine:         eth.CreateConsensusEngine(ctx, chainConfig, chainDb),
+		engine:         vena.CreateConsensusEngine(ctx, chainConfig, chainDb),
 		shutdownChan:   make(chan bool),
 		networkId:      config.NetworkId,
 		bloomRequests:  make(chan chan *bloombits.Retrieval),
-		bloomIndexer:   eth.NewBloomIndexer(chainDb, params.BloomBitsBlocksClient, params.HelperTrieConfirmations),
+		bloomIndexer:   vena.NewBloomIndexer(chainDb, params.BloomBitsBlocksClient, params.HelperTrieConfirmations),
 	}
 
 	leth.relay = NewLesTxRelay(peers, leth.reqDist)
@@ -229,7 +229,7 @@ func (s *LightDummyAPI) Mining() bool {
 // APIs returns the collection of RPC services the ethereum package offers.
 // NOTE, some of these services probably need to be moved to somewhere else.
 func (s *LightEthereum) APIs() []rpc.API {
-	return append(ethapi.GetAPIs(s.ApiBackend), []rpc.API{
+	return append(venaapi.GetAPIs(s.ApiBackend), []rpc.API{
 		{
 			Namespace: "eth",
 			Version:   "1.0",
@@ -276,13 +276,13 @@ func (s *LightEthereum) Protocols() []p2p.Protocol {
 func (s *LightEthereum) Start(srvr *p2p.Server) error {
 	log.Warn("Light client mode is an experimental feature")
 	s.startBloomHandlers(params.BloomBitsBlocksClient)
-	s.netRPCService = ethapi.NewPublicNetAPI(srvr, s.networkId)
+	s.netRPCService = venaapi.NewPublicNetAPI(srvr, s.networkId)
 	// clients are searching for the first advertised protocol in the list
 	protocolVersion := AdvertiseProtocolVersions[0]
 	s.serverPool.start(srvr, lesTopic(s.blockchain.Genesis().Hash(), protocolVersion))
 	s.protocolManager.Start(s.config.LightPeers)
 
-	if _, ok := s.engine.(consensus.Istanbul); ok {
+	if _, ok := s.engine.(consensus.Iris); ok {
 		for _, n := range p2p.GetBootNodes() {
 			srvr.AddPeer(discover.NewNode(n.ID, n.IP, n.UDP, n.TCP))
 		}

@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/Venachain/Venachain/common/mclock"
-	"github.com/Venachain/Venachain/ethdb/memorydb"
+	"github.com/Venachain/Venachain/venadb/memorydb"
 )
 
 func TestFreeClientPoolL10C100(t *testing.T) {

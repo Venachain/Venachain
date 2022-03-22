@@ -34,9 +34,6 @@ import (
 	"github.com/Venachain/Venachain/core/rawdb"
 	"github.com/Venachain/Venachain/core/state"
 	"github.com/Venachain/Venachain/core/types"
-	"github.com/Venachain/Venachain/eth/downloader"
-	"github.com/Venachain/Venachain/ethdb/dbhandle"
-	"github.com/Venachain/Venachain/ethdb/leveldb"
 	"github.com/Venachain/Venachain/event"
 	"github.com/Venachain/Venachain/light"
 	"github.com/Venachain/Venachain/log"
@@ -46,6 +43,9 @@ import (
 	"github.com/Venachain/Venachain/rlp"
 	"github.com/Venachain/Venachain/trie"
 	trie2 "github.com/Venachain/Venachain/trie"
+	"github.com/Venachain/Venachain/vena/downloader"
+	"github.com/Venachain/Venachain/venadb/dbhandle"
+	"github.com/Venachain/Venachain/venadb/leveldb"
 )
 
 const (

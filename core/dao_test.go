@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"github.com/Venachain/Venachain/core/vm"
-	"github.com/Venachain/Venachain/ethdb/memorydb"
 	"github.com/Venachain/Venachain/params"
+	"github.com/Venachain/Venachain/venadb/memorydb"
 )
 
 // Tests that DAO-fork enabled clients can properly filter out fork-commencing

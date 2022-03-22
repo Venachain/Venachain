@@ -22,7 +22,7 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/Venachain/Venachain/ethdb/memorydb"
+	"github.com/Venachain/Venachain/venadb/memorydb"
 
 	"github.com/Venachain/Venachain/common"
 )

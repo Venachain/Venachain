@@ -20,9 +20,9 @@ import (
 	"context"
 
 	"github.com/Venachain/Venachain/core"
-	"github.com/Venachain/Venachain/ethdb/dbhandle"
 	"github.com/Venachain/Venachain/light"
 	"github.com/Venachain/Venachain/log"
+	"github.com/Venachain/Venachain/venadb/dbhandle"
 )
 
 // LesOdr implements light.OdrBackend

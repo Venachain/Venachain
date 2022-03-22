@@ -27,14 +27,14 @@ import (
 	"sync"
 
 	"github.com/Venachain/Venachain/accounts"
-	"github.com/Venachain/Venachain/ethdb"
-	"github.com/Venachain/Venachain/ethdb/dbhandle"
-	"github.com/Venachain/Venachain/ethdb/memorydb"
 	"github.com/Venachain/Venachain/event"
 	"github.com/Venachain/Venachain/internal/debug"
 	"github.com/Venachain/Venachain/log"
 	"github.com/Venachain/Venachain/p2p"
 	"github.com/Venachain/Venachain/rpc"
+	"github.com/Venachain/Venachain/venadb"
+	"github.com/Venachain/Venachain/venadb/dbhandle"
+	"github.com/Venachain/Venachain/venadb/memorydb"
 	"github.com/prometheus/prometheus/util/flock"
 )
 
@@ -580,7 +580,7 @@ func (n *Node) OpenDatabase(name string, cache, handles int) (dbhandle.Database,
 	if n.config.DataDir == "" {
 		return memorydb.NewMemDatabase(), nil
 	}
-	return ethdb.New(n.config.DBType, n.config.ResolvePath(name), cache, handles)
+	return venadb.New(n.config.DBType, n.config.ResolvePath(name), cache, handles)
 }
 
 // ResolvePath returns the absolute path of a resource in the instance directory.

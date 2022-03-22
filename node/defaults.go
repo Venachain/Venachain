@@ -22,10 +22,10 @@ import (
 	"path/filepath"
 	"runtime"
 
-	types2 "github.com/Venachain/Venachain/ethdb/types"
 	"github.com/Venachain/Venachain/p2p"
 	"github.com/Venachain/Venachain/p2p/nat"
 	"github.com/Venachain/Venachain/rpc"
+	types2 "github.com/Venachain/Venachain/venadb/types"
 )
 
 const (

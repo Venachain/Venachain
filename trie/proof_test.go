@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Venachain/Venachain/ethdb/memorydb"
+	"github.com/Venachain/Venachain/venadb/memorydb"
 
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/crypto"

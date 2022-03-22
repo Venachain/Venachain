@@ -29,11 +29,11 @@ import (
 	"github.com/Venachain/Venachain/core/state"
 	"github.com/Venachain/Venachain/core/types"
 	"github.com/Venachain/Venachain/core/vm"
-	"github.com/Venachain/Venachain/ethdb/dbhandle"
 	"github.com/Venachain/Venachain/event"
 	"github.com/Venachain/Venachain/log"
 	"github.com/Venachain/Venachain/params"
 	"github.com/Venachain/Venachain/rpc"
+	"github.com/Venachain/Venachain/venadb/dbhandle"
 )
 
 const (
@@ -290,7 +290,7 @@ func (w *worker) start() {
 
 	atomic.StoreInt32(&w.running, 1)
 	w.startCh <- struct{}{}
-	if eng, ok := w.engine.(consensus.Istanbul); ok {
+	if eng, ok := w.engine.(consensus.Iris); ok {
 		eng.Start(w.chain, w.chain.CurrentBlock)
 	}
 }
@@ -299,7 +299,7 @@ func (w *worker) start() {
 func (w *worker) stop() {
 	atomic.StoreInt32(&w.running, 0)
 
-	if eng, ok := w.engine.(consensus.Istanbul); ok {
+	if eng, ok := w.engine.(consensus.Iris); ok {
 		eng.Stop()
 	}
 }
@@ -393,7 +393,7 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 				continue
 			}
 
-			if eng, ok := w.engine.(consensus.Istanbul); ok {
+			if eng, ok := w.engine.(consensus.Iris); ok {
 				if eng.ShouldSeal() {
 					log.Debug("ShouldSeal() -> true")
 					commit(commitInterruptResubmit, nil)
@@ -519,7 +519,7 @@ func (w *worker) taskLoop() {
 				w.pendingMu.Unlock()
 			}
 
-			if _, ok := w.engine.(consensus.Istanbul); ok {
+			if _, ok := w.engine.(consensus.Iris); ok {
 				// todo: shouldSeal()
 				if _, err := w.engine.Seal(w.chain, task.block, w.resultCh, stopCh); err != nil {
 					log.Warn("Block sealing failed", "err", err)
@@ -796,7 +796,7 @@ func (w *worker) commitNewWork(interrupt *int32, timestamp int64, commitBlock *t
 	tstart := time.Now()
 
 	var parent *types.Block
-	if _, ok := w.engine.(consensus.Istanbul); ok {
+	if _, ok := w.engine.(consensus.Iris); ok {
 		parent = w.chain.CurrentBlock()
 		//log.Info("parentBlock Number: " + parent.Number().String())
 	} else {
@@ -859,7 +859,7 @@ func (w *worker) commitNewWork(interrupt *int32, timestamp int64, commitBlock *t
 
 	// Short circuit if there is no available pending transactions
 	if len(pending) == 0 {
-		if _, ok := w.engine.(consensus.Istanbul); ok {
+		if _, ok := w.engine.(consensus.Iris); ok {
 			w.commit(nil, true, tstart)
 		} else {
 			w.updateSnapshot(nil)
@@ -975,7 +975,7 @@ func (w *worker) adjustGlobalTxCount() uint64 {
 	if !w.eth.TxPool().GetTxPoolConfig().IsAutoAdjustTxCount {
 		return originTxCount
 	}
-	if _, ok := w.engine.(consensus.Istanbul); !ok {
+	if _, ok := w.engine.(consensus.Iris); !ok {
 		return originTxCount
 	}
 

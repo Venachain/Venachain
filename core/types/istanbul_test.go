@@ -34,9 +34,9 @@ func TestHeaderHash(t *testing.T) {
 	expectedHash := common.HexToHash("0x8f035f17a835d954e0036e19b015fb7ea5646338b17fe0eaa6c5e5c2be3340ea")
 
 	// for istanbul consensus
-	header := &Header{MixDigest: IstanbulDigest, Extra: expectedExtra}
+	header := &Header{MixDigest: IrisDigest, Extra: expectedExtra}
 	if !reflect.DeepEqual(header.Hash(), expectedHash) {
-		t.Errorf("istanbul expected: %v, but got: %v", expectedHash.Hex(), header.Hash().Hex())
+		t.Errorf("iris expected: %v, but got: %v", expectedHash.Hex(), header.Hash().Hex())
 	}
 
 	// append useless information to extra-data
@@ -47,18 +47,18 @@ func TestHeaderHash(t *testing.T) {
 	}
 }
 
-func TestExtractToIstanbul(t *testing.T) {
+func TestExtractToIris(t *testing.T) {
 	testCases := []struct {
 		vanity         []byte
 		istRawData     []byte
-		expectedResult *IstanbulExtra
+		expectedResult *IrisExtra
 		expectedErr    error
 	}{
 		{
 			// normal case
-			bytes.Repeat([]byte{0x00}, IstanbulExtraVanity),
+			bytes.Repeat([]byte{0x00}, IrisExtraVanity),
 			hexutil.MustDecode("0xf858f8549444add0ec310f115a0e603b2d7db9f067778eaf8a94294fc7e8f22b3bcdcf955dd7ff3ba2ed833f8212946beaaed781d2d2ab6350f5c4566a2c6eaac407a6948be76812f765c24641ec63dc2852b378aba2b44080c0"),
-			&IstanbulExtra{
+			&IrisExtra{
 				Validators: []common.Address{
 					common.BytesToAddress(hexutil.MustDecode("0x44add0ec310f115a0e603b2d7db9f067778eaf8a")),
 					common.BytesToAddress(hexutil.MustDecode("0x294fc7e8f22b3bcdcf955dd7ff3ba2ed833f8212")),
@@ -72,20 +72,20 @@ func TestExtractToIstanbul(t *testing.T) {
 		},
 		{
 			// insufficient vanity
-			bytes.Repeat([]byte{0x00}, IstanbulExtraVanity-1),
+			bytes.Repeat([]byte{0x00}, IrisExtraVanity-1),
 			nil,
 			nil,
-			ErrInvalidIstanbulHeaderExtra,
+			ErrInvalidIrisHeaderExtra,
 		},
 	}
 	for _, test := range testCases {
 		h := &Header{Extra: append(test.vanity, test.istRawData...)}
-		istanbulExtra, err := ExtractIstanbulExtra(h)
+		irisExtra, err := ExtractIrisExtra(h)
 		if err != test.expectedErr {
 			t.Errorf("expected: %v, but got: %v", test.expectedErr, err)
 		}
-		if !reflect.DeepEqual(istanbulExtra, test.expectedResult) {
-			t.Errorf("expected: %v, but got: %v", test.expectedResult, istanbulExtra)
+		if !reflect.DeepEqual(irisExtra, test.expectedResult) {
+			t.Errorf("expected: %v, but got: %v", test.expectedResult, irisExtra)
 		}
 	}
 }

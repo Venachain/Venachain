@@ -21,8 +21,8 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/Venachain/Venachain/eth/downloader"
 	"github.com/Venachain/Venachain/light"
+	"github.com/Venachain/Venachain/vena/downloader"
 )
 
 var (

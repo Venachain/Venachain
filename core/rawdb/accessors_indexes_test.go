@@ -22,7 +22,7 @@ import (
 
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/core/types"
-	"github.com/Venachain/Venachain/ethdb/memorydb"
+	"github.com/Venachain/Venachain/venadb/memorydb"
 )
 
 // Tests that positional lookup metadata can be stored and retrieved.

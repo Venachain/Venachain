@@ -31,12 +31,12 @@ import (
 
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/crypto"
-	"github.com/Venachain/Venachain/ethdb"
-	"github.com/Venachain/Venachain/ethdb/dbhandle"
-	"github.com/Venachain/Venachain/ethdb/leveldb"
-	"github.com/Venachain/Venachain/ethdb/memorydb"
-	types2 "github.com/Venachain/Venachain/ethdb/types"
 	"github.com/Venachain/Venachain/rlp"
+	"github.com/Venachain/Venachain/venadb"
+	"github.com/Venachain/Venachain/venadb/dbhandle"
+	"github.com/Venachain/Venachain/venadb/leveldb"
+	"github.com/Venachain/Venachain/venadb/memorydb"
+	types2 "github.com/Venachain/Venachain/venadb/types"
 	"github.com/davecgh/go-spew/spew"
 )
 
@@ -599,7 +599,7 @@ func tempDB() (string, *Database) {
 	if err != nil {
 		panic(fmt.Sprintf("can't create temporary directory: %v", err))
 	}
-	diskdb, err := ethdb.New(types2.LevelDbStr, dir, 256, 0)
+	diskdb, err := venadb.New(types2.LevelDbStr, dir, 256, 0)
 	if err != nil {
 		panic(fmt.Sprintf("can't create temporary database: %v", err))
 	}

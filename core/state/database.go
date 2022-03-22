@@ -21,8 +21,8 @@ import (
 	"sync"
 
 	"github.com/Venachain/Venachain/common"
-	"github.com/Venachain/Venachain/ethdb/dbhandle"
 	"github.com/Venachain/Venachain/trie"
+	"github.com/Venachain/Venachain/venadb/dbhandle"
 	lru "github.com/hashicorp/golang-lru"
 )
 
