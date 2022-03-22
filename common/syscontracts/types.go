@@ -18,6 +18,7 @@ var (
 	CnsInvokeAddress             = common.HexToAddress("0x0000000000000000000000000000000000000000") // The Venachain Precompiled contract addr for group management
 	EvidenceManagementAddress    = common.HexToAddress("0x0000000000000000000000000000000000000099") // The Venachain Precompiled contract addr for evidence management
 	BulletProofAddress           = common.HexToAddress("0x0000000000000000000000000000000000000100") // The Venachain Precompiled contract addr for Bullet proof
+	PaillierAddress              = common.HexToAddress("0x0000000000000000000000000000000000000101") // The Venachain Precompiled contract addr for Paillier
 )
 
 type UpdateNode struct {
