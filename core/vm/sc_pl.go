@@ -1,12 +1,12 @@
 package vm
 
 import (
-	"github.com/Venachain/Venachain/crypto/paillier"
 	"math/big"
 	"strings"
 
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/common/syscontracts"
+	"github.com/Venachain/Venachain/crypto/paillier"
 )
 
 // PaillierManager

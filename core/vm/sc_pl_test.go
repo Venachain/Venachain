@@ -31,7 +31,7 @@ func TestPaillierWeightAdd(t *testing.T) {
 	pub := "95812e8c3bafc54adae58e01e2777a3de717312e2efe8b764c3a684a46106db7"
 	e.base.caller = common.BytesToAddress(address)
 
-	res ,err := e.paillierWeightAdd(str,[]uint{3,5,2},pub)
+	res ,err := e.paillierWeightAdd(str,"3,5,2",pub)
 	if res != "16f6c4a45ce250d511bae176f84172bfb4dbbec82f39e9d732ba6249e744eca99194ad1bd402c7f5d8c7308762819baf51943052237ea5931fea5010c7a5d386" || err != nil {
 		t.Error("wrong res")
 	}
@@ -43,7 +43,7 @@ func TestPaillierMul(t *testing.T) {
 	pub := "95812e8c3bafc54adae58e01e2777a3de717312e2efe8b764c3a684a46106db7"
 	e.base.caller = common.BytesToAddress(address)
 
-	res ,err := e.paillierMul(str,uint(3),pub)
+	res ,err := e.paillierMul(str,"3",pub)
 	if res != "29429a0b4935e75fe3a0e1ed8c71e39741a51651231f543143fc44810c033dcd4b3fad4c8d33ee640bf36d8945e1f10bf986e7ac40b14f7f58006e8cbe5f440" || err != nil {
 		t.Error("wrong res")
 	}

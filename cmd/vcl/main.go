@@ -29,6 +29,7 @@ func init() {
 		cmd.SysConfigCmd, // see cmd_sysconfig.go
 
 		StartRest, // see rest
+		cmd.PlCmd,
 	}
 	sort.Sort(cli.CommandsByName(app.Commands))
 
