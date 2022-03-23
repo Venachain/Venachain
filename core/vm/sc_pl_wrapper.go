@@ -2,6 +2,9 @@ package vm
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/params"
 )
@@ -42,8 +45,17 @@ func NewPLWrapper(db StateDB) *SCPaillierWrapper {
 	return &SCPaillierWrapper{NewPL(db)}
 }
 
-func (s *SCPaillierWrapper) paillierWeightAdd(args string, arr []uint, pubKey string) (string, error) {
-	res := s.base.paillierWeightAdd(args, arr, pubKey)
+func (s *SCPaillierWrapper) paillierWeightAdd(args string, arr string, pubKey string) (string, error) {
+	var intArr []uint
+	split := strings.Split(arr, ",")
+	for _, i := range split {
+		l, err := strconv.Atoi(i)
+		if err != nil {
+			return "", err
+		}
+		intArr = append(intArr, uint(l))
+	}
+	res := s.base.paillierWeightAdd(args, intArr, pubKey)
 	fmt.Println("the result of PaillierWeightAdd is:", res)
 	return res, nil
 }
@@ -54,8 +66,12 @@ func (s *SCPaillierWrapper) paillierAdd(args string, pubKey string) (string, err
 	return res, nil
 }
 
-func (s *SCPaillierWrapper) paillierMul(arg string, scalar uint, pubKey string) (string, error) {
-	res := s.base.paillierMul(arg, scalar, pubKey)
+func (s *SCPaillierWrapper) paillierMul(arg string, scalar string, pubKey string) (string, error) {
+	intScalar, err := strconv.Atoi(scalar)
+	if err != nil {
+		return "", err
+	}
+	res := s.base.paillierMul(arg, uint(intScalar), pubKey)
 	fmt.Println("the result of the PaillierMul is:", res)
 	return res, nil
 }

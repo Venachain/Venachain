@@ -8,7 +8,7 @@
       },
       {
         "name": "arr",
-        "type": "uint64[]"
+        "type": "string"
       },
       {
         "name": "pubKey",
@@ -54,7 +54,7 @@
       },
       {
         "name": "scalar",
-        "type": "uint"
+        "type": "string"
       },
       {
         "name": "pubKey",
