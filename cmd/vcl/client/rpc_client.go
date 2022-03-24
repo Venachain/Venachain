@@ -9,6 +9,7 @@ import (
 
 	"github.com/Venachain/Venachain/cmd/vcl/client/packet"
 	"github.com/Venachain/Venachain/cmd/vcl/client/utils"
+	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/common/hexutil"
 	"github.com/Venachain/Venachain/rpc"
 )
@@ -259,7 +260,9 @@ func (client *pClient) GetReceiptByPolling(txHash string) (*packet.Receipt, erro
 
 	select {
 	case receipt := <-ch:
-		return receipt.(*packet.Receipt), nil
+		receiptInfo := receipt.(*packet.Receipt)
+		receiptInfo.ContractAddress = common.HexToAddress(receiptInfo.ContractAddress).Hex()
+		return receiptInfo, nil
 
 	case <-time.After(time.Second * 10):
 		// temp := fmt.Sprintf("\nget contract receipt timeout...more than %d second.\n", 10)
