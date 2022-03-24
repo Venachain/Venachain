@@ -31,26 +31,30 @@ var (
 		Action:    cnsRegister,
 		Flags:     globalCmdFlags,
 		Description: `
+Register a contract to the CNS, use:
 		vcl cns register <name> <version> <address>`,
 	}
 
 	CnsRedirectCmd = cli.Command{
 		Name:      "redirect",
-		Usage:     "redirect a contract name in the CNS to another contract address by specifying the version",
+		Usage:     "Redirect a contract name in the CNS to another contract address by specifying the version",
 		ArgsUsage: "<name> <version>",
 		Action:    cnsRedirect,
 		Flags:     globalCmdFlags,
 		Description: `
+Redirect a contract name in the CNS to another contract address by specifying the version, i.e, 
+specify the current version of the contract with <name> to <version>, use:
 		vcl cns redirect <name> <version>`,
 	}
 
 	CnsResolveCmd = cli.Command{
 		Name:      "resolve",
-		Usage:     "Shows the latest version (default) contract address binded with a name ",
+		Usage:     "Shows the latest version (default) contract address binded with a name",
 		ArgsUsage: "<name>",
 		Action:    cnsResolve,
 		Flags:     cnsResolveCmdFlags,
 		Description: `
+Shows the latest version (default) contract address binded with a name, use:
 		vcl cns resolve <name>`,
 	}
 
@@ -60,10 +64,18 @@ var (
 		Action: cnsQuery,
 		Flags:  cnsQueryCmdFlags,
 		Description: `
-		vcl cns query
+Query the cns information.
+To get all cns information, use:
+		vcl cns query --all
 
-List all the data object matching the search key. 
-The --all flag has the highest priority than the other flags`,
+To get cns information in page mode, use: 
+		vcl cns query --pageNum <page No.> --pageSize <number of data shown once> 
+
+To get CNS information of specific account, use:
+		vcl cns query --addr <account address> 
+
+To get cns information of specific contract, use:
+		vcl cns query --contract <contract address or contract name>`,
 	}
 
 	CnsStateCmd = cli.Command{
@@ -73,6 +85,7 @@ The --all flag has the highest priority than the other flags`,
 		Action:    cnsState,
 		Flags:     globalCmdFlags,
 		Description: `
+Show the registration status of a contract name or contract address, use:
 		vcl cns state <contract>`,
 	}
 )
