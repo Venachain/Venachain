@@ -5,14 +5,11 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/Venachain/Venachain/cmd/vcl/client"
-
-	cmd_common "github.com/Venachain/Venachain/cmd/vcl/common"
-
-	"github.com/Venachain/Venachain/cmd/vcl/client/utils"
-
 	utl "github.com/Venachain/Venachain/cmd/utils"
+	"github.com/Venachain/Venachain/cmd/vcl/client"
 	"github.com/Venachain/Venachain/cmd/vcl/client/packet"
+	"github.com/Venachain/Venachain/cmd/vcl/client/utils"
+	cmd_common "github.com/Venachain/Venachain/cmd/vcl/common"
 	"github.com/Venachain/Venachain/common"
 	"gopkg.in/urfave/cli.v1"
 )
@@ -36,7 +33,7 @@ func clientCommonV2(c *cli.Context, dataGen packet.MsgDataGen, to *common.Addres
 	if dataGen == nil {
 		res, err := pc.Send(tx, keyfile)
 		if err != nil {
-			utl.Fatalf("to do: %s\n", err.Error())
+			utl.Fatalf("%s\n", err.Error())
 		}
 		result[0] = res
 		return result
