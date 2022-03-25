@@ -2,12 +2,12 @@ package packet
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strings"
 
-	precompile "github.com/Venachain/Venachain/cmd/vcl/client/precompiled"
-
 	"github.com/Venachain/Venachain/accounts/abi"
+	precompile "github.com/Venachain/Venachain/cmd/vcl/client/precompiled"
 	"github.com/Venachain/Venachain/cmd/vcl/client/utils"
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/common/hexutil"
@@ -266,6 +266,9 @@ func (i *WasmContractInterpreter) encodeFunctionV2(abiFunc *FuncDesc, funcParams
 	// converts the function params to bytes
 	for _, v := range funcParams {
 		p := abi.WasmArgToBytes(v)
+		if p == nil {
+			return nil, errors.New("unsupported type，please check the contract or command parameters")
+		}
 		funcByte = append(funcByte, p)
 	}
 
