@@ -22,12 +22,17 @@ char *sPaillierWeightAdd(char **cipher, unsigned long int *weight, int length, c
 
     for (int i = 0; i < length; i++)
     {
+        if (*cipher == NULL)
+        {
+            return NULL;
+        }
         mCipher = paillierCipherFromHex(*cipher++);
         mWeight = paillier_plaintext_from_ui(*weight++);
 
         if (mpz_cmp(mCipher->c, pubKey->n_squared) >= 0)
         {
             log_warn("cipher is greater than or equal to n_squared");
+            return NULL;
         }
         // mCipher * mWeight
         paillier_exp(pubKey, mCipher, mCipher, mWeight);
@@ -58,12 +63,14 @@ char *sPaillierAdd(char **cipher, int length, char *pPubKey)
         mCipher = paillierCipherFromHex(*cipher++);
         if (mpz_cmp(mCipher->c, pubKey->n_squared) >= 0)
         {
+
             log_warn("cipher is greater than or equal to n_squared");
+            return NULL;
         }
         // Sum the encrypted values by multiplying the ciphertexts
         paillier_mul(pubKey, sum, sum, mCipher);
     }
-    char *res = paillierCipherToHex(sum);
+   char *res = paillierCipherToHex(sum);
 
     // clean
     paillier_freeciphertext(sum);
@@ -73,18 +80,20 @@ char *sPaillierAdd(char **cipher, int length, char *pPubKey)
     return res;
 }
 
-char *sPaillierMul(char *cipher, unsigned long int scalar, char *pPubKey)
+char *sPaillierMul( char *cipher, unsigned long int scalar, char *pPubKey)
 {
     // encrypted 0
     paillier_ciphertext_t *sum = paillier_create_enc_zero();
+
     paillier_plaintext_t *paillierPlainTextScalar = paillier_plaintext_from_ui(scalar);
     paillier_pubkey_t *pubKey = paillier_pubkey_from_hex(pPubKey);
     paillier_ciphertext_t *mCipher = paillierCipherFromHex(cipher);
     if (mpz_cmp(mCipher->c, pubKey->n_squared) >= 0)
     {
+        return NULL;
         log_warn("cipher is greater than or equal to n_squared");
     }
-    // Sum the encrypted values by multiplying the ciphertexts
+
     paillier_exp(pubKey, sum, mCipher, paillierPlainTextScalar);
 
     char *res = paillierCipherToHex(sum);

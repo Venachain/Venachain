@@ -1,3 +1,12 @@
+/*
+ * @system:
+ * @company: 万向区块链有限公司
+ * @file:
+ * @brief:
+ * @author: jyz
+ * @Date: 2022-03-16 23:35:18
+ * @history:
+ */
 package paillier
 
 /*
@@ -9,13 +18,17 @@ package paillier
 import "C"
 
 import (
+	"errors"
 	"unsafe"
 )
 
 // 密文权重加
-func PaillierWeightAdd(args []string, arr []uint, pubKey string) string{
+func PaillierWeightAdd(args []string, arr []uint, pubKey string) (string, error) {
 	arg := make([]*C.char, 0) //C语言char*指针创建切片
 	l := len(args)
+	if l != len(arr) {
+		return "", errors.New("wrong array length ！")
+	}
 	for i, _ := range args {
 		char := C.CString(args[i])
 		defer C.free(unsafe.Pointer(char)) //释放内存
@@ -30,12 +43,17 @@ func PaillierWeightAdd(args []string, arr []uint, pubKey string) string{
 	}
 	cPubKey := C.CString(pubKey)
 	defer C.free(unsafe.Pointer(cPubKey))
+
 	CipherWeightAddSum := C.sPaillierWeightAdd(msgPtr, (*C.ulong)(unsafe.Pointer(&ulongC[0])), C.int(l), cPubKey)
-	return C.GoString(CipherWeightAddSum)
+	if CipherWeightAddSum == nil {
+		return "", errors.New("PaillierWeightAdd Fail")
+	}
+
+	return C.GoString(CipherWeightAddSum), nil
 }
 
 // 密文加法
-func PaillierAdd(args []string, pubKey string) string {
+func PaillierAdd(args []string, pubKey string) (string, error) {
 	arg := make([]*C.char, 0) //C语言char*指针创建切片
 	l := len(args)
 	for i, _ := range args {
@@ -49,17 +67,25 @@ func PaillierAdd(args []string, pubKey string) string {
 
 	cPubKey := C.CString(pubKey)
 	defer C.free(unsafe.Pointer(cPubKey))
+
 	CipherAddSum := C.sPaillierAdd(msgPtr, C.int(l), cPubKey)
-	return C.GoString(CipherAddSum)
+	if CipherAddSum == nil {
+		return "", errors.New("PaillierAdd Fail")
+	}
+	return C.GoString(CipherAddSum), nil
 }
 
 // 密文标量乘
-func PaillierMul(arg string, scalar uint, pubKey string) string {
+func PaillierMul(arg string, scalar uint, pubKey string) (string, error) {
 	cipher := C.CString(arg)
 	defer C.free(unsafe.Pointer(cipher)) //释放内存
 
 	cPubKey := C.CString(pubKey)
 	defer C.free(unsafe.Pointer(cPubKey))
+
 	CipherMulPro := C.sPaillierMul(cipher, C.ulong(scalar), cPubKey)
-	return C.GoString(CipherMulPro)
+	if CipherMulPro == nil {
+		return "", errors.New("PaillierAdd Fail")
+	}
+	return C.GoString(CipherMulPro), nil
 }

@@ -26,23 +26,20 @@ func NewPL(db StateDB) *PaillierManager {
 }
 
 // PaillierWeightAdd
-func (he *PaillierManager) paillierWeightAdd(arg string, arr []uint, pubKey string) string {
+func (he *PaillierManager) paillierWeightAdd(arg string, arr []uint, pubKey string) (string, error) {
 	args := strings.Split(arg, ",")
-	res := paillier.PaillierWeightAdd(args, arr, pubKey)
-	return res
+	return paillier.PaillierWeightAdd(args, arr, pubKey)
 }
 
 // PaillierAdd
-func (he *PaillierManager) paillierAdd(arg string, pubKey string) string {
+func (he *PaillierManager) paillierAdd(arg string, pubKey string) (string, error) {
 	args := strings.Split(arg, ",")
-	res := paillier.PaillierAdd(args, pubKey)
-	return res
+	return paillier.PaillierAdd(args, pubKey)
 }
 
 // PaillierMul
-func (he *PaillierManager) paillierMul(arg string, scalar uint, pubKey string) string {
-	res := paillier.PaillierMul(arg, scalar, pubKey)
-	return res
+func (he *PaillierManager) paillierMul(arg string, scalar uint, pubKey string) (string, error) {
+	return paillier.PaillierMul(arg, scalar, pubKey)
 }
 
 func (he *PaillierManager) emitNotifyEvent(code CodeType, msg string) {
