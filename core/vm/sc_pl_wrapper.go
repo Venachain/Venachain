@@ -55,15 +55,15 @@ func (s *SCPaillierWrapper) paillierWeightAdd(args string, arr string, pubKey st
 		}
 		intArr = append(intArr, uint(l))
 	}
-	res := s.base.paillierWeightAdd(args, intArr, pubKey)
+	res, err := s.base.paillierWeightAdd(args, intArr, pubKey)
 	fmt.Println("the result of PaillierWeightAdd is:", res)
-	return res, nil
+	return res, err
 }
 
 func (s *SCPaillierWrapper) paillierAdd(args string, pubKey string) (string, error) {
-	res := s.base.paillierAdd(args, pubKey)
+	res, err := s.base.paillierAdd(args, pubKey)
 	fmt.Println("the result of the PaillierAdd is:", res)
-	return res, nil
+	return res, err
 }
 
 func (s *SCPaillierWrapper) paillierMul(arg string, scalar string, pubKey string) (string, error) {
@@ -71,7 +71,7 @@ func (s *SCPaillierWrapper) paillierMul(arg string, scalar string, pubKey string
 	if err != nil {
 		return "", err
 	}
-	res := s.base.paillierMul(arg, uint(intScalar), pubKey)
+	res, err := s.base.paillierMul(arg, uint(intScalar), pubKey)
 	fmt.Println("the result of the PaillierMul is:", res)
-	return res, nil
+	return res, err
 }
