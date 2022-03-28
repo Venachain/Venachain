@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.1.0.1.0]
+### Bug Fixes
+* [console] 修复venachain namespace缺少方法问题 --陈明晶
+
 ## [1.1.2]
 ### Features
 * [storage] 存储插件化，新增可选存储引擎PebbleDB --曾梦露
