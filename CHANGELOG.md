@@ -1,11 +1,17 @@
 # Changelog
 
 ## [1.1.0.1.0]
-### Bug Fixes
-* [console] 修复venachain namespace缺少方法问题 --陈明晶
-
 ### Features
 * [contract] 预编译合约添加paillier合约 --饶应典
+
+### Improvements
+* [deploy] 脚本不再使用repstr二进制文件，使用sed指令替代 --吴经文
+
+### Bug Fixes
+* [console] 修复venachain namespace缺少方法问题 --陈明晶
+* [build] 修复编译时，因为release/linux下没有bin目录而报错 --吴经文
+* [build] 修复项目第一次make clean时，因为life/resolver/sig/openssl下没有Makefile文件而报错 --吴经文
+* [deploy] 修复远程部署或容器化部署在通过ifconfig判断ip地址是否是本机时，出现误判的bug --吴经文
 
 ## [1.1.2]
 ### Features
