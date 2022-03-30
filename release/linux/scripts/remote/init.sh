@@ -127,7 +127,7 @@ function readFile() {
         return 1
     fi
 
-    if [[ "$(ifconfig | grep ${IP_ADDR})" != "" ]]; then
+    if [[ "$(ifconfig | grep \<${IP_ADDR}\>)" != "" ]]; then
         IS_LOCAL="true"
     else
         IS_LOCAL="false"

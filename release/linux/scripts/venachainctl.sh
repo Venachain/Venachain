@@ -13,7 +13,11 @@ DISENABLE=""
 NODE_ID=0
 cd ${CURRENT_PATH}
 
-VERSION=$(${BIN_PATH}/venachain --version)
+VERSION="PLEASE BUILD VENACHAIN FIRST"
+if [ -f ${BIN_PATH}/venachain ]; then
+    VERSION="$(${BIN_PATH}/venachain --version)"
+fi
+
 
 function usage() {
     cat <<EOF
