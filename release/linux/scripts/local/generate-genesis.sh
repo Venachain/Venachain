@@ -210,7 +210,7 @@ function createGenesis() {
         now=$(date +%s)
         sed -i "s#__VALIDATOR__#\"${VALIDATOR_NODES}\"#g" "${CONF_PATH}/genesis.temp.json"
         sed -i "s#DEFAULT-ACCOUNT#${NODE_ADDRESS}#g" "${CONF_PATH}/genesis.temp.json"
-        sed -i "s#__INTERPRETER__#${INTERPRETER}/conf#g" "${CONF_PATH}/genesis.temp.json"
+        sed -i "s#__INTERPRETER__#${INTERPRETER}#g" "${CONF_PATH}/genesis.temp.json"
         sed -i "s#TIMESTAMP#${now}#g" "${CONF_PATH}/genesis.temp.json"
     fi
 }
