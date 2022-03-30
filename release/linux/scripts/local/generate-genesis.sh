@@ -193,37 +193,26 @@ function readParam() {
     fi
 }
 
-################################################# Replace List #################################################
-function replaceList() {
-    res=$(echo $2 | sed "s/,/\",\"/g")
-    "${BIN_PATH}"/repstr "${CONF_PATH}"/genesis.temp.json $1 $(echo \"${res}\")
-}
-
 ################################################# Create Genesis #################################################
 function createGenesis() {
     if [[ "${VALIDATOR_NODES}" == "" ]]; then
         VALIDATOR_NODES="enode://${NODE_KEY}@${IP_ADDR}:${P2P_PORT}"
     fi
+    now=$(date +%s)
+
 
     if [ "${OS}" = "Darwin" ]; then
-        createGenesisDarwin
-        return
+        sed -i '' "s#__VALIDATOR__#\"${VALIDATOR_NODES}\"#g" ${CONF_PATH}/genesis.temp.json
+        sed -i '' "s/DEFAULT-ACCOUNT/${NODE_ADDRESS}/g" "${CONF_PATH}/genesis.temp.json"
+        sed -i '' "s/__INTERPRETER__/${INTERPRETER}/g" "${CONF_PATH}/genesis.temp.json"
+        sed -i '' "s/TIMESTAMP/${now}/g" "${CONF_PATH}/genesis.temp.json"
+    else
+        now=$(date +%s)
+        sed -i "s#__VALIDATOR__#\"${VALIDATOR_NODES}\"#g" "${CONF_PATH}/genesis.temp.json"
+        sed -i "s#DEFAULT-ACCOUNT#${NODE_ADDRESS}#g" "${CONF_PATH}/genesis.temp.json"
+        sed -i "s#__INTERPRETER__#${INTERPRETER}/conf#g" "${CONF_PATH}/genesis.temp.json"
+        sed -i "s#TIMESTAMP#${now}#g" "${CONF_PATH}/genesis.temp.json"
     fi
-
-    now=$(date +%s)
-    replaceList "__VALIDATOR__" "${VALIDATOR_NODES}"
-    "${BIN_PATH}/repstr" "${CONF_PATH}/genesis.temp.json" "DEFAULT-ACCOUNT" "${NODE_ADDRESS}"
-    "${BIN_PATH}/repstr" "${CONF_PATH}/genesis.temp.json" "__INTERPRETER__" "${INTERPRETER}"
-    "${BIN_PATH}/repstr" "${CONF_PATH}/genesis.temp.json" "TIMESTAMP" "${now}"
-}
-
-################################################# Create Genesis (MAC OS) #################################################
-function createGenesisDarwin() {
-    now=$(date +%s)
-    sed -i '' "s#__VALIDATOR__#\"${VALIDATOR_NODES}\"#g" ${CONF_PATH}/genesis.temp.json
-    sed -i '' "s/DEFAULT-ACCOUNT/${NODE_ADDRESS}/g" "${CONF_PATH}/genesis.temp.json"
-    sed -i '' "s/__INTERPRETER__/${INTERPRETER}/g" "${CONF_PATH}/genesis.temp.json"
-    sed -i '' "s/TIMESTAMP/${now}/g" "${CONF_PATH}/genesis.temp.json"
 }
 
 ################################################# Setup Genesis #################################################
