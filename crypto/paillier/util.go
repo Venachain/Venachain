@@ -85,7 +85,7 @@ func PaillierMul(arg string, scalar uint, pubKey string) (string, error) {
 
 	CipherMulPro := C.sPaillierMul(cipher, C.ulong(scalar), cPubKey)
 	if CipherMulPro == nil {
-		return "", errors.New("PaillierAdd Fail")
+		return "", errors.New("PaillierMul Fail")
 	}
 	return C.GoString(CipherMulPro), nil
 }
