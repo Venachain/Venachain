@@ -3,21 +3,25 @@
 ###########################################################################################################
 ################################################# VRIABLES #################################################
 ###########################################################################################################
-SCRIPT_NAME="$(basename ${0})"
-SCRIPT_ALIAS="$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')"
-PROJECT_PATH=$(
-    cd $(dirname $0)
+
+## path
+CURRENT_PATH="$(cd "$(dirname "$0")";pwd)"
+PROJECT_PATH="$(
+    cd $(dirname ${0})
     cd ../../
     pwd
-)
-BIN_PATH=${PROJECT_PATH}/bin
-DATA_PATH=${PROJECT_PATH}/data
+)"
+BIN_PATH="${PROJECT_PATH}/bin"
+DATA_PATH="${PROJECT_PATH}/data"
 
+## global
+SCRIPT_NAME="$(basename ${0})"
+SCRIPT_ALIAS="$(echo ${CURRENT_PATH}/${SCRIPT_NAME} | sed -e 's/\(.*\)\/scripts\/\(.*\).sh/\2/g')"
 NODE_ID=""
-NODE_DIR=""
-DEPLOY_CONF=""
 AUTO=""
 
+NODE_DIR=""
+DEPLOY_CONF=""
 
 #############################################################################################################
 ################################################# FUNCTIONS #################################################
@@ -31,12 +35,11 @@ USAGE: ${SCRIPT_NAME}  [options] [value]
 
         OPTIONS:
 
-           --nodeid, -n                   the specified node name, must be specified
+            --nodeid, -n                the specified node name, must be specified
 
-           --auto                         will no prompt to create the node key 
+            --auto                      will read exit node key 
 
-           --help, -h                     show help
-
+            --help, -h                  show help
 "
 }
 
@@ -60,14 +63,14 @@ function shiftOption2() {
     if [[ $1 -lt 2 ]]; then
         printLog "error" "MISS OPTION VALUE! PLEASE SET THE VALUE"
         help
-        exit
+        exit 1
     fi
 }
 
 ################################################# Yes Or No #################################################
 function yesOrNo() {
     read -p "" anw
-    case $anw in
+    case "${anw}" in
     [Yy][Ee][Ss] | [yY])
         return 1
         ;;
@@ -80,24 +83,32 @@ function yesOrNo() {
 
 ################################################# Check Env #################################################
 function checkEnv() {
-    if [ ! -f "${DEPLOY_CONF}" ]; then
-        printLog "error" "${DEPLOY_CONF} NOT FOUND"
-        exit
+    NODE_DIR="${DATA_PATH}/node-${NODE_ID}"
+    DEPLOY_CONF="${NODE_DIR}/deploy_node-${NODE_ID}.conf"
+
+    if [[ "${NODE_ID}" == "" ]]; then
+        printLog "error" "NODE NAME NOT SET"
+        exit 1
+    fi 
+
+    if [ ! -f "${BIN_PATH}/venakey" ]; then
+        printLog "error" "FILE ${BIN_PATH}/venakey NOT FOUND"
+        exit 1
     fi
 }
 
 ################################################# Generate Key #################################################
 function generateKey() {
     ## generate node key
-    keyinfo=$(${BIN_PATH}/venakey genkeypair | sed s/[[:space:]]//g)
+    keyinfo="$(${BIN_PATH}/venakey genkeypair | sed s/[[:space:]]//g)"
     address="${keyinfo:10:40}"
     prikey="${keyinfo:62:64}"
     pubkey="${keyinfo:137:128}"
     if [ ${#prikey} -ne 64 ]; then
         printLog "error" "PRIVATE KEY LENGTH INVALID"
-        exit
+        exit 1
     fi
-    mkdir -p ${NODE_DIR}
+    mkdir -p "${NODE_DIR}"
 
     ## backup node key
     if [ -f "${NODE_DIR}/node.address" ]; then
@@ -108,7 +119,7 @@ function generateKey() {
             printLog "info" "Backup ${NODE_DIR}/node.address completed"
         else
             printLog "error" "BACKUP NODE ADDRESS FAILED"
-            exit
+            exit 1
         fi
     fi
     if [ -f "${NODE_DIR}/node.prikey" ]; then
@@ -119,7 +130,7 @@ function generateKey() {
             printLog "info" "Backup ${NODE_DIR}/node.prikey completed"
         else
             printLog "error" "BACKUP NODE PRIVATE KEY FAILED"
-            exit
+            exit 1
         fi
     fi
     if [ -f "${NODE_DIR}/node.pubkey" ]; then
@@ -130,7 +141,7 @@ function generateKey() {
             printLog "info" "Backup ${NODE_DIR}/node.pubkey completed"
         else
             printLog "error" "BACKUP NODE PUBLIC KEY FAILED"
-            exit
+            exit 1
         fi
     fi
 
@@ -140,15 +151,42 @@ function generateKey() {
     echo "${pubkey}" >"${NODE_DIR}/node.pubkey"
     if [ ! -f "${NODE_DIR}/node.address" ] || [ ! -f "${NODE_DIR}/node.prikey" ] || [ ! -f "${NODE_DIR}/node.pubkey" ]; then
         printLog "error" "STORE KEY INFO FAILED"
-        exit
+        exit 1
+    fi
+}
+
+################################################# Setup Key #################################################
+function setupKey() {
+    if [[ "${AUTO}" == "true" ]]; then
+        if [ ! -f "${NODE_DIR}/node.pubkey" ] || [ ! -f "${NODE_DIR}/node.prikey" ] || [ ! -f "${NODE_DIR}/node.address" ]; then
+            generateKey
+        else
+            printLog "warn" "Key Already Exists, Will Read Them Automatically"
+            exit 0
+        fi
+    else
+        printLog "question" "Do You What To Create a new node key ? Yes or No(y/n):"
+        yesOrNo
+        if [ $? -eq 1 ]; then
+            if [ -f "${NODE_DIR}/node.pubkey" ] || [ -f "${NODE_DIR}/node.prikey" ] || [ -f "${NODE_DIR}/node.address" ]; then
+                printLog "question" "Node key already exists, overwrite it? Yes or No(y/n):"
+                yesOrNo
+                if [ $? -ne 1 ]; then
+                    exit 2
+                fi
+            fi
+            generateKey
+        else
+            exit 2
+        fi
     fi
 }
 
 ################################################# Read Key #################################################
 function readKey() {
-    address=$(cat "${NODE_DIR}"/node.address)
-    pubkey=$(cat "${NODE_DIR}"/node.pubkey)
-    prikey=$(cat "${NODE_DIR}"/node.prikey)
+    address="$(cat "${NODE_DIR}"/node.address)"
+    pubkey="$(cat "${NODE_DIR}"/node.pubkey)"
+    prikey="$(cat "${NODE_DIR}"/node.prikey)"
     printLog "info" "Key files: ${NODE_DIR}/node.address, ${NODE_DIR}/node.prikey, ${NODE_DIR}/node.pubkey"
     echo "        Node-${NODE_ID}'s address: ${address}"
     echo "        Node-${NODE_ID}'s private key: ${prikey}"
@@ -159,35 +197,8 @@ function readKey() {
 function main() {
     printLog "info" "## Node-${NODE_ID} generate key Start ##"
     checkEnv
-    if [[ "${AUTO}" == "true" ]]; then
-        if [ ! -f "${NODE_DIR}"/node.pubkey ] || [ ! -f "${NODE_DIR}"/node.prikey ] || [ ! -f "${NODE_DIR}"/node.address ]; then
-            generateKey
-        else
-            printLog "warn" "Key Already Exists, Will Read Them Automatically"
-        fi
-    else
-        echo
-        printLog "question" "Do You What To Create a new node key ? Yes or No(y/n):"
-        yesOrNo
-        if [ $? -eq 1 ]; then
-            if [ -f "${NODE_DIR}"/node.pubkey ] || [ -f "${NODE_DIR}"/node.prikey ] || [ -f "${NODE_DIR}"/node.address ]; then
-                printLog "question" "Node key already exists, overwrite it? Yes or No(y/n):"
-                yesOrNo
-                if [ $? -ne 1 ]; then
-                    if [ ! -f "${NODE_DIR}"/node.pubkey ] || [ ! -f "${NODE_DIR}"/node.prikey ] || [ ! -f "${NODE_DIR}"/node.address ]; then
-                        printLog "warn" "Please Put Your Nodekey file \"node.prikey\",\"node.pubkey\",\"node.address\" to the directory ${NODE_DIR}"
-                    fi
-                    exit
-                fi
-            fi
-            generateKey
-        else
-            if [ ! -f "${NODE_DIR}"/node.pubkey ] || [ ! -f "${NODE_DIR}"/node.prikey ] || [ ! -f "${NODE_DIR}"/node.address ]; then
-                printLog "warn" "Please Put Your Nodekey file \"node.prikey\",\"node.pubkey\",\"node.address\" to the directory ${NODE_DIR}"
-            fi
-            exit
-        fi
-    fi
+
+    setupKey    
     readKey
     printLog "success" "Node-${NODE_ID} generate key succeeded"
 }
@@ -197,15 +208,13 @@ function main() {
 ###########################################################################################################
 if [ $# -eq 0 ]; then
     help
-    exit
+    exit 1
 fi
 while [ ! $# -eq 0 ]; do
-    case "$1" in
+    case "${1}" in
     --nodeid | -n)
         shiftOption2 $#
-        NODE_ID=$2
-        NODE_DIR="${DATA_PATH}/node-${NODE_ID}"
-        DEPLOY_CONF="${NODE_DIR}/deploy_node-${NODE_ID}.conf"
+        NODE_ID="${2}"
         shift 2
         ;;
     --auto)
@@ -214,12 +223,12 @@ while [ ! $# -eq 0 ]; do
         ;;
     --help | -h)
         help
-        exit
+        exit 1
         ;;
     *)
-        printLog "error" "COMMAND \"$1\" NOT FOUND"
+        printLog "error" "COMMAND \"${1}\" NOT FOUND"
         help
-        exit
+        exit 1
         ;;
     esac
 done

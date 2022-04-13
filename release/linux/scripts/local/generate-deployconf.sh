@@ -3,20 +3,25 @@
 ###########################################################################################################
 ################################################# VRIABLES #################################################
 ###########################################################################################################
-SCRIPT_NAME="$(basename ${0})"
-SCRIPT_ALIAS="$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')"
-PROJECT_PATH=$(
-    cd $(dirname $0)
+
+## path
+CURRENT_PATH="$(cd "$(dirname "$0")";pwd)"
+PROJECT_PATH="$(
+    cd $(dirname ${0})
     cd ../../
     pwd
-)
-DATA_PATH=${PROJECT_PATH}/data
-CONF_PATH=${PROJECT_PATH}/conf
+)"
+DATA_PATH="${PROJECT_PATH}/data"
+CONF_PATH="${PROJECT_PATH}/conf"
 
+## global
+SCRIPT_NAME="$(basename ${0})"
+SCRIPT_ALIAS="$(echo ${CURRENT_PATH}/${SCRIPT_NAME} | sed -e 's/\(.*\)\/scripts\/\(.*\).sh/\2/g')"
 NODE_ID=""
+AUTO=""
+
 NODE_DIR=""
 DEPLOY_CONF=""
-AUTO=""
 
 #############################################################################################################
 ################################################# FUNCTIONS #################################################
@@ -30,12 +35,11 @@ USAGE: ${SCRIPT_NAME}  [options] [value]
 
         OPTIONS:
 
-           --nodeid, -n             the node's name, must be specified
+            --nodeid, -n                the node's name, must be specified
 
-           --auto, -a               will read exist file
+            --auto                      will read exist file
 
-           --help, -h               show help
-
+            --help, -h                  show help
 "
 }
 
@@ -59,8 +63,22 @@ function shiftOption2() {
     if [[ $1 -lt 2 ]]; then
         printLog "error" "MISS OPTION VALUE! PLEASE SET THE VALUE"
         help
-        exit
+        exit 1
     fi
+}
+
+################################################# Yes Or No #################################################
+function yesOrNo() {
+    read -p "" anw
+    case "${anw}" in
+    [Yy][Ee][Ss] | [yY])
+        return 1
+        ;;
+    [Nn][Oo] | [Nn])
+        return 0
+        ;;
+    esac
+    return 0
 }
 
 ################################################# Save Config #################################################
@@ -76,8 +94,8 @@ function saveConf() {
 
 ################################################# Setup Port #################################################
 function setupPort() {
-    port_name=${1}
-    port=${2}
+    port_name="${1}"
+    port="${2}"
 
     while [[ 0 -lt 1 ]]; do
         if [[ $(lsof -i:${port}) == "" ]]; then
@@ -89,24 +107,37 @@ function setupPort() {
     done
 }
 
-################################################# Setup Deploy Config #################################################
-function setupDeployConfig() {
-    ## set up default conf
-    mkdir -p ${NODE_DIR}
+################################################# Check Env #################################################
+function checkEnv() {
+    NODE_DIR="${DATA_PATH}/node-${NODE_ID}" 
+    DEPLOY_CONF="${NODE_DIR}/deploy_node-${NODE_ID}.conf"  
 
-    if [[ -f "${DEPLOY_CONF}" ]]; then
+    if [[ "${NODE_ID}" == "" ]]; then
+        printLog "error" "NODE NAME NOT SET"
+        exit 1
+    fi 
+
+    if [ ! -f "${CONF_PATH}/deploy.conf.template" ]; then
+        printLog "error" "FILE ${CONF_PATH}/deploy.conf.template NOT FOUND"
+        exit 1
+    fi
+}
+
+################################################# Generate Deploy Config #################################################
+function generateDeployConfig() {
+    if [ -f "${DEPLOY_CONF}" ]; then
         timestamp=$(date '+%Y%m%d%H%M%S')
         mkdir -p "${NODE_DIR}/bak"
-        mv "${DEPLOY_CONF}" "${NODE_DIR}/bak/deploy_conf-${NODE_ID}.conf.bak.${timestamp}"
-        if [ -f "${NODE_DIR}/bak/deploy_conf-${NODE_ID}.conf.bak.${timestamp}" ]; then
-            printLog "info" "Backup ${NODE_DIR}/bak/deploy_conf-${NODE_ID}.conf completed"
+        mv "${DEPLOY_CONF}" "${NODE_DIR}/bak/deploy_node-${NODE_ID}.conf.bak.${timestamp}"
+        if [ -f "${NODE_DIR}/bak/deploy_node-${NODE_ID}.conf.bak.${timestamp}" ]; then
+            printLog "info" "Backup ${NODE_DIR}/bak/deploy_node-${NODE_ID}.conf completed"
         else
             printLog "error" "BACKUP NODE DEPLOY CONF FAILED"
-            exit
+            exit 1
         fi
     fi
 
-    cp ${CONF_PATH}/deploy.conf.template ${NODE_DIR}/deploy_node-${NODE_ID}.conf
+    cp "${CONF_PATH}/deploy.conf.template" "${NODE_DIR}/deploy_node-${NODE_ID}.conf"
     saveConf "deploy_path" "${PROJECT_PATH}"
     saveConf "user_name" "$(whoami)"
 
@@ -116,15 +147,43 @@ function setupDeployConfig() {
     setupPort "ws_port" "26791"
 }
 
+################################################# Setup Deploy Config #################################################
+function setupDeployConfig() {
+    ## set up default conf
+    mkdir -p "${NODE_DIR}"
+
+    if [[ "${AUTO}" == "true" ]]; then
+        if [ ! -f "${DEPLOY_CONF}" ]; then
+            generateDeployConfig
+        else
+            printLog "warn" "Deploy Conf Already Exists, Will Read It Automatically"
+            exit 0
+        fi
+    else 
+        printLog "question" "Do You What To Create a deploy conf ? Yes or No(y/n):"
+        yesOrNo
+        if [ $? -eq 1 ]; then
+            if [ -f "${NODE_DIR}/deploy_node-${NODE_ID}.conf" ]; then
+                printLog "question" "Deploy conf already exists, overwrite it? Yes or No(y/n):"
+                yesOrNo
+                if [ $? -ne 1 ]; then
+                    exit 2
+                fi
+            fi
+            generateDeployConfig
+        else
+            exit 2
+        fi
+    fi
+}
+
 ################################################# Main #################################################
 function main() {
-    printLog "info" "## Node-${NODE_ID} setup deployconf Start ##"
-    if [[ "${AUTO}" == "true" ]] && [[ -f "${DEPLOY_CONF}" ]]; then
-        printLog "warn" "Deploy Conf Already Exists, Will Read It Automatically"
-        exit
-    fi
+    printLog "info" "## Setup node-${NODE_ID} deployconf Start ##"
+    checkEnv
+
     setupDeployConfig
-    printLog "success" "Node-${NODE_ID} setup deployconf succeeded"
+    printLog "success" "Setup node-${NODE_ID} deployconf succeeded"
 }
 
 ###########################################################################################################
@@ -132,29 +191,27 @@ function main() {
 ###########################################################################################################
 if [ $# -eq 0 ]; then
     help
-    exit
+    exit 1
 fi
 while [ ! $# -eq 0 ]; do
-    case ${1} in
+    case "${1}" in
     --nodeid | -n)
         shiftOption2 $#
-        NODE_ID=${2}
-        NODE_DIR="${DATA_PATH}/node-${NODE_ID}" 
-        DEPLOY_CONF="${NODE_DIR}/deploy_node-${NODE_ID}.conf"   
+        NODE_ID="${2}"
         shift 2
+        ;;
+    --auto)
+        AUTO="true"
+        shift 1
         ;;
     --help | -h)
         help
-        exit
-        ;;
-    --auto | -a)
-        AUTO="true"
-        shift 1
+        exit 1
         ;;
     *)
         printLog "error" "COMMAND \"${1}\" NOT FOUND"
         help
-        exit
+        exit 1
         ;;
     esac
 done

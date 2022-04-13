@@ -5,33 +5,36 @@
 ###########################################################################################################
 
 ## path
-SCRIPT_NAME="$(basename ${0})"
-SCRIPT_ALIAS="$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')"
-OS=$(uname)
-PROJECT_PATH=$(
-    cd $(dirname $0)
+CURRENT_PATH="$(cd "$(dirname "$0")";pwd)"
+PROJECT_PATH="$(
+    cd $(dirname ${0})
     cd ../
     pwd
-)
-BIN_PATH=${PROJECT_PATH}/bin
-DATA_PATH=${PROJECT_PATH}/data
-CONF_PATH=${PROJECT_PATH}/conf
+)"
+BIN_PATH="${PROJECT_PATH}/bin"
+DATA_PATH="${PROJECT_PATH}/data"
+CONF_PATH="${PROJECT_PATH}/conf"
+SCRIPT_PATH="${PROJECT_PATH}/scripts"
 
 ## global
+OS=$(uname)
+SCRIPT_NAME="$(basename ${0})"
+SCRIPT_ALIAS="$(echo ${CURRENT_PATH}/${SCRIPT_NAME} | sed -e 's/\(.*\)\/scripts\/\(.*\).sh/\2/g')"
 NODE_ID=""
-NODE_DIR=""
-DEPLOY_CONF=""
 IP_ADDR=""
 RPC_PORT=""
 P2P_PORT=""
 WS_PORT=""
+AUTO=""
+
+NODE_DIR=""
+DEPLOY_CONF=""
 
 ## param
 ip_addr=""
 rpc_port=""
 p2p_port=""
 ws_port=""
-auto=""
 
 #############################################################################################################
 ################################################# FUNCTIONS #################################################
@@ -45,19 +48,19 @@ USAGE: ${SCRIPT_NAME}  [options] [value]
 
         OPTIONS:
 
-           --nodeid, -n                 the node id (default: 0)
+            --nodeid, -n                the node id (default: 0)
 
-           --ip                         the node ip (default: 127.0.0.1)
+            --ip                        the node ip (default: 127.0.0.1)
 
-           --rpc_port, -r               the node rpc_port (default: 6791)
+            --rpc_port, -rpc            the node rpc_port (default: 6791)
 
-           --p2p_port, -p               the node p2p_port (default: 16791)
+            --p2p_port, -p2p            the node p2p_port (default: 16791)
 
-           --ws_port, -w                the node ws_port (default: 26791)
+            --ws_port, -ws              the node ws_port (default: 26791)
 
-           --auto, -a                   will no prompt to create the node key and init
+            --auto                      will read exit the deploy conf and node key 
                                         
-           --help, -h                   show help
+            --help, -h                  show help
 "
 }
 
@@ -80,17 +83,8 @@ function printLog() {
 function shiftOption2() {
     if [[ $1 -lt 2 ]]; then
         printLog "error" "MISS OPTION VALUE! PLEASE SET THE VALUE"
-        exit
+        exit 1
     fi
-}
-
-################################################# Check Conf #################################################
-function checkConf() {
-    ref=$(cat "${DEPLOY_CONF}" | grep "$1"= | sed -e 's/\(.*\)=\(.*\)/\2/g')
-    if [[ "${ref}" != "" ]]; then
-        return 1
-    fi
-    return 0
 }
 
 ################################################# Save Config #################################################
@@ -104,11 +98,30 @@ function saveConf() {
     mv "${conf_tmp}" "${conf}"
 }
 
+################################################# Check Conf #################################################
+function checkConf() {
+    ref="$(cat "${DEPLOY_CONF}" | grep "${1}=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
+    if [[ "${ref}" != "" ]]; then
+        return 1
+    fi
+    return 0
+}
+
 ################################################# Check Env #################################################
 function checkEnv() {
+    if [[ "${NODE_ID}" == "" ]]; then
+        NODE_ID="0"
+    fi
+    NODE_DIR="${DATA_PATH}/node-${NODE_ID}"
+    DEPLOY_CONF="${NODE_DIR}/deploy_node-${NODE_ID}.conf"
+    
     if [ ! -f "${CONF_PATH}/genesis.json" ]; then
         printLog "error" "FILE ${CONF_PATH}/genesis.json NOT FOUND"
-        exit
+        exit 1
+    fi
+    if [ ! -f "${BIN_PATH}/venachain" ]; then 
+        printLog "error" "FILE ${BIN_PATH}/venachain NOT FOUND"
+        exit 1
     fi
 }
 
@@ -118,6 +131,26 @@ function assignDefault() {
     RPC_PORT="6791"
     P2P_PORT="16791"
     WS_PORT="26791"
+}
+
+################################################# Read File #################################################
+function readFile() {
+    checkConf "ip_addr"
+    if [[ $? -eq 1 ]]; then
+        IP_ADDR="$(cat ${DEPLOY_CONF} | grep "ip_addr=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
+    fi
+    checkConf "rpc_port"
+    if [[ $? -eq 1 ]]; then
+        RPC_PORT="$(cat ${DEPLOY_CONF} | grep "rpc_port=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
+    fi
+    checkConf "p2p_port"
+    if [[ $? -eq 1 ]]; then
+        P2P_PORT="$(cat ${DEPLOY_CONF} | grep "p2p_port=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
+    fi
+    checkConf "ws_port"
+    if [[ $? -eq 1 ]]; then
+        WS_PORT="$(cat ${DEPLOY_CONF} | grep "ws_port=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
+    fi
 }
 
 ################################################# Read Param #################################################
@@ -136,78 +169,113 @@ function readParam() {
     fi
 }
 
-################################################# Main #################################################
-function main() {
-    if [[ "${NODE_ID}" == "" ]]; then
-        NODE_ID="0"
-    fi
-
+################################################# Init Node #################################################
+function initNode() {
+    ## setup flag
     flag_auto=""
-    if [[ "${auto}" == "true" ]]; then
+    if [[ "${AUTO}" == "true" ]]; then
         flag_auto=" --auto "
     fi
 
-    printLog "info" "## Init Node-${NODE_ID} Start ##"
-    checkEnv
-    assignDefault
-    readParam
+    ## generate deploy conf
+    "${SCRIPT_PATH}"/venachainctl.sh dcgen -n "${NODE_ID}" ${flag_auto}
+    res=$?
+    if [[ ${res} -eq 1 ]]; then
+        exit 1
+    fi
+    if [[ ${res} -eq 2 ]]; then
+        if [[ -f "${NODE_DIR}/deploy_node-${NODE_ID}.conf" ]]; then
+            printLog "warn" "Deploy conf Exists, Will Read Them Automatically"
+        else 
+            printLog "warn" "Please Put Your Deploy Conf File to the directory ${NODE_DIR}"
+            exit 1
+        fi
+    fi
 
-    ./local/generate-deployconf.sh -n ${NODE_ID} ${flag_auto}
+    assignDefault
+    readFile
+    readParam
     saveConf "ip_addr" "${IP_ADDR}"
     saveConf "rpc_port" "${RPC_PORT}"
     saveConf "p2p_port" "${P2P_PORT}"
     saveConf "ws_port" "${WS_PORT}"
 
-    ./local/generate-key.sh -n ${NODE_ID} ${flag_auto}
-    ${BIN_PATH}/venachain --datadir ${DATA_PATH}/node-${NODE_ID} init ${CONF_PATH}/genesis.json
+    ## generate key
+    "${SCRIPT_PATH}"/venachainctl.sh keygen -n "${NODE_ID}" ${flag_auto}
+    res=$?
+    if [[ ${res} -eq 1 ]]; then
+        exit 1
+    fi
+    if [[ ${res} -eq 2 ]]; then
+        if [[ -f "${DATA_PATH}/node-${NODE_ID}/node.prikey" ]] && [[ -f "${DATA_PATH}/node-${NODE_ID}/node.pubkey" ]] && [[ -f "${DATA_PATH}/node-${NODE_ID}/node.address" ]]; then
+            printLog "warn" "Key Already Exists, Will Read Them Automatically"
+        else 
+            printLog "warn" "Please Put Your Node keys \"node.prikey\",\"node.pubkey\",\"node.address\" to the directory ${NODE_DIR}"
+            exit 1
+        fi
+    fi
+
+    ## init node
+    "${BIN_PATH}"/venachain --datadir "${DATA_PATH}/node-${NODE_ID}" init "${CONF_PATH}/genesis.json"
+    if [[ $? -eq 1 ]]; then
+        printLog "error" "INIT NODE-${NODE_ID} FAILED"
+        exit 1
+    fi
     printLog "success" "Init Node-${NODE_ID} succeeded"
+}
+
+################################################# Main #################################################
+function main() {
+    checkEnv  
+    assignDefault
+    readParam
+
+    initNode
 }
 
 ###########################################################################################################
 #################################################  EXECUTE #################################################
 ###########################################################################################################
 while [ ! $# -eq 0 ]; do
-    case $1 in
+    case "${1}" in
     --nodeid | -n)
         shiftOption2 $#
-        NODE_ID=$2
-        NODE_DIR="${DATA_PATH}/node-${NODE_ID}"
-        DEPLOY_CONF="${NODE_DIR}/deploy_node-${NODE_ID}.conf"
+        NODE_ID="${2}"
         shift 2
         ;;
     --ip)
         shiftOption2 $#
-        ip_addr=$2
+        ip_addr="${2}"
         shift 2
         ;;
-    --rpc_port | -r)
+    --rpc_port | -rpc)
         shiftOption2 $#
-        rpc_port=$2
+        rpc_port="${2}"
         shift 2
         ;;
-    --p2p_port | -p)
+    --p2p_port | -p2p)
         shiftOption2 $#
-        p2p_port=$2
+        p2p_port="${2}"
         shift 2
         ;;
-    --ws_port | -w)
+    --ws_port | -ws)
         shiftOption2 $#
-        ws_port=$2
+        ws_port="${2}"
         shift 2
         ;;
-    --auto | -a)
+    --auto)
         shiftOption2 $#
-        auto=$2
+        AUTO="${2}"
         shift 2
         ;;
     --help | -h)
         help
-        exit
+        exit 1
         ;;
     *)
-        printLog "error" "COMMAND \"$1\" NOT FOUND"
+        printLog "error" "COMMAND \"${1}\" NOT FOUND"
         help
-        exit
+        exit 1
         ;;
     esac
 done
