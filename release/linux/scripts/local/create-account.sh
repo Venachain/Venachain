@@ -3,25 +3,31 @@
 ###########################################################################################################
 ################################################# VRIABLES #################################################
 ###########################################################################################################
-SCRIPT_NAME="$(basename ${0})"
-SCRIPT_ALIAS="$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')"
-PROJECT_PATH=$(
-    cd $(dirname $0)
+
+## path
+CURRENT_PATH="$(cd "$(dirname "$0")";pwd)"
+PROJECT_PATH="$(
+    cd $(dirname ${0})
     cd ../../
     pwd
-)
-DATA_PATH=${PROJECT_PATH}/data
-CONF_PATH=${PROJECT_PATH}/conf
+)"
+DATA_PATH="${PROJECT_PATH}/data"
+CONF_PATH="${PROJECT_PATH}/conf"
 
+## global
+SCRIPT_NAME="$(basename ${0})"
+SCRIPT_ALIAS="$(echo ${CURRENT_PATH}/${SCRIPT_NAME} | sed -e 's/\(.*\)\/scripts\/\(.*\).sh/\2/g')"
 NODE_ID=""
+CREATE_KEYFILE=""
+AUTO=""
+
 NODE_DIR=""
 DEPLOY_CONF=""
 IP_ADDR=""
 RPC_PORT=""
 ACCOUNT=""
 PHRASE=""
-AUTO=""
-CREATE_KEYFILE=""
+
 
 #############################################################################################################
 ################################################# FUNCTIONS #################################################
@@ -34,14 +40,15 @@ function help() {
 USAGE: ${SCRIPT_NAME}  [options] [value]
 
         OPTIONS:
+        
+            --nodeid, -n                the specified node name, must be specified
 
-           --nodeid, -n                   the specified node name. must be specified
+            --create_keyfile, -ck       will create keyfile
 
-           --auto, -a                     create account with default phrase 0
-
-           --create_keyfile, -ck          will create keyfile
-
-           --help, -h                     show help
+            --auto                      will use the default node password: 0
+                                        to create the account and also to unlock the account
+            
+            --help, -h                  show help
 "
 }
 
@@ -65,13 +72,13 @@ function shiftOption2() {
     if [[ $1 -lt 2 ]]; then
         printLog "error" "MISS OPTION VALUE! PLEASE SET THE VALUE"
         help
-        exit
+        exit 1
     fi
 }
 
 ################################################# Check Conf #################################################
 function checkConf() {
-    ref=$(cat "${DEPLOY_CONF}" | grep "$1"= | sed -e 's/\(.*\)=\(.*\)/\2/g')
+    ref="$(cat "${DEPLOY_CONF}" | grep "${1}=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
     if [[ "${ref}" != "" ]]; then
         return 1
     fi
@@ -80,49 +87,63 @@ function checkConf() {
 
 ################################################# Check Env #################################################
 function checkEnv() {
+    NODE_DIR="${DATA_PATH}/node-${NODE_ID}"
+    DEPLOY_CONF="${NODE_DIR}/deploy_node-${NODE_ID}.conf"
+
     if [ ! -f "${DEPLOY_CONF}" ]; then
         printLog "error" "FILE ${DEPLOY_CONF} NOT FOUND"
-        exit
+        exit 1
     fi
 
     checkConf "ip_addr"
     if [[ $? -ne 1 ]]; then
-        printLog "error" "NODE'S IP HAVE NOT BEEN SET"
-        exit
+        printLog "error" "NODE'S IP NOT SET IN ${DEPLOY_CONF}"
+        exit 1
     fi
     checkConf "rpc_port"
     if [[ $? -ne 1 ]]; then
-        printLog "error" "NODE'S RPC PORT HAVE NOT BEEN SET"
-        exit
+        printLog "error" "NODE'S RPC PORT NOT SET IN ${DEPLOY_CONF}"
+        exit 1
     fi
 }
 
 ################################################# Assign Default #################################################
 function assignDefault() {
-    IP_ADDR=127.0.0.1
-    RPC_PORT=6791
+    IP_ADDR="127.0.0.1"
+    RPC_PORT="6791"
 }
 
 ################################################# Read File #################################################
 function readFile() {
     checkConf "ip_addr"
     if [[ $? -eq 1 ]]; then
-        IP_ADDR=$(cat ${DEPLOY_CONF} | grep "ip_addr=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
+        IP_ADDR="$(cat ${DEPLOY_CONF} | grep "ip_addr=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
     fi
     checkConf "rpc_addr"
     if [[ $? -eq 1 ]]; then
-        RPC_PORT=$(cat ${DEPLOY_CONF} | grep "rpc_port=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
+        RPC_PORT="$(cat ${DEPLOY_CONF} | grep "rpc_port=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
     fi
+}
+
+################################################# Unclock Account #################################################
+function unlockAccount() {
+    http_data="{\"jsonrpc\":\"2.0\",\"method\":\"personal_unlockAccount\",\"params\":[\"${ACCOUNT}\",\"${PHRASE}\"],\"id\":1}"
+    res="$(curl -H "Content-Type: application/json" --data "${http_data}" http://${IP_ADDR}:${RPC_PORT})"
+    echo "${res}"
+    if [[ "$(echo ${res} | grep true )" == "" ]]; then
+        printLog "error" "UNLOCK ACCOUNT FAILED"
+        exit 1
+    fi
+    printLog "info" "Unlock account completed"
 }
 
 ################################################# Create Account #################################################
 function createAccount() {
-
     ## create keystore
-    mkdir -p ${NODE_DIR}/keystore
+    mkdir -p "${NODE_DIR}/keystore"
     if [ ! -d "${NODE_DIR}/keystore" ]; then
         printLog "error" "CREATE KEYSTORE DIR FAILED"
-        exit
+        exit 1
     fi
 
     ## generate account
@@ -133,27 +154,31 @@ function createAccount() {
         printLog "question" "Please input account passphrase."
         read PHRASE
     fi
-    ret=$(curl --silent --write-out --output /dev/null -H "Content-Type: application/json" --data "{\"jsonrpc\":\"2.0\",\"method\":\"personal_newAccount\",\"params\":[\"${PHRASE}\"],\"id\":1}" http://${IP_ADDR}:${RPC_PORT}) >/dev/null 2>&1
-    if [[ $? -ne 0 ]]; then
+    ret="$(curl --silent --write-out --output /dev/null -H "Content-Type: application/json" --data "{\"jsonrpc\":\"2.0\",\"method\":\"personal_newAccount\",\"params\":[\"${PHRASE}\"],\"id\":1}" http://${IP_ADDR}:${RPC_PORT})" >/dev/null 2>&1
+    if [[ $? -eq 1 ]]; then
         printLog "error" "CREATE ACCOUNT FAILED, CHECK IF NODE HAS STARTED"
-        exit
+        exit 1
     fi
     substr=${ret##*\"result\":\"}
     if [ ${#substr} -gt 42 ]; then
         ACCOUNT="${substr:0:42}"  
     else
         printLog "error" "CREATE ACCOUNT FAILED"
-        exit
+        exit 1
     fi
+    unlockAccount
 
-    if [[ "${CREATE_KEYFILE}" == "true" ]]; then
+
+    ## generate keyfile
+    if [[ "${CREATE_KEYFILE}" == "true" ]]; then  
+        utc_file="$(ls -a ${NODE_DIR}/keystore | tail -n 1)"      
         echo "${PHRASE}" >"${CONF_PATH}/keyfile.phrase"
         echo "${ACCOUNT}" >"${CONF_PATH}/keyfile.account"
-        cp ${NODE_DIR}/keystore/UTC* ${CONF_PATH}/keyfile.json
+        cp "${NODE_DIR}/keystore/${utc_file}" "${CONF_PATH}/keyfile.json"
 
         if [ ! -f "${CONF_PATH}/keyfile.account" ] || [ ! -f "${CONF_PATH}/keyfile.json" ] || [ ! -f "${CONF_PATH}/keyfile.phrase" ]; then
             printLog "error" "CREATE ACCOUNT FAILED"
-            exit
+            exit 1
         fi
     fi
     
@@ -165,6 +190,7 @@ function main() {
     checkEnv
     assignDefault
     readFile 
+    
     createAccount
     printLog "info" "Account: "
     echo "        New account: ${ACCOUNT}"
@@ -177,28 +203,30 @@ function main() {
 ###########################################################################################################
 if [ $# -eq 0 ]; then
     help
-    exit
+    exit 1
 fi
 while [ ! $# -eq 0 ]; do
-    case "$1" in
+    case "${1}" in
     --nodeid | -n)
         NODE_ID="${2}"
-        NODE_DIR="${DATA_PATH}/node-${NODE_ID}"
-        DEPLOY_CONF="${NODE_DIR}/deploy_node-${NODE_ID}.conf"
         shift 2
-        ;;
-    --auto | -a)
-        AUTO="true"
-        shift 1
         ;;
     --create_keyfile | -ck)
         CREATE_KEYFILE="true"
         shift 1
         ;;
-    *)
-        echo "[ERROR] [$(echo $0 | sed -e 's/\(.*\)\/local-\(.*\).sh/\2/g')] : ********* COMMAND \"$1\" NOT FOUND **********"
+    --auto)
+        AUTO="true"
+        shift 1
+        ;;
+    --help | -h)
         help
-        exit
+        exit 1
+        ;;
+    *)
+        printLog "error" "COMMAND \"${1}\" NOT FOUND"
+        help
+        exit 1
         ;;
     esac
 done

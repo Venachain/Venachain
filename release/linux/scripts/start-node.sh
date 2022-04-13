@@ -5,19 +5,21 @@
 ###########################################################################################################
 
 ## path
-SCRIPT_NAME="$(basename ${0})"
-SCRIPT_ALIAS="$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')"
-PROJECT_PATH=$(
-    cd $(dirname $0)
+CURRENT_PATH="$(cd "$(dirname "$0")";pwd)"
+PROJECT_PATH="$(
+    cd $(dirname ${0})
     cd ../
     pwd
-)
-BIN_PATH=${PROJECT_PATH}/bin
-DATA_PATH=${PROJECT_PATH}/data
-CONF_PATH=${PROJECT_PATH}/conf
+)"
+BIN_PATH="${PROJECT_PATH}/bin"
+DATA_PATH="${PROJECT_PATH}/data"
+CONF_PATH="${PROJECT_PATH}/conf"
 
 ## global
+SCRIPT_NAME="$(basename ${0})"
+SCRIPT_ALIAS="$(echo ${CURRENT_PATH}/${SCRIPT_NAME} | sed -e 's/\(.*\)\/scripts\/\(.*\).sh/\2/g')"
 NODE_ID=""
+
 NODE_DIR=""
 DEPLOY_CONF=""
 IP_ADDR=""
@@ -38,9 +40,7 @@ TX_GLOBAL_SLOTS=""
 EXTRA_OPTIONS=""
 PPROF_ADDR=""
 
-#############################################################################################################
 ################################################# FUNCTIONS #################################################
-#############################################################################################################
 
 ################################################# Help #################################################
 function help() {
@@ -50,9 +50,9 @@ USAGE: ${SCRIPT_NAME}  [options] [value]
 
         OPTIONS:
  
-        --nodeid, -n                 start the specified node (default: 0)
+            --nodeid, -n                start the specified node, must be specified
 
-        --help, -h                   show help
+            --help, -h                  show help
 "
 }
 
@@ -75,13 +75,13 @@ function printLog() {
 function shiftOption2() {
     if [[ $1 -lt 2 ]]; then
         printLog "error" "MISS OPTION VALUE! PLEASE SET THE VALUE"
-        exit
+        exit 1
     fi
 }
 
 ################################################# Check Conf #################################################
 function checkConf() {
-    ref=$(cat "${DEPLOY_CONF}" | grep "$1"= | sed -e 's/\(.*\)=\(.*\)/\2/g')
+    ref="$(cat ${DEPLOY_CONF} | grep "${1}"= | sed -e 's/\(.*\)=\(.*\)/\2/g')"
     if [[ "${ref}" != "" ]]; then
         return 1
     fi
@@ -90,154 +90,169 @@ function checkConf() {
 
 ################################################# Check Env #################################################
 function checkEnv() {
+    NODE_DIR="${DATA_PATH}/node-${NODE_ID}"
+    DEPLOY_CONF="${NODE_DIR}/deploy_node-${NODE_ID}.conf"
+
+    if [[ "${NODE_ID}" == "" ]]; then
+        printLog "error" "NODE NAME NOT SET"
+        exit 1
+    fi
+
+    if [ ! -f "${CONF_PATH}/genesis.json" ]; then
+        printLog "error" "FILE ${CONF_PATH}/genesis.json NOT FOUND"
+        exit 1
+    fi
     if [ ! -f "${DEPLOY_CONF}" ]; then
         printLog "error" "FILE ${DEPLOY_CONF} NOT FOUND"
-        exit
+        exit 1
     fi
 
     checkConf "ip_addr"
     if [[ $? -ne 1 ]]; then
-        printLog "error" "NODE'S IP HAVE NOT BEEN SET"
-        exit
+        printLog "error" "NODE'S IP NOT SET IN ${DEPLOY_CONF}"
+        exit 1
     fi
     checkConf "rpc_port"
     if [[ $? -ne 1 ]]; then
-        printLog "error" "NODE'S RPC PORT HAVE NOT BEEN SET"
-        exit
+        printLog "error" "NODE'S RPC PORT NOT SET IN ${DEPLOY_CONF}"
+        exit 1
     fi
     checkConf "p2p_port"
     if [[ $? -ne 1 ]]; then
-        printLog "error" "NODE'S P2P PORT HAVE NOT BEEN SET"
-        exit
+        printLog "error" "NODE'S P2P PORT NOT SET IN ${DEPLOY_CONF}"
+        exit 1
     fi
     checkConf "ws_port"
     if [[ $? -ne 1 ]]; then
-        printLog "error" "NODE'S WEBSOCKET PORT HAVE NOT BEEN SET"
-        exit
+        printLog "error" "NODE'S WEBSOCKET PORT NOT SET IN ${DEPLOY_CONF}"
+        exit 1
     fi
 }
 
 ################################################# Assign Default #################################################
 function assignDefault() {
-        IP_ADDR=127.0.0.1
-        P2P_PORT=16791
+    IP_ADDR="127.0.0.1"
+    P2P_PORT="16791"
    
-        RPC_ADDR=0.0.0.0
-        RPC_API=db,eth,venachain,net,web3,admin,personal,txpool,iris
-        RPC_PORT=6791
+    RPC_ADDR="0.0.0.0"
+    RPC_API="db,eth,venachain,net,web3,admin,personal,txpool,iris"
+    RPC_PORT="6791"
 
-        WS_ADDR=0.0.0.0
-        WS_PORT=26791
+    WS_ADDR="0.0.0.0"
+    WS_PORT="26791"
  
-        LOG_SIZE=67108864
-        LOG_DIR=${NODE_DIR}/logs
+    LOG_SIZE="67108864"
+    LOG_DIR="${NODE_DIR}/logs"
 
-        TX_COUNT=1000
-        TX_GLOBAL_SLOTS=4096
+    TX_COUNT="1000"
+    TX_GLOBAL_SLOTS="4096"
   
-        GCMODE=archive
-        DBTYPE=leveldb
-        EXTRA_OPTIONS=--debug
+    GCMODE="archive"
+    DBTYPE="leveldb"
+    EXTRA_OPTIONS="--debug"
 }
 
 ################################################# Read File #################################################
 function readFile() {
     checkConf "ip_addr"
     if [[ $? -eq 1 ]]; then
-        IP_ADDR=$(cat ${DEPLOY_CONF} | grep "ip_addr=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
+        IP_ADDR="$(cat ${DEPLOY_CONF} | grep "ip_addr=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
     fi
     checkConf "p2p_port"
     if [[ $? -eq 1 ]]; then
-        P2P_PORT=$(cat ${DEPLOY_CONF} | grep "p2p_port=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
+        P2P_PORT="$(cat ${DEPLOY_CONF} | grep "p2p_port=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
     fi
     checkConf "bootnodes"
     if [[ $? -eq 1 ]]; then
-        BOOTNODES=$(cat ${DEPLOY_CONF} | grep "bootnodes=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
+        BOOTNODES="$(cat ${DEPLOY_CONF} | grep "bootnodes=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
     fi
 
     checkConf "rpc_addr"
     if [[ $? -eq 1 ]]; then
-        RPC_ADDR=$(cat ${DEPLOY_CONF} | grep "rpc_addr=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
+        RPC_ADDR="$(cat ${DEPLOY_CONF} | grep "rpc_addr=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
     fi
     checkConf "rpc_api"
     if [[ $? -eq 1 ]]; then
-        RPC_API=$(cat ${DEPLOY_CONF} | grep "rpc_api=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
+        RPC_API="$(cat ${DEPLOY_CONF} | grep "rpc_api=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
     fi
     checkConf "rpc_port"
     if [[ $? -eq 1 ]]; then
-        RPC_PORT=$(cat ${DEPLOY_CONF} | grep "rpc_port=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
+        RPC_PORT="$(cat ${DEPLOY_CONF} | grep "rpc_port=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
     fi
 
     checkConf "ws_addr"
     if [[ $? -eq 1 ]]; then
-        WS_ADDR=$(cat ${DEPLOY_CONF} | grep "ws_addr=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
+        WS_ADDR="$(cat ${DEPLOY_CONF} | grep "ws_addr=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
     fi
     checkConf "ws_port"
     if [[ $? -eq 1 ]]; then
-        WS_PORT=$(cat ${DEPLOY_CONF} | grep "ws_port=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
+        WS_PORT="$(cat ${DEPLOY_CONF} | grep "ws_port=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
     fi
 
     checkConf "log_size"
     if [[ $? -eq 1 ]]; then
-        LOG_SIZE=$(cat ${DEPLOY_CONF} | grep "log_size=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
+        LOG_SIZE="$(cat ${DEPLOY_CONF} | grep "log_size=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
     fi
     checkConf "log_dir"
     if [[ $? -eq 1 ]]; then
-        LOG_DIR=$(cat ${DEPLOY_CONF} | grep "log_dir=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
+        LOG_DIR="$(cat ${DEPLOY_CONF} | grep "log_dir=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
     fi
 
     checkConf "tx_count"
     if [[ $? -eq 1 ]]; then
-        TX_COUNT=$(cat ${DEPLOY_CONF} | grep "tx_count=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
+        TX_COUNT="$(cat ${DEPLOY_CONF} | grep "tx_count=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
     fi
     checkConf "tx_global_slots"
     if [[ $? -eq 1 ]]; then
-        TX_GLOBAL_SLOTS=$(cat ${DEPLOY_CONF} | grep "tx_global_slots=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
+        TX_GLOBAL_SLOTS="$(cat ${DEPLOY_CONF} | grep "tx_global_slots=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
     fi
     
     checkConf "gcmode"
     if [[ $? -eq 1 ]]; then
-        GCMODE=$(cat ${DEPLOY_CONF} | grep "gcmode=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
+        GCMODE="$(cat ${DEPLOY_CONF} | grep "gcmode=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
     fi
     checkConf "lightmode"
     if [[ $? -eq 1 ]]; then
-        LIGHTMODE=$(cat ${DEPLOY_CONF} | grep "lightmode=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
+        LIGHTMODE="$(cat ${DEPLOY_CONF} | grep "lightmode=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
     fi
     checkConf "dbtype"
     if [[ $? -eq 1 ]]; then
-        DBTYPE=$(cat ${DEPLOY_CONF} | grep "dbtype=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
+        DBTYPE="$(cat ${DEPLOY_CONF} | grep "dbtype=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
     fi
     checkConf "extra_options"
     if [[ $? -eq 1 ]]; then
-        EXTRA_OPTIONS=$(cat ${DEPLOY_CONF} | grep "extra_options=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
+        EXTRA_OPTIONS="$(cat ${DEPLOY_CONF} | grep "extra_options=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
     fi
     checkConf "pprof_addr"
     if [[ $? -eq 1 ]]; then
-        PPROF_ADDR=$(cat ${DEPLOY_CONF} | grep "pprof_addr=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
+        PPROF_ADDR="$(cat ${DEPLOY_CONF} | grep "pprof_addr=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
+    fi
+}
+
+################################################# Read Param #################################################
+function readParam() {
+    if [[ "${node_id}" != "" ]]; then
+        NODE_ID="${node_id}"
     fi
 }
 
 ################################################# Start Command #################################################
 function startCmd() {
     if [[ "${BOOTNODES}" == "" ]]; then
-        if [[ -f ${CONF_PATH}/genesis.json ]]; then
-            BOOTNODES=$(cat ${CONF_PATH}/genesis.json | sed -n '9p' | sed 's/^.*"\(firstValidatorNode\)": "\(.*\)"/\2/g')
-        else
-            printLog "error" "FILE ${CONF_PATH}/genesis.json NOT FOUND"
-        fi
+        BOOTNODES="$(cat ${CONF_PATH}/genesis.json | grep "\"firstValidatorNode\":" | sed -e 's/\(.*\): \"\(.*\)\"\(.*\)/\2/g')"
     fi
 
     ## check p2p port
     if [[ "$(lsof -i:${P2P_PORT})" != "" ]]; then
         printLog "error" "PORT ${P2P_PORT} IS IN USAGE"
-        exit
+        exit 1
     fi
 
     ## create log dir
     mkdir -p "${LOG_DIR}"
     if [ ! -d "${LOG_DIR}" ]; then
         printLog "error" "CREATE ${LOG_DIR} FAILED"
-        exit
+        exit 1
     fi
 
     ## backup node's log if exists
@@ -246,7 +261,7 @@ function startCmd() {
         mv "${LOG_DIR}/node-${NODE_ID}.log" "${LOG_DIR}/node-${NODE_ID}.log.bak.${timestamp}"
         if [ ! -f "${LOG_DIR}/node-${NODE_ID}.log.bak.${timestamp}" ]; then
             printLog "error" "BACKUP {LOG_DIR}/node-${NODE_ID}.log FAILED"
-            exit
+            exit 1
         fi
     fi
 
@@ -259,8 +274,8 @@ function startCmd() {
     flag_logs=" --wasmlog  ${LOG_DIR}/wasm_log --wasmlogsize ${LOG_SIZE} "
     flag_ipc=" --ipcpath ${NODE_DIR}/node-${NODE_ID}.ipc "
     flag_gcmode=" --gcmode ${GCMODE} "
-    flag_dbtype=" --dbtype ${DBTYPE} "
     flag_tx=" --txpool.globaltxcount ${TX_COUNT} --txpool.globalslots ${TX_GLOBAL_SLOTS} "
+    flag_dbtype=" --dbtype ${DBTYPE} "
 
     # lightnode mode
     flag_lightmode=""
@@ -282,31 +297,31 @@ function startCmd() {
         nohup ${BIN_PATH}/venachain ${flag_node} 
             ${flag_discov}
             ${flag_bootnodes} 
-            ${flag_rpc} --rpccorsdomain \"*\" 
+            ${flag_rpc} --rpccorsdomain \"*\"
             ${flag_ws} --wsorigins \"*\" 
             ${flag_logs} 
             ${flag_ipc} ${flag_gcmode} ${flag_dbtype}
             ${flag_tx} ${flag_lightmode} ${flag_pprof}
-             --moduleLogParams '{\"venachain_log\": [\"/\"], \"__dir__\": [\"'${LOG_DIR}'\"], \"__size__\": [\"'${LOG_SIZE}'\"]}'
-             ${EXTRA_OPTIONS}
-             1>/dev/null 2>${LOG_DIR}/venachain_error.log &
+            --moduleLogParams '{\"venachain_log\": [\"/\"], \"__dir__\": [\"'${LOG_DIR}'\"], \"__size__\": [\"'${LOG_SIZE}'\"]}'
+            ${EXTRA_OPTIONS}
+            1>/dev/null 2>${LOG_DIR}/venachain_error.log &
     "
-    nohup ${BIN_PATH}/venachain ${flag_node} \
+    nohup "${BIN_PATH}/venachain" ${flag_node} \
             ${flag_discov} \
             ${flag_bootnodes} \
             ${flag_rpc} --rpccorsdomain "*" \
-            ${flag_ws} --wsorigins "*"  \
+            ${flag_ws} --wsorigins "*" \
             ${flag_logs} \
             ${flag_ipc} ${flag_gcmode} ${flag_dbtype} \
             ${flag_tx} ${flag_lightmode} ${flag_pprof} \
-             --moduleLogParams '{"venachain_log": ["/"], "__dir__": ["'${LOG_DIR}'"], "__size__": ["'${LOG_SIZE}'"]}' \
-             ${EXTRA_OPTIONS} \
-             1>/dev/null 2>${LOG_DIR}/venachain_error.log &
+            --moduleLogParams '{"venachain_log": ["/"], "__dir__": ["'${LOG_DIR}'"], "__size__": ["'${LOG_SIZE}'"]}' \
+            ${EXTRA_OPTIONS} \
+            1>/dev/null 2>"${LOG_DIR}/venachain_error.log" &
 
     timer=0
     res_start=""
     while [ ${timer} -lt 10 ]; do
-        res_start=$(lsof -i:${P2P_PORT})
+        res_start="$(lsof -i:${P2P_PORT})"
         if [[ "${res_start}" != "" ]]; then
             break
         fi
@@ -315,22 +330,18 @@ function startCmd() {
     done
     if [[ "${res_start}" == "" ]]; then
         printLog "error" "RUN NODE NODE-${NODE_ID} FAILED"
-        exit
+        exit 1
     fi
 }
 
 ################################################# Main #################################################
 function main() {
-    if [[ "${NODE_ID}" == "" ]]; then
-        NODE_ID="0"
-        NODE_DIR="${DATA_PATH}/node-${NODE_ID}"
-        DEPLOY_CONF="${NODE_DIR}/deploy_node-${NODE_ID}.conf"
-    fi
-
-    printLog "info" "## Run node-${NODE_ID} ##"
+    printLog "info" "## Run Node-${NODE_ID} Start ##"
     checkEnv
     assignDefault
     readFile
+    readParam
+    
     startCmd
     printLog "info" "Node's url: ${IP_ADDR}:${RPC_PORT}"
     printLog "success" "Run node-${NODE_ID} succeeded"
@@ -340,22 +351,20 @@ function main() {
 #################################################  EXECUTE #################################################
 ###########################################################################################################
 while [ ! $# -eq 0 ]; do
-    case "$1" in
+    case "${1}" in
     --nodeid | -n)
         shiftOption2 $#
         NODE_ID="${2}"
-        NODE_DIR="${DATA_PATH}/node-${NODE_ID}"
-        DEPLOY_CONF="${NODE_DIR}/deploy_node-${NODE_ID}.conf"
         shift 2
         ;;
     --help | -h)
         help
-        exit
+        exit 1
         ;;
     *)
-        printLog "error" "COMMAND \"$1\" NOT FOUND"
+        printLog "error" "COMMAND \"${1}\" NOT FOUND"
         help
-        exit
+        exit 1
         ;;
     esac
 done

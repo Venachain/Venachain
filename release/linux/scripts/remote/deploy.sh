@@ -3,26 +3,32 @@
 ###########################################################################################################
 ################################################# VRIABLES #################################################
 ###########################################################################################################
-SCRIPT_NAME="$(basename ${0})"
-SCRIPT_ALIAS="$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')"
-LOCAL_IP="127.0.0.1"
-DEPLOYMENT_PATH=$(
-    cd $(dirname $0)
+
+## path
+CURRENT_PATH="$(cd "$(dirname "$0")";pwd)"
+DEPLOYMENT_PATH="$(
+    cd $(dirname ${0})
     cd ../../../
     pwd
-)
-USER_NAME=$USER
-
+)"
 DEPLOYMENT_CONF_PATH="${DEPLOYMENT_PATH}/deployment_conf"
-if [ ! -d "${DEPLOYMENT_CONF_PATH}" ]; then
-    mkdir -p ${DEPLOYMENT_CONF_PATH}
-fi
-PROJECT="test"
-PROJECT_CONF_PATH="${DEPLOYMENT_CONF_PATH}/${PROJECT}"
 
-NODE="all"
-MODE="conf"
+## global
+USER_NAME=$USER
+LOCAL_IP="127.0.0.1"
+SCRIPT_NAME="$(basename ${0})"
+SCRIPT_ALIAS="$(echo ${CURRENT_PATH}/${SCRIPT_NAME} | sed -e 's/\(.*\)\/scripts\/\(.*\).sh/\2/g')"
+PROJECT_NAME=""
+NODE=""
+MODE=""
 ADDRESS=""
+ALL=""
+
+PROJECT_CONF_PATH=""
+INTERPRETER=""
+
+## param
+mode=""
 
 #############################################################################################################
 ################################################# FUNCTIONS #################################################
@@ -36,21 +42,23 @@ USAGE: ${SCRIPT_NAME}  [options] [value]
 
         OPTIONS:
 
-           --project, -p              the specified project name. must be specified.
+            --project, -p               the project name, must be specified
 
-           --node, -n                 the specified node name. only used in conf mode. 
-                                      default='all': deploy all nodes by conf in deployment_conf
-                                      use ',' to seperate the name of node
+            --mode, -m                  the specified deploy mode
+                                        \"conf\", \"one\", \"four\" are supported (default: conf)
+                                        \"conf\": deploy node by exist node deploy conf file
+                                        \"one\": deploy a one-node chain locally
+                                        \"four\": deploy a four-nodes chain locally
 
-           --mode, -m                 the specified deploy mode. 
-                                      default='conf': deploy node by exist node deployment conf
-                                      'one': automatically generate one node's deployment conf file and build the blockchain on local
-                                      'four': automatically generate four nodes' deployment conf file and build the blockchain on local
+            --node, -n                  the node name, only used in conf mode
+                                        use \",\" to seperate the name of node
 
-           --address, -a              the specified node address. only used in conf mode.               
-                                      nodes' deployment file will be generated automatically if set
+            --address, -addr            the specified node address, only used in conf mode
+                                        deploy conf file will be generated automatically
 
-           --help, -h                 show help
+            --all, -a                   deploy all nodes
+
+            --help, -h                  show help
 "
 }
 
@@ -74,14 +82,14 @@ function shiftOption2() {
     if [[ $1 -lt 2 ]]; then
         printLog "error" "MISS OPTION VALUE! PLEASE SET THE VALUE"
         help
-        exit
+        exit 1
     fi
 }
 
 ################################################# Yes Or No #################################################
 function yesOrNo() {
     read anw
-    case $anw in
+    case "${anw}" in
     [Yy][Ee][Ss] | [yY])
         return 1
         ;;
@@ -92,39 +100,101 @@ function yesOrNo() {
     return 0
 }
 
+################################################# Check Env #################################################
+function checkEnv() {
+    PROJECT_CONF_PATH="${DEPLOYMENT_CONF_PATH}/projects/${PROJECT_NAME}"
+
+    if [[ "${PROJECT_NAME}" == "" ]]; then
+        printLog "error" "PROJECT NAME NOT SET"
+        exit 1
+    fi
+}
+
+################################################# Assaign Default #################################################
+function assignDefault() {
+    MODE="conf"
+    INTERPRETER="all"
+}
+
+################################################# Read Param #################################################
+function readParam() {
+    if [[ "${mode}" != "" ]]; then
+        MODE="${mode}"
+    fi
+}
+
+################################################# Deploy One Node #################################################
+function deployOneNode() {
+    node_id="${1}"
+    "${DEPLOYMENT_PATH}/linux/scripts"/venachainctl.sh remote transfer -p "${PROJECT_NAME}" -n "${node_id}"
+    if [[ $? -eq 1 ]]; then
+        return 1
+    fi
+    "${DEPLOYMENT_PATH}/linux/scripts"/venachainctl.sh remote init --project "${PROJECT_NAME}" --interpreter "${INTERPRETER}" --node "${node_id}"
+    if [[ $? -eq 1 ]]; then
+        return 1
+    fi
+    "${DEPLOYMENT_PATH}/linux/scripts"/venachainctl.sh remote start -p "${PROJECT_NAME}" -n "${node_id}"
+    if [[ $? -eq 1 ]]; then
+        return 1
+    fi
+}
+
 ################################################# CONF #################################################
 function conf() {
-    if [[ "${ADDRESS}" != "" ]]; then
-        if [ -d "${PROJECT_CONF_PATH}" ]; then
-            printLog "question" "${PROJECT_CONF_PATH} has already been existed, do you want to continue?"
-            yesOrNo
-            if [[ $? -ne 1 ]]; then
-                exit
-            fi
-        fi
-        ${DEPLOYMENT_PATH}/linux/scripts/remote/prepare.sh -p "${PROJECT}" -a "${ADDRESS}" --cover
-    elif [[ "${NODE}" == "" ]]; then
-        printLog "error" "NODE MUST BE SET IN CONF MODE"
-        help
-        exit
-    elif [ ! -d "${PROJECT_CONF_PATH}" ]; then
-        printLog "error" "${PROJECT_CONF_PATH} NOT CREATED"
-        help
-        exit
+    if [[ "${ADDRESS}" == "" ]] && [[ "${ALL}" != "true" ]] && [[ "${NODE}" == "" ]]; then
+        printLog "error" "NODE'S ADDRESS OR NODE'S NAME MUST BE SET"
+        exit 1
     fi
 
-    cd ${PROJECT_CONF_PATH}
-    for f in $(ls ./); 
-    do
-        if [ ! -f "${f}" ]; then
-            continue
+    if [[ "${ADDRESS}" != "" ]]; then
+        "${DEPLOYMENT_PATH}/linux/scripts"/venachainctl.sh remote prepare -p "${PROJECT_NAME}" -addr "${ADDRESS}"
+        res=$?
+        if [[ ${res} -ne 0 ]]; then
+            exit ${res}
         fi
-        node_id=$(echo ${f} | sed -e 's/\(.*\)deploy_node-\(.*\).conf/\2/g')
-        ${DEPLOYMENT_PATH}/linux/scripts/remote/transfer.sh -p "${PROJECT}" -n ${node_id}
-        ${DEPLOYMENT_PATH}/linux/scripts/remote/init.sh -p "${PROJECT}" -n ${node_id}
-        ${DEPLOYMENT_PATH}/linux/scripts/remote/start.sh -p "${PROJECT}" -n ${node_id}
-        cd ${PROJECT_CONF_PATH}
-    done
+        
+        addr_num=$(expr $(echo "${ADDRESS}" | grep -o "," | wc -l) + 1)
+        NODE=""
+        while read line;
+        do
+            node_id="$(echo ${line} | sed -e 's/\(.*\)\[node-\(.*\)\]\(.*\)/\2/g')"
+            if [[ "${NODE}" != "" ]]; then
+                NODE="${NODE},"
+            fi
+            NODE="${NODE}${node_id}"
+        done <<< "$(cat ${DEPLOYMENT_CONF_PATH}/logs/prepare_log.txt | grep "\[${PROJECT_NAME}\]" | tail -${addr_num})"
+    fi
+
+    cd "${PROJECT_CONF_PATH}"
+    if [[ "${ALL}" == "true" ]]; then
+        for file in $(ls ./); 
+        do
+            if [ ! -f "${file}" ]; then
+                continue
+            fi
+            node_id=$(echo ${file} | sed -e 's/\(.*\)deploy_node-\(.*\).conf/\2/g')
+            deployOneNode "${node_id}"
+            if [[ $? -eq 1 ]]; then
+                printLog "error" "DEPLOY NODE-${node_id} FAILED"
+                exit 1
+            fi
+            cd "${PROJECT_CONF_PATH}"
+        done
+    else 
+        for node_id in $(echo "${NODE}" | sed 's/,/\n/g'); do
+            if [ ! -f "${PROJECT_CONF_PATH}/deploy_node-${node_id}.conf" ]; then
+                printLog "error" "FILE deploy_node-${node_id}.conf NOT FOUND"
+                exit 1
+            fi
+            deployOneNode "${node_id}"
+            if [[ $? -eq 1 ]]; then
+                printLog "error" "DEPLOY NODE-${node_id} FAILED"
+                exit 1
+            fi
+            cd "${PROJECT_CONF_PATH}"
+        done
+    fi
 }
 
 ################################################# ONE #################################################
@@ -133,13 +203,19 @@ function one() {
         printLog "question" "${PROJECT_CONF_PATH} has already been existed, do you want to overwrite it?"
         yesOrNo
         if [[ $? -ne 1 ]]; then
-            exit
+            exit 2
         fi
     fi
-    ${DEPLOYMENT_PATH}/linux/scripts/remote/prepare.sh -p "${PROJECT}" -a "${USER_NAME}@${LOCAL_IP}"
-    ${DEPLOYMENT_PATH}/linux/scripts/remote/transfer.sh -p "${PROJECT}"
-    ${DEPLOYMENT_PATH}/linux/scripts/remote/init.sh -p "${PROJECT}"
-    ${DEPLOYMENT_PATH}/linux/scripts/remote/start.sh -p "${PROJECT}"
+
+    "${DEPLOYMENT_PATH}/linux/scripts"/venachainctl.sh remote prepare -p "${PROJECT_NAME}" -addr "${USER_NAME}@${LOCAL_IP}" --cover
+    if [[ $? -eq 1 ]]; then
+        exit 1
+    fi
+    deployOneNode "0"
+    if [[ $? -eq 1 ]]; then
+        printLog "error" "DEPLOY ONE FAILED"
+        exit 1
+    fi
 }
 
 ################################################# FOUR #################################################
@@ -148,25 +224,31 @@ function four() {
         printLog "question" "${PROJECT_CONF_PATH} has already been existed, do you want to overwrite it?"
         yesOrNo
         if [[ $? -ne 1 ]]; then
-            exit
+            exit 2
         fi
     fi
-    ${DEPLOYMENT_PATH}/linux/scripts/remote/prepare.sh -p "${PROJECT}" -a "${USER_NAME}@${LOCAL_IP},${USER_NAME}@${LOCAL_IP},${USER_NAME}@${LOCAL_IP},${USER_NAME}@${LOCAL_IP}"
-    cd ${PROJECT_CONF_PATH}
-    for f in $(ls ./); 
+
+    "${DEPLOYMENT_PATH}/linux/scripts"/venachainctl.sh remote prepare -p "${PROJECT_NAME}" -addr "${USER_NAME}@${LOCAL_IP},${USER_NAME}@${LOCAL_IP},${USER_NAME}@${LOCAL_IP},${USER_NAME}@${LOCAL_IP}" --cover
+    if [[ $? -eq 1 ]]; then
+        exit 1
+    fi
+    cd "${PROJECT_CONF_PATH}"
+    for file in $(ls ./); 
     do
-        if [ ! -f "${f}" ]; then
+        if [ ! -f "${file}" ]; then
             continue
         fi
-        node_id=$(echo ${f} | sed -e 's/\(.*\)deploy_node-\(.*\).conf/\2/g')
-        ${DEPLOYMENT_PATH}/linux/scripts/remote/transfer.sh -p "${PROJECT}" -n ${node_id}
-        ${DEPLOYMENT_PATH}/linux/scripts/remote/init.sh -p "${PROJECT}" -n ${node_id}
-        ${DEPLOYMENT_PATH}/linux/scripts/remote/start.sh -p "${PROJECT}" -n ${node_id}
-        cd ${PROJECT_CONF_PATH}
+        node_id=$(echo ${file} | sed -e 's/\(.*\)deploy_node-\(.*\).conf/\2/g')
+        deployOneNode "${node_id}"
+        if [[ $? -eq 1 ]]; then
+            printLog "error" "DEPLOY FOUR FAILED"
+        exit 1
+    fi
+        cd "${PROJECT_CONF_PATH}"
     done
 }
 
-################################################# Main #################################################
+################################################# Deploy #################################################
 function deploy() {
     case "${MODE}" in
     "conf")
@@ -181,13 +263,17 @@ function deploy() {
     *)
         printLog "error" "MODE ${MODE} NOT FOUND"
         help
-        exit
+        exit 1
         ;;
     esac
 }
 
 ################################################# Main #################################################
 function main() {
+    checkEnv
+    assignDefault
+    readParam
+
     deploy
 }
 
@@ -196,34 +282,43 @@ function main() {
 ###########################################################################################################
 if [ $# -eq 0 ]; then
     help
-    exit
+    exit 1
 fi
 while [ ! $# -eq 0 ]; do
-    case "$1" in
+    case "${1}" in
     --project | -p)
-        if [[ "$2" != "" ]]; then
-            PROJECT=$2
-        fi
-        PROJECT_CONF_PATH="${DEPLOYMENT_CONF_PATH}/${PROJECT}"
-        printLog "info" "Project's conf path: ${PROJECT_CONF_PATH}"
-        ;;
-    --node | -n)
-        NODE=$2
-        printLog "info" "Node ${NODE} will be deployed"
+        shiftOption2 $#
+        PROJECT_NAME="${2}"
+        shift 2
         ;;
     --mode | -m)
-        MODE=$2
+        shiftOption2 $#
+        mode="${2}"
+        shift 2
         ;;
-    --address | -a)
-        ADDRESS=$2
+    --node | -n)
+        shiftOption2 $#
+        NODE="${2}"
+        shift 2
+        ;;
+    --address | -addr)
+        shiftOption2 $#
+        ADDRESS="${2}"
+        shift 2
+        ;;
+    --all | -a)
+        ALL="true"
+        shift 1
+        ;;
+    --help | -h)
+        help
+        exit 1
         ;;
     *)
-        printLog "error" "COMMAND \"$1\" NOT FOUND"
+        printLog "error" "COMMAND \"${1}\" NOT FOUND"
         help
-        exit
+        exit 1
         ;;
     esac
-    shiftOption2 $#
-    shift 2
 done
 main

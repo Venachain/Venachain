@@ -6,6 +6,7 @@
 
 ### Improvements
 * [deploy] 脚本不再使用repstr二进制文件，使用sed指令替代 --吴经文
+* [deploy] 脚本逻辑与代码优化 --吴经文
 
 ### Bug Fixes
 * [console] 修复venachain namespace缺少方法问题 --陈明晶

@@ -3,18 +3,24 @@
 ###########################################################################################################
 ################################################# VRIABLES #################################################
 ###########################################################################################################
-SCRIPT_NAME="$(basename ${0})"
-SCRIPT_ALIAS="$(echo $0 | sed -e 's/\(.*\)\/\(.*\).sh/\2/g')"
-PROJECT_PATH=$(
-    cd $(dirname $0)
+
+## path
+CURRENT_PATH="$(cd "$(dirname "$0")";pwd)"
+PROJECT_PATH="$(
+    cd $(dirname ${0})
     cd ../../
     pwd
-)
-BIN_PATH=${PROJECT_PATH}/bin
-DATA_PATH=${PROJECT_PATH}/data
-CONF_PATH=${PROJECT_PATH}/conf
+)"
+BIN_PATH="${PROJECT_PATH}/bin"
+DATA_PATH="${PROJECT_PATH}/data"
+CONF_PATH="${PROJECT_PATH}/conf"
 
+## global
+SCRIPT_NAME="$(basename ${0})"
+SCRIPT_ALIAS="$(echo ${CURRENT_PATH}/${SCRIPT_NAME} | sed -e 's/\(.*\)\/scripts\/\(.*\).sh/\2/g')"
 NODE_ID=""
+
+DEPLOY_PATH=""
 NODE_DIR=""
 DEPLOY_CONF=""
 IP_ADDR=""
@@ -34,9 +40,9 @@ USAGE: ${SCRIPT_NAME}  [options] [value]
 
         OPTIONS:
 
-           --nodeid, -n                   the specified node name. must be specified
+            --nodeid, -n                the specified node name, must be specified
 
-           --help, -h                     show help
+            --help, -h                  show help
 "
 }
 
@@ -58,15 +64,15 @@ function printLog() {
 ################################################# Check Shift Option #################################################
 function shiftOption2() {
     if [[ $1 -lt 2 ]]; then
-         printLog "error" "MISS OPTION VALUE! PLEASE SET THE VALUE"
+        printLog "error" "MISS OPTION VALUE! PLEASE SET THE VALUE"
         help
-        exit
+        exit 1
     fi
 }
 
 ################################################# Check Conf #################################################
 function checkConf() {
-    ref=$(cat "${DEPLOY_CONF}" | grep "$1"= | sed -e 's/\(.*\)=\(.*\)/\2/g')
+    ref="$(cat "${DEPLOY_CONF}" | grep "${1}=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
     if [[ "${ref}" != "" ]]; then
         return 1
     fi
@@ -75,80 +81,106 @@ function checkConf() {
 
 ################################################# Check Env #################################################
 function checkEnv() {
+    NODE_DIR="${DATA_PATH}/node-${NODE_ID}"
+    DEPLOY_CONF="${NODE_DIR}/deploy_node-${NODE_ID}.conf"
+
+    if [[ "${NODE_ID}" == "" ]]; then
+        printLog "error" "NODE NAME NOT SET"
+        exit 1
+    fi 
+
     if [ ! -f "${DEPLOY_CONF}" ]; then
         printLog "error" "FILE ${DEPLOY_CONF} NOT FOUND"
+        exit 1
+    fi
+    if [ ! -f "${CONF_PATH}/genesis.json" ]; then
+        printLog "error" "FILE ${CONF_PATH}/genesis.json NOT FOUND"
+        exit 1
+    fi
+    if [ ! -f "${CONF_PATH}/keyfile.json" ]; then
+        printLog "error" "FILE ${CONF_PATH}/keyfile.json NOT FOUND"
         exit
+    fi
+    if [ ! -f "${CONF_PATH}/keyfile.phrase" ]; then
+        printLog "error" "FILE ${CONF_PATH}/keyfile.phrase NOT FOUND"
+        exit
+    fi
+    if [ ! -f "${CONF_PATH}/keyfile.account" ]; then
+        printLog "error" "FILE ${CONF_PATH}/keyfile.account NOT FOUND"
+        exit
+    fi
+    if [ ! -f "${BIN_PATH}/vcl" ]; then
+        printLog "error" "FILE ${BIN_PATH}/vcl NOT FOUND"
+        exit 1
     fi
 
     checkConf "ip_addr"
     if [[ $? -ne 1 ]]; then
-        printLog "error" "NODE'S IP HAVE NOT BEEN SET"
-        exit
+        printLog "error" "NODE'S IP NOT SET IN ${DEPLOY_CONF}"
+        exit 1
     fi
     checkConf "rpc_port"
     if [[ $? -ne 1 ]]; then
-        printLog "error" "NODE'S RPC PORT HAVE NOT BEEN SET"
-        exit
+        printLog "error" "NODE'S RPC PORT NOT SET IN ${DEPLOY_CONF}"
+        exit 1
     fi
 }
 
 ################################################# Assign Default #################################################
 function assignDefault() {
-    IP_ADDR=127.0.0.1
-    RPC_PORT=6791
+    IP_ADDR="127.0.0.1"
+    RPC_PORT="6791"
 }
 
 ################################################# Read File #################################################
 function readFile() {
     checkConf "ip_addr"
     if [[ $? -eq 1 ]]; then
-        IP_ADDR=$(cat ${DEPLOY_CONF} | grep "ip_addr=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
+        IP_ADDR="$(cat ${DEPLOY_CONF} | grep "ip_addr=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
     fi
     checkConf "rpc_port"
     if [[ $? -eq 1 ]]; then
-        RPC_PORT=$(cat ${DEPLOY_CONF} | grep "rpc_port=" | sed -e 's/\(.*\)=\(.*\)/\2/g')
+        RPC_PORT="$(cat ${DEPLOY_CONF} | grep "rpc_port=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
+    fi
+    checkConf "deploy_path"
+    if [[ $? -eq 1 ]]; then
+        DEPLOY_PATH="$(cat ${DEPLOY_CONF} | grep "deploy_path=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
     fi
 
-    PHRASE=$(cat ${CONF_PATH}/keyfile.phrase)
+    PHRASE="$(cat ${CONF_PATH}/keyfile.phrase)"
     if [[ "${PHRASE}" == "" ]]; then
-        printLog "error" "READ PHRASE FAILED"
-        exit
+        printLog "error" "FILE ${CONF_PATH}/keyfile.phrase IS EMPTY"
+        exit 1
     fi
-    ACCOUNT=$(cat ${CONF_PATH}/keyfile.account)
+    ACCOUNT="$(cat ${CONF_PATH}/keyfile.account)"
     if [[ "${ACCOUNT}" == "" ]]; then
-        printLog "error" "READ ACCOUNT FAILED"
-        exit
+        printLog "error" "FILE ${CONF_PATH}/keyfile.account IS EMPTY"
+        exit 1
     fi
-}
-
-################################################# Unclock Account #################################################
-function unlockAccount() {
-    http_data="{\"jsonrpc\":\"2.0\",\"method\":\"personal_unlockAccount\",\"params\":[\"${ACCOUNT}\",\"${PHRASE}\",0],\"id\":1}"
-    res=$(curl -H "Content-Type: application/json" --data "${http_data}" http://${IP_ADDR}:${RPC_PORT})
-    echo "${res}"
-    if [[ $(echo ${res} | grep error ) != "" ]]; then
-        printLog "error" "UNLOCK ACCOUNT FAILED"
-        exit
-    fi
-    printLog "info" "Unlock account completed"
 }
 
 ################################################# Set Super Admin #################################################
 function setSuperAdmin() {
-    ${BIN_PATH}/vcl role setSuperAdmin --keyfile ${CONF_PATH}/keyfile.json --url ${IP_ADDR}:${RPC_PORT} <${CONF_PATH}/keyfile.phrase
+    res_super_admin="$(${BIN_PATH}/vcl role hasRole ${ACCOUNT} SUPER_ADMIN --keyfile ${CONF_PATH}/keyfile.json --url ${IP_ADDR}:${RPC_PORT} <${CONF_PATH}/keyfile.phrase)"
+    if [[ "$(echo ${res_super_admin} | grep "int32=1")" != "" ]]; then
+        printLog "warn" "Node-${NODE_ID} Has Already Been Super Admin"
+        return 0
+    fi
+    
+    "${BIN_PATH}/vcl" role setSuperAdmin --keyfile "${CONF_PATH}/keyfile.json" --url "${IP_ADDR}:${RPC_PORT}" <"${CONF_PATH}/keyfile.phrase"
     timer=0
-    super_admin_flag=""
+    res_super_admin=""
     while [ ${timer} -lt 10 ]; do
-        super_admin_flag=$(${BIN_PATH}/vcl role hasRole ${ACCOUNT} SUPER_ADMIN --keyfile ${CONF_PATH}/keyfile.json --url ${IP_ADDR}:${RPC_PORT} <${CONF_PATH}/keyfile.phrase)
-        if [[ $(echo ${super_admin_flag} | grep "int32=1") != "" ]]; then
+        res_super_admin="$(${BIN_PATH}/vcl role hasRole ${ACCOUNT} SUPER_ADMIN --keyfile ${CONF_PATH}/keyfile.json --url ${IP_ADDR}:${RPC_PORT} <${CONF_PATH}/keyfile.phrase)"
+        if [[ "$(echo ${res_super_admin} | grep "int32=1")" != "" ]]; then
             break
         fi
         sleep 1
         let timer++
     done
-    if [[ $(echo ${super_admin_flag} | grep "int32=1") == "" ]]; then
+    if [[ "$(echo ${res_super_admin} | grep "int32=1")" == "" ]]; then
         printLog "error" "SET SUPER ADMIN FAILED"
-        exit
+        exit 1
     else
         printLog "info" "Set super admin completed"
     fi
@@ -157,20 +189,26 @@ function setSuperAdmin() {
 
 ################################################# Set Chain Admin #################################################
 function addChainAdmin() {
-    ${BIN_PATH}/vcl role addChainAdmin ${ACCOUNT} --keyfile ${CONF_PATH}/keyfile.json --url ${IP_ADDR}:${RPC_PORT} <${CONF_PATH}/keyfile.phrase
+    res_chain_admin="$(${BIN_PATH}/vcl role hasRole ${ACCOUNT} CHAIN_ADMIN --keyfile ${CONF_PATH}/keyfile.json --url ${IP_ADDR}:${RPC_PORT} <${CONF_PATH}/keyfile.phrase)"
+    if [[ $(echo ${res_chain_admin} | grep "int32=1") != "" ]]; then
+        printLog "warn" "Node-${NODE_ID} Has Already Been Chain Admin"
+        return 0
+    fi
+    
+    "${BIN_PATH}/vcl" role addChainAdmin "${ACCOUNT}" --keyfile "${CONF_PATH}/keyfile.json" --url "${IP_ADDR}:${RPC_PORT}" <"${CONF_PATH}/keyfile.phrase"
     timer=0
-    chain_admin_flag=""
+    res_chain_admin=""
     while [ ${timer} -lt 10 ]; do
-        chain_admin_flag=$(${BIN_PATH}/vcl role hasRole ${ACCOUNT} CHAIN_ADMIN --keyfile ${CONF_PATH}/keyfile.json --url ${IP_ADDR}:${RPC_PORT} <${CONF_PATH}/keyfile.phrase)
-        if [[ $(echo ${chain_admin_flag} | grep "int32=1") != "" ]]; then
+        res_chain_admin="$(${BIN_PATH}/vcl role hasRole ${ACCOUNT} CHAIN_ADMIN --keyfile ${CONF_PATH}/keyfile.json --url ${IP_ADDR}:${RPC_PORT} <${CONF_PATH}/keyfile.phrase)"
+        if [[ "$(echo ${res_chain_admin} | grep "int32=1")" != "" ]]; then
             break
         fi
         sleep 1
         let timer++
     done
-    if [[ $(echo ${chain_admin_flag} | grep "int32=1") == "" ]]; then
+    if [[ "$(echo ${res_chain_admin} | grep "int32=1")" == "" ]]; then
         printLog "error" "SET CHAIN ADMIN FAILED"
-        exit
+        exit 1
     else
         printLog "info" "Set chain admin completed"
     fi
@@ -181,30 +219,31 @@ function saveFirstnodeInfo() {
     {
         echo "user_name=$(whoami)"
         echo "node_id=${NODE_ID}"
+        echo "deploy_path=${DEPLOY_PATH}"
         echo "ip_addr=${IP_ADDR}"
         echo "rpc_port=${RPC_PORT}"
     } >"${CONF_PATH}/firstnode.info"
     if [[ ! -f "${CONF_PATH}/firstnode.info" ]] || [[ "$(cat ${CONF_PATH}/firstnode.info)" == "" ]]; then
         printLog "error" "SETUP FIRSTNODE INFO FAILED"
-        exit
+        exit 1
     fi
     printLog "info" "File: ${CONF_PATH}/firstnode.info"
     printLog "info" "Firstnode: "
-    cat ${CONF_PATH}/firstnode.info
+    cat "${CONF_PATH}/firstnode.info"
     printLog "info" "Setup firstnode info completed"
 }
 
 ################################################# Main #################################################
 function main() {
-    printLog "info" "## Deploy System Contract Start ##"
+    printLog "info" "## Add Admin Role Start ##"
     checkEnv
     assignDefault
     readFile
-    unlockAccount
+    
     setSuperAdmin
     addChainAdmin
     saveFirstnodeInfo
-    printLog "success" "Deploy system contract succeeded"
+    printLog "success" "Add admin role succeeded"
 }
 
 ###########################################################################################################
@@ -212,27 +251,28 @@ function main() {
 ###########################################################################################################
 if [ $# -eq 0 ]; then
     help
-    exit
+    exit 1
 fi
 while [ ! $# -eq 0 ]; do
-    case "$1" in
+    case "${1}" in
     --nodeid | -n)
         shiftOption2 $#
         NODE_ID="${2}"
-        NODE_DIR="${DATA_PATH}/node-${NODE_ID}"
-        DEPLOY_CONF="${NODE_DIR}/deploy_node-${NODE_ID}.conf"
         shift 2
         ;;
     --auto)
         AUTO="true"
         shift 1
         ;;
-    *)
-        printLog "error" "COMMAND \"$1\" NOT FOUND"
+    --help | -h)
         help
-        exit
+        exit 1
+        ;;
+    *)
+        printLog "error" "COMMAND \"${1}\" NOT FOUND"
+        help
+        exit 1
         ;;
     esac
-
 done
 main
