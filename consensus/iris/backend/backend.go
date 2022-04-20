@@ -432,7 +432,7 @@ func (sb *backend) executeBlock(proposal iris.Proposal) error {
 
 		if cblock.Root() != block.Root() {
 			sb.current = nil
-			return errors.New("invalid block root")
+			return fmt.Errorf("invalid merkle root (remote: %x local: %x)", block.Root(), cblock.Root())
 		}
 		sb.current.block = block
 		sb.current.header = block.Header()
