@@ -630,6 +630,10 @@ func (bc *BlockChain) GetReceiptsByHash(hash common.Hash) types.Receipts {
 	return rawdb.ReadReceipts(bc.db, hash, *number)
 }
 
+func (bc *BlockChain) HasTransaction(hash common.Hash) (bool, error) {
+	return rawdb.HasTransaction(bc.db, hash)
+}
+
 // GetBlocksFromHash returns the block corresponding to hash and up to n-1 ancestors.
 // [deprecated by eth/62]
 func (bc *BlockChain) GetBlocksFromHash(hash common.Hash, n int) (blocks []*types.Block) {
