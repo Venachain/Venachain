@@ -4,6 +4,9 @@
 ### Features
 * [contract] 预编译合约添加paillier合约 --饶应典
 
+### Bug Fixes
+* [consensus] 修复共识层执行区块的状态校验和交易重放检查问题 --陈明晶
+
 ### Improvements
 * [deploy] 部署脚本逻辑与代码优化 --吴经文
 
