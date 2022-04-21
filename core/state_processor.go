@@ -153,14 +153,21 @@ func (p *StateProcessor) CheckAndProcess(block *types.Block, statedb *state.Stat
 	for i, tx := range block.Transactions() {
 		statedb.Prepare(tx.Hash(), common.Hash{}, i)
 		snap := statedb.Snapshot()
-		if r := p.bc.GetReceiptsByHash(tx.Hash()); r != nil {
-			return nil, nil, errors.New("Already executed tx")
+
+		// 防止交易重放
+		ok, err := p.bc.HasTransaction(tx.Hash())
+		if err != nil {
+			return nil, nil, err
+		}
+		if ok {
+			return nil, nil, errors.New("already executed tx")
 		}
 		if _, ok := txsMap[tx.Hash()]; ok {
-			return nil, nil, errors.New("Repeated tx in one block")
+			return nil, nil, errors.New("repeated tx in one block")
 		} else {
 			txsMap[tx.Hash()] = struct{}{}
 		}
+
 		receipt, _, err := ApplyTransaction(p.config, p.bc, nil, gp, statedb, header, tx, usedGas, cfg)
 		if err != nil {
 			statedb.RevertToSnapshot(snap)
