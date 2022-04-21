@@ -1,64 +1,48 @@
 # Changelog
 
-## [1.1.0.1.0]
+## [1.1.1]
 ### Features
 * [contract] 预编译合约添加paillier合约 --饶应典
 
 ### Improvements
-* [deploy] 脚本不再使用repstr二进制文件，使用sed指令替代 --吴经文
-* [deploy] 脚本逻辑与代码优化 --吴经文
+* [deploy] 部署脚本逻辑与代码优化 --吴经文
 
-### Bug Fixes
-* [console] 修复venachain namespace缺少方法问题 --陈明晶
-* [build] 修复编译时，因为release/linux下没有bin目录而报错 --吴经文
-* [build] 修复项目第一次make clean时，因为life/resolver/sig/openssl下没有Makefile文件而报错 --吴经文
-* [deploy] 修复远程部署或容器化部署在通过ifconfig判断ip地址是否是本机时，出现误判的bug --吴经文
-
-## [1.1.2]
+## [1.1.0]
 ### Features
+* [contract] 增加存证预编译合约 --李京京
+* [chain] 增加DAG信息，可以并行执行交易 --张玉坚
+* [other] 轻节点功能完善 --陈明晶
 * [storage] 存储插件化，新增可选存储引擎PebbleDB --曾梦露
 * [other] Venachain支持节点License，对节点可用性进行控制 --杜代栋
-* [chain] 区块打包交易个数自动控制  --张伟
-* [deploy] 重构部署脚本支持多机一键部署  --吴经文
+* [chain] 区块打包交易个数自动控制 --张伟
+* [deploy] 重构部署脚本支持多机一键部署 --吴经文
 * [contract] 预编译合约添加bulletproof合约 --陈炫慧
 
 ### Improvements
-* [chain] 交易池优化-增加各个阶段的交易池预处理  --陈明晶
+* [other] 节点间同步的交易可并行进行验证 --陈炫慧
+* [download] 区块同步优化重复同步 --陈明晶
+* [evm] 合约支持SM3 --李京京
+* [rpc] namespace增加venachain --张玉坚
+* [chain] 交易池优化-增加各个阶段的交易池预处理 --陈明晶
 * [chain] 并行处理添加参数用于是否开启 --张玉坚
-* [contract] 优化存证预编译合约  --陈炫慧
+* [contract] 优化存证预编译合约 --陈炫慧
 * [chain] 调整区块缓存个数 --陈明晶
 * [scripts] 添加设置交易池最大交易个数 --吴经文
+* [deploy] 脚本不再使用repstr二进制文件，使用sed指令替代 --吴经文
+
 
 ### Bug Fixes
+* [evm]   合约运行中的错误信息可以正常返回 --张玉坚
+* [chain] badBlock问题修复 --张玉坚
 * [chain] 修复并行处理时，因资源竞争失败后的依赖关系处理 --张玉坚
 * [vm] 修复通过CNS调用合约防火墙未生效问题 --陈明晶
 * [vm] 修复在VM防火墙验证相关logs未生效或错误问题 --陈明晶
 * [node] 修复新增节点的类型可以设置成共识节点的问题 --陈炫慧
 * [vm] 修复CNS预编译合约中获取合约地址失败时返回值不正确的问题 --崔璨
-
-## [1.1.1]
-### Features
-* [other] 轻节点功能完善 --陈明晶
-
-### Improvements
-* [download] 区块同步优化重复同步 --陈明晶
-* [evm] 合约支持SM3              --李京京
-* [rpc] namespace增加venachain   --张玉坚
-
-### Bug Fixes
-* [chain] badBlock问题修复 -- 张玉坚
-
-## [1.1.0.0.0]
-### Features
-* [contract] 增加存证预编译合约  --李京京
-* [chain] 增加DAG信息，可以并行执行交易 --张玉坚
-
-### Improvements
-* [other] 节点间同步的交易可并行进行验证 --陈炫慧
-
-### Bug Fixes
-* [evm]   合约运行中的错误信息可以正常返回 --张玉坚
-* [chain] badBlock问题修复 -- 张玉坚
+* [console] 修复venachain namespace缺少方法问题 --陈明晶
+* [build] 修复编译时，因为release/linux下没有bin目录而报错 --吴经文
+* [build] 修复项目第一次make clean时，因为life/resolver/sig/openssl下没有Makefile文件而报错 --吴经文
+* [deploy] 修复远程部署或容器化部署在通过ifconfig判断ip地址是否是本机时，出现误判的bug --吴经文
 
 ## [1.0.1.0.4]
 ### Improvements
