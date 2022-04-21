@@ -30,9 +30,8 @@
 * [scripts] 添加设置交易池最大交易个数 --吴经文
 * [deploy] 脚本不再使用repstr二进制文件，使用sed指令替代 --吴经文
 
-
 ### Bug Fixes
-* [evm]   合约运行中的错误信息可以正常返回 --张玉坚
+* [evm] 合约运行中的错误信息可以正常返回 --张玉坚
 * [chain] badBlock问题修复 --张玉坚
 * [chain] 修复并行处理时，因资源竞争失败后的依赖关系处理 --张玉坚
 * [vm] 修复通过CNS调用合约防火墙未生效问题 --陈明晶
@@ -44,47 +43,33 @@
 * [build] 修复项目第一次make clean时，因为life/resolver/sig/openssl下没有Makefile文件而报错 --吴经文
 * [deploy] 修复远程部署或容器化部署在通过ifconfig判断ip地址是否是本机时，出现误判的bug --吴经文
 
-## [1.0.1.0.4]
+## [1.0.0.0.4]
+### Features
+* [chain] 增加隐私token的功能 --王琪
+* [contract]　增加范围证明[range proof]的验证功能  --王琪
+* [chain] 链bp参数修改，与之前版本兼容 --王琪
+
 ### Improvements
 * [scripts] 启动脚本添加设置区块最大交易数 --张玉坚
 
 ### Bug Fixes
 * [chain] 修复bad block问题 --张玉坚
 
-## [1.0.1.0.1]
-### Features
-* [chain] 链bp参数修改，与之前版本兼容 --王琪
-
-## [1.0.1.0.0]
-### Features
-* [chain] 增加隐私token的功能 --王琪
-* [contract]　增加范围证明[range proof]的验证功能  --王琪
-
 ## [1.0.0.0.3]
-
 ### Bug Fixes
-* [p2p]   peer的id使用 publicKey[:16]
-* [evm]   evm合约部署可以配置参数
+* [p2p] peer的id使用 publicKey[:16]
+* [evm] evm合约部署可以配置参数
 * [other] 修复cmd工具对VRF参数的修改
 
 ## [1.0.0.0.0]
-
 ### Breaking Changes
 * [system contract] 系统合约重构成预编译合约形式
 * [other] 删除eip，DAO等版本升级的Hard Fork和兼容性检查;
 * [other] 删除Rinkeby，Testnet;删除ChainConfig的EmptyBlock设置;删除Clique；删除difficulty；删除dev模式；
 * [other] 删除默认配置,并重写了genesis初始化逻辑。
 * [other] 交易处理生命周期全流程优化  - 张玉坚
-* [p2p]   修改protocol协议为venachainV1，交易广播添加hash广播  - 张玉坚
+* [p2p] 修改protocol协议为venachainV1，交易广播添加hash广播  - 张玉坚
 * [other] 交易结构中删除了txtype字段
-
-
-### Improvements
-* [other] 版本管理采用mod模型 - 汤勇，于宗坤，杜满想
-* [other] 删除whisper,swarm,mobile,cmd/wnode（Whisper node）- 杜满想
-* [other] 删除pow相关逻辑(reorg,sidechain),删除cbft - 杜满想
-* [contract] 系统合约缓存机制重构。
-* [contract] 禁止利用CNS调用系统预编译合约。
 
 ### Features
 * [chain] 添加一链多账本功能（群组预编译化系统合约等等）
@@ -93,6 +78,12 @@
 * [other] 可视化运维平台
 * [other] 新的链交互工具 vcl
 
+### Improvements
+* [other] 版本管理采用mod模型 - 汤勇，于宗坤，杜满想
+* [other] 删除whisper,swarm,mobile,cmd/wnode（Whisper node）- 杜满想
+* [other] 删除pow相关逻辑(reorg,sidechain),删除cbft - 杜满想
+* [contract] 系统合约缓存机制重构。
+* [contract] 禁止利用CNS调用系统预编译合约。
 
 ## [0.9.12] 2020-08-25
 ### Breaking Changes
