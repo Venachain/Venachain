@@ -19,6 +19,7 @@ package backend
 import (
 	"crypto/ecdsa"
 	"errors"
+	"fmt"
 	"math/big"
 	"sync"
 	"time"
@@ -435,10 +436,9 @@ func (sb *backend) makeCurrent(parentRoot common.Hash, header *types.Header) err
 	return nil
 }
 
-//func (sb *backend) excuteBlock(proposal istanbul.Proposal) error {
-func (sb *backend) excuteBlock(block *types.Block) error {
+//func (sb *backend) executeBlock(proposal istanbul.Proposal) error {
+func (sb *backend) executeBlock(block *types.Block) error {
 	var (
-		//block  *types.Block
 		chain  *core.BlockChain
 		parent *types.Block
 		header *types.Header
@@ -446,39 +446,54 @@ func (sb *backend) excuteBlock(block *types.Block) error {
 		err    error
 	)
 
-	//if block, ok = proposal.(*types.Block); !ok {
-	//	return errors.New("invalid proposal")
-	//}
-
 	if chain, ok = sb.chain.(*core.BlockChain); !ok {
 		return errors.New("sb.chain not a core.BlockChain")
 	}
 
 	header = block.Header()
-
 	if parent = chain.GetBlockByHash(header.ParentHash); parent == nil {
-		return errors.New("Proposal's parent block is not in current chain")
+		return errors.New("proposal's parent block is not in current chain")
 	}
 
 	if err = sb.makeCurrent(parent.Root(), header); err != nil {
 		return err
-	} else {
-		// Iterate over and process the individual transactios
+	}
 
-		cblock, receipts, err := chain.Processor().CheckAndProcess(block, sb.current.state, vm.Config{})
-		if err != nil {
-			return err
-		}
-		sb.current.txs = block.Transactions()
-		sb.current.receipts = receipts
-		sb.current.tcount = block.Transactions().Len()
+	// Iterate over and process the individual transactios
+	cblock, receipts, err := chain.Processor().CheckAndProcess(block, sb.current.state, vm.Config{})
+	if err != nil {
+		sb.current = nil
+		return err
+	}
 
-		if cblock.Root() != block.Root() {
-			sb.current = nil
-			return errors.New("Invalid block root")
-		}
-		sb.current.block = block
-		sb.current.header = block.Header()
+	if err := validateState(block, cblock); err != nil {
+		sb.current = nil
+		return err
+	}
+
+	sb.current.txs = block.Transactions()
+	sb.current.receipts = receipts
+	sb.current.tcount = block.Transactions().Len()
+	sb.current.block = block
+	sb.current.header = block.Header()
+	return nil
+}
+
+func validateState(remoteBlock *types.Block, localBlock *types.Block) error {
+	if localBlock.GasUsed() != remoteBlock.GasUsed() {
+		return fmt.Errorf("invalid gas used (remote: %d local: %d)", remoteBlock.GasUsed(), localBlock.GasUsed())
+	}
+
+	if localBlock.Bloom() != remoteBlock.Bloom() {
+		return fmt.Errorf("invalid bloom (remote: %x  local: %x)", remoteBlock.Bloom(), localBlock.Bloom())
+	}
+
+	if localBlock.ReceiptHash() != remoteBlock.ReceiptHash() {
+		return fmt.Errorf("invalid receipt root hash (remote: %x local: %x)", remoteBlock.ReceiptHash(), localBlock.ReceiptHash())
+	}
+
+	if localBlock.Root() != remoteBlock.Root() {
+		return fmt.Errorf("invalid merkle root (remote: %x local: %x)", remoteBlock.Root(), localBlock.Root())
 	}
 
 	return nil
@@ -507,10 +522,10 @@ func (sb *backend) Verify(proposal iris.Proposal, isProposer bool) (time.Duratio
 	// If this node is proposer and the proposal is mined by this node, need not to execute the block
 	if (block.Coinbase() != sb.address) || !isProposer {
 		//excute txs in block
-		//if err := sb.excuteBlock(proposal); err != nil {
+		//if err := sb.executeBlock(proposal); err != nil {
 		//	return 0, err
 		//}
-		if err := sb.excuteBlock(block); err != nil {
+		if err := sb.executeBlock(block); err != nil {
 			return 0, err
 		}
 	}
