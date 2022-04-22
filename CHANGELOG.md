@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.0.1.0.0]
+### Bug Fixes
+* [consensus] 修复共识层执行区块的状态校验和交易重放检查问题 --陈明晶
+
 ## [1.0.0.0.4]
 ### Features
 * [chain] 增加隐私token的功能 --王琪
