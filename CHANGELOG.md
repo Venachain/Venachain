@@ -4,24 +4,6 @@
 ### Bug Fixes
 * [consensus] 修复共识层执行区块的状态校验和交易重放检查问题 --陈明晶
 
-## [1.0.0.0.4]
-### Features
-* [chain] 增加隐私token的功能 --王琪
-* [contract]　增加范围证明[range proof]的验证功能  --王琪
-* [chain] 链bp参数修改，与之前版本兼容 --王琪
-
-### Improvements
-* [scripts] 启动脚本添加设置区块最大交易数 --张玉坚
-
-### Bug Fixes
-* [chain] 修复bad block问题 --张玉坚
-
-## [1.0.0.0.3]
-### Bug Fixes
-* [p2p] peer的id使用 publicKey[:16]
-* [evm] evm合约部署可以配置参数
-* [other] 修复cmd工具对VRF参数的修改
-
 ## [1.0.0.0.0]
 ### Breaking Changes
 * [system contract] 系统合约重构成预编译合约形式
@@ -38,6 +20,9 @@
 * [chain] venachain命令行工具支持通过replay区块的方式完成非兼容性升级 - 于宗坤
 * [other] 可视化运维平台
 * [other] 新的链交互工具 vcl
+* [chain] 增加隐私token的功能 --王琪
+* [contract]　增加范围证明[range proof]的验证功能  --王琪
+* [chain] 链bp参数修改，与之前版本兼容 --王琪
 
 ### Improvements
 * [other] 版本管理采用mod模型 - 汤勇，于宗坤，杜满想
@@ -45,6 +30,13 @@
 * [other] 删除pow相关逻辑(reorg,sidechain),删除cbft - 杜满想
 * [contract] 系统合约缓存机制重构。
 * [contract] 禁止利用CNS调用系统预编译合约。
+* [scripts] 启动脚本添加设置区块最大交易数 --张玉坚
+
+### Bug Fixes
+* [chain] 修复bad block问题 --张玉坚
+* [p2p] peer的id使用 publicKey[:16]
+* [evm] evm合约部署可以配置参数
+* [other] 修复cmd工具对VRF参数的修改
 
 ## [0.9.12] 2020-08-25
 ### Breaking Changes
