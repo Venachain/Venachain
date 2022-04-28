@@ -3,3 +3,4 @@
 *.sol linguist-language=Solidity
 *.c linguist-language=go
 *.cpp linguist-language=go
+*.h linguist-language=go
