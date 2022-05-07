@@ -1,8 +1,11 @@
 package vm
 
 import (
+	"encoding/json"
 	"math/big"
 	"strings"
+
+	"github.com/Venachain/Venachain/rlp"
 
 	"github.com/Venachain/Venachain/common"
 	"github.com/Venachain/Venachain/common/syscontracts"
@@ -17,11 +20,24 @@ type PaillierManager struct {
 	blockNumber  *big.Int       // blockNumber = evm.BlockNumber
 }
 
+type Paillier struct {
+	PaillierType string      `json:"paillierType"`
+	PubKey       string      `json:"pubKey"`
+	Data         interface{} `json:"data"`
+	Timestamp    *big.Int    `json:"timestamp"`
+}
+
 func NewPL(db StateDB) *PaillierManager {
 	return &PaillierManager{
 		stateDB:      db,
 		contractAddr: syscontracts.PaillierAddress,
 		blockNumber:  big.NewInt(0),
+	}
+}
+
+func NewPaillier(paillierType string) *Paillier {
+	return &Paillier{
+		PaillierType: paillierType,
 	}
 }
 
@@ -40,6 +56,20 @@ func (he *PaillierManager) paillierAdd(arg string, pubKey string) (string, error
 // PaillierMul
 func (he *PaillierManager) paillierMul(arg string, scalar uint, pubKey string) (string, error) {
 	return paillier.PaillierMul(arg, scalar, pubKey)
+}
+
+func (he *PaillierManager) savePaillier(paillierType, pubKey string, data interface{}, result string) error {
+	pai := NewPaillier(paillierType)
+	pai.PubKey = pubKey
+	pai.Data = data
+	pai.Timestamp = he.blockNumber
+	key, _ := json.Marshal(pai)
+	valueInBytes, err := rlp.EncodeToBytes(result)
+	if err != nil {
+		return err
+	}
+	he.stateDB.SetState(he.contractAddr, key, valueInBytes)
+	return nil
 }
 
 func (he *PaillierManager) emitNotifyEvent(code CodeType, msg string) {
