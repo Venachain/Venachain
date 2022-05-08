@@ -1,8 +1,9 @@
 # Changelog
-
-## [1.1.1]
+## [1.1.2]
 ### Features
 * [contract] 预编译合约添加paillier合约 --饶应典
+
+## [1.1.1]
 
 ### Bug Fixes
 * [consensus] 修复共识层执行区块的状态校验和交易重放检查问题 --陈明晶
