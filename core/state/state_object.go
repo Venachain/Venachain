@@ -321,6 +321,19 @@ func (c *stateObject) CreateTrie(db Database) {
 	}
 }
 
+// GetDirtyState retrieves a value from the account storage trie.
+func (self *stateObject) GetDirtyState(db Database, keyTree string) []byte {
+	// If we have a dirty value for this state entry, return it
+	valueKey, dirty := self.dirtyStorage[keyTree]
+	if dirty {
+		value, ok := self.dirtyValueStorage[valueKey]
+		if ok {
+			return value
+		}
+	}
+	return nil
+}
+
 // GetState retrieves a value from the account storage trie.
 //func (self *stateObject) GetState(db Database, key common.Hash) common.Hash {
 //	// If we have a dirty value for this state entry, return it
@@ -442,7 +455,7 @@ func (self *stateObject) GetCommittedStateNoCache(db Database, key string) []byt
 func (self *stateObject) SetState(db Database, keyTrie string, valueKey common.Hash, value []byte) {
 
 	//if the new value is the same as old,don't set
-	preValue := self.GetState(db, keyTrie) // get value key
+	preValue := self.GetDirtyState(db, keyTrie) // get value key
 	if bytes.Equal(preValue, value) {
 		return
 	}
@@ -461,6 +474,10 @@ func (self *stateObject) SetState(db Database, keyTrie string, valueKey common.H
 func (self *stateObject) setState(key string, valueKey common.Hash, value []byte) {
 	self.dirtyStorage[key] = valueKey
 	self.dirtyValueStorage[valueKey] = value
+}
+
+func (self *stateObject) clearState(key string) {
+	delete(self.dirtyStorage, key)
 }
 
 // updateTrie writes cached storage modifications into the object's storage trie.
