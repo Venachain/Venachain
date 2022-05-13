@@ -249,7 +249,11 @@ func (ch abiChange) dirtied() *common.Address {
 }
 
 func (ch storageChange) revert(s *StateDB) {
-	s.getStateObject(*ch.account).setState(ch.key, ch.valueKey, ch.preValue)
+	if ch.preValue == nil {
+		s.getStateObject(*ch.account).clearState(ch.key)
+	} else {
+		s.getStateObject(*ch.account).setState(ch.key, ch.valueKey, ch.preValue)
+	}
 }
 
 func (ch storageChange) dirtied() *common.Address {
