@@ -19,10 +19,6 @@ ws_port=26791
 log_dir=
 log_size=67108864
 
-## NODE INIT
-validator_nodes=
-interpreter=all
-
 ## NODE START
 bootnodes=
 gcmode=archive
