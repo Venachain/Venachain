@@ -155,6 +155,7 @@ function usage() {
 #c0        unlock                           unlock node account
 #c18       unlock OPTIONS
 #c18           --nodeid, -n                 unlock account on specified node
+#c18           --account                    unlock certain account
 #c18           --help, -h                   show help
 #c0        console                          start an interactive JavaScript environment
 #c19       console OPTIONS
@@ -578,23 +579,27 @@ function createAcc() {
 }
 
 function unlockAccount() {
+    account="${3}"
+    if [[ "${account}" == "" ]]; then
+        # get node owner address
+        keystore="${DATA_PATH}/node-${NODE_ID}/keystore/"
+        keys="$(ls $keystore)"
+        for k in ${keys}
+        do
+            keyinfo="$(cat ${keystore}/${k} | sed s/[[:space:]]//g)"
+            account="${keyinfo:12:40}"
+            break
+        done
+    else 
+        if [[ "${account:0:2}" == "0x" ]]; then
+            account="${account:2:42}"
+        fi
+    fi
+
+    printLog "info" "account: 0x${account}"
     printLog "info" "Unlock node account, nodeid: ${NODE_ID}"
     printLog "question" "Please input your account password"
     read pw
-
-    # get node owner address
-    keystore="${DATA_PATH}/node-${NODE_ID}/keystore/"
-    echo "${keystore}"
-    keys="$(ls $keystore)"
-    echo "${keys}"
-    for k in ${keys}
-    do
-        keyinfo="$(cat ${keystore}/${k} | sed s/[[:space:]]//g)"
-        keyinfo="${keyinfo,,}sss"
-        account="${keyinfo:12:40}"
-        echo "account: 0x${account}"
-        break
-    done
 
     printLog "info" "Unlock command: "
     echo "curl -X POST  -H 'Content-Type: application/json' --data '{\"jsonrpc\":\"2.0\",\"method\": \"personal_unlockAccount\", \"params\": [\"0x${account}\",\"${pw}\",0],\"id\":1}' http://${1}:${2}"
@@ -602,22 +607,28 @@ function unlockAccount() {
 }
 
 function unlock() {
-    case "$1" in
-    --nodeid | -n)
-        shiftOption2 $#
-        NODE_ID="${2}"
-        NODE_DIR="${DATA_PATH}/node-${NODE_ID}"
-        echo "${NODE_DIR}"
-        ip="$(cat ${NODE_DIR}/deploy_node-${NODE_ID}.conf | grep "ip_addr=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
-        rpc_port="$(cat ${NODE_DIR}/deploy_node-${NODE_ID}.conf | grep "rpc_port=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
-        shift 2
-        ;;
-    *)
-        showUsage 18
-        exit 1
-        ;;
-    esac
-    unlockAccount "${ip}" "${rpc_port}"
+    while [ ! $# -eq 0 ]; do
+        case "$1" in
+        --nodeid | -n)
+            shiftOption2 $#
+            NODE_ID="${2}"
+            NODE_DIR="${DATA_PATH}/node-${NODE_ID}"
+            ip="$(cat ${NODE_DIR}/deploy_node-${NODE_ID}.conf | grep "ip_addr=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
+            rpc_port="$(cat ${NODE_DIR}/deploy_node-${NODE_ID}.conf | grep "rpc_port=" | sed -e 's/\(.*\)=\(.*\)/\2/g')"
+            shift 2
+            ;;
+        --account)
+            shiftOption2 $#
+            account="${2}"
+            shift 2
+            ;;
+        *)
+            showUsage 18
+            exit 1
+            ;;
+        esac
+    done
+    unlockAccount "${ip}" "${rpc_port}" "${account}"
 }
 
 ################################################# Console #################################################

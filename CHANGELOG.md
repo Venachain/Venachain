@@ -6,6 +6,7 @@
 ### Improvements
 * [chain] 优化 setState without getCommittedState --张玉坚
 * [vcl] vcl生成funcArgs时，将去除param全部空格改为仅去除param的首尾空格 --吴经文
+* [scripts] venachainctl unlock支持解锁指定account --吴经文
 
 ## [1.1.1]
 
