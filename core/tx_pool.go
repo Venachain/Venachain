@@ -17,12 +17,16 @@
 package core
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
+	"github.com/Venachain/Venachain/accounts/abi"
+	"github.com/Venachain/Venachain/crypto"
 	"math/big"
 	"runtime"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -1163,11 +1167,12 @@ func (t *txLookup) RemoveTxs(txs types.Transactions) {
 	}
 }
 
+// 用于性能测试时生成交易
 func (pool *TxPool) GenerateTxs(benchmark *types.Benchmark) {
-	go pool.generateTxs(benchmark.Count, common.HexToAddress(benchmark.To), benchmark.PreGenerate, benchmark.ProducerCnt)
+	go pool.generateTxs(benchmark.Count, common.HexToAddress(benchmark.To), benchmark.PreGenerate, benchmark.ProducerCnt, benchmark.ContractType)
 }
 
-func (pool *TxPool) generateTxs(cnt string, addr common.Address, preProducer bool, pThreadCnt string) {
+func (pool *TxPool) generateTxs(cnt string, addr common.Address, preProducer bool, pThreadCnt, contractType string) {
 	count, _ := strconv.Atoi(cnt)
 	var producerThread = 5
 	if len(pThreadCnt) != 0 {
@@ -1184,18 +1189,9 @@ func (pool *TxPool) generateTxs(cnt string, addr common.Address, preProducer boo
 	var producerCnt int32 = 0
 	producer := func(threadNum, cnt int) {
 		var gasLimit = 1 + threadNum
-		tstr := strconv.Itoa(threadNum)
 		for i := 0; i < cnt; i++ {
 			nonce := time.Now().UnixNano()
-			var data []byte = nil
-			paramArr := [][]byte{
-				common.Int64ToBytes(int64(2)),
-				[]byte("saveEvidence"),
-			}
-			paramArr = append(paramArr, []byte(fmt.Sprintf("%v%v", tstr, time.Now().UnixNano())))
-			paramArr = append(paramArr, []byte(fmt.Sprintf("%v", "1234")))
-			paramArr = append(paramArr, []byte(fmt.Sprintf("%v", "1234")))
-			data, _ = rlp.EncodeToBytes(paramArr)
+			data := pool.getContractData(threadNum, i, contractType)
 			tx := types.NewTransaction(uint64(nonce), addr, big.NewInt(0), uint64(gasLimit), big.NewInt(1), data)
 			//tx := types.NewTransaction(uint64(nonce), addr, big.NewInt(0), uint64(gasLimit), big.NewInt(1), nil)
 
@@ -1296,4 +1292,94 @@ func (pool *TxPool) generateTxs(cnt string, addr common.Address, preProducer boo
 	}
 
 	go consumer()
+}
+
+func (pool *TxPool) getContractData(threadNum, i int, contractType string) []byte {
+	var data []byte
+	switch contractType {
+	case "wasmSameEvidence":
+		paramArr := pool.wasmSameEvidenceData(threadNum, i) // wasm存证合约，key相同
+		data, _ = rlp.EncodeToBytes(paramArr)
+	case "evmSameEvidence":
+		paramArr := pool.evmSameEvidenceData(threadNum, i) // evm存证合约，key相同
+		data = bytes.Join(paramArr, []byte(""))
+	case "evmDiffEvidence":
+		paramArr := pool.evmDiffEvidenceData(threadNum, i) // evm存证合约，key不同
+		data = bytes.Join(paramArr, []byte(""))
+	case "goevm":
+		paramArr := pool.govmData(threadNum, i) //goevm
+		data, _ = rlp.EncodeToBytes(paramArr)
+	default: //"wasmDiffEvidence"或预编译存证合约
+		paramArr := pool.wasmDiffEvidenceData(threadNum, i) // 存证合约,key不同
+		data, _ = rlp.EncodeToBytes(paramArr)
+	}
+	return data
+}
+
+// 存证合约,key不同
+func (pool *TxPool) wasmDiffEvidenceData(threadNum, i int) [][]byte {
+	paramArr := [][]byte{
+		common.Int64ToBytes(int64(2)),
+		[]byte("saveEvidence"),
+	}
+	paramArr = append(paramArr, []byte(fmt.Sprintf("%v%v", threadNum, time.Now().UnixNano())))
+	paramArr = append(paramArr, []byte(fmt.Sprintf("%v", "1234")))
+	return paramArr
+}
+
+// 存证合约，key相同
+func (pool *TxPool) wasmSameEvidenceData(threadNum, i int) [][]byte {
+	paramArr := [][]byte{
+		common.Int64ToBytes(int64(2)),
+		[]byte("saveEvidence"),
+	}
+	paramArr = append(paramArr, []byte(fmt.Sprintf("%v", "name")))
+	paramArr = append(paramArr, []byte(fmt.Sprintf("%v_%v_%v", "name", threadNum, i)))
+	return paramArr
+}
+
+// 存证合约，evm key不同
+func (pool *TxPool) evmSameEvidenceData(threadNum, i int) [][]byte {
+	paramArr := [][]byte{}
+	funcNameStr := fmt.Sprintf("%v(%v)", "saveEvidence", strings.Join([]string{"string", "string"}, ","))
+	funcName := crypto.Keccak256([]byte(funcNameStr))[:4]
+	paramArr = append(paramArr, funcName)
+
+	stringTy, _ := abi.NewTypeV2("string", "string", nil)
+	arguments := abi.Arguments{abi.Argument{Type: stringTy}, abi.Argument{Type: stringTy}}
+	key := fmt.Sprintf("%v", "name")
+	value := fmt.Sprintf("%v_%v", "name", i)
+	var funcParams []interface{}
+	funcParams = append(funcParams, key, value)
+	paramBytes, _ := arguments.PackV2(funcParams...)
+	paramArr = append(paramArr, paramBytes)
+	return paramArr
+}
+
+// 存证合约，evm key不同
+func (pool *TxPool) evmDiffEvidenceData(threadNum, i int) [][]byte {
+	paramArr := [][]byte{}
+	funcNameStr := fmt.Sprintf("%v(%v)", "saveEvidence", strings.Join([]string{"string", "string"}, ","))
+	funcName := crypto.Keccak256([]byte(funcNameStr))[:4]
+	paramArr = append(paramArr, funcName)
+
+	stringTy, _ := abi.NewTypeV2("string", "string", nil)
+	arguments := abi.Arguments{abi.Argument{Type: stringTy}, abi.Argument{Type: stringTy}}
+	key := fmt.Sprintf("%v%v", threadNum, time.Now().UnixNano())
+	value := "123"
+	var funcParams []interface{}
+	funcParams = append(funcParams, key, value)
+	paramBytes, _ := arguments.PackV2(funcParams...)
+	paramArr = append(paramArr, paramBytes)
+	return paramArr
+}
+
+func (pool *TxPool) govmData(threadNum, i int) [][]byte {
+	paramArr := [][]byte{
+		common.Int64ToBytes(int64(2)),
+		[]byte("Set"),
+	}
+	paramArr = append(paramArr, []byte(fmt.Sprintf("%v", "name")))
+	paramArr = append(paramArr, []byte(fmt.Sprintf("%v_%v", "name", i)))
+	return paramArr
 }
