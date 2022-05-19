@@ -19,6 +19,7 @@ package backend
 import (
 	"crypto/ecdsa"
 	"errors"
+	"fmt"
 	"math/big"
 	"sync"
 	"time"
@@ -351,7 +352,7 @@ func (sb *backend) makeCurrent(parentRoot common.Hash, header *types.Header) err
 	return nil
 }
 
-func (sb *backend) excuteBlock(proposal iris.Proposal) error {
+func (sb *backend) executeBlock(proposal iris.Proposal) error {
 	var (
 		block  *types.Block
 		chain  *core.BlockChain
@@ -372,27 +373,35 @@ func (sb *backend) excuteBlock(proposal iris.Proposal) error {
 	header = block.Header()
 
 	if parent = chain.GetBlockByHash(header.ParentHash); parent == nil {
-		return errors.New("Proposal's parent block is not in current chain")
+		return errors.New("proposal's parent block is not in current chain")
 	}
 
 	if err = sb.makeCurrent(parent.Root(), header); err != nil {
 		return err
 	} else {
-		// Iterate over and process the individual transactios
+		// Iterate over and process the individual transactions
 		txsMap := make(map[common.Hash]struct{})
+		usedGas := new(uint64)
 		for _, tx := range block.Transactions() {
 			sb.current.state.Prepare(tx.Hash(), common.Hash{}, sb.current.tcount)
 			snap := sb.current.state.Snapshot()
-			if r := chain.GetReceiptsByHash(tx.Hash()); r != nil {
-				return errors.New("Already executed tx")
+
+			ok, err := chain.HasTransaction(tx.Hash())
+			if ok {
+				return errors.New("already executed tx")
 			}
+			if err != nil {
+				return err
+			}
+
 			if _, ok := txsMap[tx.Hash()]; ok {
-				return errors.New("Repeated tx in one block")
+				return errors.New("repeated tx in one block")
 			} else {
 				txsMap[tx.Hash()] = struct{}{}
 			}
 
-			receipt, _, err := core.ApplyTransaction(chain.Config(), chain, &sb.address, sb.current.gasPool, sb.current.state, sb.current.header, tx, &sb.current.header.GasUsed, vm.Config{})
+			receipt, _, err := core.ApplyTransaction(chain.Config(), chain, &sb.address, sb.current.gasPool,
+				sb.current.state, sb.current.header, tx, usedGas, vm.Config{})
 			if err != nil {
 				sb.current.state.RevertToSnapshot(snap)
 				return err
@@ -409,9 +418,21 @@ func (sb *backend) excuteBlock(proposal iris.Proposal) error {
 			return err
 		}
 
+		if *usedGas != block.GasUsed() {
+			return fmt.Errorf("invalid gas used (remote: %d local: %d)", block.GasUsed(), *usedGas)
+		}
+
+		if cblock.Bloom() != block.Bloom() {
+			return fmt.Errorf("invalid bloom (remote: %x  local: %x)", block.Bloom(), cblock.Bloom())
+		}
+
+		if cblock.ReceiptHash() != block.ReceiptHash() {
+			return fmt.Errorf("invalid receipt root hash (remote: %x local: %x)", block.ReceiptHash(), cblock.ReceiptHash())
+		}
+
 		if cblock.Root() != block.Root() {
 			sb.current = nil
-			return errors.New("Invalid block root")
+			return fmt.Errorf("invalid merkle root (remote: %x local: %x)", block.Root(), cblock.Root())
 		}
 		sb.current.block = block
 		sb.current.header = block.Header()
@@ -443,7 +464,7 @@ func (sb *backend) Verify(proposal iris.Proposal, isProposer bool) (time.Duratio
 	// If this node is proposer and the proposal is mined by this node, need not to execute the block
 	if (block.Coinbase() != sb.address) || !isProposer {
 		//excute txs in block
-		if err := sb.excuteBlock(proposal); err != nil {
+		if err := sb.executeBlock(proposal); err != nil {
 			return 0, err
 		}
 	}

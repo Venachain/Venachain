@@ -94,7 +94,8 @@ func WasmArgToBytes(arg interface{}) []byte {
 	case reflect.String:
 		return []byte(arg.(string))
 	default:
-		panic("unsupported type")
+		return nil
+		//panic("unsupported type")
 	}
 }
 
