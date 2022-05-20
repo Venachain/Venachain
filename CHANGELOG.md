@@ -1,11 +1,10 @@
 # Changelog
-## [1.1.3]
-### Improvements
-* [chain] 优化 setState without getCommittedState --张玉坚
 
 ## [1.1.2]
 ### Features
 * [contract] 预编译合约添加paillier合约 --饶应典
+### Improvements
+* [chain] 优化 setState without getCommittedState --张玉坚
 
 ## [1.1.1]
 
