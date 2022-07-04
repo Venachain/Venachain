@@ -20,14 +20,16 @@ SCRIPT_NAME="$(basename ${0})"
 SCRIPT_ALIAS="$(echo ${CURRENT_PATH}/${SCRIPT_NAME} | sed -e 's/\(.*\)\/scripts\/\(.*\).sh/\2/g')"
 PROJECT_NAME=""
 NODE=""
+INTERPRETER=""
+VALIDATOR_NODES=""
 MODE=""
 ADDRESS=""
 ALL=""
 
 PROJECT_CONF_PATH=""
-INTERPRETER=""
 
 ## param
+interpreter=""
 mode=""
 
 #############################################################################################################
@@ -43,6 +45,13 @@ USAGE: ${SCRIPT_NAME}  [options] [value]
         OPTIONS:
 
             --project, -p               the project name, must be specified
+
+            --interpreter, -i           Select virtual machine interpreter, must be specified for new project
+                                        \"wasm\", \"evm\" and \"all\" are supported
+                                        (default: all)
+
+            --validatorNodes, -v        set the genesis validatorNodes, must be specified for new project
+                                        (default: the first node enode code)
 
             --mode, -m                  the specified deploy mode
                                         \"conf\", \"one\", \"four\" are supported (default: conf)
@@ -112,12 +121,16 @@ function checkEnv() {
 
 ################################################# Assaign Default #################################################
 function assignDefault() {
-    MODE="conf"
     INTERPRETER="all"
+    MODE="conf"
 }
 
 ################################################# Read Param #################################################
 function readParam() {
+    if [[ "${interpreter}" != "" ]]; then
+        INTERPRETER="${interpreter}"
+    fi
+
     if [[ "${mode}" != "" ]]; then
         MODE="${mode}"
     fi
@@ -130,7 +143,7 @@ function deployOneNode() {
     if [[ $? -eq 1 ]]; then
         return 1
     fi
-    "${DEPLOYMENT_PATH}/linux/scripts"/venachainctl.sh remote init --project "${PROJECT_NAME}" --interpreter "${INTERPRETER}" --node "${node_id}"
+    "${DEPLOYMENT_PATH}/linux/scripts"/venachainctl.sh remote init --project "${PROJECT_NAME}" --interpreter "${INTERPRETER}" --validatorNodes "${VALIDATOR_NODES}" --node "${node_id}"
     if [[ $? -eq 1 ]]; then
         return 1
     fi
@@ -289,6 +302,16 @@ while [ ! $# -eq 0 ]; do
     --project | -p)
         shiftOption2 $#
         PROJECT_NAME="${2}"
+        shift 2
+        ;;
+    --interpreter | -i)
+        shiftOption2 $#
+        interpreter="${2}"
+        shift 2
+        ;;
+    --validatorNodes | -v)
+        shiftOption2 $#
+        VALIDATOR_NODES="${2}"
         shift 2
         ;;
     --mode | -m)

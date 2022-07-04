@@ -119,6 +119,10 @@ function checkEnv() {
     fi 
     if [[ "${INTERPRETER}" == "" ]]; then
         printLog "error" "INTERPRETER METHOD NOT SET"
+    fi
+
+    if [[ "${INTERPRETER}" != "" ]] && [[ ${INTERPRETER} != "evm" ]] && [[ "${INTERPRETER}" != "wasm" ]] && [[ "${INTERPRETER}" != "all" ]]; then
+        printLog "error" "INTERPRETER MUST BE \"evm\", \"wasm\" OR \"all\""
         exit 1
     fi 
 
@@ -162,7 +166,6 @@ function readParam() {
 
 ################################################# Create Genesis #################################################
 function createGenesis() {
-
     if [[ "${VALIDATOR_NODES}" == "" ]]; then
         node_key="$(cat ${NODE_DIR}/node.pubkey)"
         VALIDATOR_NODES="enode://${node_key}@${IP_ADDR}:${P2P_PORT}"

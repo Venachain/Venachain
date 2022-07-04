@@ -112,9 +112,6 @@ function four() {
 
 ################################################# Main #################################################
 function main() {
-    assignDefault
-    readParam
-
     four
 }
 

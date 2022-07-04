@@ -152,12 +152,17 @@ function checkEnv() {
         printLog "error" "INTERPRETER NOT SET FOR GENERATING GENESIS"
         exit 1
     fi
-
     if [ ! -d "${PROJECT_CONF_PATH}" ]; then
         printLog "error" "DIRECTORY ${PROJECT_CONF_PATH} NOT FOUND"
         exit 1
     fi
 
+    if [  -f "${PROJECT_CONF_PATH}/global/genesis.json" ] && [[ "${INTERPRETER}" != "" ]]; then
+        printLog "warn" "Interpreter Param Only Firstnode Take Effect"
+    fi
+    if [  -f "${PROJECT_CONF_PATH}/global/genesis.json" ] && [[ "${VALIDATOR_NODES}" != "" ]]; then
+        printLog "warn" "ValidatorNodes Param Only Firstnode Take Effect"
+    fi
 }
 
 ################################################# Clear Data #################################################
