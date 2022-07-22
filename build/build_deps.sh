@@ -74,6 +74,6 @@ fi
 
 #download go pkg
 cd $root
-build/env.sh go get -u github.com/go-bindata/go-bindata/...
+build/env.sh go install -a -v github.com/go-bindata/go-bindata/...@latest
 build/env.sh go generate ./cmd/vcl/main.go
 build/env.sh go mod download
