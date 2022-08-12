@@ -1,5 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
 *.sol linguist-language=Solidity
-*.c linguist-language=go
-*.cpp linguist-language=go
+*.c linguist-language=golang
+*.cpp linguist-language=golang
