@@ -381,8 +381,10 @@ func (pool *TxPool) loop() {
 	for {
 		select {
 		case ev := <-pool.blockConsensusFinishEventCh:
+			pool.mu.Lock()
 			pool.removeGivenTxs(ev.Block.Transactions())
 			pool.recentRemovedPending.Add(ev.Block.Hash(), struct{}{})
+			pool.mu.Unlock()
 		// Handle ChainHeadEvent
 		case ev := <-pool.chainHeadEventCh:
 			if ev.Block != nil {
@@ -741,10 +743,10 @@ func (pool *TxPool) promoteTx(addr common.Address, hash common.Hash, tx *types.T
 		pending = pool.pending[addr]
 	}
 
-	pending.Put(hash, tx)
 
 	if pool.all.Get(hash) == nil {
 		pool.all.Add(tx)
+		pending.Put(hash, tx)
 	} else {
 		return false
 	}
