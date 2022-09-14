@@ -27,8 +27,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	lru "github.com/hashicorp/golang-lru"
-
 	"github.com/panjf2000/ants/v2"
 
 	"github.com/Venachain/Venachain/common"
@@ -254,7 +252,6 @@ type TxPool struct {
 
 	goroutinePool *ants.Pool
 
-	recentRemovedPending        *lru.ARCCache
 	blockConsensusFinishEventCh chan BlockConsensusFinishEvent
 	blockConsensusFinishSub     event.Subscription
 }
@@ -292,12 +289,6 @@ func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoo
 	}
 
 	var err error
-	pool.recentRemovedPending, err = lru.NewARC(chainHeadChanSize)
-	if err != nil {
-		log.Error("New txpool failed", "err", err)
-		return nil
-	}
-
 	pool.goroutinePool, err = ants.NewPool(runtime.NumCPU(), ants.WithOptions(ants.Options{
 		PreAlloc: true,
 		PanicHandler: func(i interface{}) {
@@ -381,8 +372,9 @@ func (pool *TxPool) loop() {
 	for {
 		select {
 		case ev := <-pool.blockConsensusFinishEventCh:
+			pool.mu.Lock()
 			pool.removeGivenTxs(ev.Block.Transactions())
-			pool.recentRemovedPending.Add(ev.Block.Hash(), struct{}{})
+			pool.mu.Unlock()
 		// Handle ChainHeadEvent
 		case ev := <-pool.chainHeadEventCh:
 			if ev.Block != nil {
@@ -741,10 +733,9 @@ func (pool *TxPool) promoteTx(addr common.Address, hash common.Hash, tx *types.T
 		pending = pool.pending[addr]
 	}
 
-	pending.Put(hash, tx)
-
 	if pool.all.Get(hash) == nil {
 		pool.all.Add(tx)
+		pending.Put(hash, tx)
 	} else {
 		return false
 	}
@@ -975,11 +966,7 @@ func (pool *TxPool) removeTx(hash common.Hash, outofbound bool) {
 // are moved back into the future queue.
 func (pool *TxPool) demoteUnexecutables(txs types.Transactions, blockHash common.Hash) {
 	pool.all.RemoveTxs(txs)
-
-	if _, ok := pool.recentRemovedPending.Get(blockHash); !ok {
-		pool.removeGivenTxs(txs)
-	}
-
+	pool.removeGivenTxs(txs)
 	pool.removeTxsForBalanceSufficient()
 }
 
